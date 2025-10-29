@@ -86,7 +86,9 @@ export default function Login(): React.JSX.Element {
         }
       } catch (apiError: any) {
         // Handle API errors
-        if (apiError.response?.data?.message) {
+        if (apiError.response?.status === 401) {
+          throw new Error('Wrong password or username')
+        } else if (apiError.response?.data?.message) {
           throw new Error(apiError.response.data.message)
         } else {
           throw new Error('Login failed. Please try again.')

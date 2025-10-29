@@ -208,12 +208,7 @@ export function Sidebar(): React.JSX.Element {
       name: 'Billing',
       href: '/billing',
       icon: CreditCard,
-    },
-    {
-      name: 'Billing Answering Subscription',
-      href: '/billing/answering-services',
-      icon: CreditCard,
-    },
+    }
   ]
 
   // Filter navigation items based on permissions
