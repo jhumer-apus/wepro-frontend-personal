@@ -21,12 +21,12 @@ interface SubNavigationItem {
 }
 
 const subNavigationItems: SubNavigationItem[] = [
-  {
-    path: '/settings/job/industry',
-    label: 'Industry',
-    icon: Factory,
-    moduleCodes: ['MOD012', 'MOD013'],
-  },
+  // {
+  //   path: '/settings/job/industry',
+  //   label: 'Industry',
+  //   icon: Factory,
+  //   moduleCodes: ['MOD012', 'MOD013'],
+  // },
   // {
   //   path: '/settings/job/types',
   //   label: 'Job Types',

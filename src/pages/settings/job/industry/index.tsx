@@ -121,6 +121,7 @@ export default function JobIndustryPage() {
     active: true,
   })
   const [submitting, setSubmitting] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [industryToDelete, setIndustryToDelete] = useState<Industry | null>(
@@ -310,6 +311,7 @@ export default function JobIndustryPage() {
     setIsEditMode(false)
     setEditingIndustry(null)
     setFormData({ name: '', active: true })
+    setFieldErrors({})
     setIndustryModalOpen(true)
   }
 
@@ -320,6 +322,7 @@ export default function JobIndustryPage() {
       name: industry.name,
       active: industry.active,
     })
+    setFieldErrors({})
     setIndustryModalOpen(true)
   }
 
@@ -330,6 +333,9 @@ export default function JobIndustryPage() {
       toast.error('Industry name is required')
       return
     }
+
+    // Clear previous errors
+    setFieldErrors({})
 
     try {
       setSubmitting(true)
@@ -365,24 +371,106 @@ export default function JobIndustryPage() {
         setFormData({ name: '', active: true })
         setIsEditMode(false)
         setEditingIndustry(null)
+        setFieldErrors({})
 
         // Refresh the industries list
         await fetchIndustries()
       } else {
+        // Handle API response errors
+        const errorResponse = response.data
+        const errors: Record<string, string> = {}
+
+        // Parse field-level errors from details array
+        if (errorResponse.details && Array.isArray(errorResponse.details)) {
+          errorResponse.details.forEach((detail: any) => {
+            if (detail.field && detail.message) {
+              errors[detail.field] = detail.message
+            }
+          })
+        }
+
+        // Set field errors if any
+        if (Object.keys(errors).length > 0) {
+          setFieldErrors(errors)
+        }
+
+        // Show toast with error message
         const action = isEditMode ? 'update' : 'create'
-        toast.error(`Failed to ${action} industry`, {
-          description:
-            response.data.message ||
-            `An error occurred while ${action}ing the industry.`,
+        const errorMessage = errorResponse.error || errorResponse.message || `Failed to ${action} industry`
+        
+        // Build detailed error description
+        let errorDescription = ''
+        if (errorResponse.details && errorResponse.details.length > 0) {
+          const errorMessages = errorResponse.details
+            .map((detail: any) => {
+              if (detail.field && detail.message) {
+                return `• ${detail.field}: ${detail.message}`
+              }
+              return null
+            })
+            .filter(Boolean)
+          
+          if (errorMessages.length > 0) {
+            errorDescription = errorMessages.join('\n')
+          } else {
+            errorDescription = `${errorResponse.details.length} validation error${errorResponse.details.length > 1 ? 's' : ''} found. Please check the form.`
+          }
+        } else {
+          errorDescription = `An error occurred while ${action}ing the industry.`
+        }
+        
+        toast.error(errorMessage, {
+          description: errorDescription,
         })
       }
     } catch (err: any) {
       const action = isEditMode ? 'updating' : 'creating'
       console.error(`Error ${action} industry:`, err)
+
+      // Parse error response structure
+      const errorResponse = err.response?.data
+      const errors: Record<string, string> = {}
+
+      // Parse field-level errors from details array
+      if (errorResponse?.details && Array.isArray(errorResponse.details)) {
+        errorResponse.details.forEach((detail: any) => {
+          if (detail.field && detail.message) {
+            errors[detail.field] = detail.message
+          }
+        })
+      }
+
+      // Set field errors if any
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors)
+      }
+
+      // Show toast with error message
+      const errorMessage = errorResponse?.error || errorResponse?.message || `An error occurred while ${action} the industry.`
+      
+      // Build detailed error description
+      let errorDescription = ''
+      if (errorResponse?.details && errorResponse.details.length > 0) {
+        const errorMessages = errorResponse.details
+          .map((detail: any) => {
+            if (detail.field && detail.message) {
+              return `• ${detail.field}: ${detail.message}`
+            }
+            return null
+          })
+          .filter(Boolean)
+        
+        if (errorMessages.length > 0) {
+          errorDescription = errorMessages.join('\n')
+        } else {
+          errorDescription = `${errorResponse.details.length} validation error${errorResponse.details.length > 1 ? 's' : ''} found. Please check the form.`
+        }
+      } else {
+        errorDescription = errorMessage
+      }
+      
       toast.error(`Failed to ${action} industry`, {
-        description:
-          err.response?.data?.error ||
-          `An error occurred while ${action} the industry.`,
+        description: errorDescription,
       })
     } finally {
       setSubmitting(false)
@@ -394,6 +482,14 @@ export default function JobIndustryPage() {
       ...prev,
       [field]: value,
     }))
+    // Clear field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
   }
 
   // Calculate pagination based on API response
@@ -785,8 +881,17 @@ export default function JobIndustryPage() {
                 value={formData.name}
                 onChange={e => handleFormChange('name', e.target.value)}
                 required
-                className="h-12 text-base"
+                className={`h-12 text-base ${
+                  fieldErrors.name
+                    ? 'border-red-500 focus-visible:ring-red-500'
+                    : ''
+                }`}
               />
+              {fieldErrors.name && (
+                <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                  {fieldErrors.name}
+                </p>
+              )}
             </div>
 
             <div className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
@@ -820,6 +925,7 @@ export default function JobIndustryPage() {
                   setIsEditMode(false)
                   setEditingIndustry(null)
                   setFormData({ name: '', active: true })
+                  setFieldErrors({})
                 }}
                 disabled={submitting}
                 className="h-11 px-6"

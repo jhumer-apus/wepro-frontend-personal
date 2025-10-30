@@ -239,6 +239,28 @@ export default function JobCategoriesTypesPage() {
     setExpandedItems(newExpanded)
   }
 
+  const formatErrorMessage = (errorResponse: any): string => {
+    // Check if response has the error structure with details
+    if (errorResponse?.details && Array.isArray(errorResponse.details) && errorResponse.details.length > 0) {
+      // Format field-specific validation errors
+      const errorMessages = errorResponse.details
+        .map((detail: any) => {
+          if (detail.field && detail.message) {
+            return `${detail.field}: ${detail.message}`
+          }
+          return detail.message || detail.error || 'Validation error'
+        })
+        .filter(Boolean)
+      
+      if (errorMessages.length > 0) {
+        return errorMessages.join('\n')
+      }
+    }
+    
+    // Fall back to general error message
+    return errorResponse?.error || errorResponse?.message || 'An error occurred'
+  }
+
   const getLevelStats = (item: JobType) => {
     const jobTypeCount = item.children.filter(child => child.level === 2).length
     const subTypeCount = item.children.filter(child => child.level === 3).length
@@ -489,11 +511,15 @@ export default function JobCategoriesTypesPage() {
         setIsModalOpen(false)
       } else {
         const action = isEditMode ? 'update' : 'create'
-        toast.error(`Failed to ${action} job type`)
+        const errorMsg = formatErrorMessage(response.data)
+        toast.error(errorMsg || `Failed to ${action} job type`)
       }
     } catch (err: any) {
-      console.error('Error creating job type:', err)
-      toast.error('Failed to create job type')
+      console.error('Error creating/updating job type:', err)
+      const errorResponse = err.response?.data || err.response || {}
+      const errorMsg = formatErrorMessage(errorResponse)
+      const action = isEditMode ? 'update' : 'create'
+      toast.error(errorMsg || `Failed to ${action} job type`)
     } finally {
       setSubmitting(false)
     }
@@ -729,19 +755,16 @@ export default function JobCategoriesTypesPage() {
         setIsIndustryEditMode(false)
         setEditingIndustry(null)
       } else {
-        toast.error('Failed to create industry', {
-          description:
-            response.data.message ||
-            'An error occurred while creating the industry.',
-        })
+        const errorMsg = formatErrorMessage(response.data)
+        const action = isIndustryEditMode ? 'update' : 'create'
+        toast.error(errorMsg || `Failed to ${action} industry`)
       }
     } catch (err: any) {
-      console.error('Error creating industry:', err)
-      toast.error('Failed to create industry', {
-        description:
-          err.response?.data?.message ||
-          'An error occurred while creating the industry.',
-      })
+      console.error('Error creating/updating industry:', err)
+      const errorResponse = err.response?.data || err.response || {}
+      const errorMsg = formatErrorMessage(errorResponse)
+      const action = isIndustryEditMode ? 'update' : 'create'
+      toast.error(errorMsg || `Failed to ${action} industry`)
     } finally {
       setIndustrySubmitting(false)
     }
@@ -1038,6 +1061,16 @@ export default function JobCategoriesTypesPage() {
               Job Industries & Types
             </h1>
           </div>
+          {(checkPermission('MOD012', 'create') ||
+            checkPermission('MOD013', 'create')) && (
+            <Button
+              onClick={handleAddIndustry}
+              className="wepro-button-gradient text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Industry
+            </Button>
+          )}
         </div>
 
         {/* Content Area */}
@@ -1047,22 +1080,7 @@ export default function JobCategoriesTypesPage() {
               <div className="space-y-6">
                 {/* Summary Section */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                  {(checkPermission('MOD012', 'create') ||
-                    checkPermission('MOD013', 'create')) && (
-                    <div className="flex items-start justify-between">
-                      <div></div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex items-center gap-2 bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800 transition-colors"
-                        onClick={handleAddIndustry}
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add Industry
-                      </Button>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-end mt-4">
+                  <div className="flex justify-between items-end">
                     <div>
                       <h3 className="text-lg font-semibold text-blue-900 mb-1">
                         Overview
@@ -1140,16 +1158,6 @@ export default function JobCategoriesTypesPage() {
                   Start by adding your first job industry to organize your
                   services.
                 </p>
-                {(checkPermission('MOD012', 'create') ||
-                  checkPermission('MOD013', 'create')) && (
-                  <Button
-                    className="flex items-center gap-2 wepro-button-gradient text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                    onClick={handleAddIndustry}
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Industry
-                  </Button>
-                )}
               </div>
             )}
           </CardContent>

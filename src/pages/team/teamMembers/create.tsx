@@ -238,12 +238,36 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
       }, 1000)
     } catch (error: any) {
       console.error('Error saving team member:', error)
+      
+      // Extract error response data
+      const errorData = error.response?.data
+      
+      // Build error message from API response
+      let errorTitle = 'Failed to save team member'
+      let errorDescription = 'An error occurred while saving the team member.'
+      
+      if (errorData) {
+        // If details array exists and has items, format all validation errors
+        if (errorData.details && Array.isArray(errorData.details) && errorData.details.length > 0) {
+          errorTitle = errorData.error || 'Validation failed'
+          // Format all error messages from details array
+          const errorMessages = errorData.details.map((detail: any) => {
+            const field = detail.field ? `${detail.field.charAt(0).toUpperCase() + detail.field.slice(1)}: ` : ''
+            return `${field}${detail.message || 'Invalid value'}`
+          })
+          errorDescription = errorMessages.join('\n')
+        } 
+        // If no details but error message exists, use that
+        else if (errorData.error) {
+          errorTitle = 'Error'
+          errorDescription = errorData.error
+        }
+      }
+      
       // Show error toast
-      toast.error('Failed to save team member', {
-        description:
-          error.response?.data?.details?.[0]?.message ||
-          error.response?.data?.error ||
-          'An error occurred while saving the team member.',
+      toast.error(errorTitle, {
+        description: errorDescription,
+        duration: 5000, // Show for 5 seconds to allow reading multiple errors
       })
     } finally {
       setIsSaving(false)
