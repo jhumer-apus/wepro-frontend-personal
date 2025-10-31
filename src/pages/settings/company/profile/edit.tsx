@@ -385,13 +385,11 @@ export default function EditCompanyProfilePage() {
 
     try {
       // Prepare the payload for the API with correct field names
-      const payload = {
+      const payload: any = {
         name: formData.name,
         ownerName: formData.ownerName,
         status: formData.status,
         weproUsername: formData.weproUsername,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
         address: formData.address,
         addressLine2: formData.addressLine2,
         city: formData.city,
@@ -401,6 +399,14 @@ export default function EditCompanyProfilePage() {
         addressId: formData.addressId,
         lat: formData.latitude ? parseFloat(formData.latitude) : undefined,
         lng: formData.longitude ? parseFloat(formData.longitude) : undefined,
+      }
+
+      // Only include email and phoneNumber if they have values
+      if (formData.email.trim()) {
+        payload.email = formData.email.trim()
+      }
+      if (formData.phoneNumber.trim()) {
+        payload.phone = formData.phoneNumber.trim()
       }
 
       // Make the actual API call

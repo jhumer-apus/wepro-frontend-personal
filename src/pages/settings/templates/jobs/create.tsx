@@ -60,7 +60,7 @@ interface JobTemplateFormData {
   title: string
   templateSources: string
   sourceCodes: string[]
-  status: 'Active' | 'Inactive' | 'Draft'
+  status: 'Active' | 'Inactive'
   channels: {
     email: {
       enabled: boolean
@@ -98,8 +98,6 @@ const getStatusBadgeColor = (status: string) => {
       return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
     case 'inactive':
       return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-    case 'draft':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
     default:
       return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
   }
@@ -172,7 +170,7 @@ export default function CreateJobTemplatePage(): React.JSX.Element {
     title: '',
     templateSources: 'All',
     sourceCodes: [],
-    status: 'Draft',
+    status: 'Active',
     channels: {
       email: {
         enabled: false,
@@ -446,7 +444,7 @@ export default function CreateJobTemplatePage(): React.JSX.Element {
         title: templateData.title || '',
         templateSources: templateData.templateSources || 'All',
         sourceCodes: templateData.sourceCodes || [],
-        status: templateData.status || 'Draft',
+        status: templateData.status || 'Active',
         channels: {
           email: {
             enabled: templateData.channels?.email?.enabled || false,
@@ -629,7 +627,7 @@ export default function CreateJobTemplatePage(): React.JSX.Element {
               </span>
               <Select
                 value={formData.status}
-                onValueChange={(value: 'Active' | 'Inactive' | 'Draft') =>
+                onValueChange={(value: 'Active' | 'Inactive') =>
                   handleInputChange('status', value)
                 }
               >
@@ -637,7 +635,6 @@ export default function CreateJobTemplatePage(): React.JSX.Element {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Draft">Draft</SelectItem>
                   <SelectItem value="Active">Active</SelectItem>
                   <SelectItem value="Inactive">Inactive</SelectItem>
                 </SelectContent>

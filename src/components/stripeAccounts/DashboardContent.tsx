@@ -185,7 +185,7 @@ export default function DashboardContent({
             <Plus className="w-4 h-4 mr-2" />
             Add Account
           </Button>
-          {selectedAccount && handleDeleteAccount && (
+          {selectedAccount && handleDeleteAccount && accounts.length > 1 && (
             <Button
               variant="outline"
               size="icon"

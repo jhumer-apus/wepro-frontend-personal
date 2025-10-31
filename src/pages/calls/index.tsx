@@ -586,6 +586,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
     'csv' | 'json'
   >('csv')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [unblockDialogOpen, setUnblockDialogOpen] = useState(false)
   const [ruleToDelete, setRuleToDelete] = useState<CallBlockingRule | null>(
     null
   )
@@ -2538,10 +2539,10 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
   // Handle delete blocking rule
   const handleDeleteRule = (rule: CallBlockingRule) => {
     setRuleToDelete(rule)
-    setDeleteDialogOpen(true)
+    setUnblockDialogOpen(true)
   }
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = async () => {console.log(ruleToDelete, 'ruleToDelete')
     if (!ruleToDelete) return
 
     setDeleting(true)
@@ -2603,13 +2604,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
       })
     } finally {
       setDeleting(false)
-      setDeleteDialogOpen(false)
+      setUnblockDialogOpen(false)
       setRuleToDelete(null)
     }
   }
 
   const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false)
+    setUnblockDialogOpen(false)
     setRuleToDelete(null)
   }
 
@@ -3136,7 +3137,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
         `/v1/wepro-phone/call-blocking?page=1&limit=10&sort=-createdAt`
       )
 
-      setCallBlockingData(callBlockingResponse.data)
+      setCallBlockingData(callBlockingResponse.data.data)
 
       // Update statistics
       const statsResponse = await apiService.get(
@@ -3145,12 +3146,12 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
       setStatistics(statsResponse.data)
 
       // Update call blocking stats
-      const totalBlocked = callBlockingResponse.data.reduce(
+      const totalBlocked = callBlockingResponse.data.data.reduce(
         (sum, rule) => sum + rule.blockedCount,
         0
       )
       const today = new Date().toISOString().split('T')[0]
-      const blockedToday = callBlockingResponse.data.filter(rule =>
+      const blockedToday = callBlockingResponse.data.data.filter(rule =>
         rule.createdAt.startsWith(today)
       ).length
 
@@ -6870,8 +6871,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
         <Plus className="w-6 h-6" />
       </Button>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      {/* Unblock Confirmation Dialog */}
+      <AlertDialog open={unblockDialogOpen} onOpenChange={setUnblockDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Unblock Number</AlertDialogTitle>
