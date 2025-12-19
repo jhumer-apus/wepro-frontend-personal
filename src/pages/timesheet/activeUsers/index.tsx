@@ -191,11 +191,11 @@ export default function ActiveUsersPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1">
           <Button
             variant="default"
             onClick={() => router.push('/timesheet/activeUsers')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center text-white"
           >
             <Users className="w-4 h-4 mr-2" />
             Active Users
@@ -203,15 +203,38 @@ export default function ActiveUsersPage() {
           <Button
             variant="ghost"
             onClick={() => router.push('/timesheet/timesheet')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <Clock className="w-4 h-4 mr-2" />
             Timesheet
           </Button>
         </div>
 
-        {/* Active Users List */}
+        {/* Search Component */}
         <Card>
+          <CardContent className="pt-6">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  Search
+                </span>
+              </div>
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                <Input
+                  placeholder="Search active users..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Active Users List */}
+        {/* Desktop View */}
+        <Card className="hidden md:block">
           <CardContent className="pt-6">
             {/* Table Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -243,23 +266,12 @@ export default function ActiveUsersPage() {
                   entries
                 </Label>
               </div>
-
-              {/* Search Bar */}
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                <Input
-                  placeholder="Search active users..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                />
-              </div>
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-600">{error}</p>
+              <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                <p className="text-red-600 dark:text-red-400">{error}</p>
               </div>
             )}
 
@@ -388,6 +400,183 @@ export default function ActiveUsersPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Mobile View */}
+        <div className="block md:hidden space-y-4">
+          {/* Show Entries Dropdown */}
+          <div className="flex items-center gap-2 justify-end">
+            <Label
+              htmlFor="entries"
+              className="text-sm text-neutral-600 dark:text-neutral-400"
+            >
+              Show
+            </Label>
+            <Select
+              value={entriesPerPage.toString()}
+              onValueChange={handleEntriesChange}
+            >
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="30">30</SelectItem>
+                <SelectItem value="40">40</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <p className="text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* Mobile Card View */}
+          <div className="space-y-4">
+            {loading ? (
+              <div className="text-center py-8">
+                <span className="text-neutral-500">Loading active users...</span>
+              </div>
+            ) : currentUsers.length === 0 ? (
+              <div className="text-center py-8">
+                <span className="text-neutral-500">No active users found</span>
+              </div>
+            ) : (
+              currentUsers.map(user => (
+                <Card key={user._id} className="border border-neutral-200 dark:border-neutral-700">
+                  <CardContent className="pt-4 pb-4">
+                    <div className="space-y-3">
+                      {/* Employee */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Employee
+                        </div>
+                        <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                          {user.userId.name}
+                        </div>
+                      </div>
+
+                      {/* Status */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Status
+                        </div>
+                        <div>{getStatusBadge(user)}</div>
+                      </div>
+
+                      {/* Clock In */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Clock In
+                        </div>
+                        <div className="text-sm">
+                          <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                            {formatDate(user.activeTimesheetId.clockInAt)}
+                          </div>
+                          <div className="text-neutral-600 dark:text-neutral-400">
+                            {formatTime(user.activeTimesheetId.clockInAt)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Duration */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Duration
+                        </div>
+                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {formatDuration(user.durationSinceClockedIn)}
+                        </div>
+                      </div>
+
+                      {/* Source */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Source
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {user.activeTimesheetId.source}
+                        </Badge>
+                      </div>
+
+                      {/* Notes */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Notes
+                        </div>
+                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {user.activeTimesheetId.notes || '-'}
+                        </div>
+                      </div>
+
+                      {/* IP Address */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          IP Address
+                        </div>
+                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {user.activeTimesheetId.ip}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Showing entries info */}
+          <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+            Showing{' '}
+            {currentUsers.length > 0
+              ? (currentPage - 1) * entriesPerPage + 1
+              : 0}{' '}
+            to {Math.min(currentPage * entriesPerPage, totalCount)} of{' '}
+            {totalCount} entries
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || loading}
+            >
+              Previous
+            </Button>
+
+            {/* Page numbers */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              page => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handlePageChange(page)}
+                  className="w-8 h-8 p-0"
+                  disabled={loading}
+                >
+                  {page}
+                </Button>
+              )
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages || loading}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
     </>
   )

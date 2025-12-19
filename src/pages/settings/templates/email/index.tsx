@@ -486,10 +486,149 @@ export default function EmailTemplatesPage() {
           </Button>
         </div>
 
+        {/* Filters and Search Component */}
+        {tenantId && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                {/* Filters Section */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {/* Email Type Filter */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">Email Type</Label>
+                    <Select
+                      value={emailTypeFilter || 'all'}
+                      onValueChange={value =>
+                        setEmailTypeFilter(value === 'all' ? '' : value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Email Types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Email Types</SelectItem>
+                        <SelectItem value="Confirmation">
+                          Confirmation
+                        </SelectItem>
+                        <SelectItem value="Reminder">Reminder</SelectItem>
+                        <SelectItem value="Follow-up">Follow-up</SelectItem>
+                        <SelectItem value="Invoice">Invoice</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Priority Filter */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">Priority</Label>
+                    <Select
+                      value={priorityFilter || 'all'}
+                      onValueChange={value =>
+                        setPriorityFilter(value === 'all' ? '' : value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Priorities" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Priorities</SelectItem>
+                        <SelectItem value="Low">Low</SelectItem>
+                        <SelectItem value="Normal">Normal</SelectItem>
+                        <SelectItem value="High">High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Status Filter */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">Status</Label>
+                    <Select
+                      value={statusFilter || 'all'}
+                      onValueChange={value =>
+                        setStatusFilter(value === 'all' ? '' : value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Inactive">Inactive</SelectItem>
+                        <SelectItem value="Draft">Draft</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Body Type Filter */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">Body Type</Label>
+                    <Select
+                      value={bodyTypeFilter || 'all'}
+                      onValueChange={value =>
+                        setBodyTypeFilter(value === 'all' ? '' : value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Body Types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Body Types</SelectItem>
+                        <SelectItem value="html">HTML</SelectItem>
+                        <SelectItem value="plain">Plain Text</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">Search</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                      <Input
+                        placeholder="Search email templates..."
+                        className="pl-10"
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sort and Clear Filters Buttons */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">&nbsp;</Label>
+                    <div className="flex justify-end gap-2 items-center">
+                      <Button
+                        variant="outline"
+                        onClick={handleSortToggle}
+                        className="flex items-center gap-2"
+                      >
+                        <ArrowUpDown className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={clearAllFilters}
+                        disabled={
+                          !emailTypeFilter &&
+                          !priorityFilter &&
+                          !statusFilter &&
+                          !bodyTypeFilter &&
+                          !searchTerm
+                        }
+                      >
+                        Clear Filters
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Content Area */}
-        <Card>
-          <CardContent className="pt-6">
-            {!tenantId ? (
+        {!tenantId ? (
+          <Card>
+            <CardContent className="pt-6">
               <div className="text-center py-12">
                 <Building2 className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
@@ -508,141 +647,13 @@ export default function EmailTemplatesPage() {
                   Refresh Page
                 </Button>
               </div>
-            ) : (
-              <>
-                {/* Filters and Search in Single Row */}
-                <div className="flex flex-col lg:flex-row gap-4 mb-6">
-                  {/* Filters Section */}
-                  <div className="flex flex-col sm:flex-row gap-4 w-full">
-                    {/* Email Type Filter */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">Email Type</Label>
-                      <Select
-                        value={emailTypeFilter || 'all'}
-                        onValueChange={value =>
-                          setEmailTypeFilter(value === 'all' ? '' : value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Email Types" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Email Types</SelectItem>
-                          <SelectItem value="Confirmation">
-                            Confirmation
-                          </SelectItem>
-                          <SelectItem value="Reminder">Reminder</SelectItem>
-                          <SelectItem value="Follow-up">Follow-up</SelectItem>
-                          <SelectItem value="Invoice">Invoice</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Priority Filter */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">Priority</Label>
-                      <Select
-                        value={priorityFilter || 'all'}
-                        onValueChange={value =>
-                          setPriorityFilter(value === 'all' ? '' : value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Priorities" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Priorities</SelectItem>
-                          <SelectItem value="Low">Low</SelectItem>
-                          <SelectItem value="Normal">Normal</SelectItem>
-                          <SelectItem value="High">High</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Status Filter */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">Status</Label>
-                      <Select
-                        value={statusFilter || 'all'}
-                        onValueChange={value =>
-                          setStatusFilter(value === 'all' ? '' : value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Status</SelectItem>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="Inactive">Inactive</SelectItem>
-                          <SelectItem value="Draft">Draft</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Body Type Filter */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">Body Type</Label>
-                      <Select
-                        value={bodyTypeFilter || 'all'}
-                        onValueChange={value =>
-                          setBodyTypeFilter(value === 'all' ? '' : value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Body Types" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Body Types</SelectItem>
-                          <SelectItem value="html">HTML</SelectItem>
-                          <SelectItem value="plain">Plain Text</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Search Bar */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">Search</Label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                        <Input
-                          placeholder="Search email templates..."
-                          className="pl-10"
-                          value={searchTerm}
-                          onChange={e => setSearchTerm(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Sort and Clear Filters Buttons */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">&nbsp;</Label>
-                      <div className="flex justify-end gap-2 items-center">
-                        <Button
-                          variant="outline"
-                          onClick={handleSortToggle}
-                          className="flex items-center gap-2"
-                        >
-                          <ArrowUpDown className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={clearAllFilters}
-                          disabled={
-                            !emailTypeFilter &&
-                            !priorityFilter &&
-                            !statusFilter &&
-                            !bodyTypeFilter &&
-                            !searchTerm
-                          }
-                        >
-                          Clear Filters
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Desktop View */}
+            <Card className="hidden md:block">
+              <CardContent className="pt-6">
                 {/* Table Controls */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                   {/* Show Entries Dropdown */}
@@ -938,10 +949,298 @@ export default function EmailTemplatesPage() {
                     </Button>
                   </div>
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+
+            {/* Mobile View */}
+            <div className="block md:hidden space-y-4">
+              {/* Show Entries and Sort in One Row */}
+              <div className="flex items-center justify-between gap-4">
+                <Button
+                  variant="outline"
+                  onClick={handleSortToggle}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowUpDown className="h-4 w-4" />
+                  Sort
+                </Button>
+                <div className="flex items-center gap-2">
+                  <Label
+                    htmlFor="entries"
+                    className="text-sm text-neutral-600 dark:text-neutral-400"
+                  >
+                    Show
+                  </Label>
+                  <Select
+                    value={pagination.limit.toString()}
+                    onValueChange={handleEntriesChange}
+                  >
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                  <p className="text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              )}
+
+              {/* Mobile Card View */}
+              <div className="space-y-4">
+                {loading ? (
+                  <div className="text-center py-8">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
+                      <span className="text-neutral-500">Loading Email templates...</span>
+                    </div>
+                  </div>
+                ) : templates.length === 0 ? (
+                  <div className="text-center py-8">
+                    <span className="text-neutral-500">No Email templates found</span>
+                  </div>
+                ) : (
+                  templates.map(template => (
+                    <Card key={template._id} className="relative border border-neutral-200 dark:border-neutral-700">
+                      <CardContent className="pt-4 pb-4">
+                        <div className="space-y-3">
+                          {/* Title */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Title
+                            </div>
+                            <div className="font-semibold text-neutral-900 dark:text-neutral-100">
+                              {template.title}
+                            </div>
+                            <div className="text-sm text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-1">
+                              {template.subject}
+                            </div>
+                            <div className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
+                              From: {template.fromName} &lt;{template.fromEmail}&gt;
+                            </div>
+                          </div>
+
+                          {/* Code */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Code
+                            </div>
+                            <Badge variant="outline" className="font-mono">
+                              {template.code}
+                            </Badge>
+                          </div>
+
+                          {/* Email Type */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Email Type
+                            </div>
+                            <Badge
+                              className={getEmailTypeBadgeColor(template.emailType)}
+                            >
+                              {template.emailType}
+                            </Badge>
+                          </div>
+
+                          {/* Priority */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Priority
+                            </div>
+                            <Badge
+                              className={getPriorityBadgeColor(template.priority)}
+                            >
+                              {template.priority}
+                            </Badge>
+                          </div>
+
+                          {/* Status */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Status
+                            </div>
+                            <Badge
+                              className={getStatusBadgeColor(template.status)}
+                            >
+                              {template.status}
+                            </Badge>
+                          </div>
+
+                          {/* Variables */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Variables
+                            </div>
+                            {template.variables && template.variables.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {template.variables
+                                  .slice(0, 3)
+                                  .map((variable, index) => (
+                                    <Badge
+                                      key={index}
+                                      variant="secondary"
+                                      className="text-xs"
+                                    >
+                                      {variable}
+                                    </Badge>
+                                  ))}
+                                {template.variables.length > 3 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{template.variables.length - 3}
+                                  </Badge>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-sm text-neutral-400">
+                                No variables
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Created By */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Created By
+                            </div>
+                            <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                              {template.createdBy?.name || 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                      {/* Action Button - Outside Card */}
+                      <div className="absolute top-4 right-4">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              className="flex items-center gap-2"
+                              onClick={() => handleViewTemplate(template)}
+                            >
+                              <Eye className="h-4 w-4" />
+                              View
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="flex items-center gap-2"
+                              onClick={() => handlePreviewTemplate(template)}
+                            >
+                              <Play className="h-4 w-4" />
+                              Generate Preview
+                            </DropdownMenuItem>
+                            {checkPermission('MOD035', 'edit') && (
+                              <DropdownMenuItem
+                                className="flex items-center gap-2"
+                                onClick={() =>
+                                  router.push(
+                                    `/settings/templates/email/create?id=${template._id}`
+                                  )
+                                }
+                              >
+                                <Edit className="h-4 w-4" />
+                                Edit Template
+                              </DropdownMenuItem>
+                            )}
+                            {checkPermission('MOD035', 'delete') && (
+                              <DropdownMenuItem
+                                className="flex items-center gap-2 text-red-600"
+                                onClick={() => handleDeleteTemplate(template)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Delete Template
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+
+              {/* Showing entries info */}
+              <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(
+                  pagination.page * pagination.limit,
+                  pagination.total
+                )}{' '}
+                of {pagination.total} entries
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1 || loading}
+                >
+                  Previous
+                </Button>
+
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from(
+                    { length: Math.min(5, pagination.pages) },
+                    (_, i) => {
+                      let pageNum
+                      if (pagination.pages <= 5) {
+                        pageNum = i + 1
+                      } else if (pagination.page <= 3) {
+                        pageNum = i + 1
+                      } else if (pagination.page >= pagination.pages - 2) {
+                        pageNum = pagination.pages - 4 + i
+                      } else {
+                        pageNum = pagination.page - 2 + i
+                      }
+
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={
+                            pagination.page === pageNum ? 'default' : 'outline'
+                          }
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum)}
+                          className="w-8 h-8 p-0 text-white"
+                          disabled={loading}
+                        >
+                          {pageNum}
+                        </Button>
+                      )
+                    }
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.pages || loading}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}

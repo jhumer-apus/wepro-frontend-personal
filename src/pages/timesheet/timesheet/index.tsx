@@ -552,11 +552,11 @@ export default function TimesheetPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1">
           <Button
             variant="ghost"
             onClick={() => router.push('/timesheet/activeUsers')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <Users className="w-4 h-4 mr-2" />
             Active Users
@@ -564,145 +564,147 @@ export default function TimesheetPage() {
           <Button
             variant="default"
             onClick={() => router.push('/timesheet/timesheet')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center text-white"
           >
             <Clock className="w-4 h-4 mr-2" />
             Timesheet
           </Button>
         </div>
 
-        {/* Timesheet List */}
+        {/* Filters and Search Component */}
         <Card>
           <CardContent className="pt-6">
-            {/* Filters and Search in Single Row */}
-            <div className="flex flex-col lg:flex-row gap-4 mb-6">
-              {/* Filters Section */}
-              <div className="flex flex-col sm:flex-row gap-4 w-full">
-                {/* User Filter */}
-                <div className="space-y-2 flex-1">
-                  <Label className="text-sm font-medium">Filter by User</Label>
-                  <Popover
-                    open={userDropdownOpen}
-                    onOpenChange={handleUserDropdownClose}
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={userDropdownOpen}
-                        className="w-full justify-between"
-                      >
-                        {getSelectedUserName()}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className="w-[var(--radix-popover-trigger-width)] p-0"
-                      align="start"
+            <div className="space-y-4">
+              {/* User Filter */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Filter by User</Label>
+                <Popover
+                  open={userDropdownOpen}
+                  onOpenChange={handleUserDropdownClose}
+                >
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={userDropdownOpen}
+                      className="w-full justify-between"
                     >
-                      <Command shouldFilter={false}>
-                        <CommandInput
-                          placeholder="Search users..."
-                          value={userSearchTerm}
-                          onValueChange={setUserSearchTerm}
-                        />
-                        <CommandList>
-                          {loadingUsers ? (
-                            <CommandEmpty>Loading users...</CommandEmpty>
-                          ) : users.length === 0 ? (
-                            <CommandEmpty>
-                              {debouncedUserSearchTerm
-                                ? 'No users found matching your search.'
-                                : 'No users found.'}
-                            </CommandEmpty>
-                          ) : (
-                            <CommandGroup>
-                              <CommandItem
-                                value="all"
-                                onSelect={() => {
-                                  setFilterUserId('all')
-                                  setUserDropdownOpen(false)
-                                  setCurrentPage(1) // Reset to first page when filtering
-                                }}
-                              >
-                                <Check
-                                  className={`mr-2 h-4 w-4 ${
-                                    filterUserId === 'all'
-                                      ? 'opacity-100'
-                                      : 'opacity-0'
-                                  }`}
-                                />
-                                All Users
-                              </CommandItem>
-                              {users
-                                .filter(user => {
-                                  if (!debouncedUserSearchTerm) return true
-                                  const searchLower =
-                                    debouncedUserSearchTerm.toLowerCase()
-                                  return (
-                                    user.name
-                                      ?.toLowerCase()
-                                      .includes(searchLower) ||
-                                    user.username
-                                      ?.toLowerCase()
-                                      .includes(searchLower) ||
-                                    user.email
-                                      ?.toLowerCase()
-                                      .includes(searchLower)
-                                  )
-                                })
-                                .map(user => (
-                                  <CommandItem
-                                    key={user._id}
-                                    value={user._id}
-                                    onSelect={() => {
-                                      setFilterUserId(user._id)
-                                      setUserDropdownOpen(false)
-                                      setCurrentPage(1) // Reset to first page when filtering
-                                    }}
-                                  >
-                                    <Check
-                                      className={`mr-2 h-4 w-4 ${
-                                        filterUserId === user._id
-                                          ? 'opacity-100'
-                                          : 'opacity-0'
-                                      }`}
-                                    />
-                                    <div className="flex flex-col">
-                                      <span className="font-medium">
-                                        {user.name}
-                                      </span>
-                                      <span className="text-sm text-muted-foreground">
-                                        {user.username}{' '}
-                                        {user.email && `• ${user.email}`}
-                                      </span>
-                                    </div>
-                                  </CommandItem>
-                                ))}
-                            </CommandGroup>
-                          )}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                      {getSelectedUserName()}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[var(--radix-popover-trigger-width)] p-0"
+                    align="start"
+                  >
+                    <Command shouldFilter={false}>
+                      <CommandInput
+                        placeholder="Search users..."
+                        value={userSearchTerm}
+                        onValueChange={setUserSearchTerm}
+                      />
+                      <CommandList>
+                        {loadingUsers ? (
+                          <CommandEmpty>Loading users...</CommandEmpty>
+                        ) : users.length === 0 ? (
+                          <CommandEmpty>
+                            {debouncedUserSearchTerm
+                              ? 'No users found matching your search.'
+                              : 'No users found.'}
+                          </CommandEmpty>
+                        ) : (
+                          <CommandGroup>
+                            <CommandItem
+                              value="all"
+                              onSelect={() => {
+                                setFilterUserId('all')
+                                setUserDropdownOpen(false)
+                                setCurrentPage(1) // Reset to first page when filtering
+                              }}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  filterUserId === 'all'
+                                    ? 'opacity-100'
+                                    : 'opacity-0'
+                                }`}
+                              />
+                              All Users
+                            </CommandItem>
+                            {users
+                              .filter(user => {
+                                if (!debouncedUserSearchTerm) return true
+                                const searchLower =
+                                  debouncedUserSearchTerm.toLowerCase()
+                                return (
+                                  user.name
+                                    ?.toLowerCase()
+                                    .includes(searchLower) ||
+                                  user.username
+                                    ?.toLowerCase()
+                                    .includes(searchLower) ||
+                                  user.email
+                                    ?.toLowerCase()
+                                    .includes(searchLower)
+                                )
+                              })
+                              .map(user => (
+                                <CommandItem
+                                  key={user._id}
+                                  value={user._id}
+                                  onSelect={() => {
+                                    setFilterUserId(user._id)
+                                    setUserDropdownOpen(false)
+                                    setCurrentPage(1) // Reset to first page when filtering
+                                  }}
+                                >
+                                  <Check
+                                    className={`mr-2 h-4 w-4 ${
+                                      filterUserId === user._id
+                                        ? 'opacity-100'
+                                        : 'opacity-0'
+                                    }`}
+                                  />
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">
+                                      {user.name}
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {user.username}{' '}
+                                      {user.email && `• ${user.email}`}
+                                    </span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        )}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-                {/* Search Bar */}
-                <div className="space-y-2 flex-1">
-                  <Label className="text-sm font-medium">Search</Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                    <Input
-                      placeholder="Search notes or source..."
-                      className="pl-10"
-                      value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
-                    />
-                  </div>
+              {/* Search Bar */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Search</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                  <Input
+                    placeholder="Search notes or source..."
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                  />
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
+        {/* Timesheet List */}
+        {/* Desktop View */}
+        <Card className="hidden md:block">
+          <CardContent className="pt-6">
             {/* Table Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
               {/* Show Entries Dropdown */}
@@ -737,8 +739,8 @@ export default function TimesheetPage() {
 
             {/* Error Message */}
             {error && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-600">{error}</p>
+              <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                <p className="text-red-600 dark:text-red-400">{error}</p>
               </div>
             )}
 
@@ -883,7 +885,7 @@ export default function TimesheetPage() {
                       variant={currentPage === page ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => handlePageChange(page)}
-                      className="w-8 h-8 p-0"
+                      className="w-8 h-8 p-0 text-white"
                       disabled={loading}
                     >
                       {page}
@@ -903,6 +905,217 @@ export default function TimesheetPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Mobile View */}
+        <div className="block md:hidden space-y-4">
+          {/* Show Entries Dropdown */}
+          <div className="flex items-center gap-2 justify-end">
+            <Label
+              htmlFor="entries"
+              className="text-sm text-neutral-600 dark:text-neutral-400"
+            >
+              Show
+            </Label>
+            <Select
+              value={entriesPerPage.toString()}
+              onValueChange={handleEntriesChange}
+            >
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="30">30</SelectItem>
+                <SelectItem value="40">40</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <p className="text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* Mobile Card View */}
+          <div className="space-y-4">
+            {loading ? (
+              <div className="text-center py-8">
+                <span className="text-neutral-500">Loading timesheets...</span>
+              </div>
+            ) : timesheets.length === 0 ? (
+              <div className="text-center py-8">
+                <span className="text-neutral-500">No timesheets found</span>
+              </div>
+            ) : (
+              timesheets.map(timesheet => (
+                <Card key={timesheet._id} className="relative border border-neutral-200 dark:border-neutral-700">
+                  <CardContent className="pt-4 pb-4">
+                    <div className="space-y-3">
+                      {/* Employee */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Employee
+                        </div>
+                        <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                          {timesheet.userId.name}
+                        </div>
+                      </div>
+
+                      {/* Status */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Status
+                        </div>
+                        <div>{getStatusBadge(timesheet)}</div>
+                      </div>
+
+                      {/* Clock In */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Clock In
+                        </div>
+                        <div className="text-sm">
+                          <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                            {formatDate(timesheet.clockInAt)}
+                          </div>
+                          <div className="text-neutral-600 dark:text-neutral-400">
+                            {formatTime(timesheet.clockInAt)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Clock Out */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Clock Out
+                        </div>
+                        {timesheet.clockOutAt ? (
+                          <div className="text-sm">
+                            <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                              {formatDate(timesheet.clockOutAt)}
+                            </div>
+                            <div className="text-neutral-600 dark:text-neutral-400">
+                              {formatTime(timesheet.clockOutAt)}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-neutral-400">-</span>
+                        )}
+                      </div>
+
+                      {/* Duration */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Duration
+                        </div>
+                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {formatDuration(timesheet)}
+                        </div>
+                      </div>
+
+                      {/* Source */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Source
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {timesheet.source}
+                        </Badge>
+                      </div>
+
+                      {/* Notes */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Notes
+                        </div>
+                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {timesheet.notes || '-'}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                  {/* Action Button - Outside Card */}
+                  {canEditTimesheet && (
+                    <div className="absolute top-4 right-4">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            className="flex items-center gap-2"
+                            onClick={() => handleEditTimesheet(timesheet)}
+                          >
+                            <Edit className="h-4 w-4" />
+                            Edit Timesheet
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )}
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Showing entries info */}
+          <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+            Showing{' '}
+            {timesheets.length > 0
+              ? (currentPage - 1) * entriesPerPage + 1
+              : 0}{' '}
+            to {Math.min(currentPage * entriesPerPage, totalCount)} of{' '}
+            {totalCount} entries
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || loading}
+            >
+              Previous
+            </Button>
+
+            {/* Page numbers */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              page => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handlePageChange(page)}
+                  className="w-8 h-8 p-0 text-white"
+                  disabled={loading}
+                >
+                  {page}
+                </Button>
+              )
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages || loading}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
 
         {/* Edit Timesheet Modal */}
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>

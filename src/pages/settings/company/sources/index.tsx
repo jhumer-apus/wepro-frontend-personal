@@ -225,8 +225,31 @@ export default function CompanySourcesPage() {
           )}
         </div>
 
-        {/* Content Area */}
+        {/* Search Component */}
         <Card>
+          <CardContent className="pt-6">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  Search
+                </span>
+              </div>
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                <Input
+                  placeholder="Search sources..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Content Area */}
+        {/* Desktop View */}
+        <Card className="hidden md:block">
           <CardHeader>
             <CardTitle className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
               Lead Sources
@@ -262,17 +285,6 @@ export default function CompanySourcesPage() {
                 <Label className="text-sm text-neutral-600 dark:text-neutral-400">
                   entries
                 </Label>
-              </div>
-
-              {/* Search Bar */}
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                <Input
-                  placeholder="Search sources..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                />
               </div>
             </div>
 
@@ -452,7 +464,7 @@ export default function CompanySourcesPage() {
                         }
                         size="sm"
                         onClick={() => handlePageChange(pageNum)}
-                        className="w-8 h-8 p-0"
+                        className="w-8 h-8 p-0 text-white"
                       >
                         {pageNum}
                       </Button>
@@ -472,6 +484,248 @@ export default function CompanySourcesPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Mobile View */}
+        <div className="block md:hidden space-y-4">
+          {/* Show Entries Dropdown */}
+          <div className="flex items-center gap-2 justify-end">
+            <Label
+              htmlFor="entries"
+              className="text-sm text-neutral-600 dark:text-neutral-400"
+            >
+              Show
+            </Label>
+            <Select
+              value={entriesPerPage.toString()}
+              onValueChange={handleEntriesChange}
+            >
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="30">30</SelectItem>
+                <SelectItem value="40">40</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <p className="text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* Mobile Card View */}
+          <div className="space-y-4">
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
+                  <span className="text-neutral-500">Loading sources...</span>
+                </div>
+              </div>
+            ) : currentSources.length === 0 ? (
+              <div className="text-center py-8">
+                <span className="text-neutral-500">No sources found</span>
+              </div>
+            ) : (
+              currentSources.map(source => (
+                <Card key={source._id} className="relative border border-neutral-200 dark:border-neutral-700">
+                  <CardContent className="pt-4 pb-4">
+                    <div className="space-y-3">
+                      {/* Source Name */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Source Name
+                        </div>
+                        <div>
+                          <div className="font-semibold text-neutral-900 dark:text-neutral-100">
+                            {source.name}
+                          </div>
+                          <div className="text-sm text-neutral-500 dark:text-neutral-400">
+                            {source.weproUsername}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Status
+                        </div>
+                        <Badge
+                          className={getStatusBadgeColor(
+                            source.status === 'Active'
+                          )}
+                        >
+                          {source.status}
+                        </Badge>
+                      </div>
+
+                      {/* Email */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Email
+                        </div>
+                        <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                          {source.email}
+                        </div>
+                      </div>
+
+                      {/* Phone */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Phone
+                        </div>
+                        <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                          {source.phoneNumber}
+                        </div>
+                      </div>
+
+                      {/* Location */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Location
+                        </div>
+                        <div className="text-sm">
+                          <div className="text-neutral-900 dark:text-neutral-100">
+                            {source.city}, {source.state}
+                          </div>
+                          <div className="text-neutral-500 dark:text-neutral-400">
+                            {source.zipCode}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Created At */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Created At
+                        </div>
+                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {formatDate(source.createdAt)}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                  {/* Action Button - Outside Card */}
+                  <div className="absolute top-4 right-4">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {checkPermission('MOD008', 'view') && (
+                          <DropdownMenuItem
+                            className="flex items-center gap-2"
+                            onClick={() =>
+                              router.push(
+                                `/settings/company/sources/${source._id}/view`
+                              )
+                            }
+                          >
+                            <Eye className="h-4 w-4" />
+                            View Details
+                          </DropdownMenuItem>
+                        )}
+                        {checkPermission('MOD008', 'edit') && (
+                          <DropdownMenuItem
+                            className="flex items-center gap-2"
+                            onClick={() =>
+                              router.push(
+                                `/settings/company/sources/create?id=${source._id}`
+                              )
+                            }
+                          >
+                            <Edit className="h-4 w-4" />
+                            Edit Source
+                          </DropdownMenuItem>
+                        )}
+                        {checkPermission('MOD008', 'delete') && (
+                          <DropdownMenuItem
+                            className="flex items-center gap-2 text-red-600"
+                            onClick={() => handleDeleteSource(source)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete Source
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Showing entries info */}
+          <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{' '}
+            {Math.min(currentPage * entriesPerPage, totalCount)} of{' '}
+            {totalCount} entries
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || loading}
+            >
+              Previous
+            </Button>
+
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum
+                if (totalPages <= 5) {
+                  pageNum = i + 1
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i
+                } else {
+                  pageNum = currentPage - 2 + i
+                }
+
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handlePageChange(pageNum)}
+                    className="w-8 h-8 p-0 text-white"
+                    disabled={loading}
+                  >
+                    {pageNum}
+                  </Button>
+                )
+              })}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages || loading}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Delete Confirmation Dialog */}

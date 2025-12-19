@@ -76,4 +76,5 @@ export interface SourceFormData {
   transactionPayFee: string
   phoneMasking: string
   callRouting: string
+  clientTenantId?: string
 }

@@ -100,6 +100,7 @@ export default function CreateEmailTemplatePage(): React.JSX.Element {
 
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [formData, setFormData] = useState<EmailTemplateFormData>({
     title: '',
     fromEmail: '',
@@ -207,6 +208,7 @@ export default function CreateEmailTemplatePage(): React.JSX.Element {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitted(true)
 
     if (!tenantId) {
       toast.error('Tenant ID is required')
@@ -372,7 +374,12 @@ export default function CreateEmailTemplatePage(): React.JSX.Element {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          onInvalid={() => setSubmitted(true)}
+          className="space-y-6"
+          data-submitted={submitted}
+        >
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -384,7 +391,7 @@ export default function CreateEmailTemplatePage(): React.JSX.Element {
               {/* Title */}
               <div className="space-y-2">
                 <Label htmlFor="title" className="text-sm font-medium">
-                  Title
+                  Title *
                 </Label>
                 <Input
                   id="title"
@@ -392,6 +399,12 @@ export default function CreateEmailTemplatePage(): React.JSX.Element {
                   placeholder="Enter email template title"
                   value={formData.title}
                   onChange={e => handleInputChange('title', e.target.value)}
+                required
+                className={
+                  submitted && !formData.title.trim()
+                    ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                    : ''
+                }
                 />
               </div>
 
@@ -399,7 +412,7 @@ export default function CreateEmailTemplatePage(): React.JSX.Element {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="emailType" className="text-sm font-medium">
-                    Email Type
+                    Email Type *
                   </Label>
                   <Select
                     value={formData.emailType}
@@ -407,7 +420,13 @@ export default function CreateEmailTemplatePage(): React.JSX.Element {
                       handleInputChange('emailType', value)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger
+                      className={
+                        submitted && !formData.emailType
+                          ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                          : ''
+                      }
+                    >
                       <SelectValue placeholder="Select email type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -489,7 +508,7 @@ export default function CreateEmailTemplatePage(): React.JSX.Element {
               {/* Subject */}
               <div className="space-y-2">
                 <Label htmlFor="subject" className="text-sm font-medium">
-                  Subject
+                  Subject *
                 </Label>
                 <Input
                   id="subject"
@@ -497,6 +516,12 @@ export default function CreateEmailTemplatePage(): React.JSX.Element {
                   placeholder="Enter email subject"
                   value={formData.subject}
                   onChange={e => handleInputChange('subject', e.target.value)}
+                required
+                className={
+                  submitted && !formData.subject.trim()
+                    ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                    : ''
+                }
                 />
               </div>
 
@@ -524,7 +549,7 @@ export default function CreateEmailTemplatePage(): React.JSX.Element {
               {/* Email Body */}
               <div className="space-y-2">
                 <Label htmlFor="body" className="text-sm font-medium">
-                  Email Body
+                  Email Body *
                 </Label>
                 {formData.bodyType === 'html' ? (
                   <div>
@@ -545,7 +570,12 @@ export default function CreateEmailTemplatePage(): React.JSX.Element {
                     placeholder="Enter email content. Use variables like {{customerName}}, {{serviceType}}, etc."
                     value={formData.body}
                     onChange={e => handleInputChange('body', e.target.value)}
-                    className="min-h-[200px]"
+                    required
+                    className={`min-h-[200px] ${
+                      submitted && !formData.body.trim()
+                        ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500 !ring-red-500 !focus-visible:ring-2'
+                        : ''
+                    }`}
                   />
                 )}
                 <p className="text-sm text-neutral-500 dark:text-neutral-400">

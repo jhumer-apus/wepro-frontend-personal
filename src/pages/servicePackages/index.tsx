@@ -325,8 +325,8 @@ export default function ServicePackagesPage(): React.JSX.Element {
           </Button>
         </div>
 
-        {/* Service Packages Table */}
-        <Card>
+        {/* Service Packages Table - Desktop View */}
+        <Card className="hidden md:block">
           <CardContent className="pt-6">
             {/* Table Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -620,6 +620,306 @@ export default function ServicePackagesPage(): React.JSX.Element {
             </div>
           </CardContent>
         </Card>
+
+        {/* Mobile View */}
+        <div className="block md:hidden space-y-4">
+          {/* Show Entries Dropdown */}
+          <div className="flex items-center gap-2 justify-end">
+            <Label
+              htmlFor="entries"
+              className="text-sm text-neutral-600 dark:text-neutral-400"
+            >
+              Show
+            </Label>
+            <Select
+              value={entriesPerPage.toString()}
+              onValueChange={handleEntriesChange}
+            >
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="30">30</SelectItem>
+                <SelectItem value="40">40</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                  <X className="w-6 h-6 text-red-500" />
+                </div>
+                <span className="font-medium text-red-600 dark:text-red-400">{error}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Card View */}
+          <div className="space-y-4">
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-neutral-500">Loading service packages...</span>
+                </div>
+              </div>
+            ) : currentPackages.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                    <Package className="w-6 h-6 text-neutral-400" />
+                  </div>
+                  <span className="font-medium text-neutral-600 dark:text-neutral-400">
+                    No service packages found
+                  </span>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-500">
+                    Create your first service package to get started
+                  </p>
+                </div>
+              </div>
+            ) : (
+              currentPackages.map(pkg => (
+                <Card key={pkg._id} className="relative border border-neutral-200 dark:border-neutral-700">
+                  <CardContent className="pt-4 pb-4">
+                    <div className="space-y-3">
+                      {/* Package Title */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Package Title
+                        </div>
+                        <div className="font-semibold text-neutral-900 dark:text-neutral-100">
+                          {pkg.title}
+                        </div>
+                        {pkg.description && (
+                          <div className="text-sm text-neutral-500 dark:text-neutral-500 mt-1 line-clamp-2">
+                            {pkg.description}
+                          </div>
+                        )}
+                        <div className="text-xs text-neutral-500 dark:text-neutral-500 mt-1">
+                          ID: {pkg._id.slice(-6)}
+                        </div>
+                      </div>
+
+                      {/* Package Code */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Package Code
+                        </div>
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {pkg.packageCode}
+                        </Badge>
+                      </div>
+
+                      {/* Charge Model */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Charge Model
+                        </div>
+                        <Badge
+                          className={getChargeModelBadgeColor(pkg.chargeModel)}
+                        >
+                          {pkg.chargeModel.charAt(0).toUpperCase() +
+                            pkg.chargeModel.slice(1)}
+                        </Badge>
+                      </div>
+
+                      {/* Pricing */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Pricing
+                        </div>
+                        <div className="space-y-1">
+                          <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                            {formatPrice(pkg.chargeAmount)}
+                          </div>
+                          <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                            {pkg.formattedPricing.description}
+                          </div>
+                          {pkg.minimumMonthlySpend > 0 && (
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                              Min: {formatPrice(pkg.minimumMonthlySpend)}/month
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Features */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Features
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {pkg.features.slice(0, 3).map((feature, index) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {feature}
+                            </Badge>
+                          ))}
+                          {pkg.features.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{pkg.features.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Status */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Status
+                        </div>
+                        <Badge className={getStatusBadgeColor(pkg.isActive)}>
+                          {pkg.isActive ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+
+                      {/* Created At */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Created At
+                        </div>
+                        <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                          {formatDate(pkg.createdAt)}
+                        </div>
+                      </div>
+
+                      {/* Is Public */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Is Public
+                        </div>
+                        <Badge
+                          className={
+                            pkg.isPublic
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+                          }
+                        >
+                          {pkg.isPublic ? 'Public' : 'Private'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                  {/* Action Button - Outside Card */}
+                  <div className="absolute top-4 right-4">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          className="flex items-center gap-2"
+                          onClick={() =>
+                            router.push(`/servicePackages/${pkg._id}/view`)
+                          }
+                        >
+                          <Eye className="h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="flex items-center gap-2"
+                          onClick={() =>
+                            router.push(`/servicePackages/create?id=${pkg._id}`)
+                          }
+                        >
+                          <Edit className="h-4 w-4" />
+                          Edit Package
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="flex items-center gap-2"
+                          onClick={() => handleCalculatePricing(pkg)}
+                        >
+                          <Calculator className="h-4 w-4" />
+                          Calculate Pricing
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="flex items-center gap-2 text-red-600"
+                          onClick={() => handleDeletePackage(pkg)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete Package
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Showing entries info */}
+          <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{' '}
+            {Math.min(currentPage * entriesPerPage, totalCount)} of{' '}
+            {totalCount} entries
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || loading}
+            >
+              Previous
+            </Button>
+
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum
+                if (totalPages <= 5) {
+                  pageNum = i + 1
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i
+                } else {
+                  pageNum = currentPage - 2 + i
+                }
+
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handlePageChange(pageNum)}
+                    className="w-8 h-8 p-0 text-white"
+                    disabled={loading}
+                  >
+                    {pageNum}
+                  </Button>
+                )
+              })}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages || loading}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Delete Confirmation Dialog */}

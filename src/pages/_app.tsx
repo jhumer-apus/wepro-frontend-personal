@@ -8,6 +8,7 @@ import { store, persistor } from '../store'
 import { AuthGuard } from '../components/AuthGuard'
 import { useRouter } from 'next/router'
 import { LoadScript } from '@react-google-maps/api'
+import { ThemeProvider } from 'next-themes'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -49,7 +50,9 @@ export default function App(props: AppProps) {
   return (
     <Provider store={store}>
       <PersistGate loading={<LoadingComponent />} persistor={persistor}>
-        <AppContent {...props} />
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <AppContent {...props} />
+        </ThemeProvider>
       </PersistGate>
     </Provider>
   )

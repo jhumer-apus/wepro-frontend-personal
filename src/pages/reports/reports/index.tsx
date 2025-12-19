@@ -251,11 +251,11 @@ export default function ReportsTabPage() {
       </Head>
       <div className="space-y-6">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1">
           <Button
             variant="ghost"
             onClick={() => handleTabClick('/reports/user-activities')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <Users className="w-4 h-4 mr-2" />
             User Activities
@@ -263,7 +263,7 @@ export default function ReportsTabPage() {
           <Button
             variant="ghost"
             onClick={() => handleTabClick('/reports/my-activities')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <User className="w-4 h-4 mr-2" />
             My Activities
@@ -271,7 +271,7 @@ export default function ReportsTabPage() {
           <Button
             variant="default"
             onClick={() => handleTabClick('/reports/reports')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center text-white"
           >
             <BarChart3 className="w-4 h-4 mr-2" />
             Reports

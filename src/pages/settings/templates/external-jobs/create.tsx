@@ -85,6 +85,7 @@ export default function CreateExternalJobTemplatePage(): React.JSX.Element {
 
   // Check if we're editing (id exists in URL)
   const isEditing = Boolean(id)
+  const [submitted, setSubmitted] = useState(false)
 
   // Add custom styles for ReactQuill
   useEffect(() => {
@@ -266,7 +267,10 @@ export default function CreateExternalJobTemplatePage(): React.JSX.Element {
   }, [id, isEditing])
 
   const validateForm = () => {
-    const errors: { title?: string; template?: string } = {}
+    const errors: {
+      title?: string
+      template?: string
+    } = {}
 
     // Validate title
     if (!formData.title.trim()) {
@@ -288,6 +292,7 @@ export default function CreateExternalJobTemplatePage(): React.JSX.Element {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitted(true)
 
     if (!tenantId) {
       toast.error('Tenant ID is required')
@@ -484,7 +489,12 @@ export default function CreateExternalJobTemplatePage(): React.JSX.Element {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          onInvalid={() => setSubmitted(true)}
+          className="space-y-6"
+          data-submitted={submitted}
+        >
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -513,8 +523,8 @@ export default function CreateExternalJobTemplatePage(): React.JSX.Element {
                   onChange={e => handleInputChange('title', e.target.value)}
                   required
                   className={
-                    validationErrors.title
-                      ? 'border-red-500 focus:border-red-500'
+                    submitted && !formData.title.trim()
+                      ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                       : ''
                   }
                 />
@@ -533,23 +543,23 @@ export default function CreateExternalJobTemplatePage(): React.JSX.Element {
                 >
                   Template Sources
                 </Label>
-                <Select
-                  value={formData.templateSources}
-                  onValueChange={(value: 'All' | 'Specific') => {
-                    handleInputChange('templateSources', value)
-                    if (value === 'All') {
-                      handleInputChange('sourceCodes', [])
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select template sources" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">All Sources</SelectItem>
-                    <SelectItem value="Specific">Specific Sources</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <Select
+                    value={formData.templateSources}
+                    onValueChange={(value: 'All' | 'Specific') => {
+                      handleInputChange('templateSources', value)
+                      if (value === 'All') {
+                        handleInputChange('sourceCodes', [])
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select template sources" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Sources</SelectItem>
+                      <SelectItem value="Specific">Specific Sources</SelectItem>
+                    </SelectContent>
+                  </Select>
               </div>
 
               {/* Source Codes - Only show when Specific is selected */}
@@ -565,7 +575,7 @@ export default function CreateExternalJobTemplatePage(): React.JSX.Element {
                         variant="outline"
                         role="combobox"
                         aria-expanded={sourceCodesOpen}
-                        className="w-full justify-between"
+                          className="w-full justify-between"
                       >
                         {formData.sourceCodes.length > 0
                           ? `${formData.sourceCodes.length} source(s) selected`
@@ -648,7 +658,13 @@ export default function CreateExternalJobTemplatePage(): React.JSX.Element {
                     {formData.template.length.toLocaleString()}/50,000
                   </span>
                 </div>
-                <div>
+                <div
+                  className={`${
+                    submitted && !formData.template.trim()
+                      ? 'border border-red-500 rounded-md !focus-visible:ring-red-500 !ring-red-500 !focus-visible:ring-2'
+                      : ''
+                  }`}
+                >
                   <ReactQuill
                     theme="snow"
                     value={formData.template}
@@ -657,7 +673,11 @@ export default function CreateExternalJobTemplatePage(): React.JSX.Element {
                     formats={quillFormats}
                     placeholder="Enter template content. Use variables like {{sourceName}}, {{sourceJobId}}, {{customerName}}, etc."
                     style={{ minHeight: '200px' }}
-                    className={`bg-white dark:bg-gray-800 ${validationErrors.template ? 'border-red-500' : ''}`}
+                    className={`bg-white dark:bg-gray-800 ${
+                      submitted && !formData.template.trim()
+                        ? 'border-red-500 !focus-visible:ring-red-500 !ring-red-500 !focus-visible:ring-2'
+                        : ''
+                    }`}
                   />
                 </div>
                 {validationErrors.template && (

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import { useTheme } from 'next-themes'
 import { Button } from '@/src/components/ui/button'
 import {
   Card,
@@ -13,7 +14,7 @@ import { Label } from '@/src/components/ui/label'
 import { Switch } from '@/src/components/ui/switch'
 import { Alert, AlertDescription } from '@/src/components/ui/alert'
 import { Loader2, MapPin, ArrowLeft, Building2, Shield } from 'lucide-react'
-
+import { toast as toastSonner } from 'sonner'
 import { toast } from '@/src/components/ui/use-toast'
 import { GoogleMap, Marker, StandaloneSearchBox } from '@react-google-maps/api'
 import { apiService } from '@/src/services/api'
@@ -88,6 +89,12 @@ export default function CreateFranchisePage() {
   const { id } = router.query
   const isEditMode = Boolean(id)
   const { checkPermission } = usePermissions()
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const mapRef = useRef<google.maps.Map | null>(null)
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null)
@@ -446,10 +453,12 @@ export default function CreateFranchisePage() {
         `Error ${isEditMode ? 'updating' : 'creating'} franchise:`,
         error
       )
-      toast({
-        title: 'Error',
-        description: `Failed to ${isEditMode ? 'update' : 'create'} franchise. Please try again.`,
-        variant: 'destructive',
+      toastSonner.error(`Failed to ${isEditMode ? 'update' : 'create'} franchise. Please try again.`, {
+        description:
+          error.response?.data?.details?.[0]?.message ||
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          'An error occurred while saving the changes.',
       })
     } finally {
       setIsLoading(false)
@@ -677,81 +686,81 @@ export default function CreateFranchisePage() {
                     </div>
 
                     {/* Location Details - Integrated into Basic Information */}
-                    <div className="pt-4 border-t border-gray-200">
+                    <div className="pt-4 border-t border-gray-200 dark:border-neutral-700">
                       <div className="flex items-center gap-2 mb-3">
-                        <MapPin className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-medium text-gray-700">
+                        <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           Location Details *
                         </span>
                       </div>
 
                       <div
-                        className={`rounded-lg p-3 space-y-2 text-sm ${
+                        className={`rounded-lg p-3 space-y-2 text-sm border ${
                           errors.lat
-                            ? 'bg-red-50 border border-red-200'
-                            : 'bg-blue-50'
+                            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                            : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/30'
                         }`}
                       >
                         <div className="flex justify-between">
-                          <span className="text-gray-600 font-medium">
+                          <span className="text-gray-600 dark:text-gray-400 font-medium">
                             Address:
                           </span>
-                          <span className="text-gray-900">
+                          <span className="text-gray-900 dark:text-gray-100">
                             {formData.address || '--'}
                           </span>
                         </div>
 
                         <div className="flex justify-between">
-                          <span className="text-gray-600 font-medium">
+                          <span className="text-gray-600 dark:text-gray-400 font-medium">
                             Address Line 2:
                           </span>
-                          <span className="text-gray-900">
+                          <span className="text-gray-900 dark:text-gray-100">
                             {formData.addressLine2 || '--'}
                           </span>
                         </div>
 
                         <div className="flex justify-between">
-                          <span className="text-gray-600 font-medium">
+                          <span className="text-gray-600 dark:text-gray-400 font-medium">
                             City:
                           </span>
-                          <span className="text-gray-900">
+                          <span className="text-gray-900 dark:text-gray-100">
                             {formData.city || '--'}
                           </span>
                         </div>
 
                         <div className="flex justify-between">
-                          <span className="text-gray-600 font-medium">
+                          <span className="text-gray-600 dark:text-gray-400 font-medium">
                             State:
                           </span>
-                          <span className="text-gray-900">
+                          <span className="text-gray-900 dark:text-gray-100">
                             {formData.state || '--'}
                           </span>
                         </div>
 
                         <div className="flex justify-between">
-                          <span className="text-gray-600 font-medium">
+                          <span className="text-gray-600 dark:text-gray-400 font-medium">
                             ZIP:
                           </span>
-                          <span className="text-gray-900">
+                          <span className="text-gray-900 dark:text-gray-100">
                             {formData.zipCode || '--'}
                           </span>
                         </div>
 
                         <div className="flex justify-between">
-                          <span className="text-gray-600 font-medium">
+                          <span className="text-gray-600 dark:text-gray-400 font-medium">
                             Country:
                           </span>
-                          <span className="text-gray-900">
+                          <span className="text-gray-900 dark:text-gray-100">
                             {formData.country || '--'}
                           </span>
                         </div>
 
-                        <div className="pt-2 border-t border-blue-200">
+                        <div className="pt-2 border-t border-blue-200 dark:border-blue-800/30">
                           <div className="flex justify-between">
-                            <span className="text-gray-600 font-medium">
+                            <span className="text-gray-600 dark:text-gray-400 font-medium">
                               Coordinates:
                             </span>
-                            <span className="text-gray-900">
+                            <span className="text-gray-900 dark:text-gray-100">
                               {formData.lat && formData.lng
                                 ? `${parseFloat(formData.lat).toFixed(4)}, ${parseFloat(formData.lng).toFixed(4)}`
                                 : '--'}
@@ -766,7 +775,7 @@ export default function CreateFranchisePage() {
                       </div>
 
                       {errors.lat && (
-                        <p className="text-sm text-red-500 mt-2">
+                        <p className="text-sm text-red-500 dark:text-red-400 mt-2">
                           {errors.lat}
                         </p>
                       )}
@@ -824,11 +833,95 @@ export default function CreateFranchisePage() {
                             onClick={onMapClick}
                             options={{
                               mapTypeId: 'roadmap',
-                              styles: [
+                              styles: mounted && resolvedTheme === 'dark' ? [
+                                { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+                                { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+                                { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
                                 {
-                                  featureType: 'poi',
-                                  elementType: 'labels',
-                                  stylers: [{ visibility: 'off' }],
+                                    featureType: 'administrative.locality',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#d59563' }]
+                                },
+                                {
+                                    featureType: 'poi',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#d59563' }]
+                                },
+                                {
+                                    featureType: 'poi.park',
+                                    elementType: 'geometry',
+                                    stylers: [{ color: '#263c3f' }]
+                                },
+                                {
+                                    featureType: 'poi.park',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#6b9a76' }]
+                                },
+                                {
+                                    featureType: 'road',
+                                    elementType: 'geometry',
+                                    stylers: [{ color: '#38414e' }]
+                                },
+                                {
+                                    featureType: 'road',
+                                    elementType: 'geometry.stroke',
+                                    stylers: [{ color: '#212a37' }]
+                                },
+                                {
+                                    featureType: 'road',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#9ca5b3' }]
+                                },
+                                {
+                                    featureType: 'road.highway',
+                                    elementType: 'geometry',
+                                    stylers: [{ color: '#746855' }]
+                                },
+                                {
+                                    featureType: 'road.highway',
+                                    elementType: 'geometry.stroke',
+                                    stylers: [{ color: '#1f2835' }]
+                                },
+                                {
+                                    featureType: 'road.highway',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#f3d19c' }]
+                                },
+                                {
+                                    featureType: 'transit',
+                                    elementType: 'geometry',
+                                    stylers: [{ color: '#2f3948' }]
+                                },
+                                {
+                                    featureType: 'transit.station',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#d59563' }]
+                                },
+                                {
+                                    featureType: 'water',
+                                    elementType: 'geometry',
+                                    stylers: [{ color: '#17263c' }]
+                                },
+                                {
+                                    featureType: 'water',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#515c6d' }]
+                                },
+                                {
+                                    featureType: 'water',
+                                    elementType: 'labels.text.stroke',
+                                    stylers: [{ color: '#17263c' }]
+                                },
+                                {
+                                    featureType: 'poi',
+                                    elementType: 'labels',
+                                    stylers: [{ visibility: 'off' }],
+                                },
+                              ] : [
+                                {
+                                    featureType: 'poi',
+                                    elementType: 'labels',
+                                    stylers: [{ visibility: 'off' }],
                                 },
                               ],
                             }}
@@ -847,10 +940,10 @@ export default function CreateFranchisePage() {
                         </div>
 
                         {!mapLoaded && (
-                          <div className="flex items-center justify-center w-full h-full bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-center w-full h-full bg-gray-50 dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
                             <div className="text-center">
-                              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-gray-400" />
-                              <p className="text-gray-500">Loading map...</p>
+                              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-gray-400 dark:text-neutral-500" />
+                              <p className="text-gray-500 dark:text-gray-400">Loading map...</p>
                             </div>
                           </div>
                         )}
@@ -874,7 +967,7 @@ export default function CreateFranchisePage() {
               <Button
                 type="submit"
                 disabled={isLoading || isFetching}
-                className="min-w-[120px]"
+                className="min-w-[120px] text-white"
               >
                 {isLoading ? (
                   <>

@@ -12,7 +12,9 @@ import { setUserData } from '@/src/store/slices/userSlice'
 import { RootState } from '@/src/store'
 import { apiService } from '@/src/services/api'
 import { useConfig } from '@/src/hooks/useConfig'
+import { useTheme } from 'next-themes'
 import logo from '../../public/logo.png'
+import logoAlt from '../../public/logo-alt.png'
 
 export default function Login(): React.JSX.Element {
   const router = useRouter()
@@ -22,6 +24,8 @@ export default function Login(): React.JSX.Element {
   )
   const userData = useAppSelector((state: RootState) => state.user)
   const config = useConfig()
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -30,6 +34,11 @@ export default function Login(): React.JSX.Element {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [focusedInput, setFocusedInput] = useState<string | null>(null)
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -113,7 +122,7 @@ export default function Login(): React.JSX.Element {
         {/* Header with Logo */}
         <div className="absolute top-6 left-6 flex items-center space-x-3 z-10">
           <img
-            src={logo.src}
+            src={mounted && resolvedTheme === 'dark' ? logoAlt.src : logo.src}
             alt="WePro Logo"
             className="h-8 w-auto"
             draggable={false}
@@ -121,14 +130,14 @@ export default function Login(): React.JSX.Element {
         </div>
 
         {/* Left Side - Login Form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white dark:bg-neutral-900">
           <div className="w-full max-w-md">
-            <Card className="border-0 shadow-none">
+            <Card className="border-0 shadow-none bg-white dark:bg-neutral-900">
               <CardContent className="p-6">
-                <h1 className="text-3xl font-bold text-black mb-2 text-center">
+                <h1 className="text-3xl font-bold text-black dark:text-white mb-2 text-center">
                   Welcome Back
                 </h1>
-                <p className="text-gray-600 mb-20 text-center">
+                <p className="text-gray-600 dark:text-gray-400 mb-20 text-center">
                   Sign in to your WePro account
                 </p>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -136,7 +145,7 @@ export default function Login(): React.JSX.Element {
                   <div className="space-y-2">
                     <Label
                       htmlFor="username"
-                      className={`text-sm font-medium ${focusedInput === 'username' ? 'text-[#4a9430]' : 'text-black'}`}
+                      className={`text-sm font-medium ${focusedInput === 'username' ? 'text-[#4a9430]' : 'text-black dark:text-gray-300'}`}
                     >
                       Username
                     </Label>
@@ -164,7 +173,7 @@ export default function Login(): React.JSX.Element {
                   <div className="space-y-2">
                     <Label
                       htmlFor="password"
-                      className={`text-sm font-medium ${focusedInput === 'password' ? 'text-[#4a9430]' : 'text-black'}`}
+                      className={`text-sm font-medium ${focusedInput === 'password' ? 'text-[#4a9430]' : 'text-black dark:text-gray-300'}`}
                     >
                       Password
                     </Label>
@@ -188,7 +197,7 @@ export default function Login(): React.JSX.Element {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -201,7 +210,7 @@ export default function Login(): React.JSX.Element {
 
                   {/* Error Message */}
                   {error && (
-                    <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3">
+                    <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
                       {error}
                     </div>
                   )}
@@ -231,7 +240,7 @@ export default function Login(): React.JSX.Element {
                   >
                     Forgot your password?
                   </a>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
                     Need help?{' '}
                     <a
                       href="#"

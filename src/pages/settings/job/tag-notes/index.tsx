@@ -162,6 +162,7 @@ export default function JobTagNotesPage() {
   const [editingJobTagNote, setEditingJobTagNote] = useState<JobTagNote | null>(
     null
   )
+  const [jobTagNoteSubmitted, setJobTagNoteSubmitted] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     job_tag_code: '',
@@ -355,6 +356,7 @@ export default function JobTagNotesPage() {
       display_order: 1,
       content: '',
     })
+    setJobTagNoteSubmitted(false)
     setJobTagNoteModalOpen(true)
     fetchJobTags()
   }
@@ -368,11 +370,13 @@ export default function JobTagNotesPage() {
       display_order: jobTagNote.display_order,
       content: jobTagNote.content,
     })
+    setJobTagNoteSubmitted(false)
     setJobTagNoteModalOpen(true)
   }
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setJobTagNoteSubmitted(true)
 
     if (!formData.title.trim()) {
       toast.error('Title is required', {
@@ -452,14 +456,10 @@ export default function JobTagNotesPage() {
       const action = isEditMode ? 'updating' : 'creating'
       console.error(`Error ${action} job tag note:`, err)
       toast.error(`Failed to ${action} job tag note`, {
-        description: `An error occurred while ${action} the job tag note.`,
-        style: {
-          backgroundColor: '#ef4444',
-          color: '#ffffff',
-          border: '1px solid #f87171',
-        },
-        className: 'text-white',
-        descriptionClassName: 'text-white',
+        description: err.response?.data?.details?.[0]?.message ||
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        'An error occurred while saving the changes.'
       })
     } finally {
       setSubmitting(false)
@@ -537,10 +537,34 @@ export default function JobTagNotesPage() {
           )}
         </div>
 
+        {/* Search Component */}
+        {tenantId && (
+          <Card>
+            <CardContent className="pt-6">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    Search
+                  </span>
+                </div>
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                  <Input
+                    placeholder="Search notes, scripts, templates..."
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Content Area */}
-        <Card className="pt-6">
-          <CardContent>
-            {!tenantId ? (
+        {!tenantId ? (
+          <Card className="pt-6">
+            <CardContent>
               <div className="text-center py-12">
                 <Building2 className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
@@ -559,8 +583,13 @@ export default function JobTagNotesPage() {
                   Refresh Page
                 </Button>
               </div>
-            ) : (
-              <>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Desktop View */}
+            <Card className="hidden md:block pt-6">
+              <CardContent>
                 {/* Table Controls */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                   {/* Show Entries Dropdown */}
@@ -590,17 +619,6 @@ export default function JobTagNotesPage() {
                     <Label className="text-sm text-neutral-600 dark:text-neutral-400">
                       entries
                     </Label>
-                  </div>
-
-                  {/* Search Bar */}
-                  <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                    <Input
-                      placeholder="Search notes, scripts, templates..."
-                      className="pl-10"
-                      value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
-                    />
                   </div>
                 </div>
 
@@ -800,7 +818,7 @@ export default function JobTagNotesPage() {
                               }
                               size="sm"
                               onClick={() => handlePageChange(pageNum)}
-                              className="w-8 h-8 p-0"
+                              className="w-8 h-8 p-0 text-white"
                             >
                               {pageNum}
                             </Button>
@@ -821,10 +839,266 @@ export default function JobTagNotesPage() {
                     </Button>
                   </div>
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+
+            {/* Mobile View */}
+            <div className="block md:hidden space-y-4">
+              {/* Show Entries Dropdown */}
+              <div className="flex items-center gap-2 justify-end">
+                <Label
+                  htmlFor="entries"
+                  className="text-sm text-neutral-600 dark:text-neutral-400"
+                >
+                  Show
+                </Label>
+                <Select
+                  value={pagination.current.limit.toString()}
+                  onValueChange={handleEntriesChange}
+                >
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="30">30</SelectItem>
+                    <SelectItem value="40">40</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                  <p className="text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              )}
+
+              {/* Mobile Card View */}
+              <div className="space-y-4">
+                {loading ? (
+                  <div className="text-center py-8">
+                    <span className="text-neutral-500">Loading job tag notes...</span>
+                  </div>
+                ) : jobTagNotes.length === 0 ? (
+                  <div className="text-center py-8">
+                    <span className="text-neutral-500">No job tag notes found</span>
+                  </div>
+                ) : (
+                  jobTagNotes.map(jobTagNote => (
+                    <Card key={jobTagNote._id} className="relative border border-neutral-200 dark:border-neutral-700">
+                      <CardContent className="pt-4 pb-4">
+                        <div className="space-y-3">
+                          {/* Title */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Title
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-medium text-neutral-900 dark:text-neutral-100">
+                                {jobTagNote.title}
+                              </span>
+                              <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                                Code: {jobTagNote.code}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Job Tag Code */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Job Tag Code
+                            </div>
+                            <Badge variant="outline" className="font-mono">
+                              {jobTagNote.job_tag_code}
+                            </Badge>
+                          </div>
+
+                          {/* Content */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Content
+                            </div>
+                            <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                              {jobTagNote.content}
+                            </div>
+                          </div>
+
+                          {/* Display Order */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Display Order
+                            </div>
+                            <Badge variant="outline">
+                              {jobTagNote.display_order}
+                            </Badge>
+                          </div>
+
+                          {/* Type - Conditional */}
+                          {checkPermission('MOD024', 'view') && (
+                            <div>
+                              <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                                Type
+                              </div>
+                              <Badge
+                                variant={
+                                  jobTagNote.isP1 ? 'default' : 'secondary'
+                                }
+                              >
+                                {jobTagNote.isP1 ? 'Default' : 'Custom'}
+                              </Badge>
+                            </div>
+                          )}
+
+                          {/* Created At */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Created At
+                            </div>
+                            <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                              {formatDate(jobTagNote.createdAt)}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                      {/* Action Button - Outside Card */}
+                      <div className="absolute top-4 right-4">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              disabled={
+                                (jobTagNote.isP1 &&
+                                  !isSuperAdmin('MOD023')) ||
+                                (!checkPermission('MOD023', 'edit') &&
+                                  !checkPermission('MOD023', 'delete') &&
+                                  !checkPermission('MOD024', 'edit') &&
+                                  !checkPermission('MOD024', 'delete'))
+                              }
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {(getUserType() === 'P1' ||
+                              checkPermission('MOD023', 'edit') ||
+                              checkPermission('MOD024', 'edit')) && (
+                              <DropdownMenuItem
+                                className="flex items-center gap-2"
+                                onClick={() =>
+                                  handleEditJobTagNote(jobTagNote)
+                                }
+                              >
+                                <Edit className="h-4 w-4" />
+                                Edit Note
+                              </DropdownMenuItem>
+                            )}
+                            {(getUserType() === 'P1' ||
+                              checkPermission('MOD023', 'delete') ||
+                              checkPermission('MOD024', 'delete')) && (
+                              <DropdownMenuItem
+                                className="flex items-center gap-2 text-red-600"
+                                onClick={() =>
+                                  handleDeleteJobTagNote(jobTagNote)
+                                }
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Delete Note
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+
+              {/* Showing entries info */}
+              <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+                Showing{' '}
+                {(pagination.current.page - 1) * pagination.current.limit + 1}{' '}
+                to{' '}
+                {Math.min(
+                  pagination.current.page * pagination.current.limit,
+                  pagination.total
+                )}{' '}
+                of {pagination.total} entries
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handlePageChange(pagination.current.page - 1)
+                  }
+                  disabled={pagination.current.page === 1 || loading}
+                >
+                  Previous
+                </Button>
+
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from(
+                    { length: Math.min(5, pagination.pages) },
+                    (_, i) => {
+                      let pageNum
+                      if (pagination.pages <= 5) {
+                        pageNum = i + 1
+                      } else if (pagination.current.page <= 3) {
+                        pageNum = i + 1
+                      } else if (
+                        pagination.current.page >=
+                        pagination.pages - 2
+                      ) {
+                        pageNum = pagination.pages - 4 + i
+                      } else {
+                        pageNum = pagination.current.page - 2 + i
+                      }
+
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={
+                            pagination.current.page === pageNum
+                              ? 'default'
+                              : 'outline'
+                          }
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum)}
+                          className="w-8 h-8 p-0 text-white"
+                          disabled={loading}
+                        >
+                          {pageNum}
+                        </Button>
+                      )
+                    }
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handlePageChange(pagination.current.page + 1)
+                  }
+                  disabled={
+                    pagination.current.page === pagination.pages || loading
+                  }
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Job Tag Note Modal - Create/Edit */}
@@ -836,7 +1110,12 @@ export default function JobTagNotesPage() {
             </DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleFormSubmit} className="space-y-6">
+          <form
+            onSubmit={handleFormSubmit}
+            onInvalid={() => setJobTagNoteSubmitted(true)}
+            className="space-y-6"
+            data-submitted={jobTagNoteSubmitted}
+          >
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-3">
                 <Label
@@ -851,7 +1130,11 @@ export default function JobTagNotesPage() {
                   value={formData.title}
                   onChange={e => handleFormChange('title', e.target.value)}
                   required
-                  className="h-12 text-base"
+                className={
+                  jobTagNoteSubmitted && !formData.title.trim()
+                    ? 'h-12 text-base border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                    : 'h-12 text-base'
+                }
                 />
               </div>
 
@@ -871,7 +1154,12 @@ export default function JobTagNotesPage() {
                       variant="outline"
                       role="combobox"
                       aria-expanded={jobTagDropdownOpen}
-                      className="w-full justify-between h-12 text-base"
+                      className={cn(
+                        'w-full justify-between h-12 text-base',
+                        jobTagNoteSubmitted &&
+                          !formData.job_tag_code &&
+                          'border-red-500 !focus-visible:ring-red-500'
+                      )}
                       disabled={jobTagsLoading}
                     >
                       {jobTagsLoading
@@ -961,7 +1249,11 @@ export default function JobTagNotesPage() {
                 value={formData.content}
                 onChange={e => handleFormChange('content', e.target.value)}
                 required
-                className="min-h-[120px] text-base"
+                className={`min-h-[120px] text-base ${
+                  jobTagNoteSubmitted && !formData.content.trim()
+                    ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500 !ring-red-500 !focus-visible:ring-2'
+                    : ''
+                }`}
               />
             </div>
 
@@ -979,6 +1271,7 @@ export default function JobTagNotesPage() {
                     display_order: 1,
                     content: '',
                   })
+                  setJobTagNoteSubmitted(false)
                 }}
                 disabled={submitting}
                 className="h-11 px-6"

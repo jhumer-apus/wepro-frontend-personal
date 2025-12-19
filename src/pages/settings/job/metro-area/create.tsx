@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import { useTheme } from 'next-themes'
 import { Button } from '@/src/components/ui/button'
 import {
   Card,
@@ -74,6 +75,12 @@ export default function CreateMetroAreaPage() {
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null)
   const markerRef = useRef<google.maps.Marker | null>(null)
   const { checkPermission } = usePermissions()
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const [formData, setFormData] = useState<MetroAreaFormData>({
     name: '',
@@ -90,6 +97,7 @@ export default function CreateMetroAreaPage() {
 
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<MetroAreaFormErrors>({})
+  const [submitted, setSubmitted] = useState(false)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [markerPosition, setMarkerPosition] = useState<{
     lat: number
@@ -630,7 +638,12 @@ export default function CreateMetroAreaPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          onInvalid={() => setSubmitted(true)}
+          className="space-y-6"
+          data-submitted={submitted}
+        >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left Column - Form Fields */}
             <div className="flex flex-col space-y-6">
@@ -676,7 +689,7 @@ export default function CreateMetroAreaPage() {
                       }`}
                     />
                     {formData.is_advance_area_select && (
-                      <p className="text-sm text-blue-600 dark:text-blue-400">
+                      <p className="text-sm text-blue-600 dark:text-blue-400"> 
                         Zipcode will be automatically populated from map
                         selection
                       </p>
@@ -703,7 +716,11 @@ export default function CreateMetroAreaPage() {
                             )
                           }
                           placeholder="25"
-                          className={errors.radius ? 'border-red-500' : ''}
+                          className={
+                            submitted && (!formData.radius || formData.radius <= 0)
+                              ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                              : ''
+                          }
                         />
                         {errors.radius && (
                           <p className="text-sm text-red-500">
@@ -719,7 +736,11 @@ export default function CreateMetroAreaPage() {
                           onChange={e =>
                             handleInputChange('radius_unit', e.target.value)
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            submitted && !formData.radius_unit
+                              ? 'border-red-500 !focus-visible:ring-red-500'
+                              : ''
+                          }`}
                         >
                           <option value="miles">Miles</option>
                           <option value="kilometers">Kilometers</option>
@@ -792,7 +813,7 @@ export default function CreateMetroAreaPage() {
                     <div className="flex items-center justify-between">
                       <Label htmlFor="is_advance_area_select">
                         Advanced Area Select
-                      </Label>
+                      </Label> 02+-  
                       <Switch
                         id="is_advance_area_select"
                         checked={formData.is_advance_area_select}
@@ -978,11 +999,95 @@ export default function CreateMetroAreaPage() {
                             onDblClick={onMapDoubleClick}
                             options={{
                               mapTypeId: 'roadmap',
-                              styles: [
+                              styles: mounted && resolvedTheme === 'dark' ? [
+                                { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+                                { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+                                { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
                                 {
-                                  featureType: 'poi',
-                                  elementType: 'labels',
-                                  stylers: [{ visibility: 'off' }],
+                                    featureType: 'administrative.locality',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#d59563' }]
+                                },
+                                {
+                                    featureType: 'poi',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#d59563' }]
+                                },
+                                {
+                                    featureType: 'poi.park',
+                                    elementType: 'geometry',
+                                    stylers: [{ color: '#263c3f' }]
+                                },
+                                {
+                                    featureType: 'poi.park',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#6b9a76' }]
+                                },
+                                {
+                                    featureType: 'road',
+                                    elementType: 'geometry',
+                                    stylers: [{ color: '#38414e' }]
+                                },
+                                {
+                                    featureType: 'road',
+                                    elementType: 'geometry.stroke',
+                                    stylers: [{ color: '#212a37' }]
+                                },
+                                {
+                                    featureType: 'road',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#9ca5b3' }]
+                                },
+                                {
+                                    featureType: 'road.highway',
+                                    elementType: 'geometry',
+                                    stylers: [{ color: '#746855' }]
+                                },
+                                {
+                                    featureType: 'road.highway',
+                                    elementType: 'geometry.stroke',
+                                    stylers: [{ color: '#1f2835' }]
+                                },
+                                {
+                                    featureType: 'road.highway',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#f3d19c' }]
+                                },
+                                {
+                                    featureType: 'transit',
+                                    elementType: 'geometry',
+                                    stylers: [{ color: '#2f3948' }]
+                                },
+                                {
+                                    featureType: 'transit.station',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#d59563' }]
+                                },
+                                {
+                                    featureType: 'water',
+                                    elementType: 'geometry',
+                                    stylers: [{ color: '#17263c' }]
+                                },
+                                {
+                                    featureType: 'water',
+                                    elementType: 'labels.text.fill',
+                                    stylers: [{ color: '#515c6d' }]
+                                },
+                                {
+                                    featureType: 'water',
+                                    elementType: 'labels.text.stroke',
+                                    stylers: [{ color: '#17263c' }]
+                                },
+                                {
+                                    featureType: 'poi',
+                                    elementType: 'labels',
+                                    stylers: [{ visibility: 'off' }],
+                                },
+                              ] : [
+                                {
+                                    featureType: 'poi',
+                                    elementType: 'labels',
+                                    stylers: [{ visibility: 'off' }],
                                 },
                               ],
                             }}
@@ -1045,10 +1150,10 @@ export default function CreateMetroAreaPage() {
                         </div>
 
                         {!mapLoaded && (
-                          <div className="flex items-center justify-center w-full h-full bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-center w-full h-full bg-gray-50 dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
                             <div className="text-center">
-                              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-gray-400" />
-                              <p className="text-gray-500">Loading map...</p>
+                              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-gray-400 dark:text-neutral-500" />
+                              <p className="text-gray-500 dark:text-gray-400">Loading map...</p>
                             </div>
                           </div>
                         )}
@@ -1119,7 +1224,7 @@ export default function CreateMetroAreaPage() {
                 (formData.is_advance_area_select &&
                   (formData.latitude === 0 || formData.longitude === 0))
               }
-              className="min-w-[120px]"
+              className="min-w-[120px] text-white"
             >
               {isLoading ? (
                 <>

@@ -287,11 +287,11 @@ export default function RolesPage() {
           checkPermission('MOD003', 'view')) ||
         (checkPermission('MOD007', 'view') &&
           checkPermission('MOD006', 'view')) ? (
-          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+          <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1">
             <Button
               variant="ghost"
               onClick={() => router.push('/team/teamMembers')}
-              className="flex-1 flex items-center justify-center"
+              className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
             >
               <Users className="w-4 h-4 mr-2" />
               Team Members
@@ -299,7 +299,7 @@ export default function RolesPage() {
             <Button
               variant="default"
               onClick={() => router.push('/team/roles')}
-              className="flex-1 flex items-center justify-center"
+              className="flex-1 flex items-center justify-center text-white"
             >
               <Shield className="w-4 h-4 mr-2" />
               Roles
@@ -335,8 +335,31 @@ export default function RolesPage() {
           )}
         </div>
 
-        {/* Roles List */}
+        {/* Search Component */}
         <Card>
+          <CardContent className="pt-6">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  Search
+                </span>
+              </div>
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                <Input
+                  placeholder="Search roles..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Roles List */}
+        {/* Desktop View */}
+        <Card className="hidden md:block">
           <CardContent className="pt-6">
             {/* Table Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -368,17 +391,6 @@ export default function RolesPage() {
                 <Label className="text-sm text-neutral-600 dark:text-neutral-400">
                   entries
                 </Label>
-              </div>
-
-              {/* Search Bar */}
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                <Input
-                  placeholder="Search roles..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                />
               </div>
             </div>
 
@@ -413,9 +425,9 @@ export default function RolesPage() {
                               (modulePerm, index) => (
                                 <div
                                   key={index}
-                                  className="inline-flex items-center px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-xs font-medium shadow-sm"
+                                  className="inline-flex items-center px-3 py-2 rounded-lg bg-gray-50 dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 text-xs font-medium shadow-sm"
                                 >
-                                  <span className="font-semibold text-gray-700">
+                                  <span className="font-semibold text-gray-700 dark:text-gray-300">
                                     {modulePerm.module}
                                   </span>
                                 </div>
@@ -541,6 +553,211 @@ export default function RolesPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Mobile View */}
+        <div className="block md:hidden space-y-4">
+          {/* Show Entries Dropdown */}
+          <div className="flex items-center gap-2 justify-end">
+            <Label
+              htmlFor="entries"
+              className="text-sm text-neutral-600 dark:text-neutral-400"
+            >
+              Show
+            </Label>
+            <Select
+              value={entriesPerPage.toString()}
+              onValueChange={handleEntriesChange}
+            >
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="30">30</SelectItem>
+                <SelectItem value="40">40</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <p className="text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* Mobile Card View */}
+          <div className="space-y-4">
+            {loading ? (
+              <div className="text-center py-8">
+                <span className="text-neutral-500">Loading roles...</span>
+              </div>
+            ) : currentRoles.length === 0 ? (
+              <div className="text-center py-8">
+                <span className="text-neutral-500">No roles found</span>
+              </div>
+            ) : (
+              currentRoles.map(role => (
+                <Card key={role._id} className="relative border border-neutral-200 dark:border-neutral-700">
+                  <CardContent className="pt-4 pb-4">
+                    <div className="space-y-3">
+                      {/* Role Name */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Role Name
+                        </div>
+                        <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                          {role.name}
+                        </div>
+                      </div>
+
+                      {/* Module */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Module
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {getModulePermissions(role.permissions).map(
+                            (modulePerm, index) => (
+                              <div
+                                key={index}
+                                className="inline-flex items-center px-3 py-2 rounded-lg bg-gray-50 dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600 text-xs font-medium shadow-sm"
+                              >
+                                <span className="font-semibold text-gray-700 dark:text-gray-300">
+                                  {modulePerm.module}
+                                </span>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Created At */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Created At
+                        </div>
+                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {role.createdAt ? formatDate(role.createdAt) : 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                  {/* Action Button - Outside Card */}
+                  <div className="absolute top-4 right-4">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          className="flex items-center gap-2"
+                          onClick={() =>
+                            router.push(`/team/roles/${role._id}/view`)
+                          }
+                        >
+                          <Eye className="h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        {(checkPermission('MOD002', 'edit') ||
+                          checkPermission('MOD007', 'edit')) && (
+                          <DropdownMenuItem
+                            className="flex items-center gap-2"
+                            onClick={() =>
+                              router.push(
+                                `/team/roles/create?id=${role._id}`
+                              )
+                            }
+                          >
+                            <Edit className="h-4 w-4" />
+                            Edit Role
+                          </DropdownMenuItem>
+                        )}
+                        {(checkPermission('MOD002', 'delete') ||
+                          checkPermission('MOD007', 'delete')) && (
+                          <DropdownMenuItem
+                            className="flex items-center gap-2 text-red-600 hover:text-red-700"
+                            onClick={() => handleDeleteClick(role)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Showing entries info */}
+          <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+            Showing {startIndex + 1} to {endIndex} of {totalCount} entries
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || loading}
+            >
+              Previous
+            </Button>
+
+            {/* Page numbers - show up to 5 pages */}
+            {(() => {
+              const maxVisiblePages = 5
+              const startPage = Math.max(
+                1,
+                currentPage - Math.floor(maxVisiblePages / 2)
+              )
+              const endPage = Math.min(
+                totalPages,
+                startPage + maxVisiblePages - 1
+              )
+
+              const pages = []
+              for (let i = startPage; i <= endPage; i++) {
+                pages.push(i)
+              }
+
+              return pages.map(page => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handlePageChange(page)}
+                  className="w-8 h-8 p-0"
+                  disabled={loading}
+                >
+                  {page}
+                </Button>
+              ))
+            })()}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages || loading}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

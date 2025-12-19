@@ -69,6 +69,7 @@ export default function CreateServicePackagePage(): React.JSX.Element {
 
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -252,6 +253,7 @@ export default function CreateServicePackagePage(): React.JSX.Element {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitted(true)
 
     // Validate form data
     if (!validateForm()) {
@@ -418,7 +420,12 @@ export default function CreateServicePackagePage(): React.JSX.Element {
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          onInvalid={() => setSubmitted(true)}
+          className="space-y-6"
+          data-submitted={submitted}
+        >
           {/* Basic Information Card */}
           <Card>
             <CardHeader>
@@ -458,8 +465,8 @@ export default function CreateServicePackagePage(): React.JSX.Element {
                   maxLength={100}
                   required
                   className={
-                    validationErrors.title
-                      ? 'border-red-500 focus:border-red-500'
+                    submitted && validationErrors.title
+                      ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                       : ''
                   }
                 />
@@ -495,8 +502,8 @@ export default function CreateServicePackagePage(): React.JSX.Element {
                   rows={3}
                   required
                   className={
-                    validationErrors.description
-                      ? 'border-red-500 focus:border-red-500'
+                    submitted && validationErrors.description
+                      ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                       : ''
                   }
                 />
@@ -572,8 +579,8 @@ export default function CreateServicePackagePage(): React.JSX.Element {
                 >
                   <SelectTrigger
                     className={
-                      validationErrors.chargeModel
-                        ? 'border-red-500 focus:border-red-500'
+                      submitted && !formData.chargeModel
+                        ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                         : ''
                     }
                   >
@@ -619,7 +626,11 @@ export default function CreateServicePackagePage(): React.JSX.Element {
                         handleInputChange('chargeAmount', e.target.value)
                       }
                       placeholder="0.00"
-                      className={`pl-8 ${validationErrors.chargeAmount ? 'border-red-500 focus:border-red-500' : ''}`}
+                      className={`pl-8 ${
+                        submitted && validationErrors.chargeAmount
+                          ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                          : ''
+                      }`}
                       required
                     />
                   </div>
@@ -649,7 +660,11 @@ export default function CreateServicePackagePage(): React.JSX.Element {
                           handleInputChange('chargeOver', e.target.value)
                         }
                         placeholder="30"
-                        className={`pl-10 ${validationErrors.chargeOver ? 'border-red-500 focus:border-red-500' : ''}`}
+                        className={`pl-10 ${
+                          submitted && validationErrors.chargeOver
+                            ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                            : ''
+                        }`}
                         required
                       />
                     </div>
@@ -684,7 +699,11 @@ export default function CreateServicePackagePage(): React.JSX.Element {
                       handleInputChange('minimumMonthlySpend', e.target.value)
                     }
                     placeholder="0.00"
-                    className={`pl-8 ${validationErrors.minimumMonthlySpend ? 'border-red-500 focus:border-red-500' : ''}`}
+                      className={`pl-8 ${
+                        submitted && validationErrors.minimumMonthlySpend
+                          ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                          : ''
+                      }`}
                     required
                   />
                 </div>
@@ -724,8 +743,8 @@ export default function CreateServicePackagePage(): React.JSX.Element {
                         }
                         placeholder={`Enter feature ${index + 1}...`}
                         className={
-                          validationErrors.features
-                            ? 'border-red-500 focus:border-red-500'
+                          submitted && validationErrors.features
+                            ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                             : 'group-hover:border-neutral-400 transition-colors'
                         }
                       />

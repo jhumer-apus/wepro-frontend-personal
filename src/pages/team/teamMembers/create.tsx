@@ -64,6 +64,7 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
   const [isSaving, setIsSaving] = useState(false)
   const [rolesLoading, setRolesLoading] = useState(false)
   const [timezonesLoading, setTimezonesLoading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [availableRoles, setAvailableRoles] = useState<Role[]>([])
   const [availableTimezones, setAvailableTimezones] = useState<Timezone[]>([])
   const [formData, setFormData] = useState<FormData>({
@@ -155,6 +156,7 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitted(true)
 
     // Validate form data - password is only required for creating new team members
     const requiredFields = [
@@ -395,7 +397,13 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
+        <form
+          onSubmit={handleSubmit}
+          onInvalid={() => setSubmitted(true)}
+          className="space-y-6"
+          autoComplete="off"
+          data-submitted={submitted}
+        >
           {/* Basic Information Card */}
           <Card>
             <CardHeader>
@@ -414,6 +422,11 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
                   onChange={e => handleInputChange('name', e.target.value)}
                   placeholder="Enter full name"
                   required
+                  className={
+                    submitted && !formData.name
+                      ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                      : ''
+                  }
                   autoComplete="off"
                 />
               </div>
@@ -427,6 +440,11 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
                   onChange={e => handleInputChange('username', e.target.value)}
                   placeholder="Enter username"
                   required
+                  className={
+                    submitted && !formData.username
+                      ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                      : ''
+                  }
                   autoComplete="off"
                 />
               </div>
@@ -448,6 +466,11 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
                       : 'Enter password'
                   }
                   required={!isEditing}
+                  className={
+                    submitted && !isEditing && !formData.password
+                      ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                      : ''
+                  }
                   autoComplete="new-password"
                 />
               </div>
@@ -461,7 +484,12 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
                       variant="outline"
                       role="combobox"
                       aria-expanded={roleOpen}
-                      className="w-full justify-between"
+                      className={cn(
+                        'w-full justify-between',
+                        submitted &&
+                          !formData.roleId &&
+                          'border-red-500 !focus-visible:ring-red-500'
+                      )}
                       disabled={rolesLoading}
                     >
                       {rolesLoading
@@ -518,7 +546,12 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
                       variant="outline"
                       role="combobox"
                       aria-expanded={timezoneOpen}
-                      className="w-full justify-between"
+                      className={cn(
+                        'w-full justify-between',
+                        submitted &&
+                          !formData.timezoneId &&
+                          'border-red-500 !focus-visible:ring-red-500'
+                      )}
                       disabled={timezonesLoading}
                     >
                       {timezonesLoading
@@ -577,7 +610,12 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
                       variant="outline"
                       role="combobox"
                       aria-expanded={statusOpen}
-                      className="w-full justify-between"
+                      className={cn(
+                        'w-full justify-between',
+                        submitted &&
+                          !formData.status &&
+                          'border-red-500 !focus-visible:ring-red-500'
+                      )}
                     >
                       {formData.status || 'Select status...'}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

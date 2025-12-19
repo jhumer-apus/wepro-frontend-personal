@@ -72,6 +72,7 @@ export default function CreateCustomFieldPage(): React.JSX.Element {
 
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -394,6 +395,7 @@ export default function CreateCustomFieldPage(): React.JSX.Element {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitted(true)
 
     // Validate form data
     if (!validateForm()) {
@@ -679,7 +681,13 @@ export default function CreateCustomFieldPage(): React.JSX.Element {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
+        <form
+          onSubmit={handleSubmit}
+          onInvalid={() => setSubmitted(true)}
+          className="space-y-6"
+          autoComplete="off"
+          data-submitted={submitted}
+        >
           {/* Basic Information Card */}
           <Card>
             <CardHeader>
@@ -732,8 +740,8 @@ export default function CreateCustomFieldPage(): React.JSX.Element {
                 >
                   <SelectTrigger
                     className={
-                      validationErrors.field_type
-                        ? 'border-red-500 focus:border-red-500'
+                      submitted && !formData.field_type
+                        ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                         : ''
                     }
                   >
@@ -807,8 +815,8 @@ export default function CreateCustomFieldPage(): React.JSX.Element {
                   }
                   placeholder="0"
                   className={
-                    validationErrors.display_order
-                      ? 'border-red-500 focus:border-red-500'
+                    submitted && formData.display_order < 0
+                      ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                       : ''
                   }
                   autoComplete="off"

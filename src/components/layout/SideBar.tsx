@@ -1,10 +1,12 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { cn } from '@/src/lib/utils'
 import { useUser } from '@/src/hooks/useUser'
 import { usePermissions } from '@/src/hooks/usePermissions'
+import { useTheme } from 'next-themes'
 import logo from '../../../public/logo.png'
+import logoAlt from '../../../public/logo-alt.png'
 import {
   LayoutDashboard,
   Briefcase,
@@ -66,6 +68,13 @@ export function Sidebar(): React.JSX.Element {
   const location: string = router.pathname
   const { user } = useUser()
   const { checkPermission, getUserType } = usePermissions()
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   console.log('User slice data:', user)
 
@@ -288,7 +297,7 @@ export function Sidebar(): React.JSX.Element {
           className="flex items-center justify-center w-full py-3 hover:scale-105 transition-transform duration-200"
         >
           <img
-            src={logo.src}
+            src={mounted && resolvedTheme === 'dark' ? logoAlt.src : logo.src}
             alt="WePro Logo"
             className="h-6 w-auto object-contain max-w-[160px] filter drop-shadow-sm"
           />

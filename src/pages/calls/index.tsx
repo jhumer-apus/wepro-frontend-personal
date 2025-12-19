@@ -376,19 +376,19 @@ function CustomSelect({
       >
         <div className="flex items-center justify-between">
           <span
-            className={`text-sm font-medium truncate ${selectedOption ? 'text-slate-900' : 'text-slate-500'}`}
+            className={`text-sm font-medium truncate ${selectedOption ? 'text-slate-900 dark:text-gray-100' : 'text-slate-500 dark:text-gray-400'}`}
           >
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <ChevronDown
-            className={`w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-2 ${isOpen ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 text-slate-400 dark:text-gray-500 transition-transform duration-200 flex-shrink-0 ml-2 ${isOpen ? 'rotate-180' : ''}`}
           />
         </div>
       </button>
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[9999] min-w-[250px]"
+          className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-neutral-800 rounded-xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden z-[9999] min-w-[250px]"
           onClick={e => e.stopPropagation()}
         >
           <div className="max-h-64 overflow-y-auto">
@@ -397,10 +397,10 @@ function CustomSelect({
                 key={option.value}
                 type="button"
                 onClick={() => handleOptionSelect(option.value)}
-                className={`w-full px-4 py-3 text-left text-sm hover:bg-slate-50 transition-colors duration-150 ${
+                className={`w-full px-4 py-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-neutral-700 transition-colors duration-150 ${
                   value === option.value
                     ? 'bg-[#53a533]/5 text-[#3d7a28] font-medium'
-                    : 'text-slate-700'
+                    : 'text-slate-700 dark:text-gray-300'
                 }`}
               >
                 <span className="block truncate">{option.label}</span>
@@ -483,19 +483,19 @@ function SearchableSelect({
       >
         <div className="flex items-center justify-between">
           <span
-            className={`text-sm font-medium truncate ${selectedOption ? 'text-slate-900' : 'text-slate-500'}`}
+            className={`text-sm font-medium truncate ${selectedOption ? 'text-slate-900 dark:text-gray-100' : 'text-slate-500 dark:text-gray-400'}`}
           >
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <ChevronDown
-            className={`w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ml-2 ${isOpen ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 text-slate-400 dark:text-gray-500 transition-transform duration-200 flex-shrink-0 ml-2 ${isOpen ? 'rotate-180' : ''}`}
           />
         </div>
       </button>
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-[9999] min-w-[250px]"
+          className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-neutral-800 rounded-xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden z-[9999] min-w-[250px]"
           onClick={e => e.stopPropagation()}
         >
           <div className="p-3 border-b border-slate-100">
@@ -518,17 +518,17 @@ function SearchableSelect({
                 key={option.value}
                 type="button"
                 onClick={() => handleOptionSelect(option.value)}
-                className={`w-full px-4 py-3 text-left text-sm hover:bg-slate-50 transition-colors duration-150 ${
+                className={`w-full px-4 py-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-neutral-700 transition-colors duration-150 ${
                   value === option.value
                     ? 'bg-[#53a533]/5 text-[#3d7a28] font-medium'
-                    : 'text-slate-700'
+                    : 'text-slate-700 dark:text-gray-300'
                 }`}
               >
                 <span className="block truncate">{option.label}</span>
               </button>
             ))}
             {filteredOptions.length === 0 && (
-              <div className="px-4 py-6 text-sm text-slate-500 text-center">
+              <div className="px-4 py-6 text-sm text-slate-500 dark:text-gray-400 text-center">
                 No options found
               </div>
             )}
@@ -3224,9 +3224,9 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+    <div className="min-h-screen">
       {/* Hero Header */}
-      <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/50">
+      <div className="backdrop-blur-xl border-b border-slate-200/50 dark:border-neutral-700/50">
         <div className="px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -3339,32 +3339,40 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
       {/* Main Content */}
       <div className="px-6 py-8">
-        <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1">
           <Button
             variant={selectedTab === 'call-log' ? 'default' : 'ghost'}
             onClick={() => setSelectedTab('call-log')}
-            className="flex-1 flex items-center justify-center"
+            className={`flex-1 flex items-center justify-center ${
+              selectedTab === 'call-log' ? 'text-white' : ''
+            } hover:bg-neutral-200 dark:hover:bg-neutral-700`}
           >
             Call Log
           </Button>
           <Button
             variant={selectedTab === 'analytics' ? 'default' : 'ghost'}
             onClick={() => setSelectedTab('analytics')}
-            className="flex-1 flex items-center justify-center"
+            className={`flex-1 flex items-center justify-center ${
+              selectedTab === 'analytics' ? 'text-white' : ''
+            } hover:bg-neutral-200 dark:hover:bg-neutral-700`}
           >
             Analytics
           </Button>
           <Button
             variant={selectedTab === 'ai-insights' ? 'default' : 'ghost'}
             onClick={() => setSelectedTab('ai-insights')}
-            className="flex-1 flex items-center justify-center"
+            className={`flex-1 flex items-center justify-center ${
+              selectedTab === 'ai-insights' ? 'text-white' : ''
+            } hover:bg-neutral-200 dark:hover:bg-neutral-700`}
           >
             AI Insights
           </Button>
           <Button
             variant={selectedTab === 'phone-settings' ? 'default' : 'ghost'}
             onClick={() => setSelectedTab('phone-settings')}
-            className="flex-1 flex items-center justify-center"
+            className={`flex-1 flex items-center justify-center ${
+              selectedTab === 'phone-settings' ? 'text-white' : ''
+            } hover:bg-neutral-200 dark:hover:bg-neutral-700`}
           >
             Phone Settings
           </Button>
@@ -3384,7 +3392,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     placeholder="Search calls by name, number, or job type..."
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
-                    className="pl-12 pr-4 py-3 bg-white border-slate-200 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-[#53a533]/50/20 focus:border-[#53a533]/30 transition-all duration-200"
+                    className="pl-12 pr-4 py-3 bg-white dark:bg-neutral-800 border-slate-200 dark:border-neutral-700 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-[#53a533]/50/20 focus:border-[#53a533]/30 transition-all duration-200"
                   />
                 </div>
 
@@ -3392,9 +3400,9 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                   <Button
                     variant="outline"
                     onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                    className={`rounded-xl border-slate-200 hover:border-slate-300 transition-all duration-200 ${
+                    className={`rounded-xl border-slate-200 dark:border-neutral-700 hover:border-slate-300 dark:hover:border-neutral-600 transition-all duration-200 ${
                       showAdvancedFilters
-                        ? 'bg-[#53a533]/5 border-[#53a533]/20 text-[#3d7a28]'
+                        ? 'bg-[#53a533]/5 dark:bg-[#53a533]/10 border-[#53a533]/20 dark:border-[#53a533]/30 text-[#3d7a28] dark:text-[#53a533]'
                         : ''
                     }`}
                   >
@@ -3421,7 +3429,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                       a.download = 'calls-export.csv'
                       a.click()
                     }}
-                    className="rounded-xl border-slate-200 hover:border-slate-300"
+                    className="rounded-xl border-slate-200 dark:border-neutral-700 hover:border-slate-300 dark:hover:border-neutral-600"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export
@@ -3431,7 +3439,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     <Button
                       variant="ghost"
                       onClick={clearAllFilters}
-                      className="text-slate-500 hover:text-slate-700"
+                      className="text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-300"
                     >
                       Clear All
                     </Button>
@@ -3465,11 +3473,11 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
               {/* Advanced Filters */}
               {showAdvancedFilters && (
-                <div className="mb-8 p-8 bg-gradient-to-br from-slate-50/80 to-blue-50/40 rounded-3xl border border-slate-200/60 backdrop-blur-sm">
+                <div className="mb-8 p-8 bg-gradient-to-br from-slate-50/80 to-blue-50/40 dark:from-neutral-800 dark:to-neutral-900 rounded-3xl border border-slate-200/60 dark:border-neutral-700 backdrop-blur-sm">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {/* Call Flow Filter */}
                     <div className="space-y-3">
-                      <label className="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-gray-300 flex items-center space-x-2">
                         <div className="w-2 h-2 bg-[#53a533]/50 rounded-full"></div>
                         <span>Call Flow</span>
                       </label>
@@ -3487,7 +3495,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                     {/* Source Filter */}
                     <div className="space-y-3">
-                      <label className="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-gray-300 flex items-center space-x-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span>Source</span>
                       </label>
@@ -3508,7 +3516,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                     {/* Phone Number Filter */}
                     <div className="space-y-3">
-                      <label className="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-gray-300 flex items-center space-x-2">
                         <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                         <span>Phone Number</span>
                       </label>
@@ -3535,7 +3543,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                     {/* Agent Filter */}
                     <div className="space-y-3">
-                      <label className="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-gray-300 flex items-center space-x-2">
                         <div className="w-2 h-2 bg-cyan-500 rounded-full"></div>
                         <span>Agent</span>
                       </label>
@@ -3556,7 +3564,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                     {/* Duration Filters */}
                     <div className="space-y-3">
-                      <label className="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-gray-300 flex items-center space-x-2">
                         <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
                         <span>Min Duration (min)</span>
                       </label>
@@ -3570,7 +3578,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     </div>
 
                     <div className="space-y-3">
-                      <label className="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-gray-300 flex items-center space-x-2">
                         <div className="w-2 h-2 bg-rose-500 rounded-full"></div>
                         <span>Max Duration (min)</span>
                       </label>
@@ -3585,7 +3593,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                     {/* Recording Filter */}
                     <div className="space-y-3">
-                      <label className="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-gray-300 flex items-center space-x-2">
                         <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
                         <span>Recording</span>
                       </label>
@@ -3603,7 +3611,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                     {/* Call Outcome Filter */}
                     <div className="space-y-3">
-                      <label className="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-gray-300 flex items-center space-x-2">
                         <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
                         <span>Call Outcome</span>
                       </label>
@@ -3625,7 +3633,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                     {/* Date Range Filter */}
                     <div className="space-y-3">
-                      <label className="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                      <label className="text-sm font-semibold text-slate-700 dark:text-gray-300 flex items-center space-x-2">
                         <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
                         <span>Date Range</span>
                       </label>
@@ -3650,7 +3658,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     {dateRangeFilter === 'custom' && (
                       <>
                         <div className="space-y-3">
-                          <label className="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                          <label className="text-sm font-semibold text-slate-700 dark:text-gray-300 flex items-center space-x-2">
                             <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
                             <span>Start Date</span>
                           </label>
@@ -3663,7 +3671,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                         </div>
 
                         <div className="space-y-3">
-                          <label className="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                          <label className="text-sm font-semibold text-slate-700 dark:text-gray-300 flex items-center space-x-2">
                             <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                             <span>End Date</span>
                           </label>
@@ -3683,9 +3691,9 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
             {/* Results Summary */}
             <div className="mb-6 flex items-center justify-between">
-              <span className="text-sm text-slate-600">
+              <span className="text-sm text-slate-600 dark:text-gray-400">
                 Showing{' '}
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-slate-900 dark:text-gray-100">
                   {activeQuickFilter ? activeQuickFilter : 'all'} calls (
                   {filteredCalls.length} results)
                 </span>
@@ -3695,25 +3703,25 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
             {/* Call List */}
             <div className="space-y-3">
               {filteredCalls.map(call => (
-                <Card
-                  key={call.id}
-                  className="border-0 bg-white/70 backdrop-blur-sm hover:bg-white hover:shadow-lg transition-all duration-200 rounded-2xl overflow-hidden"
-                >
+                  <Card
+                    key={call.id}
+                    className="border-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm hover:bg-white dark:hover:bg-neutral-800 hover:shadow-lg transition-all duration-200 rounded-2xl overflow-hidden"
+                  >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1">
                         {/* Avatar & Direction */}
                         <div className="relative">
-                          <Avatar className="w-12 h-12 border-2 border-white shadow-md">
+                          <Avatar className="w-12 h-12 border-2 border-white dark:border-neutral-800 shadow-md">
                             <AvatarImage src={call.avatar} />
-                            <AvatarFallback className="bg-gradient-to-br from-blue-400 to-cyan-400 text-white font-semibold">
+                            <AvatarFallback className="bg-gradient-to-br from-blue-400 to-cyan-400 dark:from-blue-600 dark:to-cyan-600 text-white font-semibold">
                               {call.customerName
                                 .split(' ')
                                 .map(n => n[0])
                                 .join('')}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full shadow-md flex items-center justify-center">
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white dark:bg-neutral-800 rounded-full shadow-md flex items-center justify-center">
                             {call.type === 'incoming' ? (
                               <ArrowDownLeft className="w-3 h-3 text-green-500" />
                             ) : (
@@ -3725,14 +3733,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                         {/* Call Details */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="text-lg font-semibold text-slate-900 truncate">
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 truncate">
                               {call.customerName}
                             </h3>
 
                             {/* Call Outcome Indicator */}
                             <div className="flex items-center space-x-1">
                               {getOutcomeIcon(call.callOutcome)}
-                              <span className="text-xs text-slate-500 capitalize">
+                              <span className="text-xs text-slate-500 dark:text-gray-400 capitalize">
                                 {call.callOutcome.replace('-', ' ')}
                               </span>
                             </div>
@@ -3741,7 +3749,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             {call.customerSatisfaction && (
                               <div className="flex items-center space-x-1">
                                 {getSatisfactionIcon(call.customerSatisfaction)}
-                                <span className="text-xs text-slate-500 capitalize">
+                                <span className="text-xs text-slate-500 dark:text-gray-400 capitalize">
                                   {call.customerSatisfaction}
                                 </span>
                               </div>
@@ -3749,7 +3757,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                           </div>
 
                           <div className="flex items-center space-x-4 mb-2">
-                            <span className="text-sm text-slate-600 font-mono">
+                            <span className="text-sm text-slate-600 dark:text-gray-300 font-mono">
                               {call.phoneNumber}
                             </span>
                             <Badge
@@ -3757,20 +3765,20 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             >
                               {call.source}
                             </Badge>
-                            <span className="text-sm text-slate-500 flex items-center">
+                            <span className="text-sm text-slate-500 dark:text-gray-400 flex items-center">
                               <MapPin className="w-3 h-3 mr-1" />
                               {call.location}
                             </span>
                           </div>
 
                           <div className="flex items-center space-x-4 mb-2">
-                            <span className="text-sm font-medium text-slate-700">
+                            <span className="text-sm font-medium text-slate-700 dark:text-gray-300">
                               {call.jobType}
                             </span>
                             {call.followUpRequired && (
                               <Badge
                                 variant="outline"
-                                className="text-red-600 border-red-200"
+                                className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800"
                               >
                                 Follow-up Required
                               </Badge>
@@ -3791,7 +3799,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                           </div>
 
                           {call.notes && (
-                            <p className="text-sm text-slate-600 line-clamp-2">
+                            <p className="text-sm text-slate-600 dark:text-gray-400 line-clamp-2">
                               {call.notes}
                             </p>
                           )}
@@ -3801,7 +3809,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                         <div className="text-right space-y-2 ml-4">
                           <div className="flex items-center space-x-2">
                             {getStatusIcon(call.status)}
-                            <span className="text-sm text-slate-600">
+                            <span className="text-sm text-slate-600 dark:text-gray-400">
                               {call.timestamp}
                             </span>
                           </div>
@@ -3817,14 +3825,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             <div className="flex items-center space-x-2">
                               <Avatar className="w-5 h-5">
                                 <AvatarImage src={call.answeredBy.avatar} />
-                                <AvatarFallback className="text-xs bg-slate-200">
+                                <AvatarFallback className="text-xs bg-slate-200 dark:bg-neutral-700 dark:text-gray-300">
                                   {call.answeredBy.name
                                     .split(' ')
                                     .map(n => n[0])
                                     .join('')}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="text-xs text-slate-500">
+                              <span className="text-xs text-slate-500 dark:text-gray-400">
                                 {call.answeredBy.name.split(' ')[0]}
                               </span>
                             </div>
@@ -3837,9 +3845,9 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
               ))}
             </div>
 
-            {/* No Results */}
-            {filteredCalls.length === 0 && (
-              <Card className="border-0 bg-white/50">
+              {/* No Results */}
+              {filteredCalls.length === 0 && (
+                <Card className="border-0 bg-white/50 dark:bg-neutral-800/50">
                 <CardContent className="p-12 text-center">
                   <PhoneCall className="w-16 h-16 text-slate-400 mx-auto mb-6" />
                   <h3 className="text-xl font-semibold text-slate-900 mb-2">
@@ -3862,14 +3870,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
           <TabsContent value="analytics" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Card className="border-0 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl">
+              <Card className="border-0 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-2xl">
                 <CardContent className="p-6 text-center">
-                  <BarChart3 className="w-8 h-8 text-[#53a533]/50 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  <BarChart3 className="w-8 h-8 text-[#53a533]/50 dark:text-[#53a533]/70 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-2">
                     Call Volume
                   </h3>
-                  <p className="text-2xl font-bold text-[#4a9430]">89</p>
-                  <p className="text-sm text-slate-600">Today</p>
+                  <p className="text-2xl font-bold text-[#4a9430] dark:text-[#53a533]">89</p>
+                  <p className="text-sm text-slate-600 dark:text-gray-400">Today</p>
                 </CardContent>
               </Card>
             </div>
@@ -3878,29 +3886,29 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
           <TabsContent value="ai-insights" className="mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {aiInsights.map((insight, index) => (
-                <Card
-                  key={index}
-                  className="border-0 bg-white/70 backdrop-blur-sm rounded-2xl"
-                >
+                  <Card
+                    key={index}
+                    className="border-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-2xl"
+                  >
                   <CardContent className="p-6">
                     <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center">
-                        <insight.icon className="w-6 h-6 text-purple-600" />
+                      <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl flex items-center justify-center">
+                        <insight.icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-2">
                           {insight.title}
                         </h3>
-                        <p className="text-slate-600 mb-3">
+                        <p className="text-slate-600 dark:text-gray-400 mb-3">
                           {insight.description}
                         </p>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-500">
+                          <span className="text-sm text-slate-500 dark:text-gray-400">
                             {insight.confidence}% confidence
                           </span>
                           <Button
                             size="sm"
-                            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg"
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 dark:from-purple-600 dark:to-pink-600 dark:hover:from-purple-700 dark:hover:to-pink-700 text-white rounded-lg"
                           >
                             {insight.action}
                           </Button>
@@ -3918,20 +3926,20 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
               {/* Call Blocking Management */}
               {checkPermission('MOD039', 'view') && (
                 <Card
-                  ref={callBlockingRef}
-                  data-section="call-blocking"
-                  className="border-0 bg-white/70 backdrop-blur-sm rounded-2xl"
-                >
+                    ref={callBlockingRef}
+                    data-section="call-blocking"
+                    className="border-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-2xl"
+                  >
                   <CardContent className="p-8">
                     <div className="flex items-center space-x-3 mb-8">
-                      <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-rose-100 rounded-2xl flex items-center justify-center">
-                        <Shield className="w-8 h-8 text-red-600" />
+                      <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 rounded-2xl flex items-center justify-center">
+                        <Shield className="w-8 h-8 text-red-600 dark:text-red-400" />
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-slate-900">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100">
                           Call Blocking Management
                         </h2>
-                        <p className="text-slate-600">
+                        <p className="text-slate-600 dark:text-gray-400">
                           Block unwanted calls and manage your blocked numbers
                           list
                         </p>
@@ -3942,15 +3950,15 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                       {/* Add Number to Block */}
                       {checkPermission('MOD039', 'create') && (
                         <div className="flex flex-col space-y-6 h-[calc(100vh-80px)]">
-                          <div className="p-6 bg-gradient-to-r from-red-50 to-rose-50 rounded-xl border border-red-200 flex-grow flex flex-col">
-                            <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                          <div className="p-6 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 rounded-xl border border-red-200 dark:border-red-800 flex-grow flex flex-col">
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-4">
                               Block New Number
                             </h3>
 
                             <div className="space-y-4">
                               {/* Blocking Type */}
                               <div>
-                                <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                   Blocking Type
                                 </Label>
                                 <Select
@@ -3961,7 +3969,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     handleFormInputChange('blockingType', value)
                                   }
                                 >
-                                  <SelectTrigger className="px-4 py-3 border-slate-200 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200">
+                                  <SelectTrigger className="px-4 py-3 border-slate-200 dark:border-neutral-700 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -3978,7 +3986,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               {/* Phone Number (conditional) */}
                               {createFormData.blockingType === 'number' && (
                                 <div>
-                                  <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                  <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                     Phone Number
                                   </Label>
                                   <Input
@@ -3991,9 +3999,9 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     }
                                     placeholder="(777) 888-9999"
                                     maxLength={14} // (777) 888-9999 = 14 characters
-                                    className={`px-4 py-3 border-slate-200 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200 ${formErrors.phoneNumber ? 'border-red-500' : ''}`}
+                                    className={`px-4 py-3 border-slate-200 dark:border-neutral-700 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200 ${formErrors.phoneNumber ? 'border-red-500' : ''}`}
                                   />
-                                  <p className="text-slate-500 text-xs mt-1">
+                                  <p className="text-slate-500 dark:text-gray-400 text-xs mt-1">
                                     Enter 10-digit phone number in format (777)
                                     888-9999
                                   </p>
@@ -4008,7 +4016,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               {/* Pattern (conditional) */}
                               {createFormData.blockingType === 'pattern' && (
                                 <div>
-                                  <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                  <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                     Pattern (Regex)
                                   </Label>
                                   <Input
@@ -4020,7 +4028,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                       )
                                     }
                                     placeholder="^\\+1800.*"
-                                    className={`px-4 py-3 border-slate-200 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200 ${formErrors.pattern ? 'border-red-500' : ''}`}
+                                    className={`px-4 py-3 border-slate-200 dark:border-neutral-700 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200 ${formErrors.pattern ? 'border-red-500' : ''}`}
                                   />
                                   {formErrors.pattern && (
                                     <p className="text-red-500 text-xs mt-1">
@@ -4032,7 +4040,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                               {/* Block Type */}
                               <div>
-                                <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                   Block Type
                                 </Label>
                                 <Select
@@ -4043,7 +4051,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     handleFormInputChange('blockType', value)
                                   }
                                 >
-                                  <SelectTrigger className="px-4 py-3 border-slate-200 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200">
+                                  <SelectTrigger className="px-4 py-3 border-slate-200 dark:border-neutral-700 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -4060,7 +4068,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               {/* Expiration Date (conditional) */}
                               {createFormData.blockType === 'temporary' && (
                                 <div>
-                                  <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                  <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                     Expiration Date
                                   </Label>
                                   <Input
@@ -4072,7 +4080,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                         e.target.value
                                       )
                                     }
-                                    className={`px-4 py-3 border-slate-200 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200 ${formErrors.expiresAt ? 'border-red-500' : ''}`}
+                                    className={`px-4 py-3 border-slate-200 dark:border-neutral-700 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200 ${formErrors.expiresAt ? 'border-red-500' : ''}`}
                                   />
                                   {formErrors.expiresAt && (
                                     <p className="text-red-500 text-xs mt-1">
@@ -4084,7 +4092,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                               {/* Block Reason */}
                               <div>
-                                <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                   Block Reason
                                 </Label>
                                 <Select
@@ -4093,7 +4101,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     handleFormInputChange('reason', value)
                                   }
                                 >
-                                  <SelectTrigger className="px-4 py-3 border-slate-200 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200">
+                                  <SelectTrigger className="px-4 py-3 border-slate-200 dark:border-neutral-700 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -4115,7 +4123,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                               {/* Source Selection Type */}
                               <div>
-                                <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                   Source Selection
                                 </Label>
                                 <Select
@@ -4127,7 +4135,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     )
                                   }
                                 >
-                                  <SelectTrigger className="px-4 py-3 border-slate-200 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200">
+                                  <SelectTrigger className="px-4 py-3 border-slate-200 dark:border-neutral-700 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -4145,7 +4153,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               {createFormData.sourceSelectionType ===
                                 'specific' && (
                                 <div>
-                                  <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                  <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                     Source Codes
                                   </Label>
                                   <Popover
@@ -4238,7 +4246,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                               {/* Notes */}
                               <div>
-                                <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                   Notes (Optional)
                                 </Label>
                                 <Textarea
@@ -4250,7 +4258,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     )
                                   }
                                   placeholder="Additional notes about this blocking rule..."
-                                  className="px-4 py-3 border-slate-200 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200"
+                                  className="px-4 py-3 border-slate-200 dark:border-neutral-700 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-red-500/20 focus:border-red-300 transition-all duration-200"
                                   rows={3}
                                 />
                               </div>
@@ -4259,7 +4267,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               <Button
                                 onClick={handleCreateBlockingRule}
                                 disabled={creating}
-                                className="w-full bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white shadow-lg rounded-xl"
+                                className="w-full bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 dark:from-red-600 dark:to-rose-600 dark:hover:from-red-700 dark:hover:to-rose-700 text-white shadow-lg rounded-xl"
                               >
                                 <Shield className="w-4 h-4 mr-2" />
                                 {creating ? 'Creating...' : 'Block Number'}
@@ -4280,13 +4288,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                       >
                         <div className="flex-1 flex flex-col min-h-0">
                           <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-slate-900">
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100">
                               Currently Blocked Numbers
                             </h3>
                             <div className="flex items-center space-x-2">
                               <Badge
                                 variant="outline"
-                                className="text-red-600 border-red-200"
+                                className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800"
                               >
                                 {callBlockingLoading
                                   ? '...'
@@ -4311,7 +4319,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                 </div>
                               ) : callBlockingData.length === 0 ? (
                                 <div className="flex items-center justify-center py-8">
-                                  <div className="text-slate-500">
+                                  <div className="text-slate-500 dark:text-gray-400">
                                     No blocked numbers found
                                   </div>
                                 </div>
@@ -4361,12 +4369,12 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   return (
                                     <div
                                       key={blocked._id}
-                                      className="p-4 bg-white rounded-xl border border-slate-100 hover:border-red-200 hover:bg-red-50/30 transition-all duration-200"
+                                      className="p-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 hover:border-red-200 dark:hover:border-red-800 hover:bg-red-50/30 dark:hover:bg-red-900/20 transition-all duration-200"
                                     >
                                       <div className="flex items-center justify-between">
                                         <div className="flex-1">
                                           <div className="flex items-center space-x-3 mb-2">
-                                            <span className="font-mono text-lg font-semibold text-slate-900">
+                                            <span className="font-mono text-lg font-semibold text-slate-900 dark:text-gray-100">
                                               {formatPhoneNumber(
                                                 blocked.phoneNumber
                                               )}
@@ -4377,16 +4385,16 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                                 blocked.reason === 'spam' ||
                                                 blocked.reason ===
                                                   'telemarketing'
-                                                  ? 'text-red-600 border-red-200'
+                                                  ? 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
                                                   : blocked.reason ===
                                                       'harassment'
-                                                    ? 'text-orange-600 border-orange-200'
+                                                    ? 'text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800'
                                                     : blocked.reason === 'fraud'
-                                                      ? 'text-red-700 border-red-300'
+                                                      ? 'text-red-700 dark:text-red-400 border-red-300 dark:border-red-800'
                                                       : blocked.reason ===
                                                           'wrong_number'
-                                                        ? 'text-blue-600 border-blue-200'
-                                                        : 'text-slate-600 border-slate-200'
+                                                        ? 'text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
+                                                        : 'text-slate-600 dark:text-gray-400 border-slate-200 dark:border-neutral-700'
                                               }`}
                                             >
                                               {formatReason(blocked.reason)}
@@ -4396,8 +4404,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                               className={`capitalize text-xs ${
                                                 blocked.blockingType ===
                                                 'pattern'
-                                                  ? 'text-blue-600 border-blue-200'
-                                                  : 'text-indigo-600 border-indigo-200'
+                                                  ? 'text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
+                                                  : 'text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800'
                                               }`}
                                             >
                                               {blocked.blockingType}
@@ -4407,14 +4415,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                               className={`capitalize text-xs ${
                                                 blocked.blockType ===
                                                 'permanent'
-                                                  ? 'text-purple-600 border-purple-200'
-                                                  : 'text-green-600 border-green-200'
+                                                  ? 'text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800'
+                                                  : 'text-green-600 dark:text-green-400 border-green-200 dark:border-green-800'
                                               }`}
                                             >
                                               {blocked.blockType}
                                             </Badge>
                                           </div>
-                                          <div className="flex items-center space-x-4 text-sm text-slate-600">
+                                          <div className="flex items-center space-x-4 text-sm text-slate-600 dark:text-gray-400">
                                             <span>
                                               Blocked:{' '}
                                               {formatDate(blocked.createdAt)}
@@ -4424,7 +4432,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                               {blocked.blockedCount}
                                             </span>
                                             {blocked.notes && (
-                                              <span className="text-slate-500 italic">
+                                              <span className="text-slate-500 dark:text-gray-500 italic">
                                                 {blocked.notes.length > 50
                                                   ? `${blocked.notes.substring(0, 50)}...`
                                                   : blocked.notes}
@@ -4439,7 +4447,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                                     <Badge
                                                       key={tagIndex}
                                                       variant="outline"
-                                                      className="text-xs text-slate-500 border-slate-200"
+                                                      className="text-xs text-slate-500 dark:text-gray-400 border-slate-200 dark:border-neutral-700"
                                                     >
                                                       {tag}
                                                     </Badge>
@@ -4456,7 +4464,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                             <Button
                                               variant="ghost"
                                               size="sm"
-                                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                                               onClick={() =>
                                                 handleEditRule(blocked)
                                               }
@@ -4473,7 +4481,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                             <Button
                                               variant="ghost"
                                               size="sm"
-                                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                              className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
                                               onClick={() =>
                                                 handleDeleteRule(blocked)
                                               }
@@ -4496,7 +4504,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     variant="outline"
                                     onClick={handleLoadMore}
                                     disabled={loadingMore}
-                                    className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                                    className="text-slate-600 dark:text-gray-400 border-slate-300 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800"
                                   >
                                     {loadingMore ? (
                                       <>
@@ -4521,13 +4529,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     {/* Statistics Card */}
                     {statistics && (
                       <div className="mt-8">
-                        <Card className="border-0 bg-gradient-to-r from-slate-50 to-blue-50 rounded-2xl">
+                        <Card className="border-0 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-neutral-800 dark:to-neutral-900 rounded-2xl border dark:border-neutral-700">
                           <CardContent className="p-6">
                             {checkPermission('MOD039', 'view_statistics') && (
                               <>
                                 <div className="mb-6">
                                   <div className="flex flex-wrap items-center justify-between gap-4">
-                                    <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                                    <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-4">
                                       Blocking Statistics
                                     </h3>
                                     <div className="flex items-center space-x-2">
@@ -4537,16 +4545,16 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                         onChange={e =>
                                           setBlockingStartDate(e.target.value)
                                         }
-                                        className="text-sm"
+                                        className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
                                       />
-                                      <span className="text-slate-500">to</span>
+                                      <span className="text-slate-500 dark:text-gray-400">to</span>
                                       <Input
                                         type="date"
                                         value={blockingEndDate}
                                         onChange={e =>
                                           setBlockingEndDate(e.target.value)
                                         }
-                                        className="text-sm"
+                                        className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
                                       />
                                       <Select
                                         value={blockingGroupBy}
@@ -4558,7 +4566,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                             | 'none'
                                         ) => setBlockingGroupBy(value)}
                                       >
-                                        <SelectTrigger className="w-24 text-sm">
+                                        <SelectTrigger className="w-24 text-sm dark:bg-neutral-800 dark:border-neutral-700">
                                           <SelectValue placeholder="Group" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -4579,7 +4587,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                                        className="text-slate-600 dark:text-gray-400 border-slate-300 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800"
                                         onClick={fetchCallBlockingStatistics}
                                         disabled={statisticsLoading}
                                       >
@@ -4594,53 +4602,53 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
                                   {/* Summary Stats */}
-                                  <div className="text-center p-4 bg-white/60 rounded-xl">
-                                    <div className="text-2xl font-bold text-slate-900">
+                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
+                                    <div className="text-2xl font-bold text-slate-900 dark:text-gray-100">
                                       {statistics?.summary?.totalRules || 0}
                                     </div>
-                                    <div className="text-sm text-slate-600">
+                                    <div className="text-sm text-slate-600 dark:text-gray-400">
                                       Total Rules
                                     </div>
                                   </div>
-                                  <div className="text-center p-4 bg-white/60 rounded-xl">
+                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
                                     <div className="text-2xl font-bold text-green-600">
                                       {statistics?.summary?.activeRules || 0}
                                     </div>
-                                    <div className="text-sm text-slate-600">
+                                    <div className="text-sm text-slate-600 dark:text-gray-400">
                                       Active
                                     </div>
                                   </div>
-                                  <div className="text-center p-4 bg-white/60 rounded-xl">
+                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
                                     <div className="text-2xl font-bold text-red-600">
                                       {statistics?.summary?.inactiveRules || 0}
                                     </div>
-                                    <div className="text-sm text-slate-600">
+                                    <div className="text-sm text-slate-600 dark:text-gray-400">
                                       Inactive
                                     </div>
                                   </div>
-                                  <div className="text-center p-4 bg-white/60 rounded-xl">
+                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
                                     <div className="text-2xl font-bold text-orange-600">
                                       {statistics?.summary?.expiredRules || 0}
                                     </div>
-                                    <div className="text-sm text-slate-600">
+                                    <div className="text-sm text-slate-600 dark:text-gray-400">
                                       Expired
                                     </div>
                                   </div>
-                                  <div className="text-center p-4 bg-white/60 rounded-xl">
+                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
                                     <div className="text-2xl font-bold text-blue-600">
                                       {statistics?.summary?.totalBlockedCalls ||
                                         0}
                                     </div>
-                                    <div className="text-sm text-slate-600">
+                                    <div className="text-sm text-slate-600 dark:text-gray-400">
                                       Blocked Calls
                                     </div>
                                   </div>
-                                  <div className="text-center p-4 bg-white/60 rounded-xl">
+                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
                                     <div className="text-2xl font-bold text-purple-600">
                                       {(statistics?.byType?.number || 0) +
                                         (statistics?.byType?.pattern || 0)}
                                     </div>
-                                    <div className="text-sm text-slate-600">
+                                    <div className="text-sm text-slate-600 dark:text-gray-400">
                                       Total Rules
                                     </div>
                                   </div>
@@ -4649,28 +4657,28 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                   {/* By Type */}
                                   <div>
-                                    <h4 className="font-semibold text-slate-900 mb-3">
+                                    <h4 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
                                       By Type
                                     </h4>
                                     <div className="space-y-2">
-                                      <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
-                                        <span className="text-sm text-slate-600">
+                                      <div className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
+                                        <span className="text-sm text-slate-600 dark:text-gray-400">
                                           Number
                                         </span>
                                         <Badge
                                           variant="outline"
-                                          className="text-blue-600 border-blue-200"
+                                          className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
                                         >
                                           {statistics?.byType?.number || 0}
                                         </Badge>
                                       </div>
-                                      <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
-                                        <span className="text-sm text-slate-600">
+                                      <div className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
+                                        <span className="text-sm text-slate-600 dark:text-gray-400">
                                           Pattern
                                         </span>
                                         <Badge
                                           variant="outline"
-                                          className="text-indigo-600 border-indigo-200"
+                                          className="text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800"
                                         >
                                           {statistics?.byType?.pattern || 0}
                                         </Badge>
@@ -4680,7 +4688,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                                   {/* By Reason */}
                                   <div>
-                                    <h4 className="font-semibold text-slate-900 mb-3">
+                                    <h4 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
                                       By Reason
                                     </h4>
                                     <div className="space-y-2">
@@ -4689,9 +4697,9 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                       ).map(([reason, count]) => (
                                         <div
                                           key={reason}
-                                          className="flex justify-between items-center p-2 bg-white/60 rounded-lg"
+                                          className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg"
                                         >
-                                          <span className="text-sm text-slate-600 capitalize">
+                                          <span className="text-sm text-slate-600 dark:text-gray-400 capitalize">
                                             {reason.replace('_', ' ')}
                                           </span>
                                           <Badge
@@ -4699,14 +4707,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                             className={`text-xs ${
                                               reason === 'spam' ||
                                               reason === 'telemarketing'
-                                                ? 'text-red-600 border-red-200'
+                                                ? 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
                                                 : reason === 'harassment'
-                                                  ? 'text-orange-600 border-orange-200'
+                                                  ? 'text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800'
                                                   : reason === 'fraud'
-                                                    ? 'text-red-700 border-red-300'
+                                                    ? 'text-red-700 dark:text-red-400 border-red-300 dark:border-red-800'
                                                     : reason === 'wrong_number'
-                                                      ? 'text-blue-600 border-blue-200'
-                                                      : 'text-slate-600 border-slate-200'
+                                                      ? 'text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
+                                                      : 'text-slate-600 dark:text-gray-400 border-slate-200 dark:border-neutral-700'
                                             }`}
                                           >
                                             {count}
@@ -4718,29 +4726,29 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                                   {/* By Block Type */}
                                   <div>
-                                    <h4 className="font-semibold text-slate-900 mb-3">
+                                    <h4 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
                                       By Block Type
                                     </h4>
                                     <div className="space-y-2">
-                                      <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
-                                        <span className="text-sm text-slate-600">
+                                      <div className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
+                                        <span className="text-sm text-slate-600 dark:text-gray-400">
                                           Permanent
                                         </span>
                                         <Badge
                                           variant="outline"
-                                          className="text-purple-600 border-purple-200"
+                                          className="text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800"
                                         >
                                           {statistics?.byBlockType?.permanent ||
                                             0}
                                         </Badge>
                                       </div>
-                                      <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
-                                        <span className="text-sm text-slate-600">
+                                      <div className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
+                                        <span className="text-sm text-slate-600 dark:text-gray-400">
                                           Temporary
                                         </span>
                                         <Badge
                                           variant="outline"
-                                          className="text-green-600 border-green-200"
+                                          className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-800"
                                         >
                                           {statistics?.byBlockType?.temporary ||
                                             0}
@@ -4754,7 +4762,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                 {statistics?.topBlockedNumbers &&
                                   statistics.topBlockedNumbers.length > 0 && (
                                     <div className="mt-6">
-                                      <h4 className="font-semibold text-slate-900 mb-3">
+                                      <h4 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
                                         Top Blocked Numbers
                                       </h4>
                                       <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -4763,13 +4771,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                           .map((item, index) => (
                                             <div
                                               key={item._id}
-                                              className="flex justify-between items-center p-3 bg-white/60 rounded-lg"
+                                              className="flex justify-between items-center p-3 bg-white/60 dark:bg-neutral-800/60 rounded-lg"
                                             >
                                               <div className="flex items-center space-x-3">
-                                                <span className="text-sm font-medium text-slate-500">
+                                                <span className="text-sm font-medium text-slate-500 dark:text-gray-400">
                                                   #{index + 1}
                                                 </span>
-                                                <span className="font-mono text-sm text-slate-900">
+                                                <span className="font-mono text-sm text-slate-900 dark:text-gray-100">
                                                   {item.phoneNumber ||
                                                     item.pattern}
                                                 </span>
@@ -4779,17 +4787,17 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                                     item.reason === 'spam' ||
                                                     item.reason ===
                                                       'telemarketing'
-                                                      ? 'text-red-600 border-red-200'
+                                                      ? 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
                                                       : item.reason ===
                                                           'harassment'
-                                                        ? 'text-orange-600 border-orange-200'
+                                                        ? 'text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800'
                                                         : item.reason ===
                                                             'fraud'
-                                                          ? 'text-red-700 border-red-300'
+                                                          ? 'text-red-700 dark:text-red-400 border-red-300 dark:border-red-800'
                                                           : item.reason ===
                                                               'wrong_number'
-                                                            ? 'text-blue-600 border-blue-200'
-                                                            : 'text-slate-600 border-slate-200'
+                                                            ? 'text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
+                                                            : 'text-slate-600 dark:text-gray-400 border-slate-200 dark:border-neutral-700'
                                                   }`}
                                                 >
                                                   {item.reason.replace(
@@ -4799,15 +4807,15 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                                 </Badge>
                                               </div>
                                               <div className="flex items-center space-x-2">
-                                                <span className="text-sm text-slate-600">
+                                                <span className="text-sm text-slate-600 dark:text-gray-400">
                                                   {item.blockedCount} calls
                                                 </span>
                                                 <Badge
                                                   variant="outline"
                                                   className={`text-xs ${
                                                     item.isCurrentlyActive
-                                                      ? 'text-green-600 border-green-200'
-                                                      : 'text-red-600 border-red-200'
+                                                      ? 'text-green-600 dark:text-green-400 border-green-200 dark:border-green-800'
+                                                      : 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
                                                   }`}
                                                 >
                                                   {item.isCurrentlyActive
@@ -4826,7 +4834,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               className={
                                 'flex items-center space-x-2 ' +
                                 (checkPermission('MOD039', 'view_statistics')
-                                  ? 'mt-6 pt-6 border-t border-slate-200'
+                                  ? 'mt-6 pt-6 border-t border-slate-200 dark:border-neutral-700'
                                   : '')
                               }
                             >
@@ -4834,7 +4842,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                                  className="text-slate-600 dark:text-gray-400 border-slate-300 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800"
                                   onClick={handleImportBlockedList}
                                   disabled={importing}
                                 >
@@ -4848,7 +4856,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-green-600 border-green-300 hover:bg-green-50"
+                                  className="text-green-600 dark:text-green-400 border-green-300 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-900/20"
                                   onClick={handleExportBlockedList}
                                   disabled={exporting}
                                 >
@@ -4870,21 +4878,21 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
               {/* Spam Protection */}
               {checkPermission('MOD040', 'view') && (
                 <Card
-                  ref={spamProtectionRef}
-                  data-section="spam-protection"
-                  className="border-0 bg-white/70 backdrop-blur-sm rounded-2xl"
-                >
+                    ref={spamProtectionRef}
+                    data-section="spam-protection"
+                    className="border-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-2xl"
+                  >
                   <CardContent className="p-8">
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center space-x-3">
-                        <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-100 rounded-2xl flex items-center justify-center">
-                          <Shield className="w-8 h-8 text-orange-600" />
+                        <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-2xl flex items-center justify-center">
+                          <Shield className="w-8 h-8 text-orange-600 dark:text-orange-400" />
                         </div>
                         <div>
-                          <h2 className="text-2xl font-bold text-slate-900">
+                          <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100">
                             Spam Protection
                           </h2>
-                          <p className="text-slate-600">
+                          <p className="text-slate-600 dark:text-gray-400">
                             Manage spam protection rules and automated call
                             screening
                           </p>
@@ -4908,25 +4916,25 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                         </div>
                       ) : spamProtectionError ? (
                         <div className="text-center py-12">
-                          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                          <p className="text-red-600 mb-4">
+                          <AlertTriangle className="w-12 h-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
+                          <p className="text-red-600 dark:text-red-400 mb-4">
                             {spamProtectionError}
                           </p>
                           <Button
                             onClick={fetchSpamProtectionData}
                             variant="outline"
-                            className="text-red-600 border-red-200 hover:bg-red-50"
+                            className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
                           >
                             Try Again
                           </Button>
                         </div>
                       ) : spamProtectionData.length === 0 ? (
                         <div className="text-center py-12">
-                          <Shield className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                          <Shield className="w-12 h-12 text-slate-400 dark:text-neutral-500 mx-auto mb-4" />
+                          <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-2">
                             No Spam Protection Rules
                           </h3>
-                          <p className="text-slate-600 mb-6">
+                          <p className="text-slate-600 dark:text-gray-400 mb-6">
                             Create your first spam protection rule to start
                             screening calls
                           </p>
@@ -4940,35 +4948,35 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                           {spamProtectionData.map(rule => (
                             <div
                               key={rule._id}
-                              className="p-4 bg-white/60 rounded-xl border border-slate-200 hover:border-slate-300 transition-all duration-200"
+                              className="p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl border border-slate-200 dark:border-neutral-700 hover:border-slate-300 dark:hover:border-neutral-600 transition-all duration-200"
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex-1">
                                   <div className="flex items-center space-x-3 mb-2">
-                                    <h3 className="text-lg font-semibold text-slate-900">
+                                    <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100">
                                       {rule.title}
                                     </h3>
                                     <Badge
                                       variant="outline"
                                       className={`${
                                         rule.status === 'active'
-                                          ? 'text-green-600 border-green-200 bg-green-50'
+                                          ? 'text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
                                           : rule.status === 'failed'
-                                            ? 'text-red-600 border-red-200 bg-red-50'
-                                            : 'text-yellow-600 border-yellow-200 bg-yellow-50'
+                                            ? 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20'
+                                            : 'text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20'
                                       }`}
                                     >
                                       {rule.status}
                                     </Badge>
                                     <Badge
                                       variant="outline"
-                                      className="text-slate-600"
+                                      className="text-slate-600 dark:text-gray-400 dark:border-neutral-700"
                                     >
                                       {rule.code}
                                     </Badge>
                                   </div>
 
-                                  <div className="flex items-center space-x-6 text-sm text-slate-600">
+                                  <div className="flex items-center space-x-6 text-sm text-slate-600 dark:text-gray-400">
                                     <span>
                                       <span className="font-medium">Type:</span>{' '}
                                       {rule.protection === '{{dynamic}}'
@@ -5004,7 +5012,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="text-slate-600 hover:text-slate-900"
+                                    className="text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
                                     onClick={() =>
                                       handleSpamProtectionView(rule)
                                     }
@@ -5018,7 +5026,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 items-center"
+                                      className="text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 dark:border-neutral-700 items-center"
                                       onClick={() => {
                                         setSelectedSpamProtectionRule(rule)
                                         handleSpamProtectionRegenerateAudio()
@@ -5039,7 +5047,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="text-slate-600 hover:text-slate-900"
+                                      className="text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
                                       onClick={() =>
                                         handleSpamProtectionEdit(rule)
                                       }
@@ -5051,7 +5059,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 dark:border-neutral-700"
                                       onClick={() =>
                                         handleSpamProtectionDelete(rule)
                                       }
@@ -5071,7 +5079,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                 variant="outline"
                                 onClick={handleLoadMoreSpamProtection}
                                 disabled={spamProtectionLoadingMore}
-                                className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                                className="text-slate-600 dark:text-gray-400 border-slate-300 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800"
                               >
                                 {spamProtectionLoadingMore ? (
                                   <>
@@ -5096,10 +5104,10 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                       <>
                         {spamProtectionStatistics && (
                           <div className="mt-8">
-                            <Card className="border-0 bg-gradient-to-r from-slate-50 to-blue-50 rounded-2xl">
+                            <Card className="border-0 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-neutral-800 dark:to-neutral-900 rounded-2xl border dark:border-neutral-700">
                               <CardContent className="p-6">
                                 <div className="flex items-center justify-between mb-6">
-                                  <h3 className="text-lg font-semibold text-slate-900">
+                                  <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100">
                                     Spam Protection Statistics
                                   </h3>
                                   <div className="flex items-center space-x-3">
@@ -5112,9 +5120,9 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                             e.target.value
                                           )
                                         }
-                                        className="text-sm"
+                                        className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
                                       />
-                                      <span className="text-slate-500">to</span>
+                                      <span className="text-slate-500 dark:text-gray-400">to</span>
                                       <Input
                                         type="date"
                                         value={spamProtectionEndDate}
@@ -5123,13 +5131,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                             e.target.value
                                           )
                                         }
-                                        className="text-sm"
+                                        className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
                                       />
                                     </div>
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                                      className="text-slate-600 dark:text-gray-400 border-slate-300 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800"
                                       onClick={fetchSpamProtectionStatistics}
                                       disabled={spamProtectionStatisticsLoading}
                                     >
@@ -5143,57 +5151,57 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
                                   {/* Summary Stats */}
-                                  <div className="text-center p-4 bg-white/60 rounded-xl">
-                                    <div className="text-2xl font-bold text-slate-900">
+                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
+                                    <div className="text-2xl font-bold text-slate-900 dark:text-gray-100">
                                       {spamProtectionStatistics?.summary
                                         ?.totalRules || 0}
                                     </div>
-                                    <div className="text-sm text-slate-600">
+                                    <div className="text-sm text-slate-600 dark:text-gray-400">
                                       Total Rules
                                     </div>
                                   </div>
-                                  <div className="text-center p-4 bg-white/60 rounded-xl">
-                                    <div className="text-2xl font-bold text-green-600">
+                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
+                                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                                       {spamProtectionStatistics?.summary
                                         ?.activeRules || 0}
                                     </div>
-                                    <div className="text-sm text-slate-600">
+                                    <div className="text-sm text-slate-600 dark:text-gray-400">
                                       Active
                                     </div>
                                   </div>
-                                  <div className="text-center p-4 bg-white/60 rounded-xl">
-                                    <div className="text-2xl font-bold text-yellow-600">
+                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
+                                    <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                                       {spamProtectionStatistics?.summary
                                         ?.processingRules || 0}
                                     </div>
-                                    <div className="text-sm text-slate-600">
+                                    <div className="text-sm text-slate-600 dark:text-gray-400">
                                       Processing
                                     </div>
                                   </div>
-                                  <div className="text-center p-4 bg-white/60 rounded-xl">
-                                    <div className="text-2xl font-bold text-red-600">
+                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
+                                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                                       {spamProtectionStatistics?.summary
                                         ?.failedRules || 0}
                                     </div>
-                                    <div className="text-sm text-slate-600">
+                                    <div className="text-sm text-slate-600 dark:text-gray-400">
                                       Failed
                                     </div>
                                   </div>
-                                  <div className="text-center p-4 bg-white/60 rounded-xl">
-                                    <div className="text-2xl font-bold text-gray-600">
+                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
+                                    <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">
                                       {spamProtectionStatistics?.summary
                                         ?.inactiveRules || 0}
                                     </div>
-                                    <div className="text-sm text-slate-600">
+                                    <div className="text-sm text-slate-600 dark:text-gray-400">
                                       Inactive
                                     </div>
                                   </div>
-                                  <div className="text-center p-4 bg-white/60 rounded-xl">
-                                    <div className="text-2xl font-bold text-blue-600">
+                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
+                                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                       {spamProtectionStatistics?.summary
                                         ?.totalUsage || 0}
                                     </div>
-                                    <div className="text-sm text-slate-600">
+                                    <div className="text-sm text-slate-600 dark:text-gray-400">
                                       Total Usage
                                     </div>
                                   </div>
@@ -5202,7 +5210,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                   {/* By Protection Type */}
                                   <div>
-                                    <h4 className="font-semibold text-slate-900 mb-3">
+                                    <h4 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
                                       By Protection Type
                                     </h4>
                                     <div className="space-y-2">
@@ -5212,16 +5220,16 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                       ).map(([type, count]) => (
                                         <div
                                           key={type}
-                                          className="flex justify-between items-center p-2 bg-white/60 rounded-lg"
+                                          className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg"
                                         >
-                                          <span className="text-sm text-slate-600">
+                                          <span className="text-sm text-slate-600 dark:text-gray-400">
                                             {type === '{{dynamic}}'
                                               ? 'Dynamic'
                                               : type}
                                           </span>
                                           <Badge
                                             variant="outline"
-                                            className="text-blue-600 border-blue-200"
+                                            className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
                                           >
                                             {count}
                                           </Badge>
@@ -5232,29 +5240,29 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                                   {/* By Source Type */}
                                   <div>
-                                    <h4 className="font-semibold text-slate-900 mb-3">
+                                    <h4 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
                                       By Source Type
                                     </h4>
                                     <div className="space-y-2">
-                                      <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
-                                        <span className="text-sm text-slate-600">
+                                      <div className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
+                                        <span className="text-sm text-slate-600 dark:text-gray-400">
                                           All Sources
                                         </span>
                                         <Badge
                                           variant="outline"
-                                          className="text-green-600 border-green-200"
+                                          className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-800"
                                         >
                                           {spamProtectionStatistics
                                             ?.bySourceType?.all || 0}
                                         </Badge>
                                       </div>
-                                      <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
-                                        <span className="text-sm text-slate-600">
+                                      <div className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
+                                        <span className="text-sm text-slate-600 dark:text-gray-400">
                                           Specific Sources
                                         </span>
                                         <Badge
                                           variant="outline"
-                                          className="text-blue-600 border-blue-200"
+                                          className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
                                         >
                                           {spamProtectionStatistics
                                             ?.bySourceType?.specific || 0}
@@ -5265,7 +5273,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                                   {/* Most Used Rules */}
                                   <div>
-                                    <h4 className="font-semibold text-slate-900 mb-3">
+                                    <h4 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
                                       Most Used Rules
                                     </h4>
                                     <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -5274,19 +5282,19 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                         .map((rule, index) => (
                                           <div
                                             key={rule._id}
-                                            className="flex justify-between items-center p-2 bg-white/60 rounded-lg"
+                                            className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg"
                                           >
                                             <div className="flex items-center space-x-2">
-                                              <span className="text-sm font-medium text-slate-500">
+                                              <span className="text-sm font-medium text-slate-500 dark:text-gray-500">
                                                 #{index + 1}
                                               </span>
-                                              <span className="text-sm text-slate-900 truncate">
+                                              <span className="text-sm text-slate-900 dark:text-gray-100 truncate">
                                                 {rule.title}
                                               </span>
                                             </div>
                                             <Badge
                                               variant="outline"
-                                              className="text-xs text-slate-600"
+                                              className="text-xs text-slate-600 dark:text-gray-400 dark:border-neutral-700"
                                             >
                                               {rule.usageCount}
                                             </Badge>
@@ -5309,31 +5317,31 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
               {(checkPermission('MOD041', 'view') ||
                 checkPermission('MOD042', 'view')) && (
                 <Card
-                  ref={phoneNumberRef}
-                  data-section="phone-numbers"
-                  className="border-0 bg-white/70 backdrop-blur-sm rounded-2xl"
-                >
+                    ref={phoneNumberRef}
+                    data-section="phone-numbers"
+                    className="border-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-2xl"
+                  >
                   <CardContent className="p-8">
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center space-x-3">
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center">
-                          <Phone className="w-8 h-8 text-blue-600" />
+                        <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center">
+                          <Phone className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                          <h2 className="text-2xl font-bold text-slate-900">
+                          <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100">
                             Phone Number Management
                           </h2>
-                          <p className="text-slate-600">
+                          <p className="text-slate-600 dark:text-gray-400">
                             Manage your phone numbers and their capabilities
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-3">
                         <div className="text-right">
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-slate-500 dark:text-gray-400">
                             Total Numbers
                           </p>
-                          <p className="text-2xl font-bold text-[#4a9430]">
+                          <p className="text-2xl font-bold text-[#4a9430] dark:text-[#53a533]">
                             {phoneNumberLoading
                               ? '...'
                               : phoneNumberData.length}
@@ -5346,14 +5354,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     {checkPermission('MOD041', 'view') && (
                       <div className="mb-4 flex items-center space-x-4">
                         <div className="relative max-w-md">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-gray-500 w-4 h-4" />
                           <Input
                             placeholder="Search phone numbers..."
                             value={phoneNumberSearchTerm}
                             onChange={e =>
                               setPhoneNumberSearchTerm(e.target.value)
                             }
-                            className="pl-10 text-sm"
+                            className="pl-10 text-sm dark:bg-neutral-800 dark:border-neutral-700"
                           />
                         </div>
                         <div className="flex items-center space-x-2">
@@ -5363,16 +5371,16 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             onChange={e =>
                               setPhoneNumberStartDate(e.target.value)
                             }
-                            className="text-sm"
+                            className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
                           />
-                          <span className="text-slate-500">to</span>
+                          <span className="text-slate-500 dark:text-gray-400">to</span>
                           <Input
                             type="date"
                             value={phoneNumberEndDate}
                             onChange={e =>
                               setPhoneNumberEndDate(e.target.value)
                             }
-                            className="text-sm"
+                            className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
                           />
                         </div>
                       </div>
@@ -5382,32 +5390,32 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                       <>
                         <div className="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium text-slate-700">
+                            <Label className="text-sm font-medium text-slate-700 dark:text-gray-300">
                               Search
                             </Label>
                             <div className="relative">
-                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-gray-500 w-4 h-4" />
                               <Input
                                 placeholder="Search phone numbers..."
                                 value={phoneNumberSearchTerm}
                                 onChange={e =>
                                   setPhoneNumberSearchTerm(e.target.value)
                                 }
-                                className="pl-10 text-sm"
+                                className="pl-10 text-sm dark:bg-neutral-800 dark:border-neutral-700"
                               />
                             </div>
                           </div>
 
                           {/* Status Filter */}
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium text-slate-700">
+                            <Label className="text-sm font-medium text-slate-700 dark:text-gray-300">
                               Status
                             </Label>
                             <Select
                               value={phoneNumberStatus}
                               onValueChange={setPhoneNumberStatus}
                             >
-                              <SelectTrigger className="text-sm">
+                              <SelectTrigger className="text-sm dark:bg-neutral-800 dark:border-neutral-700">
                                 <SelectValue placeholder="All Statuses" />
                               </SelectTrigger>
                               <SelectContent>
@@ -5425,7 +5433,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                           </div>
                           {/* Tenant ID Filter */}
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium text-slate-700">
+                            <Label className="text-sm font-medium text-slate-700 dark:text-gray-300">
                               Tenant
                             </Label>
                             <Popover
@@ -5445,7 +5453,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   variant="outline"
                                   role="combobox"
                                   aria-expanded={tenantDropdownOpen}
-                                  className="w-full justify-between text-sm"
+                                  className="w-full justify-between text-sm dark:bg-neutral-800 dark:border-neutral-700"
                                 >
                                   {phoneNumberTenantId &&
                                   phoneNumberTenantId !== 'all'
@@ -5540,7 +5548,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                           {/* By Tenant ID Filter */}
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium text-slate-700">
+                            <Label className="text-sm font-medium text-slate-700 dark:text-gray-300">
                               By Tenant
                             </Label>
                             <Popover
@@ -5560,7 +5568,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   variant="outline"
                                   role="combobox"
                                   aria-expanded={byTenantDropdownOpen}
-                                  className="w-full justify-between text-sm"
+                                  className="w-full justify-between text-sm dark:bg-neutral-800 dark:border-neutral-700"
                                 >
                                   {phoneNumberByTenantId &&
                                   phoneNumberByTenantId !== 'all'
@@ -5656,14 +5664,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                         <div className="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                           {/* Country Filter */}
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium text-slate-700">
+                            <Label className="text-sm font-medium text-slate-700 dark:text-gray-300">
                               Country
                             </Label>
                             <Select
                               value={phoneNumberCountry}
                               onValueChange={setPhoneNumberCountry}
                             >
-                              <SelectTrigger className="text-sm">
+                              <SelectTrigger className="text-sm dark:bg-neutral-800 dark:border-neutral-700">
                                 <SelectValue placeholder="All Countries" />
                               </SelectTrigger>
                               <SelectContent>
@@ -5682,7 +5690,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium text-slate-700">
+                            <Label className="text-sm font-medium text-slate-700 dark:text-gray-300">
                               Start Date
                             </Label>
                             <Input
@@ -5691,11 +5699,11 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               onChange={e =>
                                 setPhoneNumberStartDate(e.target.value)
                               }
-                              className="text-sm"
+                              className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium text-slate-700">
+                            <Label className="text-sm font-medium text-slate-700 dark:text-gray-300">
                               End Date
                             </Label>
                             <Input
@@ -5704,7 +5712,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               onChange={e =>
                                 setPhoneNumberEndDate(e.target.value)
                               }
-                              className="text-sm"
+                              className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
                             />
                           </div>
                         </div>
@@ -5717,16 +5725,16 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                       <>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                           {/* Total Numbers */}
-                          <div className="p-4 bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl border border-slate-100">
+                          <div className="p-4 bg-gradient-to-br from-slate-50 to-gray-50 dark:from-neutral-800 dark:to-neutral-900 rounded-xl border border-slate-100 dark:border-neutral-700">
                             <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-slate-500 rounded-lg flex items-center justify-center">
+                              <div className="w-10 h-10 bg-slate-500 dark:bg-neutral-700 rounded-lg flex items-center justify-center">
                                 <Phone className="w-5 h-5 text-white" />
                               </div>
                               <div>
-                                <p className="text-sm text-slate-600">
+                                <p className="text-sm text-slate-600 dark:text-gray-400">
                                   Total Numbers
                                 </p>
-                                <p className="text-xl font-bold text-slate-900">
+                                <p className="text-xl font-bold text-slate-900 dark:text-gray-100">
                                   {phoneNumberStatistics?.summary
                                     ?.totalNumbers || 0}
                                 </p>
@@ -5734,14 +5742,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             </div>
                           </div>
                           {/* Active Numbers */}
-                          <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100">
+                          <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-100 dark:border-green-800/30">
                             <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                              <div className="w-10 h-10 bg-green-500 dark:bg-green-600 rounded-lg flex items-center justify-center">
                                 <CheckCircle className="w-5 h-5 text-white" />
                               </div>
                               <div>
-                                <p className="text-sm text-slate-600">Active</p>
-                                <p className="text-xl font-bold text-green-600">
+                                <p className="text-sm text-slate-600 dark:text-gray-400">Active</p>
+                                <p className="text-xl font-bold text-green-600 dark:text-green-400">
                                   {phoneNumberStatistics?.summary
                                     ?.activeNumbers || 0}
                                 </p>
@@ -5749,16 +5757,16 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             </div>
                           </div>
                           {/* Assigned Numbers */}
-                          <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
+                          <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
                             <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                              <div className="w-10 h-10 bg-blue-500 dark:bg-blue-600 rounded-lg flex items-center justify-center">
                                 <Link className="w-5 h-5 text-white" />
                               </div>
                               <div>
-                                <p className="text-sm text-slate-600">
+                                <p className="text-sm text-slate-600 dark:text-gray-400">
                                   Assigned
                                 </p>
-                                <p className="text-xl font-bold text-blue-600">
+                                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
                                   {phoneNumberStatistics?.summary
                                     ?.assignedNumbers || 0}
                                 </p>
@@ -5766,16 +5774,16 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             </div>
                           </div>
                           {/* Unassigned Numbers */}
-                          <div className="p-4 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100">
+                          <div className="p-4 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-xl border border-amber-100 dark:border-amber-800/30">
                             <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
+                              <div className="w-10 h-10 bg-amber-500 dark:bg-amber-600 rounded-lg flex items-center justify-center">
                                 <Unlink className="w-5 h-5 text-white" />
                               </div>
                               <div>
-                                <p className="text-sm text-slate-600">
+                                <p className="text-sm text-slate-600 dark:text-gray-400">
                                   Unassigned
                                 </p>
-                                <p className="text-xl font-bold text-amber-600">
+                                <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
                                   {phoneNumberStatistics?.summary
                                     ?.unassignedNumbers || 0}
                                 </p>
@@ -5783,16 +5791,16 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             </div>
                           </div>
                           {/* Total Calls */}
-                          <div className="p-4 bg-gradient-to-br from-purple-50 to-violet-50 rounded-xl border border-purple-100">
+                          <div className="p-4 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 rounded-xl border border-purple-100 dark:border-purple-800/30">
                             <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                              <div className="w-10 h-10 bg-purple-500 dark:bg-purple-600 rounded-lg flex items-center justify-center">
                                 <PhoneCall className="w-5 h-5 text-white" />
                               </div>
                               <div>
-                                <p className="text-sm text-slate-600">
+                                <p className="text-sm text-slate-600 dark:text-gray-400">
                                   Total Calls
                                 </p>
-                                <p className="text-xl font-bold text-purple-600">
+                                <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
                                   {phoneNumberStatistics?.summary?.totalCalls ||
                                     0}
                                 </p>
@@ -5800,16 +5808,16 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             </div>
                           </div>
                           {/* Total SMS */}
-                          <div className="p-4 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl border border-indigo-100">
+                          <div className="p-4 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800/30">
                             <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center">
+                              <div className="w-10 h-10 bg-indigo-500 dark:bg-indigo-600 rounded-lg flex items-center justify-center">
                                 <MessageSquare className="w-5 h-5 text-white" />
                               </div>
                               <div>
-                                <p className="text-sm text-slate-600">
+                                <p className="text-sm text-slate-600 dark:text-gray-400">
                                   Total SMS
                                 </p>
-                                <p className="text-xl font-bold text-indigo-600">
+                                <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
                                   {phoneNumberStatistics?.summary?.totalSms ||
                                     0}
                                 </p>
@@ -5842,7 +5850,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                                    className="text-slate-600 dark:text-gray-400 border-slate-300 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800"
                                   >
                                     {phoneStatisticsAccordionOpen
                                       ? 'Show less'
@@ -5852,10 +5860,10 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               </AccordionTrigger>
                               <AccordionContent className="px-0 pt-4">
                                 {phoneNumberStatistics ? (
-                                  <Card className="border-0 bg-gradient-to-r from-slate-50 to-blue-50 rounded-2xl">
+                                  <Card className="border-0 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-neutral-800 dark:to-neutral-900 rounded-2xl border dark:border-neutral-700">
                                     <CardContent className="p-6">
                                       <div className="flex items-center justify-between mb-6">
-                                        <h3 className="text-lg font-semibold text-slate-900">
+                                        <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100">
                                           Phone Number Statistics
                                         </h3>
                                       </div>
@@ -5863,7 +5871,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         {/* By Country */}
                                         <div>
-                                          <h4 className="font-semibold text-slate-900 mb-3">
+                                          <h4 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
                                             By Country
                                           </h4>
                                           <div className="space-y-2">
@@ -5873,14 +5881,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                             ).map(([country, count]) => (
                                               <div
                                                 key={country}
-                                                className="flex justify-between items-center p-2 bg-white/60 rounded-lg"
+                                                className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg"
                                               >
-                                                <span className="text-sm text-slate-600">
+                                                <span className="text-sm text-slate-600 dark:text-gray-400">
                                                   {country}
                                                 </span>
                                                 <Badge
                                                   variant="outline"
-                                                  className="text-blue-600 border-blue-200"
+                                                  className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
                                                 >
                                                   {count}
                                                 </Badge>
@@ -5891,29 +5899,29 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                                         {/* By Number Type */}
                                         <div>
-                                          <h4 className="font-semibold text-slate-900 mb-3">
+                                          <h4 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
                                             By Number Type
                                           </h4>
                                           <div className="space-y-2">
-                                            <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
-                                              <span className="text-sm text-slate-600">
+                                            <div className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
+                                              <span className="text-sm text-slate-600 dark:text-gray-400">
                                                 Local
                                               </span>
                                               <Badge
                                                 variant="outline"
-                                                className="text-green-600 border-green-200"
+                                                className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-800"
                                               >
                                                 {phoneNumberStatistics
                                                   ?.byNumberType?.local || 0}
                                               </Badge>
                                             </div>
-                                            <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
-                                              <span className="text-sm text-slate-600">
+                                            <div className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
+                                              <span className="text-sm text-slate-600 dark:text-gray-400">
                                                 Toll-Free
                                               </span>
                                               <Badge
                                                 variant="outline"
-                                                className="text-blue-600 border-blue-200"
+                                                className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
                                               >
                                                 {phoneNumberStatistics
                                                   ?.byNumberType?.[
@@ -5921,13 +5929,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                                 ] || 0}
                                               </Badge>
                                             </div>
-                                            <div className="flex justify-between items-center p-2 bg-white/60 rounded-lg">
-                                              <span className="text-sm text-slate-600">
+                                            <div className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
+                                              <span className="text-sm text-slate-600 dark:text-gray-400">
                                                 Mobile
                                               </span>
                                               <Badge
                                                 variant="outline"
-                                                className="text-purple-600 border-purple-200"
+                                                className="text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800"
                                               >
                                                 {phoneNumberStatistics
                                                   ?.byNumberType?.mobile || 0}
@@ -5938,7 +5946,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                                         {/* Most Used Numbers */}
                                         <div>
-                                          <h4 className="font-semibold text-slate-900 mb-3">
+                                          <h4 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
                                             Most Used Numbers
                                           </h4>
                                           <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -5947,18 +5955,18 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                               .map((number, index) => (
                                                 <div
                                                   key={number.id}
-                                                  className="flex justify-between items-center p-2 bg-white/60 rounded-lg"
+                                                  className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg"
                                                 >
                                                   <div className="flex items-center space-x-2">
-                                                    <span className="text-sm font-medium text-slate-500">
+                                                    <span className="text-sm font-medium text-slate-500 dark:text-gray-500">
                                                       #{index + 1}
                                                     </span>
                                                     <div className="flex flex-col">
-                                                      <span className="text-sm text-slate-900 truncate">
+                                                      <span className="text-sm text-slate-900 dark:text-gray-100 truncate">
                                                         {number.friendlyName ||
                                                           number.phoneNumber}
                                                       </span>
-                                                      <span className="text-xs text-slate-500">
+                                                      <span className="text-xs text-slate-500 dark:text-gray-500">
                                                         {number.code}
                                                       </span>
                                                     </div>
@@ -5966,7 +5974,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                                   <div className="flex flex-col items-end">
                                                     <Badge
                                                       variant="outline"
-                                                      className="text-xs text-slate-600 mb-1"
+                                                      className="text-xs text-slate-600 dark:text-gray-400 dark:border-neutral-700 mb-1"
                                                     >
                                                       {
                                                         number.totalCallsReceived
@@ -5975,7 +5983,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                                     </Badge>
                                                     <Badge
                                                       variant="outline"
-                                                      className="text-xs text-slate-600"
+                                                      className="text-xs text-slate-600 dark:text-gray-400 dark:border-neutral-700"
                                                     >
                                                       {number.totalSmsReceived}{' '}
                                                       SMS
@@ -5990,8 +5998,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   </Card>
                                 ) : (
                                   <div className="text-center py-8">
-                                    <BarChart3 className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                                    <p className="text-slate-600">
+                                    <BarChart3 className="w-12 h-12 text-slate-400 dark:text-neutral-500 mx-auto mb-4" />
+                                    <p className="text-slate-600 dark:text-gray-400">
                                       No statistics available
                                     </p>
                                   </div>
@@ -6003,8 +6011,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                       </>
                     )}
                     {/* Table Header */}
-                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 mb-4">
-                      <div className="grid grid-cols-12 gap-4 text-sm font-semibold text-slate-700">
+                    <div className="bg-slate-50 dark:bg-neutral-800 rounded-xl p-4 border border-slate-200 dark:border-neutral-700 mb-4">
+                      <div className="grid grid-cols-12 gap-4 text-sm font-semibold text-slate-700 dark:text-gray-300">
                         <div className="col-span-3">Phone Number</div>
                         <div className="col-span-2">Assigned Source</div>
                         <div className="col-span-2">Capabilities</div>
@@ -6023,25 +6031,25 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                         </div>
                       ) : phoneNumberError ? (
                         <div className="text-center py-12">
-                          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                          <p className="text-red-600 mb-4">
+                          <AlertTriangle className="w-12 h-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
+                          <p className="text-red-600 dark:text-red-400 mb-4">
                             {phoneNumberError}
                           </p>
                           <Button
                             onClick={fetchPhoneNumberData}
                             variant="outline"
-                            className="text-red-600 border-red-200 hover:bg-red-50"
+                            className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
                           >
                             Try Again
                           </Button>
                         </div>
                       ) : phoneNumberData.length === 0 ? (
                         <div className="text-center py-12">
-                          <Phone className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                          <Phone className="w-12 h-12 text-slate-400 dark:text-neutral-500 mx-auto mb-4" />
+                          <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-2">
                             No Phone Numbers
                           </h3>
-                          <p className="text-slate-600 mb-6">
+                          <p className="text-slate-600 dark:text-gray-400 mb-6">
                             No phone numbers found for the selected date range
                           </p>
                         </div>
@@ -6049,21 +6057,21 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                         phoneNumberData.map(phoneNumber => (
                           <div
                             key={phoneNumber._id}
-                            className="bg-white rounded-xl p-4 border border-slate-100 hover:border-[#53a533]/20 hover:shadow-md transition-all duration-200"
+                            className="bg-white dark:bg-neutral-800 rounded-xl p-4 border border-slate-100 dark:border-neutral-700 hover:border-[#53a533]/20 hover:shadow-md transition-all duration-200"
                           >
                             <div className="grid grid-cols-12 gap-4 items-center">
                               {/* Phone Number */}
                               <div className="col-span-3">
                                 <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-[#53a533]/10 rounded-lg flex items-center justify-center">
-                                    <Phone className="w-4 h-4 text-[#4a9430]" />
+                                  <div className="w-8 h-8 bg-[#53a533]/10 dark:bg-[#53a533]/20 rounded-lg flex items-center justify-center">
+                                    <Phone className="w-4 h-4 text-[#4a9430] dark:text-[#53a533]" />
                                   </div>
                                   <div>
-                                    <p className="font-mono font-semibold text-slate-900">
+                                    <p className="font-mono font-semibold text-slate-900 dark:text-gray-100">
                                       {phoneNumber.friendlyName ||
                                         phoneNumber.numberType}
                                     </p>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-slate-500 dark:text-gray-400">
                                       {phoneNumber.formattedPhoneNumber}
                                     </p>
                                   </div>
@@ -6074,19 +6082,19 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               <div className="col-span-2">
                                 {phoneNumber.assignedSource ? (
                                   <div>
-                                    <p className="font-medium text-slate-900">
+                                    <p className="font-medium text-slate-900 dark:text-gray-100">
                                       {phoneNumber.assignedSource}
                                     </p>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-slate-500 dark:text-gray-400">
                                       Assigned
                                     </p>
                                   </div>
                                 ) : (
                                   <div>
-                                    <p className="text-slate-400 italic">
+                                    <p className="text-slate-400 dark:text-gray-500 italic">
                                       Unassigned
                                     </p>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-slate-500 dark:text-gray-400">
                                       Available
                                     </p>
                                   </div>
@@ -6099,7 +6107,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   {phoneNumber.capabilities.voice && (
                                     <Badge
                                       variant="outline"
-                                      className="text-xs text-green-600 border-green-200"
+                                      className="text-xs text-green-600 dark:text-green-400 border-green-200 dark:border-green-800"
                                     >
                                       Voice
                                     </Badge>
@@ -6107,7 +6115,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   {phoneNumber.capabilities.sms && (
                                     <Badge
                                       variant="outline"
-                                      className="text-xs text-blue-600 border-blue-200"
+                                      className="text-xs text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
                                     >
                                       SMS
                                     </Badge>
@@ -6115,7 +6123,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   {phoneNumber.capabilities.mms && (
                                     <Badge
                                       variant="outline"
-                                      className="text-xs text-purple-600 border-purple-200"
+                                      className="text-xs text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800"
                                     >
                                       MMS
                                     </Badge>
@@ -6123,7 +6131,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   {phoneNumber.capabilities.fax && (
                                     <Badge
                                       variant="outline"
-                                      className="text-xs text-orange-600 border-orange-200"
+                                      className="text-xs text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800"
                                     >
                                       Fax
                                     </Badge>
@@ -6133,18 +6141,18 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                               {/* Calls */}
                               <div className="col-span-1">
-                                <p className="font-semibold text-slate-900">
+                                <p className="font-semibold text-slate-900 dark:text-gray-100">
                                   {phoneNumber.totalCallsReceived || 0}
                                 </p>
-                                <p className="text-xs text-slate-500">total</p>
+                                <p className="text-xs text-slate-500 dark:text-gray-400">total</p>
                               </div>
 
                               {/* SMS */}
                               <div className="col-span-1">
-                                <p className="font-semibold text-slate-900">
+                                <p className="font-semibold text-slate-900 dark:text-gray-100">
                                   {phoneNumber.totalSmsReceived || 0}
                                 </p>
-                                <p className="text-xs text-slate-500">total</p>
+                                <p className="text-xs text-slate-500 dark:text-gray-400">total</p>
                               </div>
 
                               {/* Status */}
@@ -6153,12 +6161,12 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   variant="outline"
                                   className={`${
                                     phoneNumber.status === 'active'
-                                      ? 'text-green-600 border-green-200 bg-green-50'
+                                      ? 'text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
                                       : phoneNumber.status === 'assigned'
-                                        ? 'text-blue-600 border-blue-200 bg-blue-50'
+                                        ? 'text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20'
                                         : phoneNumber.status === 'inactive'
-                                          ? 'text-red-600 border-red-200 bg-red-50'
-                                          : 'text-yellow-600 border-yellow-200 bg-yellow-50'
+                                          ? 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20'
+                                          : 'text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20'
                                   }`}
                                 >
                                   {phoneNumber.status === 'assigned' &&
@@ -6176,7 +6184,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="w-8 h-8 p-0 text-slate-500 hover:text-[#4a9430] hover:bg-[#53a533]/5"
+                                        className="w-8 h-8 p-0 text-slate-500 dark:text-gray-400 hover:text-[#4a9430] dark:hover:text-[#53a533] hover:bg-[#53a533]/5 dark:hover:bg-[#53a533]/10"
                                         title="More Options"
                                       >
                                         <MoreHorizontal className="w-4 h-4" />
@@ -6279,7 +6287,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                     {/* Pagination */}
                     <div className="flex items-center justify-between pt-6">
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-slate-600 dark:text-gray-400">
                         Showing {phoneNumberData.length} of{' '}
                         {phoneNumberPagination.total} numbers
                       </p>
@@ -6289,6 +6297,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                           size="sm"
                           disabled={phoneNumberPagination.current <= 1}
                           onClick={handlePhoneNumberPreviousPage}
+                          className="dark:border-neutral-700 dark:hover:bg-neutral-800"
                         >
                           <ChevronLeft className="w-4 h-4" />
                           Previous
@@ -6306,8 +6315,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             onClick={() => handlePhoneNumberPageChange(page)}
                             className={
                               page === phoneNumberPagination.current
-                                ? 'bg-[#53a533]/5 text-[#4a9430] border-[#53a533]/20'
-                                : ''
+                                ? 'bg-[#53a533]/5 dark:bg-[#53a533]/20 text-[#4a9430] dark:text-[#53a533] border-[#53a533]/20 dark:border-[#53a533]/30'
+                                : 'dark:border-neutral-700 dark:hover:bg-neutral-800'
                             }
                           >
                             {page}
@@ -6322,6 +6331,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             phoneNumberPagination.pages
                           }
                           onClick={handlePhoneNumberNextPage}
+                          className="dark:border-neutral-700 dark:hover:bg-neutral-800"
                         >
                           Next
                           <ChevronRight className="w-4 h-4" />
@@ -6334,17 +6344,17 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
               {/* Buy New Numbers */}
               {checkPermission('MOD041', 'purchase') && (
-                <Card className="border-0 bg-white/70 backdrop-blur-sm rounded-2xl">
+                <Card className="border-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-2xl">
                   <CardContent className="p-8">
                     <div className="flex items-center space-x-3 mb-8">
-                      <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center">
-                        <Plus className="w-8 h-8 text-green-600" />
+                      <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-2xl flex items-center justify-center">
+                        <Plus className="w-8 h-8 text-green-600 dark:text-green-400" />
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold text-slate-900">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100">
                           Purchase New Phone Numbers
                         </h2>
-                        <p className="text-slate-600">
+                        <p className="text-slate-600 dark:text-gray-400">
                           Add dedicated tracking numbers for your marketing
                           campaigns
                         </p>
@@ -6355,14 +6365,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                       {/* Number Selection */}
                       <div className="space-y-6">
                         <div>
-                          <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                          <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-4">
                             Search Filters
                           </h3>
                           <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {/* Country */}
                               <div>
-                                <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                   Country
                                 </Label>
                                 <Select
@@ -6380,7 +6390,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     }))
                                   }
                                 >
-                                  <SelectTrigger className="text-sm">
+                                  <SelectTrigger className="text-sm dark:bg-neutral-800 dark:border-neutral-700">
                                     <SelectValue placeholder="Select country" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -6399,7 +6409,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                               {/* Locality */}
                               <div>
-                                <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                   Locality
                                 </Label>
                                 <Input
@@ -6411,13 +6421,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     }))
                                   }
                                   placeholder="e.g., New York"
-                                  className="text-sm"
+                                  className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
                                 />
                               </div>
 
                               {/* Area Code */}
                               <div>
-                                <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                   Area Code
                                 </Label>
                                 <Input
@@ -6429,13 +6439,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     }))
                                   }
                                   placeholder="e.g., 212"
-                                  className="text-sm"
+                                  className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
                                 />
                               </div>
 
                               {/* Number Type */}
                               <div>
-                                <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                   Number Type
                                 </Label>
                                 <Select
@@ -6447,7 +6457,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     }))
                                   }
                                 >
-                                  <SelectTrigger className="text-sm">
+                                  <SelectTrigger className="text-sm dark:bg-neutral-800 dark:border-neutral-700">
                                     <SelectValue placeholder="All number types" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -6473,7 +6483,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                               {/* Contains */}
                               <div>
-                                <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                   Contains
                                 </Label>
                                 <Input
@@ -6485,13 +6495,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     }))
                                   }
                                   placeholder="e.g., 555"
-                                  className="text-sm"
+                                  className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
                                 />
                               </div>
 
                               {/* Limit */}
                               <div>
-                                <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                                <Label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-2 block">
                                   Limit
                                 </Label>
                                 <Select
@@ -6503,7 +6513,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     }))
                                   }
                                 >
-                                  <SelectTrigger className="text-sm">
+                                  <SelectTrigger className="text-sm dark:bg-neutral-800 dark:border-neutral-700">
                                     <SelectValue placeholder="Select limit" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -6517,8 +6527,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             </div>
 
                             {/* Capabilities */}
-                            <div className="p-4 bg-[#53a533]/5 rounded-xl border border-[#53a533]/20">
-                              <h4 className="font-semibold text-[#1f3f15] mb-2">
+                            <div className="p-4 bg-[#53a533]/5 dark:bg-[#53a533]/10 rounded-xl border border-[#53a533]/20 dark:border-[#53a533]/30">
+                              <h4 className="font-semibold text-[#1f3f15] dark:text-[#53a533] mb-2">
                                 Number Features
                               </h4>
                               <div className="space-y-2 text-sm">
@@ -6533,11 +6543,11 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                         smsEnabled: e.target.checked,
                                       }))
                                     }
-                                    className="w-4 h-4 text-[#4a9430] rounded"
+                                    className="w-4 h-4 text-[#4a9430] dark:text-[#53a533] rounded"
                                   />
                                   <Label
                                     htmlFor="purchase-sms-enabled"
-                                    className="text-[#3d7a28] cursor-pointer"
+                                    className="text-[#3d7a28] dark:text-[#53a533] cursor-pointer"
                                   >
                                     SMS
                                   </Label>
@@ -6553,11 +6563,11 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                         mmsEnabled: e.target.checked,
                                       }))
                                     }
-                                    className="w-4 h-4 text-[#4a9430] rounded"
+                                    className="w-4 h-4 text-[#4a9430] dark:text-[#53a533] rounded"
                                   />
                                   <Label
                                     htmlFor="purchase-mms-enabled"
-                                    className="text-[#3d7a28] cursor-pointer"
+                                    className="text-[#3d7a28] dark:text-[#53a533] cursor-pointer"
                                   >
                                     MMS
                                   </Label>
@@ -6575,11 +6585,11 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                         voiceEnabled: e.target.checked,
                                       }))
                                     }
-                                    className="w-4 h-4 text-[#4a9430] rounded"
+                                    className="w-4 h-4 text-[#4a9430] dark:text-[#53a533] rounded"
                                   />
                                   <Label
                                     htmlFor="purchase-voice-enabled"
-                                    className="text-[#3d7a28] cursor-pointer"
+                                    className="text-[#3d7a28] dark:text-[#53a533] cursor-pointer"
                                   >
                                     Voice
                                   </Label>
@@ -6591,38 +6601,38 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                         {/* Selected Number Display or Placeholder */}
                         {selectedNumberForPurchaseSection ? (
-                          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 shadow-sm">
-                            <h3 className="font-semibold text-slate-900 mb-3">
+                          <div className="p-4 bg-slate-50 dark:bg-neutral-800 rounded-lg border border-slate-200 dark:border-neutral-700 shadow-sm">
+                            <h3 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
                               Selected Number
                             </h3>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
-                                <span className="text-slate-600">
+                                <span className="text-slate-600 dark:text-gray-400">
                                   Phone Number:
                                 </span>
-                                <span className="font-medium text-slate-900">
+                                <span className="font-medium text-slate-900 dark:text-gray-100">
                                   {selectedNumberForPurchaseSection.phoneNumber}
                                 </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-slate-600">Type:</span>
-                                <span className="font-medium text-slate-900 capitalize">
+                                <span className="text-slate-600 dark:text-gray-400">Type:</span>
+                                <span className="font-medium text-slate-900 dark:text-gray-100 capitalize">
                                   {selectedNumberForPurchaseSection.numberType}
                                 </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-slate-600">
+                                <span className="text-slate-600 dark:text-gray-400">
                                   Location:
                                 </span>
-                                <span className="font-medium text-slate-900">
+                                <span className="font-medium text-slate-900 dark:text-gray-100">
                                   {selectedNumberForPurchaseSection.locality
                                     ? `${selectedNumberForPurchaseSection.locality}, ${selectedNumberForPurchaseSection.region}`
                                     : selectedNumberForPurchaseSection.region}
                                 </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-slate-600">Price:</span>
-                                <span className="font-medium text-slate-900">
+                                <span className="text-slate-600 dark:text-gray-400">Price:</span>
+                                <span className="font-medium text-slate-900 dark:text-gray-100">
                                   $
                                   {
                                     selectedNumberForPurchaseSection.monthlyCharge
@@ -6632,7 +6642,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               </div>
                             </div>
                             <div className="mt-4">
-                              <label className="text-sm font-medium text-slate-700 mb-3 block">
+                              <label className="text-sm font-medium text-slate-700 dark:text-gray-300 mb-3 block">
                                 Number Purpose/Name
                               </label>
                               <Input
@@ -6641,13 +6651,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   setPurchaseSectionFriendlyName(e.target.value)
                                 }
                                 placeholder="e.g., Google Emergency Line, Facebook Main"
-                                className="px-4 py-3 border-slate-200 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-[#53a533]/50/20 focus:border-[#53a533]/30 transition-all duration-200"
+                                className="px-4 py-3 border-slate-200 dark:border-neutral-700 dark:bg-neutral-900 rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-[#53a533]/50/20 focus:border-[#53a533]/30 transition-all duration-200"
                               />
                             </div>
                             {/* Error Display */}
                             {purchaseSectionPurchaseError && (
-                              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                <p className="text-sm text-red-600">
+                              <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                <p className="text-sm text-red-600 dark:text-red-400">
                                   {purchaseSectionPurchaseError}
                                 </p>
                               </div>
@@ -6655,10 +6665,10 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                             <div className="mt-4 flex justify-between space-x-2">
                               <div>
-                                <h4 className="font-semibold text-slate-900">
+                                <h4 className="font-semibold text-slate-900 dark:text-gray-100">
                                   Ready to purchase?
                                 </h4>
-                                <p className="text-sm text-slate-600">
+                                <p className="text-sm text-slate-600 dark:text-gray-400">
                                   Your new number will be active within 5
                                   minutes
                                 </p>
@@ -6675,13 +6685,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             </div>
                           </div>
                         ) : (
-                          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 shadow-sm">
+                          <div className="p-4 bg-slate-50 dark:bg-neutral-800 rounded-lg border border-slate-200 dark:border-neutral-700 shadow-sm">
                             <div className="text-center py-6">
-                              <Phone className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                              <Phone className="w-12 h-12 text-slate-400 dark:text-neutral-500 mx-auto mb-3" />
+                              <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-2">
                                 Select a Number to Purchase
                               </h3>
-                              <p className="text-slate-600 text-sm">
+                              <p className="text-slate-600 dark:text-gray-400 text-sm">
                                 Choose a phone number from the available options
                                 to see details and proceed with purchase.
                               </p>
@@ -6693,7 +6703,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                       {/* Available Numbers */}
                       <div className="space-y-6">
                         <div>
-                          <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                          <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-4">
                             Available Numbers in{' '}
                             {purchaseSectionFilters.areaCode}
                           </h3>
@@ -6704,32 +6714,32 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               </div>
                             ) : purchaseSectionError ? (
                               <div className="text-center py-8">
-                                <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                                <p className="text-red-600 mb-4">
+                                <AlertTriangle className="w-12 h-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
+                                <p className="text-red-600 dark:text-red-400 mb-4">
                                   {purchaseSectionError}
                                 </p>
                                 <Button
                                   onClick={fetchPurchaseSectionNumbers}
                                   variant="outline"
-                                  className="text-red-600 border-red-200 hover:bg-red-50"
+                                  className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
                                 >
                                   Try Again
                                 </Button>
                               </div>
                             ) : purchaseSectionNumbers.length === 0 ? (
                               <div className="text-center py-8">
-                                <Phone className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                                <Phone className="w-12 h-12 text-slate-400 dark:text-neutral-500 mx-auto mb-4" />
+                                <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-2">
                                   No Numbers Available
                                 </h3>
-                                <p className="text-slate-600 mb-6">
+                                <p className="text-slate-600 dark:text-gray-400 mb-6">
                                   No phone numbers found for area code{' '}
                                   {purchaseSectionFilters.areaCode}
                                 </p>
                                 <Button
                                   onClick={fetchPurchaseSectionNumbers}
                                   variant="outline"
-                                  className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                                  className="text-slate-600 dark:text-gray-400 border-slate-300 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800"
                                 >
                                   Refresh
                                 </Button>
@@ -6738,7 +6748,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               purchaseSectionNumbers.map((number, index) => (
                                 <div
                                   key={number.phoneNumber}
-                                  className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-100 hover:border-[#53a533]/20 hover:bg-[#53a533]/5/30 transition-all duration-200 cursor-pointer"
+                                  className="flex items-center justify-between p-3 bg-white dark:bg-neutral-800 rounded-lg border border-slate-100 dark:border-neutral-700 hover:border-[#53a533]/20 dark:hover:border-[#53a533]/30 hover:bg-[#53a533]/5/30 dark:hover:bg-[#53a533]/10 transition-all duration-200 cursor-pointer"
                                   onClick={() => {
                                     if (
                                       selectedNumberForPurchaseSection?.phoneNumber ===
@@ -6753,10 +6763,10 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   }}
                                 >
                                   <div>
-                                    <span className="font-mono text-slate-900">
+                                    <span className="font-mono text-slate-900 dark:text-gray-100">
                                       {number.phoneNumber}
                                     </span>
-                                    <div className="text-xs text-slate-500 mt-1">
+                                    <div className="text-xs text-slate-500 dark:text-gray-400 mt-1">
                                       {number.locality
                                         ? `${number.locality}, ${number.region}`
                                         : number.region}{' '}
@@ -6764,7 +6774,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     </div>
                                   </div>
                                   <div className="flex items-center space-x-2">
-                                    <span className="text-sm text-green-600 font-medium">
+                                    <span className="text-sm text-green-600 dark:text-green-400 font-medium">
                                       ${number.monthlyCharge}/month
                                     </span>
                                     <Button
@@ -6802,19 +6812,19 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             )}
                           </div>
 
-                          <div className="mt-4 p-3 bg-slate-50 rounded-lg">
-                            <p className="text-sm text-slate-600">
+                          <div className="mt-4 p-3 bg-slate-50 dark:bg-neutral-800 rounded-lg">
+                            <p className="text-sm text-slate-600 dark:text-gray-400">
                               <strong>Note:</strong> Available numbers update
                               automatically when you change the search filters.
                             </p>
                           </div>
                         </div>
 
-                        <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
-                          <h4 className="font-semibold text-green-900 mb-2">
+                        <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                          <h4 className="font-semibold text-green-900 dark:text-green-400 mb-2">
                             Pricing Information
                           </h4>
-                          <div className="space-y-2 text-sm text-green-800">
+                          <div className="space-y-2 text-sm text-green-800 dark:text-green-300">
                             <div className="flex justify-between">
                               <span>Monthly Number Fee:</span>
                               <span className="font-semibold">
@@ -6832,11 +6842,11 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             </div>*/}
                             <div className="flex justify-between">
                               <span>Setup Fee:</span>
-                              <span className="font-semibold text-green-600">
+                              <span className="font-semibold text-green-600 dark:text-green-400">
                                 FREE
                               </span>
                             </div>
-                            <hr className="border-green-300 my-2" />
+                            <hr className="border-green-300 dark:border-green-800 my-2" />
                             <div className="flex justify-between font-semibold">
                               <span>Total Monthly:</span>
                               {selectedNumberForPurchaseSection?.monthlyCharge ? (
@@ -8592,7 +8602,6 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
             >
               {spamProtectionCreating ? (
                 <>
-                  <Loading size="sm" className="mr-2" />
                   {spamProtectionToEdit ? 'Updating...' : 'Creating...'}
                 </>
               ) : (

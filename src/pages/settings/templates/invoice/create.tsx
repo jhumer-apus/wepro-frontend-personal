@@ -97,6 +97,7 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
   const router = useRouter()
   const { checkPermission, getUserType, userData } = usePermissions()
   const tenantId = userData?.tenantId
+  const [submitted, setSubmitted] = useState(false)
 
   // Check if we're in edit mode
   const isEditMode = !!router.query.id
@@ -483,8 +484,13 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
     }
   }, [isEditMode, templateId])
 
+  const handleInvalid = () => {
+    setSubmitted(true)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitted(true)
 
     if (!tenantId) {
       toast.error('Tenant ID is required')
@@ -655,7 +661,12 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
 
         {/* Form */}
         {!isLoading && (
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            onInvalid={handleInvalid}
+            data-submitted={submitted}
+            className="space-y-6"
+          >
             {/* Basic Information Card */}
             <Card>
               <CardHeader>
@@ -668,7 +679,7 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
                 {/* Title */}
                 <div className="space-y-2">
                   <Label htmlFor="title" className="text-sm font-medium">
-                    Title
+                    Title *
                   </Label>
                   <Input
                     id="title"
@@ -679,7 +690,11 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
                       handleInputChange('title', e.target.value)
                       clearFieldError('title')
                     }}
-                    className={validationErrors.title ? 'border-red-500' : ''}
+                    className={
+                      submitted && validationErrors.title
+                        ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                        : ''
+                    }
                     required
                   />
                   {validationErrors.title && (
@@ -728,13 +743,13 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
                         clearFieldError('templateSources')
                       }}
                     >
-                      <SelectTrigger
-                        className={
-                          validationErrors.templateSources
-                            ? 'border-red-500'
-                            : ''
-                        }
-                      >
+                    <SelectTrigger
+                      className={
+                        submitted && validationErrors.templateSources
+                          ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                          : ''
+                      }
+                    >
                         <SelectValue placeholder="Select template sources" />
                       </SelectTrigger>
                       <SelectContent>
@@ -765,7 +780,11 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
                           variant="outline"
                           role="combobox"
                           aria-expanded={sourceCodesOpen}
-                          className={`w-full justify-between ${validationErrors.sourceCodes ? 'border-red-500' : ''}`}
+                          className={`w-full justify-between ${
+                            submitted && validationErrors.sourceCodes
+                              ? 'border-red-500 !focus-visible:ring-red-500'
+                              : ''
+                          }`}
                         >
                           {formData.sourceCodes.length > 0
                             ? `${formData.sourceCodes.length} source(s) selected`
@@ -899,6 +918,11 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
                             e.target.value
                           )
                         }
+                        className={
+                          submitted && validationErrors.emailFromEmail
+                            ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                            : ''
+                        }
                       />
                     </div>
 
@@ -957,11 +981,11 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
                       Email Template
                     </Label>
                     <div
-                      className={
-                        validationErrors.emailTemplate
-                          ? 'border border-red-500 rounded-md'
+                      className={`${
+                        submitted && validationErrors.emailTemplate
+                          ? 'border border-red-500 rounded-md !focus-visible:ring-red-500 !ring-red-500 !focus-visible:ring-2'
                           : ''
-                      }
+                      }`}
                     >
                       <ReactQuill
                         theme="snow"
@@ -974,7 +998,11 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
                         formats={quillFormats}
                         placeholder="Enter email content. Use variables like {{invoiceNumber}}, {{customerName}}, {{total}}, etc."
                         style={{ minHeight: '200px' }}
-                        className="bg-white dark:bg-gray-800"
+                        className={`bg-white dark:bg-gray-800 ${
+                          submitted && validationErrors.emailTemplate
+                            ? 'border-red-500 !focus-visible:ring-red-500 !ring-red-500 !focus-visible:ring-2'
+                            : ''
+                        }`}
                       />
                     </div>
                     {validationErrors.emailTemplate && (
@@ -1078,7 +1106,11 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
                         handleChannelChange('sms', 'template', e.target.value)
                         clearFieldError('smsTemplate')
                       }}
-                      className={`min-h-[120px] ${validationErrors.smsTemplate ? 'border-red-500' : ''}`}
+                      className={`min-h-[120px] ${
+                        submitted && validationErrors.smsTemplate
+                          ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                          : ''
+                      }`}
                     />
                     {validationErrors.smsTemplate && (
                       <p className="text-sm text-red-500">
@@ -1157,7 +1189,11 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
                         )
                         clearFieldError('whatsappTemplate')
                       }}
-                      className={`min-h-[120px] ${validationErrors.whatsappTemplate ? 'border-red-500' : ''}`}
+                      className={`min-h-[120px] ${
+                        submitted && validationErrors.whatsappTemplate
+                          ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                          : ''
+                      }`}
                     />
                     {validationErrors.whatsappTemplate && (
                       <p className="text-sm text-red-500">
@@ -1201,11 +1237,11 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
                       WePro Chat Template
                     </Label>
                     <div
-                      className={
-                        validationErrors.weproChatTemplate
-                          ? 'border border-red-500 rounded-md'
+                      className={`${
+                        submitted && validationErrors.weproChatTemplate
+                          ? 'border border-red-500 rounded-md !focus-visible:ring-red-500 !ring-red-500 !focus-visible:ring-2'
                           : ''
-                      }
+                      }`}
                     >
                       <ReactQuill
                         theme="snow"
@@ -1218,7 +1254,11 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
                         formats={quillFormats}
                         placeholder="Enter WePro Chat content. Use variables like {{invoiceNumber}}, {{customerName}}, {{total}}, etc."
                         style={{ minHeight: '200px' }}
-                        className="bg-white dark:bg-gray-800"
+                        className={`bg-white dark:bg-gray-800 ${
+                          submitted && validationErrors.weproChatTemplate
+                            ? 'border-red-500 !focus-visible:ring-red-500 !ring-red-500 !focus-visible:ring-2'
+                            : ''
+                        }`}
                       />
                     </div>
                     {validationErrors.weproChatTemplate && (

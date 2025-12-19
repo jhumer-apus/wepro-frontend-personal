@@ -60,7 +60,7 @@ export const CompanySettingsSubNavigation: React.FC<
   }
 
   return (
-    <div className={`flex space-x-1 bg-gray-100 rounded-lg p-1 ${className}`}>
+    <div className={`flex space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1 ${className}`}>
       {filteredNavigation.map(item => {
         const Icon = item.icon
         const active = isActive(item.path)
@@ -70,7 +70,9 @@ export const CompanySettingsSubNavigation: React.FC<
             key={item.path}
             variant={active ? 'default' : 'ghost'}
             onClick={() => router.push(item.path)}
-            className="flex-1 flex items-center justify-center"
+            className={`flex-1 flex items-center justify-center ${
+              active ? 'text-white' : ''
+            } ${!active ? 'hover:bg-neutral-200 dark:hover:bg-neutral-700' : ''}`}
           >
             <Icon className="w-4 h-4 mr-2" />
             {item.label}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import { useTheme } from 'next-themes'
 import { Button } from '@/src/components/ui/button'
 import {
   Card,
@@ -22,6 +23,7 @@ import { Switch } from '@/src/components/ui/switch'
 import { Alert, AlertDescription } from '@/src/components/ui/alert'
 import { ArrowLeft, Save, Loader2, MapPin } from 'lucide-react'
 import { usePermissions } from '@/src/hooks/usePermissions'
+import { useAppSelector } from '@/src/store/hooks'
 import { Source, SourceFormData } from '@/src/constants/interface/source'
 import { dummySources } from '@/src/constants/dummyData/sources'
 import { toast } from 'sonner'
@@ -101,13 +103,29 @@ export default function CreateSourcePage() {
   const { id } = router.query
   const { checkPermission } = usePermissions()
   const isEditing = Boolean(id)
-
+  const packageId = useAppSelector(
+    state =>
+      (state.user.data as any)?.packageId as
+        | {
+            _id: string
+            name: string
+            type: string
+          }
+        | undefined
+  )
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const mapRef = useRef<google.maps.Map | null>(null)
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null)
   const markerRef = useRef<google.maps.Marker | null>(null)
 
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [markerPosition, setMarkerPosition] = useState<{
     lat: number
@@ -122,14 +140,23 @@ export default function CreateSourcePage() {
   const [industriesLoading, setIndustriesLoading] = useState(false)
   const [availableIndustries, setAvailableIndustries] = useState<Industry[]>([])
   const [industryOpen, setIndustryOpen] = useState(false)
+  const [tenantsLoading, setTenantsLoading] = useState(false)
+  const [availableTenants, setAvailableTenants] = useState<
+    Array<{
+      _id: string
+      name: string
+      companyName: string
+      type: string
+    }>
+  >([])
+  const [tenantOpen, setTenantOpen] = useState(false)
   const [formData, setFormData] = useState<SourceFormData>({
     name: '',
     status: 'Active',
     weproUsername: '',
     email: '',
     phoneNumber: '',
-    address: '',
-    addressLine2: '',
+    address: '', 
     city: '',
     state: '',
     zipCode: '',
@@ -142,6 +169,7 @@ export default function CreateSourcePage() {
     transactionPayFee: 'Company',
     phoneMasking: 'Yes',
     callRouting: 'AI Then Company Agent',
+    clientTenantId: '',
   })
 
   // Fetch franchises from API
@@ -190,6 +218,38 @@ export default function CreateSourcePage() {
     fetchIndustries()
   }, [])
 
+  // Fetch tenants from API when packageId.type is P4
+  useEffect(() => {
+    const fetchTenants = async () => {
+      if (packageId?.type === 'P4') {
+        try {
+          setTenantsLoading(true)
+          const response = await apiService.get(
+            '/v1/users/tenant?page=1&limit=100&packageType=P3'
+          )
+          setAvailableTenants(
+            response.data.data.map((tenant: any) => ({
+              _id: tenant._id,
+              name: tenant.name,
+              companyName: tenant.companyName,
+              type: tenant.type,
+            }))
+          )
+        } catch (error) {
+          console.error('Error fetching tenants:', error)
+          toast.error('Failed to load tenants', {
+            description:
+              'Please try again or contact support if the issue persists.',
+          })
+        } finally {
+          setTenantsLoading(false)
+        }
+      }
+    }
+
+    fetchTenants()
+  }, [packageId?.type])
+
   // Load source data if editing
   useEffect(() => {
     const loadSourceData = async () => {
@@ -234,6 +294,7 @@ export default function CreateSourcePage() {
               transactionPayFee: sourceData.transactionPayFee || 'Company',
               phoneMasking: sourceData.phoneMasking || 'Yes',
               callRouting: sourceData.callRouting || 'AI Then Company Agent',
+              clientTenantId: sourceData.clientTenantId || '',
             })
 
             // Set marker position if coordinates exist
@@ -417,6 +478,7 @@ export default function CreateSourcePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitted(true)
 
     if (!formData.name.trim()) {
       toast.error('Source name is required')
@@ -448,6 +510,11 @@ export default function CreateSourcePage() {
       return
     }
 
+    if (packageId?.type === 'P4' && !formData.clientTenantId?.trim()) {
+      toast.error('Source Provider is required')
+      return
+    }
+
     try {
       setSaving(true)
 
@@ -472,6 +539,9 @@ export default function CreateSourcePage() {
         transactionPayFee: formData.transactionPayFee,
         phoneMasking: formData.phoneMasking,
         callRouting: formData.callRouting,
+        ...(packageId?.type === 'P4' && formData.clientTenantId
+          ? { clientTenantId: formData.clientTenantId }
+          : {}),
       }
 
       // Make the actual API call
@@ -515,9 +585,10 @@ export default function CreateSourcePage() {
       toast.error(
         isEditing ? 'Failed to update source' : 'Failed to create source',
         {
-          description: isEditing
-            ? 'An error occurred while updating the source.'
-            : 'An error occurred while creating the source.',
+          description: error.response?.data?.details?.[0]?.message ||
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          'An error occurred while saving the changes.'
         }
       )
     } finally {
@@ -540,8 +611,8 @@ export default function CreateSourcePage() {
       <div className="space-y-6">
         <div className="flex items-center justify-center py-12">
           <div className="flex items-center gap-2">
-            <Loader2 className="h-6 w-6 animate-spin" />
-            <span>Loading source...</span>
+            <Loader2 className="h-6 w-6 animate-spin dark:text-gray-400" />
+            <span className="dark:text-gray-400">Loading source...</span>
           </div>
         </div>
       </div>
@@ -579,12 +650,17 @@ export default function CreateSourcePage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          onInvalid={() => setSubmitted(true)}
+          className="space-y-6"
+          data-submitted={submitted}
+        >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left Column - Form Fields */}
             <div className="flex flex-col">
               {/* Basic Information */}
-              <Card className="flex-1 flex flex-col">
+              <Card className="flex-1 flex flex-col dark:bg-neutral-800 dark:border-neutral-700">
                 <CardHeader>
                   <CardTitle className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
                     Source Information
@@ -603,6 +679,11 @@ export default function CreateSourcePage() {
                         }
                         placeholder="Enter source name"
                         required
+                        className={
+                          submitted && !formData.name
+                            ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                            : ''
+                        }
                       />
                     </div>
 
@@ -615,7 +696,13 @@ export default function CreateSourcePage() {
                           handleInputChange('status', value)
                         }
                       >
-                        <SelectTrigger>
+                        <SelectTrigger
+                          className={
+                            submitted && !formData.status
+                              ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                              : ''
+                          }
+                        >
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -639,6 +726,11 @@ export default function CreateSourcePage() {
                         }
                         placeholder="Enter WePro username"
                         required
+                        className={
+                          submitted && !formData.weproUsername
+                            ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                            : ''
+                        }
                       />
                     </div>
 
@@ -654,6 +746,11 @@ export default function CreateSourcePage() {
                         }
                         placeholder="Enter email address"
                         required
+                        className={
+                          submitted && !formData.email
+                            ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                            : ''
+                        }
                       />
                     </div>
 
@@ -668,6 +765,11 @@ export default function CreateSourcePage() {
                         }
                         placeholder="Enter phone number"
                         required
+                        className={
+                          submitted && !formData.phoneNumber
+                            ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                            : ''
+                        }
                       />
                     </div>
 
@@ -683,7 +785,12 @@ export default function CreateSourcePage() {
                             variant="outline"
                             role="combobox"
                             aria-expanded={franchiseOpen}
-                            className="w-full justify-between"
+                            className={cn(
+                              'w-full justify-between dark:border-neutral-700 dark:hover:bg-neutral-800',
+                              submitted &&
+                                !formData.franchiseCode &&
+                                'border-red-500 !focus-visible:ring-red-500'
+                            )}
                             disabled={franchisesLoading}
                           >
                             {getSelectedFranchiseName() ||
@@ -726,7 +833,7 @@ export default function CreateSourcePage() {
                                       <span className="font-medium">
                                         {franchise.name}
                                       </span>
-                                      <span className="text-sm text-gray-500">
+                                      <span className="text-sm text-gray-500 dark:text-gray-400">
                                         Code: {franchise.code}
                                       </span>
                                     </div>
@@ -751,7 +858,12 @@ export default function CreateSourcePage() {
                             variant="outline"
                             role="combobox"
                             aria-expanded={industryOpen}
-                            className="w-full justify-between"
+                            className={cn(
+                              'w-full justify-between dark:border-neutral-700 dark:hover:bg-neutral-800',
+                              submitted &&
+                                !formData.industryId &&
+                                'border-red-500 !focus-visible:ring-red-500'
+                            )}
                             disabled={industriesLoading}
                           >
                             {getSelectedIndustryName() || 'Select industry...'}
@@ -792,7 +904,7 @@ export default function CreateSourcePage() {
                                       <span className="font-medium">
                                         {industry.name}
                                       </span>
-                                      <span className="text-sm text-gray-500">
+                                      <span className="text-sm text-gray-500 dark:text-gray-400">
                                         Code: {industry.code}
                                       </span>
                                     </div>
@@ -804,6 +916,82 @@ export default function CreateSourcePage() {
                         </PopoverContent>
                       </Popover>
                     </div>
+
+                    {/* Client Tenant ID - Only show when packageId.type is P4 */}
+                    {packageId?.type === 'P4' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="clientTenantId">Source Provider *</Label>
+                        <Popover open={tenantOpen} onOpenChange={setTenantOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={tenantOpen}
+                              className={cn(
+                                'w-full justify-between dark:border-neutral-700 dark:hover:bg-neutral-800',
+                                submitted &&
+                                  !formData.clientTenantId &&
+                                  'border-red-500 !focus-visible:ring-red-500'
+                              )}
+                              disabled={tenantsLoading}
+                            >
+                              {formData.clientTenantId
+                                ? availableTenants.find(
+                                    t => t._id === formData.clientTenantId
+                                  )?.companyName || 'Select tenant...'
+                                : 'Select tenant...'}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <Command>
+                              <CommandInput placeholder="Search tenant..." />
+                              <CommandList>
+                                <CommandEmpty>
+                                  {tenantsLoading
+                                    ? 'Loading tenants...'
+                                    : 'No tenant found.'}
+                                </CommandEmpty>
+                                <CommandGroup>
+                                  {availableTenants.map(tenant => (
+                                    <CommandItem
+                                      key={tenant._id}
+                                      value={`${tenant.companyName} ${tenant.name}`}
+                                      onSelect={() => {
+                                        handleInputChange(
+                                          'clientTenantId',
+                                          tenant._id
+                                        )
+                                        setTenantOpen(false)
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          'mr-2 h-4 w-4',
+                                          formData.clientTenantId === tenant._id
+                                            ? 'opacity-100'
+                                            : 'opacity-0'
+                                        )}
+                                      />
+                                      <div className="flex flex-col">
+                                        <span className="font-medium">
+                                          {tenant.companyName}
+                                        </span>
+                                        {tenant.name !== tenant.companyName && (
+                                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                                            {tenant.name}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    )}
 
                     {/* Transaction Pay Fee */}
                     <div className="space-y-2">
@@ -880,7 +1068,7 @@ export default function CreateSourcePage() {
                       Location Details
                     </h3>
 
-                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-3">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-3 border dark:border-blue-800/30">
                       <div className="flex justify-between">
                         <span className="text-gray-600 dark:text-gray-400 font-medium">
                           Address:
@@ -935,7 +1123,7 @@ export default function CreateSourcePage() {
                         </span>
                       </div>
 
-                      <div className="pt-2 border-t border-blue-200 dark:border-blue-700">
+                      <div className="pt-2 border-t border-blue-200 dark:border-blue-800/30">
                         <div className="flex justify-between">
                           <span className="text-gray-600 dark:text-gray-400 font-medium">
                             Coordinates:
@@ -955,19 +1143,19 @@ export default function CreateSourcePage() {
 
             {/* Right Column - Google Map */}
             <div className="flex flex-col">
-              <Card className="flex-1 flex flex-col">
+              <Card className="flex-1 flex flex-col dark:bg-neutral-800 dark:border-neutral-700">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="w-5 h-5" />
+                  <CardTitle className="flex items-center gap-2 dark:text-gray-100">
+                    <MapPin className="w-5 h-5 dark:text-blue-400" />
                     Location Selection
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 p-0">
                   <div className="h-full flex flex-col">
                     <div className="p-4 pb-2">
-                      <Alert>
-                        <MapPin className="h-4 w-4" />
-                        <AlertDescription>
+                      <Alert className="dark:bg-blue-900/20 dark:border-blue-800/30">
+                        <MapPin className="h-4 w-4 dark:text-blue-400" />
+                        <AlertDescription className="dark:text-gray-300">
                           Use the search box on the map to find a location, or
                           click on the map to set a marker. The address fields
                           will be automatically populated based on your
@@ -985,7 +1173,7 @@ export default function CreateSourcePage() {
                         <input
                           type="text"
                           placeholder="Search for a location..."
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
                         />
                       </StandaloneSearchBox>
 
@@ -998,11 +1186,95 @@ export default function CreateSourcePage() {
                           onClick={onMapClick}
                           options={{
                             mapTypeId: 'roadmap',
-                            styles: [
+                            styles: mounted && resolvedTheme === 'dark' ? [
+                              { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+                              { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+                              { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
                               {
-                                featureType: 'poi',
-                                elementType: 'labels',
-                                stylers: [{ visibility: 'off' }],
+                                  featureType: 'administrative.locality',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#d59563' }]
+                              },
+                              {
+                                  featureType: 'poi',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#d59563' }]
+                              },
+                              {
+                                  featureType: 'poi.park',
+                                  elementType: 'geometry',
+                                  stylers: [{ color: '#263c3f' }]
+                              },
+                              {
+                                  featureType: 'poi.park',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#6b9a76' }]
+                              },
+                              {
+                                  featureType: 'road',
+                                  elementType: 'geometry',
+                                  stylers: [{ color: '#38414e' }]
+                              },
+                              {
+                                  featureType: 'road',
+                                  elementType: 'geometry.stroke',
+                                  stylers: [{ color: '#212a37' }]
+                              },
+                              {
+                                  featureType: 'road',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#9ca5b3' }]
+                              },
+                              {
+                                  featureType: 'road.highway',
+                                  elementType: 'geometry',
+                                  stylers: [{ color: '#746855' }]
+                              },
+                              {
+                                  featureType: 'road.highway',
+                                  elementType: 'geometry.stroke',
+                                  stylers: [{ color: '#1f2835' }]
+                              },
+                              {
+                                  featureType: 'road.highway',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#f3d19c' }]
+                              },
+                              {
+                                  featureType: 'transit',
+                                  elementType: 'geometry',
+                                  stylers: [{ color: '#2f3948' }]
+                              },
+                              {
+                                  featureType: 'transit.station',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#d59563' }]
+                              },
+                              {
+                                  featureType: 'water',
+                                  elementType: 'geometry',
+                                  stylers: [{ color: '#17263c' }]
+                              },
+                              {
+                                  featureType: 'water',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#515c6d' }]
+                              },
+                              {
+                                  featureType: 'water',
+                                  elementType: 'labels.text.stroke',
+                                  stylers: [{ color: '#17263c' }]
+                              },
+                              {
+                                  featureType: 'poi',
+                                  elementType: 'labels',
+                                  stylers: [{ visibility: 'off' }],
+                              },
+                            ] : [
+                              {
+                                  featureType: 'poi',
+                                  elementType: 'labels',
+                                  stylers: [{ visibility: 'off' }],
                               },
                             ],
                           }}
@@ -1022,10 +1294,10 @@ export default function CreateSourcePage() {
                       </div>
 
                       {!mapLoaded && (
-                        <div className="flex items-center justify-center w-full h-full bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center justify-center w-full h-full bg-gray-50 dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
                           <div className="text-center">
-                            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-gray-400" />
-                            <p className="text-gray-500">Loading map...</p>
+                            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-gray-400 dark:text-neutral-500" />
+                            <p className="text-gray-500 dark:text-gray-400">Loading map...</p>
                           </div>
                         </div>
                       )}
@@ -1043,6 +1315,7 @@ export default function CreateSourcePage() {
               variant="outline"
               onClick={handleCancel}
               disabled={saving}
+              className="dark:border-neutral-700 dark:hover:bg-neutral-800"
             >
               Cancel
             </Button>

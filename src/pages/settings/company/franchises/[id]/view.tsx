@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import { useTheme } from 'next-themes'
 import { Button } from '@/src/components/ui/button'
 import {
   Card,
@@ -89,6 +90,12 @@ export default function FranchiseViewPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { checkPermission } = usePermissions()
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (id) {
@@ -208,7 +215,7 @@ export default function FranchiseViewPage() {
               onClick={() =>
                 router.push(`/settings/company/franchises/create?id=${id}`)
               }
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-white"
             >
               <Edit className="w-4 h-4" />
               Edit Franchise
@@ -413,18 +420,102 @@ export default function FranchiseViewPage() {
                     <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2 block">
                       Location Map
                     </label>
-                    <div className="mt-2 border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="mt-2 border border-gray-200 dark:border-neutral-700 rounded-lg overflow-hidden">
                       <GoogleMap
                         mapContainerStyle={mapContainerStyle}
                         center={{ lat: franchise.lat, lng: franchise.lng }}
                         zoom={15}
                         options={{
                           mapTypeId: 'roadmap',
-                          styles: [
+                          styles: mounted && resolvedTheme === 'dark' ? [
+                            { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+                            { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+                            { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
                             {
-                              featureType: 'poi',
-                              elementType: 'labels',
-                              stylers: [{ visibility: 'off' }],
+                                featureType: 'administrative.locality',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#d59563' }]
+                            },
+                            {
+                                featureType: 'poi',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#d59563' }]
+                            },
+                            {
+                                featureType: 'poi.park',
+                                elementType: 'geometry',
+                                stylers: [{ color: '#263c3f' }]
+                            },
+                            {
+                                featureType: 'poi.park',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#6b9a76' }]
+                            },
+                            {
+                                featureType: 'road',
+                                elementType: 'geometry',
+                                stylers: [{ color: '#38414e' }]
+                            },
+                            {
+                                featureType: 'road',
+                                elementType: 'geometry.stroke',
+                                stylers: [{ color: '#212a37' }]
+                            },
+                            {
+                                featureType: 'road',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#9ca5b3' }]
+                            },
+                            {
+                                featureType: 'road.highway',
+                                elementType: 'geometry',
+                                stylers: [{ color: '#746855' }]
+                            },
+                            {
+                                featureType: 'road.highway',
+                                elementType: 'geometry.stroke',
+                                stylers: [{ color: '#1f2835' }]
+                            },
+                            {
+                                featureType: 'road.highway',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#f3d19c' }]
+                            },
+                            {
+                                featureType: 'transit',
+                                elementType: 'geometry',
+                                stylers: [{ color: '#2f3948' }]
+                            },
+                            {
+                                featureType: 'transit.station',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#d59563' }]
+                            },
+                            {
+                                featureType: 'water',
+                                elementType: 'geometry',
+                                stylers: [{ color: '#17263c' }]
+                            },
+                            {
+                                featureType: 'water',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#515c6d' }]
+                            },
+                            {
+                                featureType: 'water',
+                                elementType: 'labels.text.stroke',
+                                stylers: [{ color: '#17263c' }]
+                            },
+                            {
+                                featureType: 'poi',
+                                elementType: 'labels',
+                                stylers: [{ visibility: 'off' }],
+                            },
+                          ] : [
+                            {
+                                featureType: 'poi',
+                                elementType: 'labels',
+                                stylers: [{ visibility: 'off' }],
                             },
                           ],
                         }}

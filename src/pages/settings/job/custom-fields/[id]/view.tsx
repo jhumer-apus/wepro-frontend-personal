@@ -321,7 +321,7 @@ export default function CustomJobFieldViewPage(): React.JSX.Element {
                   {isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
-              <Button onClick={handleEdit} className="flex items-center gap-2">
+              <Button onClick={handleEdit} className="flex items-center gap-2 text-white">
                 <Edit className="w-4 h-4" />
                 Edit Field
               </Button>

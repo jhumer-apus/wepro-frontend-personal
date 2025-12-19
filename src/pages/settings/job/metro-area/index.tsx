@@ -305,6 +305,7 @@ export default function JobMetroAreaPage() {
             <div className="flex items-center space-x-3">
               <Button
                 onClick={() => router.push('/settings/job/metro-area/create')}
+                className="text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Metro Area
@@ -313,11 +314,77 @@ export default function JobMetroAreaPage() {
           )}
         </div>
 
+        {/* Filters and Search Component */}
+        {tenantId && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                {/* Filters Section */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {/* Latitude Filter */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">Latitude</Label>
+                    <Input
+                      placeholder="e.g., 40.7128"
+                      value={latitudeFilter}
+                      onChange={e => setLatitudeFilter(e.target.value)}
+                      type="number"
+                      step="any"
+                    />
+                  </div>
+
+                  {/* Longitude Filter */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">Longitude</Label>
+                    <Input
+                      placeholder="e.g., -74.0060"
+                      value={longitudeFilter}
+                      onChange={e => setLongitudeFilter(e.target.value)}
+                      type="number"
+                      step="any"
+                    />
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">Search</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                      <Input
+                        placeholder="Search metro areas..."
+                        className="pl-10"
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Clear Filters Button */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">&nbsp;</Label>
+                    <div className="flex justify-end">
+                      <Button
+                        variant="outline"
+                        onClick={clearAllFilters}
+                        disabled={
+                          !searchTerm && !latitudeFilter && !longitudeFilter
+                        }
+                      >
+                        Clear Filters
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Main Content */}
         {/* Metro Areas Table */}
-        <Card>
-          <CardContent className="pt-6">
-            {!tenantId ? (
+        {!tenantId ? (
+          <Card>
+            <CardContent className="pt-6">
               <div className="text-center py-12">
                 <Building2 className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
@@ -336,68 +403,13 @@ export default function JobMetroAreaPage() {
                   Refresh Page
                 </Button>
               </div>
-            ) : (
-              <>
-                {/* Filters and Search in Single Row */}
-                <div className="flex flex-col lg:flex-row gap-4 mb-6">
-                  {/* Filters Section */}
-                  <div className="flex flex-col sm:flex-row gap-4 w-full">
-                    {/* Latitude Filter */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">Latitude</Label>
-                      <Input
-                        placeholder="e.g., 40.7128"
-                        value={latitudeFilter}
-                        onChange={e => setLatitudeFilter(e.target.value)}
-                        type="number"
-                        step="any"
-                      />
-                    </div>
-
-                    {/* Longitude Filter */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">Longitude</Label>
-                      <Input
-                        placeholder="e.g., -74.0060"
-                        value={longitudeFilter}
-                        onChange={e => setLongitudeFilter(e.target.value)}
-                        type="number"
-                        step="any"
-                      />
-                    </div>
-
-                    {/* Search Bar */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">Search</Label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                        <Input
-                          placeholder="Search metro areas..."
-                          className="pl-10"
-                          value={searchTerm}
-                          onChange={e => setSearchTerm(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Clear Filters Button */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">&nbsp;</Label>
-                      <div className="space-y-2 flex justify-end">
-                        <Button
-                          variant="outline"
-                          onClick={clearAllFilters}
-                          disabled={
-                            !searchTerm && !latitudeFilter && !longitudeFilter
-                          }
-                        >
-                          Clear Filters
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Desktop View */}
+            <Card className="hidden md:block">
+              <CardContent className="pt-6">
                 {/* Table Controls */}
                 {!(debouncedLatitudeFilter && debouncedLongitudeFilter) && (
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -609,7 +621,7 @@ export default function JobMetroAreaPage() {
                                   }
                                   size="sm"
                                   onClick={() => handlePageChange(pageNum)}
-                                  className="w-8 h-8 p-0"
+                                  className="w-8 h-8 p-0 text-white"
                                 >
                                   {pageNum}
                                 </Button>
@@ -640,10 +652,266 @@ export default function JobMetroAreaPage() {
                       )}
                     </div>
                   )}
-              </>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+
+            {/* Mobile View */}
+            <div className="block md:hidden space-y-4">
+              {/* Show Entries Dropdown */}
+              {!(debouncedLatitudeFilter && debouncedLongitudeFilter) && (
+                <div className="flex items-center gap-2 justify-end">
+                  <Label
+                    htmlFor="entries"
+                    className="text-sm text-neutral-600 dark:text-neutral-400"
+                  >
+                    Show
+                  </Label>
+                  <Select
+                    value={entriesPerPage.toString()}
+                    onValueChange={handleEntriesChange}
+                  >
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="30">30</SelectItem>
+                      <SelectItem value="40">40</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {error && (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                  <p className="text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              )}
+
+              {/* Mobile Card View */}
+              <div className="space-y-4">
+                {loading ? (
+                  <div className="text-center py-8">
+                    <span className="text-neutral-500">Loading metro areas...</span>
+                  </div>
+                ) : metroAreas.length === 0 ? (
+                  <div className="text-center py-8">
+                    <span className="text-neutral-500">No metro areas found</span>
+                  </div>
+                ) : (
+                  metroAreas.map(metroArea => (
+                    <Card key={metroArea._id} className="relative border border-neutral-200 dark:border-neutral-700">
+                      <CardContent className="pt-4 pb-4">
+                        <div className="space-y-3">
+                          {/* Name */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Name
+                            </div>
+                            <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                              {metroArea.name}
+                            </div>
+                          </div>
+
+                          {/* Code */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Code
+                            </div>
+                            <Badge
+                              style={{
+                                backgroundColor: metroArea.background_color,
+                                color: metroArea.text_color,
+                              }}
+                              className="font-mono"
+                            >
+                              {metroArea.code}
+                            </Badge>
+                          </div>
+
+                          {/* Zipcode */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Zipcode
+                            </div>
+                            <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                              {metroArea.zipcode}
+                            </div>
+                          </div>
+
+                          {/* Radius */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Radius
+                            </div>
+                            <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                              {metroArea.is_advance_area_select
+                                ? '--'
+                                : `${metroArea.radius} ${metroArea.radius_unit}`}
+                            </div>
+                          </div>
+
+                          {/* Location */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Location
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-neutral-500" />
+                              <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                                {metroArea.latitude.toFixed(4)}°,{' '}
+                                {metroArea.longitude.toFixed(4)}°
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Created At */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Created At
+                            </div>
+                            <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                              {formatDate(metroArea.createdAt)}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                      {/* Action Button - Outside Card */}
+                      <div className="absolute top-4 right-4">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {checkPermission('MOD029', 'view') && (
+                              <DropdownMenuItem
+                                className="flex items-center gap-2"
+                                onClick={() =>
+                                  router.push(
+                                    `/settings/job/metro-area/${metroArea._id}/view`
+                                  )
+                                }
+                              >
+                                <Eye className="h-4 w-4" />
+                                View Metro Area
+                              </DropdownMenuItem>
+                            )}
+                            {checkPermission('MOD029', 'edit') && (
+                              <DropdownMenuItem
+                                className="flex items-center gap-2"
+                                onClick={() =>
+                                  router.push(
+                                    `/settings/job/metro-area/create?id=${metroArea._id}`
+                                  )
+                                }
+                              >
+                                <Edit className="h-4 w-4" />
+                                Edit Metro Area
+                              </DropdownMenuItem>
+                            )}
+                            {checkPermission('MOD029', 'delete') && (
+                              <DropdownMenuItem
+                                className="flex items-center gap-2 text-red-600"
+                                onClick={() =>
+                                  handleDeleteMetroArea(metroArea)
+                                }
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Delete Metro Area
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+
+              {/* Showing entries info */}
+              {totalCount > 0 &&
+                !(debouncedLatitudeFilter && debouncedLongitudeFilter) && (
+                  <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+                    Showing {(currentPage - 1) * entriesPerPage + 1} to{' '}
+                    {Math.min(currentPage * entriesPerPage, totalCount)} of{' '}
+                    {totalCount} entries
+                  </div>
+                )}
+
+              {/* Pagination Controls */}
+              {totalCount > 0 &&
+                !(debouncedLatitudeFilter && debouncedLongitudeFilter) && (
+                  <div className="flex items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1 || loading}
+                    >
+                      Previous
+                    </Button>
+
+                    {/* Page numbers */}
+                    <div className="flex items-center gap-1">
+                      {Array.from(
+                        { length: Math.min(5, totalPages) },
+                        (_, i) => {
+                          let pageNum
+                          if (totalPages <= 5) {
+                            pageNum = i + 1
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i
+                          } else {
+                            pageNum = currentPage - 2 + i
+                          }
+
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={
+                                currentPage === pageNum ? 'default' : 'outline'
+                              }
+                              size="sm"
+                              onClick={() => handlePageChange(pageNum)}
+                              className="w-8 h-8 p-0 text-white"
+                              disabled={loading}
+                            >
+                              {pageNum}
+                            </Button>
+                          )
+                        }
+                      )}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={
+                        currentPage === totalPages ||
+                        !paginationInfo?.hasNextPage ||
+                        loading
+                      }
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}

@@ -74,6 +74,7 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
   const [isSaving, setIsSaving] = useState(false)
   const [timezonesLoading, setTimezonesLoading] = useState(false)
   const [packagesLoading, setPackagesLoading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
   const [availableTimezones, setAvailableTimezones] = useState<Timezone[]>([])
   const [availablePackages, setAvailablePackages] = useState<
@@ -291,6 +292,7 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitted(true)
 
     // Validate form data
     if (!validateForm()) {
@@ -379,6 +381,10 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
 
   const handleCancel = () => {
     router.push('/answeringServices')
+  }
+
+  const handleInvalid = () => {
+    setSubmitted(true)
   }
 
   const getSelectedPackageName = () => {
@@ -494,7 +500,13 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
+        <form
+          onSubmit={handleSubmit}
+          onInvalid={handleInvalid}
+          className="space-y-6"
+          autoComplete="off"
+          data-submitted={submitted}
+        >
           {/* Basic Information Card */}
           <Card>
             <CardHeader>
@@ -515,7 +527,7 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
                   required
                   className={
                     validationErrors.name
-                      ? 'border-red-500 focus:border-red-500'
+                      ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                       : ''
                   }
                   autoComplete="off"
@@ -540,7 +552,7 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
                   required
                   className={
                     validationErrors.companyName
-                      ? 'border-red-500 focus:border-red-500'
+                      ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                       : ''
                   }
                   autoComplete="off"
@@ -563,7 +575,7 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
                   required
                   className={
                     validationErrors.username
-                      ? 'border-red-500 focus:border-red-500'
+                      ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                       : ''
                   }
                   autoComplete="off"
@@ -598,7 +610,7 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
                   required={!isEditing}
                   className={
                     validationErrors.password
-                      ? 'border-red-500 focus:border-red-500'
+                      ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                       : ''
                   }
                   autoComplete="new-password"
@@ -619,7 +631,12 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
                       variant="outline"
                       role="combobox"
                       aria-expanded={packageOpen}
-                      className="w-full justify-between"
+                      className={cn(
+                        'w-full justify-between',
+                        submitted &&
+                          !formData.packageId &&
+                          'border-red-500 !focus-visible:ring-red-500'
+                      )}
                       disabled={packagesLoading}
                     >
                       {packagesLoading
@@ -686,7 +703,12 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
                       variant="outline"
                       role="combobox"
                       aria-expanded={timezoneOpen}
-                      className="w-full justify-between"
+                      className={cn(
+                        'w-full justify-between',
+                        submitted &&
+                          !formData.timezoneId &&
+                          'border-red-500 !focus-visible:ring-red-500'
+                      )}
                       disabled={timezonesLoading}
                     >
                       {timezonesLoading

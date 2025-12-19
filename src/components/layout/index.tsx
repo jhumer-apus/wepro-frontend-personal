@@ -1,10 +1,11 @@
 import { Sidebar } from '@/src/components/layout/SideBar'
 import { Header } from '@/src/components/layout/Header'
 import { Toaster } from '@/src/components/ui/sonner'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppSelector } from '@/src/store/hooks'
 import { RootState } from '@/src/store'
 import { useRouter } from 'next/router'
+import { useTheme } from 'next-themes'
 
 export default function DashboardLayout({
   children,
@@ -16,19 +17,26 @@ export default function DashboardLayout({
     (state: RootState) => state.auth
   )
   const router = useRouter()
+  const { theme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Don't render layout for login page
   if (router.pathname === '/login') {
     return <>{children}</>
   }
 
-  // Show loading while checking authentication
-  if (loading) {
+  // Show loading while checking authentication or theme is not mounted
+  if (loading || !mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950">
         <div className="flex items-center space-x-2">
           <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-gray-600">Loading...</span>
+          <span className="text-gray-600 dark:text-gray-400">Loading...</span>
         </div>
       </div>
     )

@@ -325,11 +325,11 @@ export default function TeamMembersPage() {
           checkPermission('MOD003', 'view')) ||
         (checkPermission('MOD007', 'view') &&
           checkPermission('MOD006', 'view')) ? (
-          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+          <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1">
             <Button
               variant="default"
               onClick={() => router.push('/team/teamMembers')}
-              className="flex-1 flex items-center justify-center"
+              className="flex-1 flex items-center justify-center text-white"
             >
               <Users className="w-4 h-4 mr-2" />
               Team Members
@@ -337,7 +337,7 @@ export default function TeamMembersPage() {
             <Button
               variant="ghost"
               onClick={() => router.push('/team/roles')}
-              className="flex-1 flex items-center justify-center"
+              className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
             >
               <Shield className="w-4 h-4 mr-2" />
               Roles
@@ -430,7 +430,7 @@ export default function TeamMembersPage() {
             {/* Role Filter */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Shield className="h-4 w-4 text-neutral-500" />
+                <Shield className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
                 <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   Filter by Role
                 </span>
@@ -470,7 +470,8 @@ export default function TeamMembersPage() {
         </Card>
 
         {/* Team Members List */}
-        <Card>
+        {/* Desktop View */}
+        <Card className="hidden md:block">
           <CardContent className="pt-6">
             {/* Table Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -506,11 +507,12 @@ export default function TeamMembersPage() {
 
             {/* Error Message */}
             {error && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-red-600">{error}</p>
+              <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                <p className="text-red-600 dark:text-red-400">{error}</p>
               </div>
             )}
 
+            {/* Desktop Table View */}
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -652,7 +654,7 @@ export default function TeamMembersPage() {
                       variant={currentPage === page ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => handlePageChange(page)}
-                      className="w-8 h-8 p-0"
+                      className="w-8 h-8 p-0 text-white"
                       disabled={loading}
                     >
                       {page}
@@ -672,6 +674,229 @@ export default function TeamMembersPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Mobile View */}
+        <div className="block md:hidden space-y-4">
+          {/* Show Entries Dropdown */}
+          <div className="flex items-center gap-2 justify-end">
+            <Label
+              htmlFor="entries"
+              className="text-sm text-neutral-600 dark:text-neutral-400"
+            >
+              Show
+            </Label>
+            <Select
+              value={entriesPerPage.toString()}
+              onValueChange={handleEntriesChange}
+            >
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="30">30</SelectItem>
+                <SelectItem value="40">40</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <p className="text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* Mobile Card View */}
+          <div className="space-y-4">
+            {loading ? (
+              <div className="text-center py-8">
+                <span className="text-neutral-500">Loading users...</span>
+              </div>
+            ) : teamMembers.length === 0 ? (
+              <div className="text-center py-8">
+                <span className="text-neutral-500">No users found</span>
+              </div>
+            ) : (
+              teamMembers.map(member => (
+                <Card key={member._id} className="relative border border-neutral-200 dark:border-neutral-700">
+                  <CardContent className="pt-4 pb-4">
+                    <div className="space-y-3">
+                      {/* Name */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Name
+                        </div>
+                        <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                          {member.name}
+                        </div>
+                      </div>
+
+                      {/* Username */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Username
+                        </div>
+                        <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                          {member.username}
+                        </div>
+                      </div>
+
+                      {/* Role */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Role
+                        </div>
+                        <div>
+                          {member.roleId ? (
+                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                              {member.roleId.name}
+                            </Badge>
+                          ) : (
+                            <span className="text-sm text-neutral-400">No role</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Timezone */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Timezone
+                        </div>
+                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {member.timezoneId.name}
+                        </div>
+                      </div>
+
+                      {/* Created */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Created
+                        </div>
+                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {formatDate(member.createdAt)}
+                        </div>
+                      </div>
+
+                      {/* Status */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Status
+                        </div>
+                        <div>
+                          <Badge className={getStatusBadgeStyle(member.status)}>
+                            {member.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                  {/* Action Button - Outside Card */}
+                  <div className="absolute top-4 right-4">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          className="flex items-center gap-2"
+                          onClick={() =>
+                            router.push(
+                              `/team/teamMembers/${member._id}/view`
+                            )
+                          }
+                        >
+                          <Eye className="h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        {(checkPermission('MOD003', 'edit') ||
+                          checkPermission('MOD006', 'edit')) && (
+                          <DropdownMenuItem
+                            className="flex items-center gap-2"
+                            onClick={() =>
+                              router.push(
+                                `/team/teamMembers/create?id=${member._id}`
+                              )
+                            }
+                          >
+                            <Edit className="h-4 w-4" />
+                            Edit Member
+                          </DropdownMenuItem>
+                        )}
+                        {(checkPermission('MOD003', 'delete') ||
+                          checkPermission('MOD006', 'delete')) && (
+                          <DropdownMenuItem
+                            className="flex items-center gap-2 text-red-600 hover:text-red-700"
+                            onClick={() => handleDeleteClick(member)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Showing entries info */}
+          <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+            Showing{' '}
+            {teamMembers.length > 0
+              ? (currentPage - 1) * entriesPerPage + 1
+              : 0}{' '}
+            to {Math.min(currentPage * entriesPerPage, totalCount)} of{' '}
+            {totalCount} entries
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || loading}
+            >
+              Previous
+            </Button>
+
+            {/* Page numbers */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              page => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handlePageChange(page)}
+                  className="w-8 h-8 p-0 text-white"
+                  disabled={loading}
+                >
+                  {page}
+                </Button>
+              )
+            )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages || loading}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

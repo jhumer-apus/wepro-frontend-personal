@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import { useTheme } from 'next-themes'
 import { Button } from '@/src/components/ui/button'
 import {
   Card,
@@ -42,11 +43,17 @@ export default function ViewSourcePage() {
   const router = useRouter()
   const { id } = router.query
   const { checkPermission } = usePermissions()
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
   const [source, setSource] = useState<Source | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [markerBuffer, setMarkerBuffer] = useState<boolean>(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Load source data
   useEffect(() => {
@@ -87,9 +94,9 @@ export default function ViewSourcePage() {
     return (
       <div className="p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+          <div className="h-8 bg-gray-200 dark:bg-neutral-700 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 dark:bg-neutral-700 rounded w-1/2 mb-8"></div>
+          <div className="h-64 bg-gray-200 dark:bg-neutral-700 rounded"></div>
         </div>
       </div>
     )
@@ -141,7 +148,7 @@ export default function ViewSourcePage() {
             {/* Basic Information */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
               <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
-                <Globe className="w-5 h-5" />
+                <Globe className="w-5 h-5 dark:text-gray-400" />
                 Basic Information
               </h2>
               <div className="space-y-4">
@@ -158,7 +165,7 @@ export default function ViewSourcePage() {
                       >
                         {source.status}
                       </Badge>
-                      <Badge variant="outline">Code: {source.code}</Badge>
+                      <Badge variant="outline" className="dark:border-neutral-700 dark:text-gray-300">Code: {source.code}</Badge>
                     </div>
                   </div>
                 </div>
@@ -206,7 +213,7 @@ export default function ViewSourcePage() {
             {/* System Information */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
               <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
-                <Info className="w-5 h-5" />
+                <Info className="w-5 h-5 dark:text-gray-400" />
                 System Information
               </h2>
               <div className="space-y-4">
@@ -257,7 +264,7 @@ export default function ViewSourcePage() {
             {/* Business Information */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
               <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
-                <Info className="w-5 h-5" />
+                <Info className="w-5 h-5 dark:text-gray-400" />
                 Business Information
               </h2>
               <div className="space-y-4">
@@ -303,73 +310,73 @@ export default function ViewSourcePage() {
 
             {/* Address Details Card - Only show if lat and lng exist */}
             {source.lat && source.lng && (
-              <Card>
+              <Card className="dark:bg-neutral-800 dark:border-neutral-700">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="w-5 h-5" />
+                  <CardTitle className="flex items-center gap-2 dark:text-gray-100">
+                    <MapPin className="w-5 h-5 dark:text-blue-400" />
                     Address Details
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Address Information */}
                   <div className="space-y-4">
-                    <div className="bg-blue-50 rounded-lg p-3 space-y-2 text-sm">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 space-y-2 text-sm border dark:border-blue-800/30">
                       <div className="flex justify-between">
-                        <span className="text-gray-600 font-medium">
+                        <span className="text-gray-600 dark:text-gray-400 font-medium">
                           Address:
                         </span>
-                        <span className="text-gray-900">
+                        <span className="text-gray-900 dark:text-gray-100">
                           {source.address || '--'}
                         </span>
                       </div>
 
                       <div className="flex justify-between">
-                        <span className="text-gray-600 font-medium">
+                        <span className="text-gray-600 dark:text-gray-400 font-medium">
                           Address Line 2:
                         </span>
-                        <span className="text-gray-900">
+                        <span className="text-gray-900 dark:text-gray-100">
                           {source.addressLine2 || '--'}
                         </span>
                       </div>
 
                       <div className="flex justify-between">
-                        <span className="text-gray-600 font-medium">City:</span>
-                        <span className="text-gray-900">
+                        <span className="text-gray-600 dark:text-gray-400 font-medium">City:</span>
+                        <span className="text-gray-900 dark:text-gray-100">
                           {source.city || '--'}
                         </span>
                       </div>
 
                       <div className="flex justify-between">
-                        <span className="text-gray-600 font-medium">
+                        <span className="text-gray-600 dark:text-gray-400 font-medium">
                           State:
                         </span>
-                        <span className="text-gray-900">
+                        <span className="text-gray-900 dark:text-gray-100">
                           {source.state || '--'}
                         </span>
                       </div>
 
                       <div className="flex justify-between">
-                        <span className="text-gray-600 font-medium">ZIP:</span>
-                        <span className="text-gray-900">
+                        <span className="text-gray-600 dark:text-gray-400 font-medium">ZIP:</span>
+                        <span className="text-gray-900 dark:text-gray-100">
                           {source.zipCode || '--'}
                         </span>
                       </div>
 
                       <div className="flex justify-between">
-                        <span className="text-gray-600 font-medium">
+                        <span className="text-gray-600 dark:text-gray-400 font-medium">
                           Country:
                         </span>
-                        <span className="text-gray-900">
+                        <span className="text-gray-900 dark:text-gray-100">
                           {source.country || '--'}
                         </span>
                       </div>
 
-                      <div className="pt-2 border-t border-blue-200">
+                      <div className="pt-2 border-t border-blue-200 dark:border-blue-800/30">
                         <div className="flex justify-between">
-                          <span className="text-gray-600 font-medium">
+                          <span className="text-gray-600 dark:text-gray-400 font-medium">
                             Coordinates:
                           </span>
-                          <span className="text-gray-900">
+                          <span className="text-gray-900 dark:text-gray-100">
                             {source.lat && source.lng
                               ? `${source.lat.toFixed(4)}, ${source.lng.toFixed(4)}`
                               : '--'}
@@ -392,11 +399,95 @@ export default function ViewSourcePage() {
                           zoom={15}
                           options={{
                             mapTypeId: 'roadmap',
-                            styles: [
+                            styles: mounted && resolvedTheme === 'dark' ? [
+                              { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+                              { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+                              { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
                               {
-                                featureType: 'poi',
-                                elementType: 'labels',
-                                stylers: [{ visibility: 'off' }],
+                                  featureType: 'administrative.locality',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#d59563' }]
+                              },
+                              {
+                                  featureType: 'poi',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#d59563' }]
+                              },
+                              {
+                                  featureType: 'poi.park',
+                                  elementType: 'geometry',
+                                  stylers: [{ color: '#263c3f' }]
+                              },
+                              {
+                                  featureType: 'poi.park',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#6b9a76' }]
+                              },
+                              {
+                                  featureType: 'road',
+                                  elementType: 'geometry',
+                                  stylers: [{ color: '#38414e' }]
+                              },
+                              {
+                                  featureType: 'road',
+                                  elementType: 'geometry.stroke',
+                                  stylers: [{ color: '#212a37' }]
+                              },
+                              {
+                                  featureType: 'road',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#9ca5b3' }]
+                              },
+                              {
+                                  featureType: 'road.highway',
+                                  elementType: 'geometry',
+                                  stylers: [{ color: '#746855' }]
+                              },
+                              {
+                                  featureType: 'road.highway',
+                                  elementType: 'geometry.stroke',
+                                  stylers: [{ color: '#1f2835' }]
+                              },
+                              {
+                                  featureType: 'road.highway',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#f3d19c' }]
+                              },
+                              {
+                                  featureType: 'transit',
+                                  elementType: 'geometry',
+                                  stylers: [{ color: '#2f3948' }]
+                              },
+                              {
+                                  featureType: 'transit.station',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#d59563' }]
+                              },
+                              {
+                                  featureType: 'water',
+                                  elementType: 'geometry',
+                                  stylers: [{ color: '#17263c' }]
+                              },
+                              {
+                                  featureType: 'water',
+                                  elementType: 'labels.text.fill',
+                                  stylers: [{ color: '#515c6d' }]
+                              },
+                              {
+                                  featureType: 'water',
+                                  elementType: 'labels.text.stroke',
+                                  stylers: [{ color: '#17263c' }]
+                              },
+                              {
+                                  featureType: 'poi',
+                                  elementType: 'labels',
+                                  stylers: [{ visibility: 'off' }],
+                              },
+                            ] : [
+                              {
+                                  featureType: 'poi',
+                                  elementType: 'labels',
+                                  stylers: [{ visibility: 'off' }],
                               },
                             ],
                           }}

@@ -31,6 +31,8 @@ import {
   Check,
   X,
   XCircle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { usePermissions } from '@/src/hooks/usePermissions'
@@ -113,6 +115,8 @@ export default function MyActivitiesPage() {
     null
   )
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
 
   // Filter states
   const [filterAction, setFilterAction] = useState<string>('')
@@ -414,6 +418,29 @@ export default function MyActivitiesPage() {
     }
   }
 
+  const toggleCardDetails = (activityId: string) => {
+    setExpandedCards(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(activityId)) {
+        newSet.delete(activityId)
+      } else {
+        newSet.add(activityId)
+      }
+      return newSet
+    })
+  }
+
+  const getStatusBadgeColor = (statusCode: number) => {
+    if (statusCode >= 200 && statusCode < 300)
+      return 'bg-green-100 text-green-800'
+    if (statusCode >= 300 && statusCode < 400)
+      return 'bg-blue-100 text-blue-800'
+    if (statusCode >= 400 && statusCode < 500)
+      return 'bg-yellow-100 text-yellow-800'
+    if (statusCode >= 500) return 'bg-red-100 text-red-800'
+    return 'bg-gray-100 text-gray-800'
+  }
+
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -450,11 +477,11 @@ export default function MyActivitiesPage() {
       </Head>
       <div className="space-y-6">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1">
           <Button
             variant="ghost"
             onClick={() => handleTabClick('/reports/user-activities')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <Users className="w-4 h-4 mr-2" />
             User Activities
@@ -462,7 +489,7 @@ export default function MyActivitiesPage() {
           <Button
             variant="default"
             onClick={() => handleTabClick('/reports/my-activities')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center text-white"
           >
             <User className="w-4 h-4 mr-2" />
             My Activities
@@ -470,7 +497,7 @@ export default function MyActivitiesPage() {
           <Button
             variant="ghost"
             onClick={() => handleTabClick('/reports/reports')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <BarChart3 className="w-4 h-4 mr-2" />
             Reports
@@ -515,7 +542,7 @@ export default function MyActivitiesPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {/* Action Filter */}
-                  <div className="space-y-2">
+                  <div className={`space-y-2 ${!showMobileFilters ? 'hidden md:block' : ''}`}>
                     <Label className="text-sm font-medium">Action</Label>
                     <Input
                       placeholder="Enter action..."
@@ -525,7 +552,7 @@ export default function MyActivitiesPage() {
                   </div>
 
                   {/* Method Filter */}
-                  <div className="space-y-2">
+                  <div className={`space-y-2 ${!showMobileFilters ? 'hidden md:block' : ''}`}>
                     <Label className="text-sm font-medium">Method</Label>
                     <Select
                       value={filterMethod}
@@ -546,7 +573,7 @@ export default function MyActivitiesPage() {
                   </div>
 
                   {/* Endpoint Filter */}
-                  <div className="space-y-2">
+                  <div className={`space-y-2 ${!showMobileFilters ? 'hidden md:block' : ''}`}>
                     <Label className="text-sm font-medium">Endpoint</Label>
                     <Input
                       placeholder="Enter endpoint..."
@@ -556,7 +583,7 @@ export default function MyActivitiesPage() {
                   </div>
 
                   {/* Status Code Filter */}
-                  <div className="space-y-2">
+                  <div className={`space-y-2 ${!showMobileFilters ? 'hidden md:block' : ''}`}>
                     <Label className="text-sm font-medium">Status Code</Label>
                     <Select
                       value={filterStatusCode}
@@ -577,7 +604,7 @@ export default function MyActivitiesPage() {
                   </div>
 
                   {/* Success Filter */}
-                  <div className="space-y-2">
+                  <div className={`space-y-2 ${!showMobileFilters ? 'hidden md:block' : ''}`}>
                     <Label className="text-sm font-medium">Success</Label>
                     <Select
                       value={filterSuccess}
@@ -598,7 +625,7 @@ export default function MyActivitiesPage() {
                   </div>
 
                   {/* Start Date Filter */}
-                  <div className="space-y-2">
+                  <div className={`space-y-2 ${!showMobileFilters ? 'hidden md:block' : ''}`}>
                     <Label className="text-sm font-medium">Start Date</Label>
                     <Input
                       type="date"
@@ -609,7 +636,7 @@ export default function MyActivitiesPage() {
                   </div>
 
                   {/* End Date Filter */}
-                  <div className="space-y-2">
+                  <div className={`space-y-2 ${!showMobileFilters ? 'hidden md:block' : ''}`}>
                     <Label className="text-sm font-medium">End Date</Label>
                     <Input
                       type="date"
@@ -620,12 +647,32 @@ export default function MyActivitiesPage() {
                   </div>
                 </div>
               </div>
+              {/* Mobile Toggle Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="md:hidden flex items-center gap-2 w-full justify-center mt-4"
+              >
+                {showMobileFilters ? (
+                  <>
+                    <ChevronUp className="h-4 w-4" />
+                    Hide Filters
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4" />
+                    Show More Filters
+                  </>
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>
 
         {/* My Activities List */}
-        <Card>
+        {/* Desktop View */}
+        <Card className="hidden md:block">
           <CardContent className="pt-6">
             {/* Table Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -867,6 +914,325 @@ export default function MyActivitiesPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Mobile View */}
+        <div className="block md:hidden space-y-4">
+          {/* Show Entries Dropdown */}
+          <div className="flex items-center gap-2 justify-end">
+            <Label
+              htmlFor="entries"
+              className="text-sm text-neutral-600 dark:text-neutral-400"
+            >
+              Show
+            </Label>
+            <Select
+              value={entriesPerPage.toString()}
+              onValueChange={handleEntriesChange}
+            >
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="30">30</SelectItem>
+                <SelectItem value="40">40</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+              <p className="text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* Mobile Card View */}
+          <div className="space-y-4">
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
+                  <span className="text-neutral-500">Loading activities...</span>
+                </div>
+              </div>
+            ) : currentActivities.length === 0 ? (
+              <div className="text-center py-8">
+                <span className="text-neutral-500">No activities found</span>
+              </div>
+            ) : (
+              currentActivities.map(activity => (
+                <Card key={activity._id} className="border border-neutral-200 dark:border-neutral-700">
+                  <CardContent className="pt-4 pb-4">
+                    <div className="space-y-3">
+                      {/* Action */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Action
+                        </div>
+                        <div className="font-medium text-neutral-900 dark:text-neutral-100">
+                          {activity.action}
+                        </div>
+                      </div>
+
+                      {/* Method */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Method
+                        </div>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            activity.method === 'GET'
+                              ? 'bg-blue-100 text-blue-800'
+                              : activity.method === 'POST'
+                                ? 'bg-green-100 text-green-800'
+                                : activity.method === 'PUT'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : activity.method === 'DELETE'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {activity.method}
+                        </span>
+                      </div>
+
+                      {/* Endpoint */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Endpoint
+                        </div>
+                        <div className="font-mono text-sm break-all">
+                          {activity.endpoint}
+                        </div>
+                      </div>
+
+                      {/* Status Code */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Status Code
+                        </div>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor(activity.statusCode)}`}
+                        >
+                          {activity.statusCode}
+                        </span>
+                      </div>
+
+                      {/* Success */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Success
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {activity.success ? (
+                            <Check className="h-5 w-5 text-green-600" />
+                          ) : (
+                            <X className="h-5 w-5 text-red-600" />
+                          )}
+                          <span className="text-sm text-neutral-900 dark:text-neutral-100">
+                            {activity.success ? 'Yes' : 'No'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Response Time */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Response Time
+                        </div>
+                        <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                          {activity.responseTime}ms
+                        </div>
+                      </div>
+
+                      {/* Created At */}
+                      <div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                          Created At
+                        </div>
+                        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {formatTimestamp(activity.createdAt)}
+                        </div>
+                      </div>
+
+                      {/* Additional Details - Hidden by default */}
+                      {expandedCards.has(activity._id) && (
+                        <>
+                          {/* Module */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Module
+                            </div>
+                            <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                              {activity.module}
+                            </div>
+                          </div>
+
+                          {/* IP Address */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              IP Address
+                            </div>
+                            <div className="font-mono text-sm text-neutral-900 dark:text-neutral-100">
+                              {activity.ipAddress}
+                            </div>
+                          </div>
+
+                          {/* Browser */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Browser
+                            </div>
+                            <div>
+                              <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                                {activity.browser}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {activity.browserVersion}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* OS */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Operating System
+                            </div>
+                            <div>
+                              <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                                {activity.os}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {activity.osVersion}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Device */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Device
+                            </div>
+                            <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                              {activity.device}
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Show Details Button - Always at bottom */}
+                      <div className="pt-2 flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleCardDetails(activity._id)}
+                          className="flex-1 flex items-center justify-center gap-2"
+                        >
+                          {expandedCards.has(activity._id) ? (
+                            <>
+                              <ChevronUp className="h-4 w-4" />
+                              Hide Details
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="h-4 w-4" />
+                              Show Details
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRowClick(activity)}
+                          className="flex items-center gap-2"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Showing entries info */}
+          <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+            Showing{' '}
+            {(pagination.current.page - 1) * pagination.current.limit + 1}{' '}
+            to{' '}
+            {Math.min(
+              pagination.current.page * pagination.current.limit,
+              pagination.total
+            )}{' '}
+            of {pagination.total} entries
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(pagination.current.page - 1)}
+              disabled={pagination.current.page === 1 || loading}
+            >
+              Previous
+            </Button>
+
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {Array.from(
+                { length: Math.min(5, pagination.pages) },
+                (_, i) => {
+                  let pageNum
+                  if (pagination.pages <= 5) {
+                    pageNum = i + 1
+                  } else if (pagination.current.page <= 3) {
+                    pageNum = i + 1
+                  } else if (
+                    pagination.current.page >=
+                    pagination.pages - 2
+                  ) {
+                    pageNum = pagination.pages - 4 + i
+                  } else {
+                    pageNum = pagination.current.page - 2 + i
+                  }
+
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={
+                        pagination.current.page === pageNum
+                          ? 'default'
+                          : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => handlePageChange(pageNum)}
+                      className="w-8 h-8 p-0"
+                      disabled={loading}
+                    >
+                      {pageNum}
+                    </Button>
+                  )
+                }
+              )}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(pagination.current.page + 1)}
+              disabled={pagination.current.page === pagination.pages || loading}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       </div>
       {/* Side Panel for Activity Details */}
       {isSidePanelOpen && selectedActivity && (

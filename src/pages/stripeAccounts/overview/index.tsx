@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import { useTheme } from 'next-themes'
 import { Button } from '@/src/components/ui/button'
 import {
   Dialog,
@@ -190,6 +191,12 @@ interface StripeAccountsResponse {
 }
 
 export default function StripeAccountsOverview() {
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   const router = useRouter()
   const [isSetupComplete, setIsSetupComplete] = useState(true)
   const [showSetupDialog, setShowSetupDialog] = useState(false)
@@ -250,9 +257,6 @@ export default function StripeAccountsOverview() {
   const [onboardingStatusData, setOnboardingStatusData] = useState<any>(null)
   const [loadingOnboardingStatus, setLoadingOnboardingStatus] = useState(false)
   
-  // Empty state modal state
-  const [showEmptyStateModal, setShowEmptyStateModal] = useState(false)
-
   // Company info edit state
   const [companyInfoFormData, setCompanyInfoFormData] = useState({
     companyName: '',
@@ -360,15 +364,6 @@ export default function StripeAccountsOverview() {
   useEffect(() => {
     fetchAccounts()
   }, [])
-
-  // Show empty state modal when no accounts
-  useEffect(() => {
-    if (accounts.length === 0 && !loadingAccounts) {
-      setShowEmptyStateModal(true)
-    } else {
-      setShowEmptyStateModal(false)
-    }
-  }, [accounts.length, loadingAccounts])
 
   // Debounce search term effect
   useEffect(() => {
@@ -1364,23 +1359,23 @@ export default function StripeAccountsOverview() {
         />
       </Head>
       
-      {/* Show empty state modal when no accounts */}
+      {/* Show empty state content when no accounts */}
       {accounts.length === 0 && !loadingAccounts && (
-        <Dialog open={true}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+        <div className="flex min-h-[60vh] items-center justify-center p-6">
+          <Card className="w-full max-w-2xl shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-orange-500" />
                 No Accounts Added Yet
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 You haven't added any Stripe accounts yet. Add your first account to start processing payments.
               </p>
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end">
                 <Button
-                  variant="outline"
+                  variant="default"
                   onClick={() => {
                     setShowAddLocationDialog(true)
                   }}
@@ -1388,9 +1383,9 @@ export default function StripeAccountsOverview() {
                   Add Account
                 </Button>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Main content - only show when accounts exist */}
@@ -1439,11 +1434,11 @@ export default function StripeAccountsOverview() {
       />
       <div className="space-y-6 mt-4">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1">
           <Button
             variant="default"
             onClick={() => router.push('/stripeAccounts/overview')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center text-white"
           >
             <Settings className="w-4 h-4 mr-2" />
             Overview
@@ -1451,7 +1446,7 @@ export default function StripeAccountsOverview() {
           <Button
             variant="ghost"
             onClick={() => router.push('/stripeAccounts/payouts')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <TrendingUp className="w-4 h-4 mr-2" />
             Payouts
@@ -1459,7 +1454,7 @@ export default function StripeAccountsOverview() {
           <Button
             variant="ghost"
             onClick={() => router.push('/stripeAccounts/payments')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <CreditCard className="w-4 h-4 mr-2" />
             Payments
@@ -1467,7 +1462,7 @@ export default function StripeAccountsOverview() {
           <Button
             variant="ghost"
             onClick={() => router.push('/stripeAccounts/disputes')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <AlertTriangle className="w-4 h-4 mr-2" />
             Disputes
@@ -1475,7 +1470,7 @@ export default function StripeAccountsOverview() {
           <Button
             variant="ghost"
             onClick={() => router.push('/stripeAccounts/equipment')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <ShoppingCart className="w-4 h-4 mr-2" />
             Equipment
@@ -1915,12 +1910,12 @@ export default function StripeAccountsOverview() {
         open={showAddLocationDialog}
         onOpenChange={setShowAddLocationDialog}
       >
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto dark:bg-neutral-900 dark:border-neutral-800">
           <DialogHeader>
-            <DialogTitle>Add Account Location</DialogTitle>
+            <DialogTitle className="dark:text-gray-100">Add Account Location</DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
-            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border dark:border-blue-800/30">
               <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
                 Available Account Locations
               </h4>
@@ -1959,7 +1954,7 @@ export default function StripeAccountsOverview() {
                 availableAccounts.map((account: Account) => (
                   <Card
                     key={account._id}
-                    className="cursor-pointer border-2 hover:border-blue-500 transition-colors group"
+                    className="cursor-pointer border-2 dark:border-neutral-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors group dark:bg-neutral-800"
                   >
                     <CardContent className="pt-6">
                       <div className="space-y-4">
@@ -1969,7 +1964,7 @@ export default function StripeAccountsOverview() {
                               <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div>
-                              <h3 className="font-semibold text-lg">
+                              <h3 className="font-semibold text-lg dark:text-gray-100">
                                 {account.name}
                               </h3>
                               <p className="text-sm text-neutral-500 dark:text-neutral-400">
@@ -1981,8 +1976,8 @@ export default function StripeAccountsOverview() {
                             variant="outline"
                             className={
                               account.status === 'Active'
-                                ? 'bg-green-50 text-green-700 border-green-200'
-                                : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800'
+                                : 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800'
                             }
                           >
                             {account.status}
@@ -2011,32 +2006,32 @@ export default function StripeAccountsOverview() {
                           {account.zipCode}
                         </p>
 
-                        <div className="pt-4 border-t">
-                          <h4 className="font-medium mb-3">
+                        <div className="pt-4 border-t dark:border-neutral-700">
+                          <h4 className="font-medium mb-3 dark:text-gray-100">
                             Payment Processing Setup
                           </h4>
                           <div className="space-y-2 text-sm">
                             <div className="flex items-center gap-2">
-                              <CheckCircle className="w-4 h-4 text-green-500" />
-                              <span>Separate payment account</span>
+                              <CheckCircle className="w-4 h-4 text-green-500 dark:text-green-400" />
+                              <span className="dark:text-gray-300">Separate payment account</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <CheckCircle className="w-4 h-4 text-green-500" />
-                              <span>Individual balance tracking</span>
+                              <CheckCircle className="w-4 h-4 text-green-500 dark:text-green-400" />
+                              <span className="dark:text-gray-300">Individual balance tracking</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <CheckCircle className="w-4 h-4 text-green-500" />
-                              <span>Location-specific reporting</span>
+                              <CheckCircle className="w-4 h-4 text-green-500 dark:text-green-400" />
+                              <span className="dark:text-gray-300">Location-specific reporting</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <CheckCircle className="w-4 h-4 text-green-500" />
-                              <span>Customizable fee structure</span>
+                              <CheckCircle className="w-4 h-4 text-green-500 dark:text-green-400" />
+                              <span className="dark:text-gray-300">Customizable fee structure</span>
                             </div>
                           </div>
                         </div>
 
                          <Button
-                           className="w-full mt-4"
+                           className="w-full mt-4 dark:bg-blue-600 dark:hover:bg-blue-700"
                             onClick={() => {
                               setSelectedAccountForSetup(account)
                               setStep1FormData({
@@ -2081,41 +2076,41 @@ export default function StripeAccountsOverview() {
               )}
             </div>
 
-            <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Setup Process</h4>
+            <div className="bg-neutral-50 dark:bg-neutral-800 p-4 rounded-lg border dark:border-neutral-700">
+              <h4 className="font-medium mb-2 dark:text-gray-100">Setup Process</h4>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium">
                     1
                   </div>
-                  <span>Select Location</span>
+                  <span className="dark:text-gray-300">Select Location</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium">
                     2
                   </div>
-                  <span>Account Verification</span>
+                  <span className="dark:text-gray-300">Account Verification</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium">
                     3
                   </div>
-                  <span>Payment Setup</span>
+                  <span className="dark:text-gray-300">Payment Setup</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium">
                     4
                   </div>
-                  <span>Start Processing</span>
+                  <span className="dark:text-gray-300">Start Processing</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-2 pt-4 border-t">
+            <div className="flex gap-2 pt-4 border-t dark:border-neutral-700">
               <Button
                 variant="outline"
                 onClick={() => setShowAddLocationDialog(false)}
-                className="flex-1"
+                className="flex-1 dark:border-neutral-700 dark:hover:bg-neutral-800"
               >
                 Close
               </Button>
@@ -2279,11 +2274,95 @@ export default function StripeAccountsOverview() {
                                     onClick={onMapClick}
                                     options={{
                                     mapTypeId: 'roadmap',
-                                    styles: [
+                                    styles: mounted && resolvedTheme === 'dark' ? [
+                                        { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+                                        { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+                                        { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
                                         {
-                                        featureType: 'poi',
-                                        elementType: 'labels',
-                                        stylers: [{ visibility: 'off' }],
+                                            featureType: 'administrative.locality',
+                                            elementType: 'labels.text.fill',
+                                            stylers: [{ color: '#d59563' }]
+                                        },
+                                        {
+                                            featureType: 'poi',
+                                            elementType: 'labels.text.fill',
+                                            stylers: [{ color: '#d59563' }]
+                                        },
+                                        {
+                                            featureType: 'poi.park',
+                                            elementType: 'geometry',
+                                            stylers: [{ color: '#263c3f' }]
+                                        },
+                                        {
+                                            featureType: 'poi.park',
+                                            elementType: 'labels.text.fill',
+                                            stylers: [{ color: '#6b9a76' }]
+                                        },
+                                        {
+                                            featureType: 'road',
+                                            elementType: 'geometry',
+                                            stylers: [{ color: '#38414e' }]
+                                        },
+                                        {
+                                            featureType: 'road',
+                                            elementType: 'geometry.stroke',
+                                            stylers: [{ color: '#212a37' }]
+                                        },
+                                        {
+                                            featureType: 'road',
+                                            elementType: 'labels.text.fill',
+                                            stylers: [{ color: '#9ca5b3' }]
+                                        },
+                                        {
+                                            featureType: 'road.highway',
+                                            elementType: 'geometry',
+                                            stylers: [{ color: '#746855' }]
+                                        },
+                                        {
+                                            featureType: 'road.highway',
+                                            elementType: 'geometry.stroke',
+                                            stylers: [{ color: '#1f2835' }]
+                                        },
+                                        {
+                                            featureType: 'road.highway',
+                                            elementType: 'labels.text.fill',
+                                            stylers: [{ color: '#f3d19c' }]
+                                        },
+                                        {
+                                            featureType: 'transit',
+                                            elementType: 'geometry',
+                                            stylers: [{ color: '#2f3948' }]
+                                        },
+                                        {
+                                            featureType: 'transit.station',
+                                            elementType: 'labels.text.fill',
+                                            stylers: [{ color: '#d59563' }]
+                                        },
+                                        {
+                                            featureType: 'water',
+                                            elementType: 'geometry',
+                                            stylers: [{ color: '#17263c' }]
+                                        },
+                                        {
+                                            featureType: 'water',
+                                            elementType: 'labels.text.fill',
+                                            stylers: [{ color: '#515c6d' }]
+                                        },
+                                        {
+                                            featureType: 'water',
+                                            elementType: 'labels.text.stroke',
+                                            stylers: [{ color: '#17263c' }]
+                                        },
+                                        {
+                                            featureType: 'poi',
+                                            elementType: 'labels',
+                                            stylers: [{ visibility: 'off' }],
+                                        },
+                                    ] : [
+                                        {
+                                            featureType: 'poi',
+                                            elementType: 'labels',
+                                            stylers: [{ visibility: 'off' }],
                                         },
                                     ],
                                     }}
@@ -2302,10 +2381,10 @@ export default function StripeAccountsOverview() {
                                 </div>
 
                                 {!mapLoaded && (
-                                <div className="flex items-center justify-center w-full h-64 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="flex items-center justify-center w-full h-64 bg-gray-50 dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
                                     <div className="text-center">
-                                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-gray-400" />
-                                    <p className="text-gray-500">Loading map...</p>
+                                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-gray-400 dark:text-neutral-500" />
+                                    <p className="text-gray-500 dark:text-gray-400">Loading map...</p>
                                     </div>
                                 </div>
                                 )}
@@ -2316,75 +2395,75 @@ export default function StripeAccountsOverview() {
                         {/* Bottom Row: Location Details */}
                         <div className="space-y-3">
                             <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-blue-600" />
-                            <span className="text-sm font-medium text-gray-700">
+                            <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Location Details *
                             </span>
                             </div>
 
-                            <div className="rounded-lg p-4 space-y-3 text-sm bg-blue-50 border border-blue-200">
+                            <div className="rounded-lg p-4 space-y-3 text-sm bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30">
                             <div className="grid grid-cols-1 gap-4">
                                 <div className="flex justify-between">
-                                <span className="text-gray-600 font-medium">
+                                <span className="text-gray-600 dark:text-gray-400 font-medium">
                                     Address:
                                 </span>
-                                <span className="text-gray-900">
+                                <span className="text-gray-900 dark:text-gray-100">
                                     {step1FormData.address || '--'}
                                 </span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                <span className="text-gray-600 font-medium">
+                                <span className="text-gray-600 dark:text-gray-400 font-medium">
                                     Address Line 2:
                                 </span>
-                                <span className="text-gray-900">
+                                <span className="text-gray-900 dark:text-gray-100">
                                     {step1FormData.addressLine2 || '--'}
                                 </span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                <span className="text-gray-600 font-medium">
+                                <span className="text-gray-600 dark:text-gray-400 font-medium">
                                     City:
                                 </span>
-                                <span className="text-gray-900">
+                                <span className="text-gray-900 dark:text-gray-100">
                                     {step1FormData.city || '--'}
                                 </span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                <span className="text-gray-600 font-medium">
+                                <span className="text-gray-600 dark:text-gray-400 font-medium">
                                     State:
                                 </span>
-                                <span className="text-gray-900">
+                                <span className="text-gray-900 dark:text-gray-100">
                                     {step1FormData.state || '--'}
                                 </span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                <span className="text-gray-600 font-medium">
+                                <span className="text-gray-600 dark:text-gray-400 font-medium">
                                     ZIP:
                                 </span>
-                                <span className="text-gray-900">
+                                <span className="text-gray-900 dark:text-gray-100">
                                     {step1FormData.zipCode || '--'}
                                 </span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                <span className="text-gray-600 font-medium">
+                                <span className="text-gray-600 dark:text-gray-400 font-medium">
                                     Country:
                                 </span>
-                                <span className="text-gray-900">
+                                <span className="text-gray-900 dark:text-gray-100">
                                     {step1FormData.country || '--'}
                                 </span>
                                 </div>
                             </div>
 
-                            <div className="pt-3 border-t border-blue-200">
+                            <div className="pt-3 border-t border-blue-200 dark:border-blue-800/30">
                                 <div className="flex justify-between">
-                                <span className="text-gray-600 font-medium">
+                                <span className="text-gray-600 dark:text-gray-400 font-medium">
                                     Coordinates:
                                 </span>
-                                <span className="text-gray-900">
+                                <span className="text-gray-900 dark:text-gray-100">
                                     {step1FormData.lat && step1FormData.lng
                                     ? `${parseFloat(step1FormData.lat).toFixed(4)}, ${parseFloat(step1FormData.lng).toFixed(4)}`
                                     : '--'}

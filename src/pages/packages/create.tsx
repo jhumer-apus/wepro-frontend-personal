@@ -117,6 +117,7 @@ export default function CreatePackagePage(): React.JSX.Element {
 
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -458,6 +459,7 @@ export default function CreatePackagePage(): React.JSX.Element {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitted(true)
 
     // Validate form data
     if (!validateForm()) {
@@ -539,6 +541,7 @@ export default function CreatePackagePage(): React.JSX.Element {
       toast.error('Failed to save package', {
         description:
           error.response?.data?.message ||
+          error.response?.data?.error ||
           'An error occurred while saving the package.',
       })
     } finally {
@@ -619,7 +622,12 @@ export default function CreatePackagePage(): React.JSX.Element {
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          onInvalid={() => setSubmitted(true)}
+          className="space-y-6"
+          data-submitted={submitted}
+        >
           {/* Basic Information Card */}
           <Card>
             <CardHeader>
@@ -660,7 +668,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                   required
                   className={
                     validationErrors.name
-                      ? 'border-red-500 focus:border-red-500'
+                      ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                       : ''
                   }
                 />
@@ -703,8 +711,8 @@ export default function CreatePackagePage(): React.JSX.Element {
                   >
                     <SelectTrigger
                       className={
-                        validationErrors.type
-                          ? 'border-red-500 focus:border-red-500'
+                        submitted && !formData.type
+                          ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                           : ''
                       }
                     >
@@ -738,7 +746,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                       value={formData.price}
                       onChange={e => handleInputChange('price', e.target.value)}
                       placeholder="0.00"
-                      className={`pl-8 ${validationErrors.price ? 'border-red-500 focus:border-red-500' : ''}`}
+                      className={`pl-8 ${validationErrors.price ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500' : ''}`}
                       required
                     />
                   </div>
@@ -771,8 +779,8 @@ export default function CreatePackagePage(): React.JSX.Element {
                   >
                     <SelectTrigger
                       className={
-                        validationErrors.interval
-                          ? 'border-red-500 focus:border-red-500'
+                        submitted && !formData.interval
+                          ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                           : ''
                       }
                     >
@@ -849,7 +857,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                     placeholder="0"
                     className={
                       validationErrors.limits?.users
-                        ? 'border-red-500 focus:border-red-500'
+                        ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                         : ''
                     }
                     required
@@ -874,7 +882,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                     placeholder="0"
                     className={
                       validationErrors.limits?.numbers
-                        ? 'border-red-500 focus:border-red-500'
+                        ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                         : ''
                     }
                     required
@@ -899,7 +907,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                     placeholder="0"
                     className={
                       validationErrors.limits?.minutes
-                        ? 'border-red-500 focus:border-red-500'
+                        ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                         : ''
                     }
                     required
@@ -922,7 +930,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                     placeholder="0"
                     className={
                       validationErrors.limits?.sms
-                        ? 'border-red-500 focus:border-red-500'
+                        ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                         : ''
                     }
                     required
@@ -947,7 +955,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                     placeholder="0"
                     className={
                       validationErrors.limits?.whatsappSms
-                        ? 'border-red-500 focus:border-red-500'
+                        ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                         : ''
                     }
                     required
@@ -970,7 +978,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                     placeholder="0"
                     className={
                       validationErrors.limits?.emails
-                        ? 'border-red-500 focus:border-red-500'
+                        ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                         : ''
                     }
                     required
@@ -1019,7 +1027,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                       placeholder="0.00"
                       className={`pl-8 ${
                         validationErrors.additionalPricing?.userMonthly
-                          ? 'border-red-500 focus:border-red-500'
+                          ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                           : ''
                       }`}
                       required
@@ -1052,7 +1060,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                       placeholder="0.00"
                       className={`pl-8 ${
                         validationErrors.additionalPricing?.numberMonthly
-                          ? 'border-red-500 focus:border-red-500'
+                          ? 'border-red-500 focus-border-red-500 !focus-visible:ring-red-500'
                           : ''
                       }`}
                       required
@@ -1085,7 +1093,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                       placeholder="0.00"
                       className={`pl-8 ${
                         validationErrors.additionalPricing?.perMinute
-                          ? 'border-red-500 focus:border-red-500'
+                          ? 'border-red-500 focus-border-red-500 !focus-visible:ring-red-500'
                           : ''
                       }`}
                       required
@@ -1115,7 +1123,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                       placeholder="0.00"
                       className={`pl-8 ${
                         validationErrors.additionalPricing?.perSms
-                          ? 'border-red-500 focus:border-red-500'
+                          ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                           : ''
                       }`}
                       required
@@ -1148,7 +1156,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                       placeholder="0.00"
                       className={`pl-8 ${
                         validationErrors.additionalPricing?.perWhatsappSms
-                          ? 'border-red-500 focus:border-red-500'
+                          ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
                           : ''
                       }`}
                       required
@@ -1181,7 +1189,7 @@ export default function CreatePackagePage(): React.JSX.Element {
                       placeholder="0.00"
                       className={`pl-8 ${
                         validationErrors.additionalPricing?.perEmail
-                          ? 'border-red-500 focus:border-red-500'
+                          ? 'border-red-500 focus-border-red-500 !focus-visible:ring-red-500'
                           : ''
                       }`}
                       required

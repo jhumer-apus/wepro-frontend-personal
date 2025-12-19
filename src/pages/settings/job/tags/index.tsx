@@ -116,6 +116,7 @@ export default function JobTagsPage() {
   const [jobTagModalOpen, setJobTagModalOpen] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [editingJobTag, setEditingJobTag] = useState<JobTag | null>(null)
+  const [jobTagSubmitted, setJobTagSubmitted] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -272,6 +273,7 @@ export default function JobTagsPage() {
       background_color: '#3B82F6',
       text_color: '#FFFFFF',
     })
+    setJobTagSubmitted(false)
     setJobTagModalOpen(true)
   }
 
@@ -284,11 +286,13 @@ export default function JobTagsPage() {
       background_color: jobTag.background_color,
       text_color: jobTag.text_color,
     })
+    setJobTagSubmitted(false)
     setJobTagModalOpen(true)
   }
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setJobTagSubmitted(true)
 
     if (!formData.name.trim()) {
       toast.error('Job tag name is required', {
@@ -394,14 +398,10 @@ export default function JobTagsPage() {
       }
 
       toast.error(`Failed to ${action} job tag`, {
-        description: errorMessage,
-        style: {
-          backgroundColor: '#ef4444',
-          color: '#ffffff',
-          border: '1px solid #f87171',
-        },
-        className: 'text-white',
-        descriptionClassName: 'text-white',
+        description: err.response?.data?.details?.[0]?.message ||
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        'An error occurred while saving the changes.'
       })
     } finally {
       setSubmitting(false)
@@ -475,10 +475,34 @@ export default function JobTagsPage() {
           )}
         </div>
 
+        {/* Search Component */}
+        {tenantId && (
+          <Card>
+            <CardContent className="pt-6">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    Search
+                  </span>
+                </div>
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                  <Input
+                    placeholder="Search job tags..."
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Content Area */}
-        <Card className="pt-6">
-          <CardContent>
-            {!tenantId ? (
+        {!tenantId ? (
+          <Card className="pt-6">
+            <CardContent>
               <div className="text-center py-12">
                 <Building2 className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
@@ -497,8 +521,13 @@ export default function JobTagsPage() {
                   Refresh Page
                 </Button>
               </div>
-            ) : (
-              <>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Desktop View */}
+            <Card className="hidden md:block pt-6">
+              <CardContent>
                 {/* Table Controls */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                   {/* Show Entries Dropdown */}
@@ -528,17 +557,6 @@ export default function JobTagsPage() {
                     <Label className="text-sm text-neutral-600 dark:text-neutral-400">
                       entries
                     </Label>
-                  </div>
-
-                  {/* Search Bar */}
-                  <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                    <Input
-                      placeholder="Search job tags..."
-                      className="pl-10"
-                      value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
-                    />
                   </div>
                 </div>
 
@@ -725,7 +743,7 @@ export default function JobTagsPage() {
                               }
                               size="sm"
                               onClick={() => handlePageChange(pageNum)}
-                              className="w-8 h-8 p-0"
+                              className="w-8 h-8 p-0 text-white"
                             >
                               {pageNum}
                             </Button>
@@ -746,10 +764,252 @@ export default function JobTagsPage() {
                     </Button>
                   </div>
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+
+            {/* Mobile View */}
+            <div className="block md:hidden space-y-4">
+              {/* Show Entries Dropdown */}
+              <div className="flex items-center gap-2 justify-end">
+                <Label
+                  htmlFor="entries"
+                  className="text-sm text-neutral-600 dark:text-neutral-400"
+                >
+                  Show
+                </Label>
+                <Select
+                  value={pagination.current.limit.toString()}
+                  onValueChange={handleEntriesChange}
+                >
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="30">30</SelectItem>
+                    <SelectItem value="40">40</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                  <p className="text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              )}
+
+              {/* Mobile Card View */}
+              <div className="space-y-4">
+                {loading ? (
+                  <div className="text-center py-8">
+                    <span className="text-neutral-500">Loading job tags...</span>
+                  </div>
+                ) : jobTags.length === 0 ? (
+                  <div className="text-center py-8">
+                    <span className="text-neutral-500">No job tags found</span>
+                  </div>
+                ) : (
+                  jobTags.map(jobTag => (
+                    <Card key={jobTag._id} className="relative border border-neutral-200 dark:border-neutral-700">
+                      <CardContent className="pt-4 pb-4">
+                        <div className="space-y-3">
+                          {/* Tag Name */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Tag Name
+                            </div>
+                            <Badge
+                              className="px-3 py-1 text-sm font-medium"
+                              style={{
+                                backgroundColor: jobTag.background_color,
+                                color: jobTag.text_color,
+                              }}
+                            >
+                              {jobTag.name}
+                            </Badge>
+                          </div>
+
+                          {/* Description */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Description
+                            </div>
+                            <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                              {jobTag.description || 'No description'}
+                            </div>
+                          </div>
+
+                          {/* Status Code */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Status Code
+                            </div>
+                            <Badge variant="outline" className="font-mono">
+                              {jobTag.code || 'N/A'}
+                            </Badge>
+                          </div>
+
+                          {/* Type - Conditional */}
+                          {checkPermission('MOD022', 'view') && (
+                            <div>
+                              <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                                Type
+                              </div>
+                              <Badge
+                                variant={
+                                  jobTag.isP1 ? 'default' : 'secondary'
+                                }
+                              >
+                                {jobTag.isP1 ? 'Default' : 'Custom'}
+                              </Badge>
+                            </div>
+                          )}
+
+                          {/* Created At */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Created At
+                            </div>
+                            <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                              {formatDate(jobTag.createdAt)}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                      {/* Action Button - Outside Card */}
+                      <div className="absolute top-4 right-4">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              disabled={
+                                (jobTag.isP1 && !isSuperAdmin('MOD021')) ||
+                                (!checkPermission('MOD021', 'edit') &&
+                                  !checkPermission('MOD021', 'delete') &&
+                                  !checkPermission('MOD022', 'edit') &&
+                                  !checkPermission('MOD022', 'delete'))
+                              }
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {(getUserType() === 'P1' ||
+                              checkPermission('MOD021', 'edit') ||
+                              checkPermission('MOD022', 'edit')) && (
+                              <DropdownMenuItem
+                                className="flex items-center gap-2"
+                                onClick={() => handleEditJobTag(jobTag)}
+                              >
+                                <Edit className="h-4 w-4" />
+                                Edit Job Tag
+                              </DropdownMenuItem>
+                            )}
+                            {(getUserType() === 'P1' ||
+                              checkPermission('MOD021', 'delete') ||
+                              checkPermission('MOD022', 'delete')) && (
+                              <DropdownMenuItem
+                                className="flex items-center gap-2 text-red-600"
+                                onClick={() => handleDeleteJobTag(jobTag)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Delete Job Tag
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+
+              {/* Showing entries info */}
+              <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+                Showing{' '}
+                {(pagination.current.page - 1) * pagination.current.limit + 1}{' '}
+                to{' '}
+                {Math.min(
+                  pagination.current.page * pagination.current.limit,
+                  pagination.total
+                )}{' '}
+                of {pagination.total} entries
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handlePageChange(pagination.current.page - 1)
+                  }
+                  disabled={pagination.current.page === 1 || loading}
+                >
+                  Previous
+                </Button>
+
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from(
+                    { length: Math.min(5, pagination.pages) },
+                    (_, i) => {
+                      let pageNum
+                      if (pagination.pages <= 5) {
+                        pageNum = i + 1
+                      } else if (pagination.current.page <= 3) {
+                        pageNum = i + 1
+                      } else if (
+                        pagination.current.page >=
+                        pagination.pages - 2
+                      ) {
+                        pageNum = pagination.pages - 4 + i
+                      } else {
+                        pageNum = pagination.current.page - 2 + i
+                      }
+
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={
+                            pagination.current.page === pageNum
+                              ? 'default'
+                              : 'outline'
+                          }
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum)}
+                          className="w-8 h-8 p-0 text-white"
+                          disabled={loading}
+                        >
+                          {pageNum}
+                        </Button>
+                      )
+                    }
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handlePageChange(pagination.current.page + 1)
+                  }
+                  disabled={
+                    pagination.current.page === pagination.pages || loading
+                  }
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Job Tag Modal - Create/Edit */}
@@ -761,7 +1021,12 @@ export default function JobTagsPage() {
             </DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleFormSubmit} className="space-y-6">
+          <form
+            onSubmit={handleFormSubmit}
+            onInvalid={() => setJobTagSubmitted(true)}
+            className="space-y-6"
+            data-submitted={jobTagSubmitted}
+          >
             <div className="space-y-3">
               <Label
                 htmlFor="name"
@@ -775,7 +1040,11 @@ export default function JobTagsPage() {
                 value={formData.name}
                 onChange={e => handleFormChange('name', e.target.value)}
                 required
-                className="h-12 text-base"
+                className={
+                  jobTagSubmitted && !formData.name.trim()
+                    ? 'h-12 text-base border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                    : 'h-12 text-base'
+                }
               />
             </div>
 
@@ -873,6 +1142,7 @@ export default function JobTagsPage() {
                     background_color: '#3B82F6',
                     text_color: '#FFFFFF',
                   })
+                  setJobTagSubmitted(false)
                 }}
                 disabled={submitting}
                 className="h-11 px-6"

@@ -36,6 +36,7 @@ export default function CreateRole() {
 
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
   // Get user data from Redux
   const userData = useSelector((state: RootState) => state.user.data)
@@ -153,15 +154,18 @@ export default function CreateRole() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitted(true)
 
     // Validate form data
     if (!formData.name) {
-      alert('Please fill in all required fields')
+      setSubmitted(true)
+      toast.error('Please fix the validation errors before submitting')
       return
     }
 
     if (formData.modulePermissions.length === 0) {
-      alert('Please add at least one module permission')
+      setSubmitted(true)
+      toast.error('Please add at least one module permission')
       return
     }
 
@@ -230,9 +234,39 @@ export default function CreateRole() {
       setTimeout(() => {
         router.push('/team/roles')
       }, 1000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving role:', error)
-      alert('Error saving role. Please try again.')
+      
+      // Extract error response data
+      const errorData = error.response?.data
+      
+      // Build error message from API response
+      let errorTitle = 'Failed to save role'
+      let errorDescription = 'An error occurred while saving the role.'
+      
+      if (errorData) {
+        // If details array exists and has items, format all validation errors
+        if (errorData.details && Array.isArray(errorData.details) && errorData.details.length > 0) {
+          errorTitle = errorData.error || 'Validation failed'
+          // Format all error messages from details array
+          const errorMessages = errorData.details.map((detail: any) => {
+            const field = detail.field ? `${detail.field.charAt(0).toUpperCase() + detail.field.slice(1)}: ` : ''
+            return `${field}${detail.message || 'Invalid value'}`
+          })
+          errorDescription = errorMessages.join('\n')
+        } 
+        // If no details but error message exists, use that
+        else if (errorData.error) {
+          errorTitle = 'Error'
+          errorDescription = errorData.error
+        }
+      }
+      
+      // Show error toast
+      toast.error(errorTitle, {
+        description: errorDescription,
+        duration: 5000, // Show for 5 seconds to allow reading multiple errors
+      })
     } finally {
       setIsSaving(false)
     }
@@ -412,8 +446,12 @@ export default function CreateRole() {
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <Card>
+        <form
+          onSubmit={handleSubmit}
+          onInvalid={() => setSubmitted(true)}
+          data-submitted={submitted}
+        >
+          <Card className="bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700">
             <CardContent className="p-6 space-y-6">
               {/* Basic Information */}
               <div className="space-y-3">
@@ -426,6 +464,11 @@ export default function CreateRole() {
                   }
                   placeholder="Enter role name (e.g., Project Manager, Admin)"
                   required
+                  className={
+                    submitted && !formData.name
+                      ? 'border-red-500 focus:border-red-500 !focus-visible:ring-red-500'
+                      : ''
+                  }
                 />
               </div>
 
@@ -457,7 +500,7 @@ export default function CreateRole() {
 
               {/* Permissions Section */}
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Module Permissions
                 </h3>
 
@@ -465,14 +508,14 @@ export default function CreateRole() {
                 {formData.modulePermissions.map(modulePerm => (
                   <div
                     key={modulePerm.id}
-                    className="border border-gray-200 rounded-lg p-4"
+                    className="border border-gray-200 dark:border-neutral-700 rounded-lg p-4 bg-white dark:bg-neutral-800"
                   >
                     {/* Module Header */}
                     <div className="flex justify-between items-center mb-3">
-                      <h4 className="font-medium text-gray-900">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">
                         {getSelectedModuleLabel(modulePerm.module)}
                       </h4>
-                      <span className="text-sm text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded">
+                      <span className="text-sm text-gray-500 dark:text-gray-400 font-mono bg-gray-100 dark:bg-neutral-700 px-2 py-1 rounded">
                         {availableModules.find(m => m._id === modulePerm.module)
                           ?.code || 'N/A'}
                       </span>
@@ -485,7 +528,7 @@ export default function CreateRole() {
                         ?.permissions.map(permission => (
                           <div
                             key={permission._id}
-                            className="flex items-center gap-2 bg-white px-3 py-2 rounded-full border shadow-sm"
+                            className="flex items-center gap-2 bg-white dark:bg-neutral-700 px-3 py-2 rounded-full border border-gray-200 dark:border-neutral-600 shadow-sm"
                           >
                             <Checkbox
                               id={`${modulePerm.id}-${permission.key}`}
@@ -496,7 +539,7 @@ export default function CreateRole() {
                                 togglePermission(modulePerm.id, permission.key)
                               }
                             />
-                            <span className="text-sm font-medium text-gray-700">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               {permission.key.toUpperCase()}
                             </span>
                           </div>

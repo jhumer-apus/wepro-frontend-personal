@@ -691,7 +691,7 @@ export default function ProfilePage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1" disabled={editLoading}>
+                <Button type="submit" className="flex-1 text-white" disabled={editLoading}>
                   {editLoading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
@@ -779,7 +779,7 @@ export default function ProfilePage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1"
+                  className="flex-1 text-white"
                   disabled={workingHoursFormLoading}
                 >
                   {workingHoursFormLoading ? (

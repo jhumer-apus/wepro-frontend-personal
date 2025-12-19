@@ -499,10 +499,122 @@ export default function KnowledgeHubNotesPage() {
           </Button>
         </div>
 
+        {/* Filters and Search Component */}
+        {tenantId && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                {/* Filters Section */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {/* Status Filter */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">Status</Label>
+                    <Select
+                      value={statusFilter || 'all'}
+                      onValueChange={value =>
+                        setStatusFilter(value === 'all' ? '' : value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Inactive">Inactive</SelectItem>
+                        <SelectItem value="Draft">Draft</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Source Code Filter */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">Source Code</Label>
+                    <Select
+                      value={sourceCodeFilter || 'all'}
+                      onValueChange={value =>
+                        setSourceCodeFilter(value === 'all' ? '' : value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Sources" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Sources</SelectItem>
+                        {sources.map(source => (
+                          <SelectItem key={source._id} value={source.code}>
+                            {source.code} - {source.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Note For Filter */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">Note For</Label>
+                    <Select
+                      value={noteForFilter || 'all'}
+                      onValueChange={value =>
+                        setNoteForFilter(value === 'all' ? '' : value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Fields" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Fields</SelectItem>
+                        {customJobFields.map(field => (
+                          <SelectItem key={field._id} value={field.code}>
+                            {field.code} - {field.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">Search</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                      <Input
+                        placeholder="Search notes..."
+                        className="pl-10"
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Clear Filters Button */}
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-sm font-medium">&nbsp;</Label>
+                    <div className="flex justify-end">
+                      <Button
+                        variant="outline"
+                        onClick={clearAllFilters}
+                        disabled={
+                          !statusFilter &&
+                          !sourceCodeFilter &&
+                          !noteForFilter &&
+                          !searchTerm
+                        }
+                      >
+                        Clear Filters
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Content Area */}
-        <Card>
-          <CardContent className="pt-6">
-            {!tenantId ? (
+        {!tenantId ? (
+          <Card>
+            <CardContent className="pt-6">
               <div className="text-center py-12">
                 <Building2 className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
@@ -521,114 +633,13 @@ export default function KnowledgeHubNotesPage() {
                   Refresh Page
                 </Button>
               </div>
-            ) : (
-              <>
-                {/* Filters and Search in Single Row */}
-                <div className="flex flex-col lg:flex-row gap-4 mb-6">
-                  {/* Filters Section */}
-                  <div className="flex flex-col sm:flex-row gap-4 w-full">
-                    {/* Status Filter */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">Status</Label>
-                      <Select
-                        value={statusFilter || 'all'}
-                        onValueChange={value =>
-                          setStatusFilter(value === 'all' ? '' : value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Status</SelectItem>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="Inactive">Inactive</SelectItem>
-                          <SelectItem value="Draft">Draft</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Source Code Filter */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">Source Code</Label>
-                      <Select
-                        value={sourceCodeFilter || 'all'}
-                        onValueChange={value =>
-                          setSourceCodeFilter(value === 'all' ? '' : value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Sources" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Sources</SelectItem>
-                          {sources.map(source => (
-                            <SelectItem key={source._id} value={source.code}>
-                              {source.code} - {source.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Note For Filter */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">Note For</Label>
-                      <Select
-                        value={noteForFilter || 'all'}
-                        onValueChange={value =>
-                          setNoteForFilter(value === 'all' ? '' : value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Fields" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Fields</SelectItem>
-                          {customJobFields.map(field => (
-                            <SelectItem key={field._id} value={field.code}>
-                              {field.code} - {field.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Search Bar */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">Search</Label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                        <Input
-                          placeholder="Search notes..."
-                          className="pl-10"
-                          value={searchTerm}
-                          onChange={e => setSearchTerm(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Clear Filters Button */}
-                    <div className="space-y-2 flex-1">
-                      <Label className="text-sm font-medium">&nbsp;</Label>
-                      <div className="space-y-2 flex justify-end">
-                        <Button
-                          variant="outline"
-                          onClick={clearAllFilters}
-                          disabled={
-                            !statusFilter &&
-                            !sourceCodeFilter &&
-                            !noteForFilter &&
-                            !searchTerm
-                          }
-                        >
-                          Clear Filters
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Desktop View */}
+            <Card className="hidden md:block">
+              <CardContent className="pt-6">
                 {/* Table Controls */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                   {/* Show Entries Dropdown */}
@@ -866,7 +877,7 @@ export default function KnowledgeHubNotesPage() {
                               }
                               size="sm"
                               onClick={() => handlePageChange(pageNum)}
-                              className="w-8 h-8 p-0"
+                              className="w-8 h-8 p-0 text-white"
                             >
                               {pageNum}
                             </Button>
@@ -885,10 +896,273 @@ export default function KnowledgeHubNotesPage() {
                     </Button>
                   </div>
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+
+            {/* Mobile View */}
+            <div className="block md:hidden space-y-4">
+              {/* Show Entries Dropdown */}
+              <div className="flex items-center gap-2 justify-end">
+                <Label
+                  htmlFor="entries"
+                  className="text-sm text-neutral-600 dark:text-neutral-400"
+                >
+                  Show
+                </Label>
+                <Select
+                  value={pagination.limit.toString()}
+                  onValueChange={handleEntriesChange}
+                >
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="30">30</SelectItem>
+                    <SelectItem value="40">40</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                  <p className="text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              )}
+
+              {/* Mobile Card View */}
+              <div className="space-y-4">
+                {loading ? (
+                  <div className="text-center py-8">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
+                      <span className="text-neutral-500">Loading notes...</span>
+                    </div>
+                  </div>
+                ) : notes.length === 0 ? (
+                  <div className="text-center py-8">
+                    <span className="text-neutral-500">No notes found</span>
+                  </div>
+                ) : (
+                  notes.map(note => (
+                    <Card key={note._id} className="relative border border-neutral-200 dark:border-neutral-700">
+                      <CardContent className="pt-4 pb-4">
+                        <div className="space-y-3">
+                          {/* Title */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Title
+                            </div>
+                            <div className="font-semibold text-neutral-900 dark:text-neutral-100">
+                              {note.title}
+                            </div>
+                            {note.note && (
+                              <div className="text-sm text-neutral-500 dark:text-neutral-400 line-clamp-2 mt-1">
+                                {note.note.replace(/<[^>]*>/g, '')}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Code */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Code
+                            </div>
+                            <Badge variant="outline" className="font-mono">
+                              {note.code}
+                            </Badge>
+                          </div>
+
+                          {/* Source Codes */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Source Codes
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {note.sourceCodes.slice(0, 3).map((code, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
+                                  {code}
+                                </Badge>
+                              ))}
+                              {note.sourceCodes.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{note.sourceCodes.length - 3}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Status */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Status
+                            </div>
+                            <Badge
+                              className={getStatusBadgeColor(note.status)}
+                            >
+                              {note.status}
+                            </Badge>
+                          </div>
+
+                          {/* Note For */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Note For
+                            </div>
+                            <Badge variant="outline" className="font-mono">
+                              {note.noteFor}
+                            </Badge>
+                          </div>
+
+                          {/* Created By */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Created By
+                            </div>
+                            <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                              {note.createdBy?.name || 'N/A'}
+                            </div>
+                          </div>
+
+                          {/* Created At */}
+                          <div>
+                            <div className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                              Created At
+                            </div>
+                            <div className="text-sm text-neutral-900 dark:text-neutral-100">
+                              {formatDate(
+                                note.createdAt,
+                                userData?.timezoneId?.value
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                      {/* Action Button - Outside Card */}
+                      <div className="absolute top-4 right-4">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              className="flex items-center gap-2"
+                              onClick={() => handleViewNote(note)}
+                            >
+                              <Eye className="h-4 w-4" />
+                              View
+                            </DropdownMenuItem>
+                            {checkPermission('MOD032', 'edit') && (
+                              <DropdownMenuItem
+                                className="flex items-center gap-2"
+                                onClick={() =>
+                                  router.push(
+                                    `/settings/knowledgeHub/notes/create?id=${note._id}`
+                                  )
+                                }
+                              >
+                                <Edit className="h-4 w-4" />
+                                Edit Note
+                              </DropdownMenuItem>
+                            )}
+                            {checkPermission('MOD032', 'edit') && (
+                              <DropdownMenuItem
+                                className="flex items-center gap-2 text-red-600"
+                                onClick={() => handleDeleteNote(note)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Delete Note
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+
+              {/* Showing entries info */}
+              <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(
+                  pagination.page * pagination.limit,
+                  pagination.total
+                )}{' '}
+                of {pagination.total} entries
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1 || loading}
+                >
+                  Previous
+                </Button>
+
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from(
+                    { length: Math.min(5, pagination.pages) },
+                    (_, i) => {
+                      let pageNum
+                      if (pagination.pages <= 5) {
+                        pageNum = i + 1
+                      } else if (pagination.page <= 3) {
+                        pageNum = i + 1
+                      } else if (pagination.page >= pagination.pages - 2) {
+                        pageNum = pagination.pages - 4 + i
+                      } else {
+                        pageNum = pagination.page - 2 + i
+                      }
+
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={
+                            pagination.page === pageNum ? 'default' : 'outline'
+                          }
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum)}
+                          className="w-8 h-8 p-0 text-white"
+                          disabled={loading}
+                        >
+                          {pageNum}
+                        </Button>
+                      )
+                    }
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.pages || loading}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}

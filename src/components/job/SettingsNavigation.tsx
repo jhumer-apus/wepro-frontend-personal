@@ -18,7 +18,7 @@ const mainNavigationItems: NavigationItem[] = [
     moduleCodes: ['MOD028', 'MOD027', 'MOD008'],
   },
   {
-    path: '/settings/job/industry',
+    path: '/settings/job/categories-types',
     label: 'Job',
     icon: Briefcase,
     moduleCodes: [
@@ -85,7 +85,7 @@ export const SettingsNavigation: React.FC<SettingsNavigationProps> = ({
     if (path === '/settings/company/profile') {
       return currentPath.startsWith('/settings/company')
     }
-    if (path === '/settings/job/industry') {
+    if (path.startsWith('/settings/job')) {
       return currentPath.startsWith('/settings/job')
     }
     if (path === '/settings/notifications') {
@@ -101,7 +101,7 @@ export const SettingsNavigation: React.FC<SettingsNavigationProps> = ({
   }
 
   return (
-    <div className={`flex space-x-1 bg-gray-200 rounded-lg p-1 ${className}`}>
+    <div className={`flex space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1 ${className}`}>
       {filteredNavigation.map(item => {
         const Icon = item.icon
         const active = isActive(item.path)
@@ -111,7 +111,9 @@ export const SettingsNavigation: React.FC<SettingsNavigationProps> = ({
             key={item.path}
             variant={active ? 'default' : 'ghost'}
             onClick={() => router.push(item.path)}
-            className="flex-1 flex items-center justify-center"
+            className={`flex-1 flex items-center justify-center ${
+              active ? 'text-white' : ''
+            } ${!active ? 'hover:bg-neutral-200 dark:hover:bg-neutral-700' : ''}`}
           >
             <Icon className="w-4 h-4 mr-2" />
             {item.label}

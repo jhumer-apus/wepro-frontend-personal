@@ -263,11 +263,11 @@ export default function StripeAccountsPayouts() {
       />
       <div className="space-y-6 mt-4">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1">
           <Button
             variant="ghost"
             onClick={() => router.push('/stripeAccounts/overview')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <Settings className="w-4 h-4 mr-2" />
             Overview
@@ -275,7 +275,7 @@ export default function StripeAccountsPayouts() {
           <Button
             variant="default"
             onClick={() => router.push('/stripeAccounts/payouts')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center text-white"
           >
             <TrendingUp className="w-4 h-4 mr-2" />
             Payouts
@@ -283,7 +283,7 @@ export default function StripeAccountsPayouts() {
           <Button
             variant="ghost"
             onClick={() => router.push('/stripeAccounts/payments')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <CreditCard className="w-4 h-4 mr-2" />
             Payments
@@ -291,7 +291,7 @@ export default function StripeAccountsPayouts() {
           <Button
             variant="ghost"
             onClick={() => router.push('/stripeAccounts/disputes')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <AlertTriangle className="w-4 h-4 mr-2" />
             Disputes
@@ -299,7 +299,7 @@ export default function StripeAccountsPayouts() {
           <Button
             variant="ghost"
             onClick={() => router.push('/stripeAccounts/equipment')}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
           >
             <ShoppingCart className="w-4 h-4 mr-2" />
             Equipment

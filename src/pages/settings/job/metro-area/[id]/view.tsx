@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import { useTheme } from 'next-themes'
 import { Button } from '@/src/components/ui/button'
 import {
   Card,
@@ -43,6 +44,8 @@ export default function MetroAreaViewPage() {
   const router = useRouter()
   const { id } = router.query
   const { checkPermission } = usePermissions()
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
   const [metroArea, setMetroArea] = useState<MetroArea | null>(null)
   const [markerBuffer, setMarkerBuffer] = useState<boolean>(false)
@@ -52,6 +55,10 @@ export default function MetroAreaViewPage() {
   const [polygonPoints, setPolygonPoints] = useState<
     google.maps.LatLngLiteral[]
   >([])
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Fetch metro area data
   useEffect(() => {
@@ -132,7 +139,7 @@ export default function MetroAreaViewPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600 dark:text-blue-400" />
           <p className="text-gray-600 dark:text-gray-400">
             Loading metro area details...
           </p>
@@ -203,6 +210,7 @@ export default function MetroAreaViewPage() {
                   `/settings/job/metro-area/create?id=${metroArea._id}`
                 )
               }
+              className='text-white'
             >
               Edit Metro Area
             </Button>
@@ -404,11 +412,95 @@ export default function MetroAreaViewPage() {
                         onLoad={onMapLoad}
                         options={{
                           mapTypeId: 'roadmap',
-                          styles: [
+                          styles: mounted && resolvedTheme === 'dark' ? [
+                            { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+                            { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+                            { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
                             {
-                              featureType: 'poi',
-                              elementType: 'labels',
-                              stylers: [{ visibility: 'off' }],
+                                featureType: 'administrative.locality',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#d59563' }]
+                            },
+                            {
+                                featureType: 'poi',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#d59563' }]
+                            },
+                            {
+                                featureType: 'poi.park',
+                                elementType: 'geometry',
+                                stylers: [{ color: '#263c3f' }]
+                            },
+                            {
+                                featureType: 'poi.park',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#6b9a76' }]
+                            },
+                            {
+                                featureType: 'road',
+                                elementType: 'geometry',
+                                stylers: [{ color: '#38414e' }]
+                            },
+                            {
+                                featureType: 'road',
+                                elementType: 'geometry.stroke',
+                                stylers: [{ color: '#212a37' }]
+                            },
+                            {
+                                featureType: 'road',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#9ca5b3' }]
+                            },
+                            {
+                                featureType: 'road.highway',
+                                elementType: 'geometry',
+                                stylers: [{ color: '#746855' }]
+                            },
+                            {
+                                featureType: 'road.highway',
+                                elementType: 'geometry.stroke',
+                                stylers: [{ color: '#1f2835' }]
+                            },
+                            {
+                                featureType: 'road.highway',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#f3d19c' }]
+                            },
+                            {
+                                featureType: 'transit',
+                                elementType: 'geometry',
+                                stylers: [{ color: '#2f3948' }]
+                            },
+                            {
+                                featureType: 'transit.station',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#d59563' }]
+                            },
+                            {
+                                featureType: 'water',
+                                elementType: 'geometry',
+                                stylers: [{ color: '#17263c' }]
+                            },
+                            {
+                                featureType: 'water',
+                                elementType: 'labels.text.fill',
+                                stylers: [{ color: '#515c6d' }]
+                            },
+                            {
+                                featureType: 'water',
+                                elementType: 'labels.text.stroke',
+                                stylers: [{ color: '#17263c' }]
+                            },
+                            {
+                                featureType: 'poi',
+                                elementType: 'labels',
+                                stylers: [{ visibility: 'off' }],
+                            },
+                          ] : [
+                            {
+                                featureType: 'poi',
+                                elementType: 'labels',
+                                stylers: [{ visibility: 'off' }],
                             },
                           ],
                         }}
@@ -488,10 +580,10 @@ export default function MetroAreaViewPage() {
                     </div>
 
                     {!mapLoaded && (
-                      <div className="flex items-center justify-center w-full h-full bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center justify-center w-full h-full bg-gray-50 dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700">
                         <div className="text-center">
-                          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-gray-400" />
-                          <p className="text-gray-500">Loading map...</p>
+                          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-gray-400 dark:text-neutral-500" />
+                          <p className="text-gray-500 dark:text-gray-400">Loading map...</p>
                         </div>
                       </div>
                     )}

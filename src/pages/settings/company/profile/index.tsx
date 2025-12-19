@@ -219,7 +219,7 @@ export default function CompanyProfilePage() {
           </div>
           <Button
             onClick={() => router.push('/settings/company/profile/edit')}
-            className="shrink-0"
+            className="shrink-0 text-white"
           >
             Edit Profile
           </Button>
