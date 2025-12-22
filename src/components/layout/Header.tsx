@@ -8,6 +8,7 @@ import {
   Menu,
   LogOut,
   Clock,
+  X,
 } from 'lucide-react'
 import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
@@ -66,6 +67,7 @@ export function Header({ onMenuClick }: HeaderProps): React.JSX.Element {
   const [showClockModal, setShowClockModal] = useState(false)
   const [clockNotes, setClockNotes] = useState('')
   const [clockAction, setClockAction] = useState<'IN' | 'OUT'>('OUT')
+  const [showMobileSearch, setShowMobileSearch] = useState(false)
 
   // Format time with user's timezone
   const formatTime = (dateString: string) => {
@@ -182,7 +184,8 @@ export function Header({ onMenuClick }: HeaderProps): React.JSX.Element {
 
       {/* Search */}
       <div className="flex-1 max-w-md">
-        <div className="relative">
+        {/* Desktop Search - Always visible */}
+        <div className="hidden md:block relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
           <Input
             type="search"
@@ -190,13 +193,46 @@ export function Header({ onMenuClick }: HeaderProps): React.JSX.Element {
             className="pl-10 pr-4 py-2 bg-neutral-50 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 focus:ring-2 focus:ring-[#53a533]/50 focus:border-[#53a533]/50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
           />
         </div>
+
+        {/* Mobile Search - Toggle between icon and input */}
+        <div className="md:hidden">
+          {!showMobileSearch ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowMobileSearch(true)}
+              className="h-10 w-10 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+          ) : (
+            <div className="relative flex items-center gap-2">
+              <Search className="absolute left-3 h-4 w-4 text-neutral-400" />
+              <Input
+                type="search"
+                placeholder="Search jobs, customers, admin team..."
+                className="pl-10 pr-10 py-2 bg-neutral-50 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 focus:ring-2 focus:ring-[#53a533]/50 focus:border-[#53a533]/50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+                autoFocus
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowMobileSearch(false)}
+                className="absolute right-1 h-8 w-8 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Actions */}
       <div className="flex items-center space-x-3">
         {/* Clock In/Out Button - Only show if user has permission */}
+        {/* Hide on mobile when search is active */}
         {showClockButton && (
-          <div className="flex items-center space-x-2">
+          <div className={`flex items-center space-x-2 ${showMobileSearch ? 'hidden md:flex' : ''}`}>
             {/* Display since time when clocked in */}
             {timesheetStatus === 'IN' && timesheetData?.since && (
               <div className="text-xs text-neutral-500 dark:text-neutral-400 whitespace-nowrap">

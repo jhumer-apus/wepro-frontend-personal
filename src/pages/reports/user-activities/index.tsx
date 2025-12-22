@@ -634,30 +634,33 @@ export default function UserActivitiesPage() {
       </Head>
       <div className="space-y-6">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1">
+        <div className="flex sm:flex gap-1 sm:space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1 overflow-x-auto sm:overflow-x-visible scrollbar-hide">
           <Button
             variant="default"
             onClick={() => handleTabClick('/reports/user-activities')}
-            className="flex-1 flex items-center justify-center text-white"
+            className="flex-shrink-0 sm:flex-1 flex items-center justify-center text-white text-xs sm:text-sm px-4 sm:px-4"
           >
-            <Users className="w-4 h-4 mr-2" />
-            User Activities
+            <Users className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">User Activities</span>
+            <span className="sm:hidden">User Activities</span>
           </Button>
           <Button
             variant="ghost"
             onClick={() => handleTabClick('/reports/my-activities')}
-            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
+            className="flex-shrink-0 sm:flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700 text-xs sm:text-sm px-4 sm:px-4"
           >
-            <User className="w-4 h-4 mr-2" />
-            My Activities
+            <User className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">My Activities</span>
+            <span className="sm:hidden">My Activities</span>
           </Button>
           <Button
             variant="ghost"
             onClick={() => handleTabClick('/reports/reports')}
-            className="flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700"
+            className="flex-shrink-0 sm:flex-1 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700 text-xs sm:text-sm px-4 sm:px-4"
           >
-            <BarChart3 className="w-4 h-4 mr-2" />
-            Reports
+            <BarChart3 className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Reports</span>
+            <span className="sm:hidden">Reports</span>
           </Button>
         </div>
 

@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react'
 import { apiService } from '@/src/services/api'
 import { usePermissions } from '@/src/hooks/usePermissions'
 import { Role } from '@/src/constants/interface/role'
-import { Module } from '@/src/constants/interface/module'
 
 export default function ViewRole() {
   const router = useRouter()
@@ -19,21 +18,22 @@ export default function ViewRole() {
     // P1 users need MOD002 permission
     if (!checkPermission('MOD002', 'view')) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-          <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900">
+        <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900 p-4">
+          <div className="text-center max-w-md w-full">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
               <Shield className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
-            <h3 className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
               Access Denied
             </h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 mb-6">
               You don't have permission to view this page.
             </p>
-            <div className="mt-6">
+            <div className="flex justify-center">
               <Button
                 onClick={() => router.push('/dashboard')}
                 variant="outline"
+                className="w-full sm:w-auto"
               >
                 Go to Dashboard
               </Button>
@@ -49,21 +49,22 @@ export default function ViewRole() {
       !checkPermission('MOD002', 'view')
     ) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-          <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900">
+        <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900 p-4">
+          <div className="text-center max-w-md w-full">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
               <Shield className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
-            <h3 className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
               Access Denied
             </h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 mb-6">
               You don't have permission to view this page.
             </p>
-            <div className="mt-6">
+            <div className="flex justify-center">
               <Button
                 onClick={() => router.push('/dashboard')}
                 variant="outline"
+                className="w-full sm:w-auto"
               >
                 Go to Dashboard
               </Button>
@@ -76,21 +77,22 @@ export default function ViewRole() {
     // Other user types need MOD007 permission
     if (!checkPermission('MOD007', 'view')) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-          <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900">
+        <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900 p-4">
+          <div className="text-center max-w-md w-full">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
               <Shield className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
-            <h3 className="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
               Access Denied
             </h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 mb-6">
               You don't have permission to view this page.
             </p>
-            <div className="mt-6">
+            <div className="flex justify-center">
               <Button
                 onClick={() => router.push('/dashboard')}
                 variant="outline"
+                className="w-full sm:w-auto"
               >
                 Go to Dashboard
               </Button>
@@ -108,7 +110,7 @@ export default function ViewRole() {
   const [error, setError] = useState<string | null>(null)
 
   // Available modules for display
-  const availableModules: Module[] = [
+  const availableModules: Array<{ _id: string; name: string; code: string }> = [
     { _id: 'M1', name: 'Module 1 - Core Features', code: 'M1' },
     { _id: 'M2', name: 'Module 2 - Advanced Analytics', code: 'M2' },
     { _id: 'M3', name: 'Module 3 - Admin Team', code: 'M3' },
@@ -158,11 +160,11 @@ export default function ViewRole() {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+          <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-1/2 mb-8"></div>
+          <div className="h-64 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
         </div>
       </div>
     )
@@ -170,12 +172,12 @@ export default function ViewRole() {
 
   if (error || !role) {
     return (
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">
             {error || 'Role Not Found'}
           </h2>
-          <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+          <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 mb-6">
             {error || "The role you're looking for doesn't exist."}
           </p>
           <Button onClick={() => router.push('/team/roles')}>
@@ -198,49 +200,50 @@ export default function ViewRole() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Back Button - Top Left */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <button
             onClick={() => router.push('/team/roles')}
             className="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors duration-200 text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Roles
+            <span className="hidden sm:inline">Back to Roles</span>
+            <span className="sm:hidden">Back</span>
           </button>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+            <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-100 break-words">
               {role.name}
             </h1>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Basic Information */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
-                <Info className="w-5 h-5" />
-                Basic Information
+            <div className="bg-white dark:bg-neutral-800 p-4 sm:p-6 rounded-lg shadow-md border border-neutral-200 dark:border-neutral-700">
+              <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
+                <Info className="w-5 h-5 shrink-0" />
+                <span>Basic Information</span>
               </h2>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                  <label className="text-xs sm:text-sm font-medium text-neutral-600 dark:text-neutral-400 block mb-1">
                     Role Name
                   </label>
-                  <div className="mt-1 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                  <div className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-neutral-100 break-words">
                     {role.name}
                   </div>
                 </div>
 
                 {role.createdAt && (
                   <div>
-                    <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                    <label className="text-xs sm:text-sm font-medium text-neutral-600 dark:text-neutral-400 block mb-1">
                       Created
                     </label>
-                    <div className="mt-1 text-neutral-900 dark:text-neutral-100">
+                    <div className="text-sm sm:text-base text-neutral-900 dark:text-neutral-100">
                       {formatDate(role.createdAt)}
                     </div>
                   </div>
@@ -248,10 +251,10 @@ export default function ViewRole() {
 
                 {role.updatedAt && (
                   <div>
-                    <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                    <label className="text-xs sm:text-sm font-medium text-neutral-600 dark:text-neutral-400 block mb-1">
                       Last Updated
                     </label>
-                    <div className="mt-1 text-neutral-900 dark:text-neutral-100">
+                    <div className="text-sm sm:text-base text-neutral-900 dark:text-neutral-100">
                       {formatDate(role.updatedAt)}
                     </div>
                   </div>
@@ -260,43 +263,49 @@ export default function ViewRole() {
             </div>
 
             {/* Module Permissions */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
-                <Key className="w-5 h-5" />
-                Module Permissions
+            <div className="bg-white dark:bg-neutral-800 p-4 sm:p-6 rounded-lg shadow-md border border-neutral-200 dark:border-neutral-700">
+              <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-4 flex items-center gap-2">
+                <Key className="w-5 h-5 shrink-0" />
+                <span>Module Permissions</span>
               </h2>
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  {role.permissions.map((permission, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <span className="font-medium text-gray-900 text-sm">
-                        {getModuleLabel(permission.module)}
-                      </span>
-                      <div className="flex gap-1">
-                        {permission.permissions.map((perm, permIndex) => (
-                          <span
-                            key={permIndex}
-                            className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-md"
-                          >
-                            {perm.toUpperCase()}
-                          </span>
-                        ))}
+              <div className="space-y-3 sm:space-y-4">
+                {role.permissions.length === 0 ? (
+                  <div className="text-sm text-neutral-500 dark:text-neutral-400 text-center py-4">
+                    No permissions assigned
+                  </div>
+                ) : (
+                  <div className="space-y-2 sm:space-y-3">
+                    {role.permissions.map((permission, index) => (
+                      <div
+                        key={index}
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-3 bg-neutral-50 dark:bg-neutral-700/50 rounded-lg border border-neutral-200 dark:border-neutral-600"
+                      >
+                        <span className="font-medium text-neutral-900 dark:text-neutral-100 text-sm sm:text-base break-words">
+                          {getModuleLabel(permission.module)}
+                        </span>
+                        <div className="flex flex-wrap gap-1.5 sm:gap-1">
+                          {permission.permissions.map((perm, permIndex) => (
+                            <span
+                              key={permIndex}
+                              className="px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-md whitespace-nowrap"
+                            >
+                              {perm.toUpperCase()}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
             <Button
               onClick={() => router.push(`/team/roles/create?id=${role._id}`)}
-              className="wepro-button-gradient text-white"
+              className="wepro-button-gradient text-white w-full sm:w-auto"
             >
               <Edit className="w-4 h-4 mr-2" />
               Edit Role

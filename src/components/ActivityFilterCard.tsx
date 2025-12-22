@@ -269,10 +269,10 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
       )}
       <CardContent className="space-y-4">
         <div className="">
-          <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
             {/* User ID Filter - Searchable Dropdown - Hide when tenant is selected */}
             {filterTenantId === 'all' && (
-              <div className="space-y-2 min-w-0 flex-1 sm:max-w-xs">
+              <div className="space-y-2 w-full sm:min-w-0 sm:flex-1 sm:max-w-xs">
                 <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   User
                 </Label>
@@ -285,14 +285,16 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
                       variant="outline"
                       role="combobox"
                       aria-expanded={userDropdownOpen}
-                      className="w-full justify-between"
+                      className="w-full justify-between text-left"
                     >
-                      {getSelectedUserName()}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      <span className="truncate flex-1 mr-2">
+                        {getSelectedUserName()}
+                      </span>
+                      <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
-                    className="w-[var(--radix-popover-trigger-width)] p-0"
+                    className="w-[var(--radix-popover-trigger-width)] p-0 max-w-[calc(100vw-2rem)] sm:max-w-none"
                     align="start"
                   >
                     <Command shouldFilter={false}>
@@ -300,8 +302,9 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
                         placeholder="Search users..."
                         value={userSearchTerm}
                         onValueChange={setUserSearchTerm}
+                        className="h-9"
                       />
-                      <CommandList>
+                      <CommandList className="max-h-[300px] sm:max-h-[400px]">
                         {loadingUsers ? (
                           <CommandEmpty>Loading users...</CommandEmpty>
                         ) : users.length === 0 ? (
@@ -341,11 +344,11 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
                                       : 'opacity-0'
                                   }`}
                                 />
-                                <div className="flex flex-col">
-                                  <span className="font-medium">
+                                <div className="flex flex-col min-w-0">
+                                  <span className="font-medium truncate">
                                     {user.name}
                                   </span>
-                                  <span className="text-sm text-muted-foreground">
+                                  <span className="text-sm text-muted-foreground truncate">
                                     {user.username}{' '}
                                     {user.email && `• ${user.email}`}
                                   </span>
@@ -363,7 +366,7 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
 
             {/* Tenant ID Filter - Searchable Dropdown - Only show for P1 users and when no specific user is selected */}
             {getUserType() === 'P1' && filterUserId === 'all' && (
-              <div className="space-y-2 min-w-0 flex-1 sm:max-w-xs">
+              <div className="space-y-2 w-full sm:min-w-0 sm:flex-1 sm:max-w-xs">
                 <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   Tenant
                 </Label>
@@ -376,14 +379,16 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
                       variant="outline"
                       role="combobox"
                       aria-expanded={tenantDropdownOpen}
-                      className="w-full justify-between"
+                      className="w-full justify-between text-left"
                     >
-                      {getSelectedTenantName()}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      <span className="truncate flex-1 mr-2">
+                        {getSelectedTenantName()}
+                      </span>
+                      <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
-                    className="w-[var(--radix-popover-trigger-width)] p-0"
+                    className="w-[var(--radix-popover-trigger-width)] p-0 max-w-[calc(100vw-2rem)] sm:max-w-none"
                     align="start"
                   >
                     <Command shouldFilter={false}>
@@ -391,8 +396,9 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
                         placeholder="Search tenants..."
                         value={tenantSearchTerm}
                         onValueChange={setTenantSearchTerm}
+                        className="h-9"
                       />
-                      <CommandList>
+                      <CommandList className="max-h-[300px] sm:max-h-[400px]">
                         {loadingTenants ? (
                           <CommandEmpty>Loading tenants...</CommandEmpty>
                         ) : tenants.length === 0 ? (
@@ -449,11 +455,11 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
                                         : 'opacity-0'
                                     }`}
                                   />
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="font-medium truncate">
                                       {tenant.name}
                                     </span>
-                                    <span className="text-sm text-muted-foreground">
+                                    <span className="text-sm text-muted-foreground truncate">
                                       {tenant.username}{' '}
                                       {tenant.email && `• ${tenant.email}`}
                                     </span>
@@ -470,7 +476,7 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
             )}
 
             {/* Date Range Filter */}
-            <div className="space-y-2 min-w-0 flex-1 sm:max-w-xs">
+            <div className="space-y-2 w-full sm:min-w-0 sm:flex-1 sm:max-w-xs">
               <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                 Date Range
               </Label>
@@ -481,7 +487,7 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[300px] sm:max-h-none">
                   <SelectItem value="All">All</SelectItem>
                   <SelectItem value="Custom">Custom</SelectItem>
                   <SelectItem value="Today">Today</SelectItem>
@@ -504,8 +510,8 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
 
             {/* Custom Date Range Picker - Only show when Custom is selected */}
             {dateRangeFilter === 'Custom' && (
-              <>
-                <div className="space-y-2 min-w-0 flex-1 sm:max-w-40">
+              <div className="flex flex-col sm:flex-row gap-4 w-full sm:col-span-2">
+                <div className="space-y-2 w-full sm:min-w-0 sm:flex-1 sm:max-w-40">
                   <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                     Start Date
                   </Label>
@@ -516,7 +522,7 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
                     className="w-full"
                   />
                 </div>
-                <div className="space-y-2 min-w-0 flex-1 sm:max-w-40">
+                <div className="space-y-2 w-full sm:min-w-0 sm:flex-1 sm:max-w-40">
                   <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                     End Date
                   </Label>
@@ -527,7 +533,7 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
                     className="w-full"
                   />
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>

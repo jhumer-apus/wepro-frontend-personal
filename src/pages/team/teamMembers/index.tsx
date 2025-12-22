@@ -439,7 +439,7 @@ export default function TeamMembersPage() {
                 <Button
                   variant={activeFilter === 'all' ? 'default' : 'outline'}
                   size="sm"
-                  className="flex items-center gap-2 px-3 py-2 h-auto"
+                  className={(activeFilter === 'all' ? 'text-white' : '') + "flex items-center gap-2 px-3 py-2 h-auto"}
                   onClick={() => {
                     setActiveFilter('all')
                     setSearchTerm('')

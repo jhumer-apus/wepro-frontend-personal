@@ -3338,12 +3338,12 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
       </div>
 
       {/* Main Content */}
-      <div className="px-6 py-8">
-        <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1">
+      <div className="px-4 sm:px-6 py-4 sm:py-8">
+        <div className="flex gap-1 sm:space-x-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1 overflow-x-auto sm:overflow-x-visible scrollbar-hide">
           <Button
             variant={selectedTab === 'call-log' ? 'default' : 'ghost'}
             onClick={() => setSelectedTab('call-log')}
-            className={`flex-1 flex items-center justify-center ${
+            className={`flex-shrink-0 sm:flex-1 flex items-center justify-center text-xs sm:text-sm px-4 ${
               selectedTab === 'call-log' ? 'text-white' : ''
             } hover:bg-neutral-200 dark:hover:bg-neutral-700`}
           >
@@ -3352,7 +3352,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
           <Button
             variant={selectedTab === 'analytics' ? 'default' : 'ghost'}
             onClick={() => setSelectedTab('analytics')}
-            className={`flex-1 flex items-center justify-center ${
+            className={`flex-shrink-0 sm:flex-1 flex items-center justify-center text-xs sm:text-sm px-4 ${
               selectedTab === 'analytics' ? 'text-white' : ''
             } hover:bg-neutral-200 dark:hover:bg-neutral-700`}
           >
@@ -3361,7 +3361,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
           <Button
             variant={selectedTab === 'ai-insights' ? 'default' : 'ghost'}
             onClick={() => setSelectedTab('ai-insights')}
-            className={`flex-1 flex items-center justify-center ${
+            className={`flex-shrink-0 sm:flex-1 flex items-center justify-center text-xs sm:text-sm px-4 ${
               selectedTab === 'ai-insights' ? 'text-white' : ''
             } hover:bg-neutral-200 dark:hover:bg-neutral-700`}
           >
@@ -3370,7 +3370,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
           <Button
             variant={selectedTab === 'phone-settings' ? 'default' : 'ghost'}
             onClick={() => setSelectedTab('phone-settings')}
-            className={`flex-1 flex items-center justify-center ${
+            className={`flex-shrink-0 sm:flex-1 flex items-center justify-center text-xs sm:text-sm px-4 ${
               selectedTab === 'phone-settings' ? 'text-white' : ''
             } hover:bg-neutral-200 dark:hover:bg-neutral-700`}
           >
@@ -3396,7 +3396,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                   />
                 </div>
 
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
                   <Button
                     variant="outline"
                     onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
@@ -3407,7 +3407,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     }`}
                   >
                     <SlidersHorizontal className="w-4 h-4 mr-2" />
-                    Advanced Filters
+                    <span className="hidden sm:inline">Advanced Filters</span>
+                    <span className="sm:hidden">Filters</span>
                     <ChevronDown
                       className={`w-4 h-4 ml-2 transition-transform duration-200 ${showAdvancedFilters ? 'rotate-180' : ''}`}
                     />
@@ -3431,8 +3432,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     }}
                     className="rounded-xl border-slate-200 dark:border-neutral-700 hover:border-slate-300 dark:hover:border-neutral-600"
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    Export
+                    <Download className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Export</span>
                   </Button>
 
                   {(searchTerm || activeQuickFilter || showAdvancedFilters) && (
@@ -3454,9 +3455,9 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     const range = getDateRangeDisplay()
                     if (range) {
                       return (
-                        <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-2 rounded-xl border border-[#53a533]/20/60">
-                          <CalendarDays className="w-4 h-4 text-[#53a533]/50" />
-                          <span className="text-sm font-medium text-[#3d7a28]">
+                        <div className="inline-flex flex-wrap items-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 px-3 sm:px-4 py-2 rounded-xl border border-[#53a533]/20/60">
+                          <CalendarDays className="w-4 h-4 text-[#53a533]/50 shrink-0" />
+                          <span className="text-xs sm:text-sm font-medium text-[#3d7a28]">
                             {range.label}
                           </span>
                           <span className="text-xs text-[#53a533]/50">
@@ -3473,7 +3474,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
               {/* Advanced Filters */}
               {showAdvancedFilters && (
-                <div className="mb-8 p-8 bg-gradient-to-br from-slate-50/80 to-blue-50/40 dark:from-neutral-800 dark:to-neutral-900 rounded-3xl border border-slate-200/60 dark:border-neutral-700 backdrop-blur-sm">
+                <div className="mb-8 p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-slate-50/80 to-blue-50/40 dark:from-neutral-800 dark:to-neutral-900 rounded-3xl border border-slate-200/60 dark:border-neutral-700 backdrop-blur-sm">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {/* Call Flow Filter */}
                     <div className="space-y-3">
@@ -3690,8 +3691,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
             </div>
 
             {/* Results Summary */}
-            <div className="mb-6 flex items-center justify-between">
-              <span className="text-sm text-slate-600 dark:text-gray-400">
+            <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <span className="text-xs sm:text-sm text-slate-600 dark:text-gray-400">
                 Showing{' '}
                 <span className="font-semibold text-slate-900 dark:text-gray-100">
                   {activeQuickFilter ? activeQuickFilter : 'all'} calls (
@@ -3707,78 +3708,83 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     key={call.id}
                     className="border-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm hover:bg-white dark:hover:bg-neutral-800 hover:shadow-lg transition-all duration-200 rounded-2xl overflow-hidden"
                   >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-4 flex-1">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      {/* Left Section: Avatar & Main Details */}
+                      <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                         {/* Avatar & Direction */}
-                        <div className="relative">
-                          <Avatar className="w-12 h-12 border-2 border-white dark:border-neutral-800 shadow-md">
+                        <div className="relative shrink-0">
+                          <Avatar className="w-10 h-10 sm:w-12 sm:h-12 border-2 border-white dark:border-neutral-800 shadow-md">
                             <AvatarImage src={call.avatar} />
-                            <AvatarFallback className="bg-gradient-to-br from-blue-400 to-cyan-400 dark:from-blue-600 dark:to-cyan-600 text-white font-semibold">
+                            <AvatarFallback className="bg-gradient-to-br from-blue-400 to-cyan-400 dark:from-blue-600 dark:to-cyan-600 text-white font-semibold text-xs sm:text-sm">
                               {call.customerName
                                 .split(' ')
                                 .map(n => n[0])
                                 .join('')}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white dark:bg-neutral-800 rounded-full shadow-md flex items-center justify-center">
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-white dark:bg-neutral-800 rounded-full shadow-md flex items-center justify-center">
                             {call.type === 'incoming' ? (
-                              <ArrowDownLeft className="w-3 h-3 text-green-500" />
+                              <ArrowDownLeft className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-green-500" />
                             ) : (
-                              <ArrowUpRight className="w-3 h-3 text-[#53a533]/50" />
+                              <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#53a533]/50" />
                             )}
                           </div>
                         </div>
 
                         {/* Call Details */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 truncate">
+                        <div className="flex-1 min-w-0 space-y-2">
+                          {/* Name and Status Row */}
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                            <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-gray-100 truncate">
                               {call.customerName}
                             </h3>
-
-                            {/* Call Outcome Indicator */}
-                            <div className="flex items-center space-x-1">
-                              {getOutcomeIcon(call.callOutcome)}
-                              <span className="text-xs text-slate-500 dark:text-gray-400 capitalize">
-                                {call.callOutcome.replace('-', ' ')}
-                              </span>
-                            </div>
-
-                            {/* Customer Satisfaction Indicator */}
-                            {call.customerSatisfaction && (
-                              <div className="flex items-center space-x-1">
-                                {getSatisfactionIcon(call.customerSatisfaction)}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {/* Call Outcome Indicator */}
+                              <div className="flex items-center gap-1">
+                                {getOutcomeIcon(call.callOutcome)}
                                 <span className="text-xs text-slate-500 dark:text-gray-400 capitalize">
-                                  {call.customerSatisfaction}
+                                  {call.callOutcome.replace('-', ' ')}
                                 </span>
                               </div>
-                            )}
+
+                              {/* Customer Satisfaction Indicator */}
+                              {call.customerSatisfaction && (
+                                <div className="flex items-center gap-1">
+                                  {getSatisfactionIcon(call.customerSatisfaction)}
+                                  <span className="text-xs text-slate-500 dark:text-gray-400 capitalize">
+                                    {call.customerSatisfaction}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
-                          <div className="flex items-center space-x-4 mb-2">
-                            <span className="text-sm text-slate-600 dark:text-gray-300 font-mono">
+                          {/* Phone, Source, Location Row */}
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                            <span className="text-xs sm:text-sm text-slate-600 dark:text-gray-300 font-mono">
                               {call.phoneNumber}
                             </span>
                             <Badge
-                              className={`${getSourceColor(call.source)} text-white text-xs px-2 py-1`}
+                              className={`${getSourceColor(call.source)} text-white text-xs px-2 py-0.5`}
                             >
                               {call.source}
                             </Badge>
-                            <span className="text-sm text-slate-500 dark:text-gray-400 flex items-center">
-                              <MapPin className="w-3 h-3 mr-1" />
-                              {call.location}
+                            <span className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 flex items-center gap-1">
+                              <MapPin className="w-3 h-3 shrink-0" />
+                              <span className="truncate max-w-[150px] sm:max-w-none">{call.location}</span>
                             </span>
                           </div>
 
-                          <div className="flex items-center space-x-4 mb-2">
-                            <span className="text-sm font-medium text-slate-700 dark:text-gray-300">
+                          {/* Job Type and Follow-up Row */}
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                            <span className="text-xs sm:text-sm font-medium text-slate-700 dark:text-gray-300">
                               {call.jobType}
                             </span>
                             {call.followUpRequired && (
                               <Badge
                                 variant="outline"
-                                className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800"
+                                className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 text-xs"
                               >
                                 Follow-up Required
                               </Badge>
@@ -3786,44 +3792,49 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                           </div>
 
                           {/* Tags */}
-                          <div className="flex items-center space-x-2 mb-2">
-                            {call.tags.map((tag, index) => (
-                              <Badge
-                                key={index}
-                                variant="secondary"
-                                className="text-xs"
-                              >
-                                #{tag}
-                              </Badge>
-                            ))}
-                          </div>
+                          {call.tags.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                              {call.tags.map((tag, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
+                                  #{tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
 
+                          {/* Notes */}
                           {call.notes && (
-                            <p className="text-sm text-slate-600 dark:text-gray-400 line-clamp-2">
+                            <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-400 line-clamp-2">
                               {call.notes}
                             </p>
                           )}
                         </div>
+                      </div>
 
-                        {/* Time & Status */}
-                        <div className="text-right space-y-2 ml-4">
-                          <div className="flex items-center space-x-2">
-                            {getStatusIcon(call.status)}
-                            <span className="text-sm text-slate-600 dark:text-gray-400">
-                              {call.timestamp}
-                            </span>
-                          </div>
+                      {/* Right Section: Time & Status */}
+                      <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 sm:gap-2 sm:ml-4 shrink-0">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(call.status)}
+                          <span className="text-xs sm:text-sm text-slate-600 dark:text-gray-400 whitespace-nowrap">
+                            {call.timestamp}
+                          </span>
+                        </div>
 
+                        <div className="flex flex-col items-end gap-1.5 sm:gap-2">
                           {call.hasRecording && (
-                            <div className="flex items-center space-x-1 text-[#4a9430] text-sm">
-                              <Play className="w-3 h-3" />
+                            <div className="flex items-center gap-1 text-[#4a9430] text-xs sm:text-sm">
+                              <Play className="w-3 h-3 shrink-0" />
                               <span>{call.duration}</span>
                             </div>
                           )}
 
                           {call.answeredBy && (
-                            <div className="flex items-center space-x-2">
-                              <Avatar className="w-5 h-5">
+                            <div className="flex items-center gap-1.5">
+                              <Avatar className="w-5 h-5 shrink-0">
                                 <AvatarImage src={call.answeredBy.avatar} />
                                 <AvatarFallback className="text-xs bg-slate-200 dark:bg-neutral-700 dark:text-gray-300">
                                   {call.answeredBy.name
@@ -3832,7 +3843,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     .join('')}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="text-xs text-slate-500 dark:text-gray-400">
+                              <span className="text-xs text-slate-500 dark:text-gray-400 truncate max-w-[80px] sm:max-w-none">
                                 {call.answeredBy.name.split(' ')[0]}
                               </span>
                             </div>
@@ -3848,18 +3859,18 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
               {/* No Results */}
               {filteredCalls.length === 0 && (
                 <Card className="border-0 bg-white/50 dark:bg-neutral-800/50">
-                <CardContent className="p-12 text-center">
-                  <PhoneCall className="w-16 h-16 text-slate-400 mx-auto mb-6" />
-                  <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                <CardContent className="p-6 sm:p-12 text-center">
+                  <PhoneCall className="w-12 h-12 sm:w-16 sm:h-16 text-slate-400 mx-auto mb-4 sm:mb-6" />
+                  <h3 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-gray-100 mb-2">
                     No calls found
                   </h3>
-                  <p className="text-slate-600 mb-6">
+                  <p className="text-sm sm:text-base text-slate-600 dark:text-gray-400 mb-4 sm:mb-6">
                     Try adjusting your search criteria or filters to find what
                     you&apos;re looking for.
                   </p>
                   <Button
                     onClick={clearAllFilters}
-                    className="bg-gradient-to-r from-[#53a533] to-[#53a533] hover:from-[#4a9430] hover:to-[#4a9430] text-white rounded-xl"
+                    className="bg-gradient-to-r from-[#53a533] to-[#53a533] hover:from-[#4a9430] hover:to-[#4a9430] text-white rounded-xl text-sm sm:text-base"
                   >
                     Clear All Filters
                   </Button>
@@ -3871,13 +3882,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
           <TabsContent value="analytics" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <Card className="border-0 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-2xl">
-                <CardContent className="p-6 text-center">
-                  <BarChart3 className="w-8 h-8 text-[#53a533]/50 dark:text-[#53a533]/70 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-2">
+                <CardContent className="p-4 sm:p-6 text-center">
+                  <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-[#53a533]/50 dark:text-[#53a533]/70 mx-auto mb-3 sm:mb-4" />
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-gray-100 mb-2">
                     Call Volume
                   </h3>
-                  <p className="text-2xl font-bold text-[#4a9430] dark:text-[#53a533]">89</p>
-                  <p className="text-sm text-slate-600 dark:text-gray-400">Today</p>
+                  <p className="text-xl sm:text-2xl font-bold text-[#4a9430] dark:text-[#53a533]">89</p>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-400">Today</p>
                 </CardContent>
               </Card>
             </div>
@@ -3890,25 +3901,25 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     key={index}
                     className="border-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-2xl"
                   >
-                  <CardContent className="p-6">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl flex items-center justify-center">
-                        <insight.icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-start space-x-3 sm:space-x-4">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl flex items-center justify-center shrink-0">
+                        <insight.icon className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" />
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-gray-100 mb-2">
                           {insight.title}
                         </h3>
-                        <p className="text-slate-600 dark:text-gray-400 mb-3">
+                        <p className="text-sm sm:text-base text-slate-600 dark:text-gray-400 mb-3">
                           {insight.description}
                         </p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-500 dark:text-gray-400">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                          <span className="text-xs sm:text-sm text-slate-500 dark:text-gray-400">
                             {insight.confidence}% confidence
                           </span>
                           <Button
                             size="sm"
-                            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 dark:from-purple-600 dark:to-pink-600 dark:hover:from-purple-700 dark:hover:to-pink-700 text-white rounded-lg"
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 dark:from-purple-600 dark:to-pink-600 dark:hover:from-purple-700 dark:hover:to-pink-700 text-white rounded-lg w-full sm:w-auto text-xs sm:text-sm"
                           >
                             {insight.action}
                           </Button>
@@ -3930,16 +3941,16 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     data-section="call-blocking"
                     className="border-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-2xl"
                   >
-                  <CardContent className="p-8">
-                    <div className="flex items-center space-x-3 mb-8">
-                      <div className="w-16 h-16 bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 rounded-2xl flex items-center justify-center">
-                        <Shield className="w-8 h-8 text-red-600 dark:text-red-400" />
+                  <CardContent className="p-4 sm:p-6 lg:p-8">
+                    <div className="flex items-start sm:items-center gap-3 sm:space-x-3 mb-6 sm:mb-8">
+                      <div className="hidden sm:flex w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 rounded-xl sm:rounded-2xl items-center justify-center shrink-0">
+                        <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 dark:text-red-400" />
                       </div>
-                      <div>
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100">
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900 dark:text-gray-100 break-words">
                           Call Blocking Management
                         </h2>
-                        <p className="text-slate-600 dark:text-gray-400">
+                        <p className="text-sm sm:text-base text-slate-600 dark:text-gray-400 mt-1">
                           Block unwanted calls and manage your blocked numbers
                           list
                         </p>
@@ -3950,8 +3961,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                       {/* Add Number to Block */}
                       {checkPermission('MOD039', 'create') && (
                         <div className="flex flex-col space-y-6 h-[calc(100vh-80px)]">
-                          <div className="p-6 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 rounded-xl border border-red-200 dark:border-red-800 flex-grow flex flex-col">
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-4">
+                          <div className="p-4 sm:p-6 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 rounded-xl border border-red-200 dark:border-red-800 flex-grow flex flex-col">
+                            <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-gray-100 mb-4">
                               Block New Number
                             </h3>
 
@@ -4287,14 +4298,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                         }
                       >
                         <div className="flex-1 flex flex-col min-h-0">
-                          <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+                            <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-gray-100">
                               Currently Blocked Numbers
                             </h3>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center gap-2">
                               <Badge
                                 variant="outline"
-                                className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800"
+                                className="text-xs sm:text-sm text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 whitespace-nowrap"
                               >
                                 {callBlockingLoading
                                   ? '...'
@@ -4369,19 +4380,20 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   return (
                                     <div
                                       key={blocked._id}
-                                      className="p-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 hover:border-red-200 dark:hover:border-red-800 hover:bg-red-50/30 dark:hover:bg-red-900/20 transition-all duration-200"
+                                      className="p-3 sm:p-4 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 hover:border-red-200 dark:hover:border-red-800 hover:bg-red-50/30 dark:hover:bg-red-900/20 transition-all duration-200"
                                     >
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                          <div className="flex items-center space-x-3 mb-2">
-                                            <span className="font-mono text-lg font-semibold text-slate-900 dark:text-gray-100">
+                                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                                        <div className="flex-1 min-w-0 space-y-2">
+                                          {/* Phone Number and Badges */}
+                                          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                                            <span className="font-mono text-base sm:text-lg font-semibold text-slate-900 dark:text-gray-100 whitespace-nowrap">
                                               {formatPhoneNumber(
                                                 blocked.phoneNumber
                                               )}
                                             </span>
                                             <Badge
                                               variant="outline"
-                                              className={`text-xs ${
+                                              className={`text-xs shrink-0 ${
                                                 blocked.reason === 'spam' ||
                                                 blocked.reason ===
                                                   'telemarketing'
@@ -4401,7 +4413,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                             </Badge>
                                             <Badge
                                               variant="outline"
-                                              className={`capitalize text-xs ${
+                                              className={`capitalize text-xs shrink-0 ${
                                                 blocked.blockingType ===
                                                 'pattern'
                                                   ? 'text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
@@ -4412,7 +4424,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                             </Badge>
                                             <Badge
                                               variant="outline"
-                                              className={`capitalize text-xs ${
+                                              className={`capitalize text-xs shrink-0 ${
                                                 blocked.blockType ===
                                                 'permanent'
                                                   ? 'text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800'
@@ -4422,26 +4434,30 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                               {blocked.blockType}
                                             </Badge>
                                           </div>
-                                          <div className="flex items-center space-x-4 text-sm text-slate-600 dark:text-gray-400">
-                                            <span>
+                                          
+                                          {/* Info Row */}
+                                          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-slate-600 dark:text-gray-400">
+                                            <span className="whitespace-nowrap">
                                               Blocked:{' '}
                                               {formatDate(blocked.createdAt)}
                                             </span>
-                                            <span>
+                                            <span className="whitespace-nowrap">
                                               Calls prevented:{' '}
                                               {blocked.blockedCount}
                                             </span>
                                             {blocked.notes && (
-                                              <span className="text-slate-500 dark:text-gray-500 italic">
+                                              <span className="text-slate-500 dark:text-gray-500 italic truncate max-w-full sm:max-w-md">
                                                 {blocked.notes.length > 50
                                                   ? `${blocked.notes.substring(0, 50)}...`
                                                   : blocked.notes}
                                               </span>
                                             )}
                                           </div>
+                                          
+                                          {/* Tags */}
                                           {blocked.tags &&
                                             blocked.tags.length > 0 && (
-                                              <div className="flex flex-wrap gap-1 mt-2">
+                                              <div className="flex flex-wrap gap-1.5">
                                                 {blocked.tags.map(
                                                   (tag, tagIndex) => (
                                                     <Badge
@@ -4456,7 +4472,9 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                               </div>
                                             )}
                                         </div>
-                                        <div className="flex items-center space-x-2">
+                                        
+                                        {/* Action Buttons */}
+                                        <div className="flex items-center gap-2 shrink-0">
                                           {checkPermission(
                                             'MOD039',
                                             'edit'
@@ -4469,8 +4487,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                                 handleEditRule(blocked)
                                               }
                                             >
-                                              <Edit className="w-4 h-4 mr-1" />
-                                              Edit
+                                              <Edit className="w-4 h-4 sm:mr-1" />
+                                              <span className="hidden sm:inline">Edit</span>
                                             </Button>
                                           )}
 
@@ -4486,8 +4504,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                                 handleDeleteRule(blocked)
                                               }
                                             >
-                                              <XCircle className="w-4 h-4 mr-1" />
-                                              Unblock
+                                              <XCircle className="w-4 h-4 sm:mr-1" />
+                                              <span className="hidden sm:inline">Unblock</span>
                                             </Button>
                                           )}
                                         </div>
@@ -4530,80 +4548,88 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     {statistics && (
                       <div className="mt-8">
                         <Card className="border-0 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-neutral-800 dark:to-neutral-900 rounded-2xl border dark:border-neutral-700">
-                          <CardContent className="p-6">
+                          <CardContent className="p-4 sm:p-6">
                             {checkPermission('MOD039', 'view_statistics') && (
                               <>
                                 <div className="mb-6">
-                                  <div className="flex flex-wrap items-center justify-between gap-4">
-                                    <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100 mb-4">
+                                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-gray-100">
                                       Blocking Statistics
                                     </h3>
-                                    <div className="flex items-center space-x-2">
-                                      <Input
-                                        type="date"
-                                        value={blockingStartDate}
-                                        onChange={e =>
-                                          setBlockingStartDate(e.target.value)
-                                        }
-                                        className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
-                                      />
-                                      <span className="text-slate-500 dark:text-gray-400">to</span>
-                                      <Input
-                                        type="date"
-                                        value={blockingEndDate}
-                                        onChange={e =>
-                                          setBlockingEndDate(e.target.value)
-                                        }
-                                        className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
-                                      />
-                                      <Select
-                                        value={blockingGroupBy}
-                                        onValueChange={(
-                                          value:
-                                            | 'day'
-                                            | 'week'
-                                            | 'month'
-                                            | 'none'
-                                        ) => setBlockingGroupBy(value)}
-                                      >
-                                        <SelectTrigger className="w-24 text-sm dark:bg-neutral-800 dark:border-neutral-700">
-                                          <SelectValue placeholder="Group" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="none">
-                                            No Group
-                                          </SelectItem>
-                                          <SelectItem value="day">
-                                            Day
-                                          </SelectItem>
-                                          <SelectItem value="week">
-                                            Week
-                                          </SelectItem>
-                                          <SelectItem value="month">
-                                            Month
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="text-slate-600 dark:text-gray-400 border-slate-300 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800"
-                                        onClick={fetchCallBlockingStatistics}
-                                        disabled={statisticsLoading}
-                                      >
-                                        <BarChart3 className="w-4 h-4 mr-2" />
-                                        {statisticsLoading
-                                          ? 'Refreshing...'
-                                          : 'Refresh'}
-                                      </Button>
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2 w-full sm:w-auto">
+                                      {/* Date Range - Stack vertically on mobile, horizontal on desktop */}
+                                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+                                        <Input
+                                          type="date"
+                                          value={blockingStartDate}
+                                          onChange={e =>
+                                            setBlockingStartDate(e.target.value)
+                                          }
+                                          className="text-xs sm:text-sm dark:bg-neutral-800 dark:border-neutral-700 w-full sm:w-auto"
+                                        />
+                                        <span className="hidden sm:inline text-xs sm:text-sm text-slate-500 dark:text-gray-400 whitespace-nowrap shrink-0">to</span>
+                                        <Input
+                                          type="date"
+                                          value={blockingEndDate}
+                                          onChange={e =>
+                                            setBlockingEndDate(e.target.value)
+                                          }
+                                          className="text-xs sm:text-sm dark:bg-neutral-800 dark:border-neutral-700 w-full sm:w-auto"
+                                        />
+                                      </div>
+                                      
+                                      {/* Select and Button - Side by side on mobile, inline on desktop */}
+                                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                                        <Select
+                                          value={blockingGroupBy}
+                                          onValueChange={(
+                                            value:
+                                              | 'day'
+                                              | 'week'
+                                              | 'month'
+                                              | 'none'
+                                          ) => setBlockingGroupBy(value)}
+                                        >
+                                          <SelectTrigger className="flex-1 sm:flex-none sm:w-24 text-xs sm:text-sm dark:bg-neutral-800 dark:border-neutral-700">
+                                            <SelectValue placeholder="Group" />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="none">
+                                              No Group
+                                            </SelectItem>
+                                            <SelectItem value="day">
+                                              Day
+                                            </SelectItem>
+                                            <SelectItem value="week">
+                                              Week
+                                            </SelectItem>
+                                            <SelectItem value="month">
+                                              Month
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                        
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="text-slate-600 dark:text-gray-400 border-slate-300 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800 flex-1 sm:flex-none sm:w-auto whitespace-nowrap"
+                                          onClick={fetchCallBlockingStatistics}
+                                          disabled={statisticsLoading}
+                                        >
+                                          <BarChart3 className="w-4 h-4 sm:mr-2" />
+                                          {statisticsLoading
+                                            ? 'Refreshing...'
+                                            : 'Refresh'}
+                                        </Button>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
                                   {/* Summary Stats */}
-                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
-                                    <div className="text-2xl font-bold text-slate-900 dark:text-gray-100">
+                                  <div className="text-center p-3 sm:p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
+                                    <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-gray-100">
                                       {statistics?.summary?.totalRules || 0}
                                     </div>
                                     <div className="text-sm text-slate-600 dark:text-gray-400">
@@ -4832,7 +4858,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             )}
                             <div
                               className={
-                                'flex items-center space-x-2 ' +
+                                'flex flex-wrap items-center gap-2 sm:gap-2 ' +
                                 (checkPermission('MOD039', 'view_statistics')
                                   ? 'mt-6 pt-6 border-t border-slate-200 dark:border-neutral-700'
                                   : '')
@@ -4842,28 +4868,42 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-slate-600 dark:text-gray-400 border-slate-300 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800"
+                                  className="text-slate-600 dark:text-gray-400 border-slate-300 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800 flex-1 sm:flex-none min-w-0"
                                   onClick={handleImportBlockedList}
                                   disabled={importing}
                                 >
-                                  <Upload className="w-4 h-4 mr-2" />
-                                  {importing
-                                    ? 'Importing...'
-                                    : 'Import Blocked List'}
+                                  <Upload className="w-4 h-4 sm:mr-2 shrink-0" />
+                                  <span className="hidden sm:inline">
+                                    {importing
+                                      ? 'Importing...'
+                                      : 'Import Blocked List'}
+                                  </span>
+                                  <span className="sm:hidden">
+                                    {importing
+                                      ? 'Importing...'
+                                      : 'Import'}
+                                  </span>
                                 </Button>
                               )}
                               {checkPermission('MOD039', 'export') && (
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-green-600 dark:text-green-400 border-green-300 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                  className="text-green-600 dark:text-green-400 border-green-300 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-900/20 flex-1 sm:flex-none min-w-0"
                                   onClick={handleExportBlockedList}
                                   disabled={exporting}
                                 >
-                                  <Download className="w-4 h-4 mr-2" />
-                                  {exporting
-                                    ? 'Exporting...'
-                                    : 'Export Blocked List'}
+                                  <Download className="w-4 h-4 sm:mr-2 shrink-0" />
+                                  <span className="hidden sm:inline">
+                                    {exporting
+                                      ? 'Exporting...'
+                                      : 'Export Blocked List'}
+                                  </span>
+                                  <span className="sm:hidden">
+                                    {exporting
+                                      ? 'Exporting...'
+                                      : 'Export'}
+                                  </span>
                                 </Button>
                               )}
                             </div>
@@ -4882,17 +4922,17 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     data-section="spam-protection"
                     className="border-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-2xl"
                   >
-                  <CardContent className="p-8">
-                    <div className="flex items-center justify-between mb-8">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-2xl flex items-center justify-center">
-                          <Shield className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+                  <CardContent className="p-4 sm:p-6 lg:p-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0 mb-6 sm:mb-8">
+                      <div className="flex items-start sm:items-center gap-3 sm:space-x-3 flex-1 min-w-0">
+                        <div className="hidden sm:flex w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 rounded-xl sm:rounded-2xl items-center justify-center shrink-0">
+                          <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600 dark:text-orange-400" />
                         </div>
-                        <div>
-                          <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100">
+                        <div className="flex-1 min-w-0">
+                          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900 dark:text-gray-100 break-words">
                             Spam Protection
                           </h2>
-                          <p className="text-slate-600 dark:text-gray-400">
+                          <p className="text-sm sm:text-base text-slate-600 dark:text-gray-400 mt-1">
                             Manage spam protection rules and automated call
                             screening
                           </p>
@@ -4901,10 +4941,11 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                       {checkPermission('MOD040', 'create') && (
                         <Button
                           onClick={() => setSpamProtectionCreateModalOpen(true)}
-                          className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg rounded-xl px-6"
+                          className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg rounded-xl px-4 sm:px-6 w-full sm:w-auto shrink-0"
                         >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add Rule
+                          <Plus className="w-4 h-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Add Rule</span>
+                          <span className="sm:hidden">Add</span>
                         </Button>
                       )}
                     </div>
@@ -4948,17 +4989,18 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                           {spamProtectionData.map(rule => (
                             <div
                               key={rule._id}
-                              className="p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl border border-slate-200 dark:border-neutral-700 hover:border-slate-300 dark:hover:border-neutral-600 transition-all duration-200"
+                              className="p-3 sm:p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl border border-slate-200 dark:border-neutral-700 hover:border-slate-300 dark:hover:border-neutral-600 transition-all duration-200"
                             >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center space-x-3 mb-2">
-                                    <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                                <div className="flex-1 min-w-0 space-y-2">
+                                  {/* Header with title and badges */}
+                                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                                    <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-gray-100 break-words">
                                       {rule.title}
                                     </h3>
                                     <Badge
                                       variant="outline"
-                                      className={`${
+                                      className={`text-xs shrink-0 ${
                                         rule.status === 'active'
                                           ? 'text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
                                           : rule.status === 'failed'
@@ -4970,20 +5012,21 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     </Badge>
                                     <Badge
                                       variant="outline"
-                                      className="text-slate-600 dark:text-gray-400 dark:border-neutral-700"
+                                      className="text-xs text-slate-600 dark:text-gray-400 dark:border-neutral-700 shrink-0"
                                     >
                                       {rule.code}
                                     </Badge>
                                   </div>
 
-                                  <div className="flex items-center space-x-6 text-sm text-slate-600 dark:text-gray-400">
-                                    <span>
+                                  {/* Info section */}
+                                  <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-xs sm:text-sm text-slate-600 dark:text-gray-400">
+                                    <span className="whitespace-nowrap">
                                       <span className="font-medium">Type:</span>{' '}
                                       {rule.protection === '{{dynamic}}'
                                         ? 'Dynamic'
                                         : rule.protection}
                                     </span>
-                                    <span>
+                                    <span className="whitespace-nowrap">
                                       <span className="font-medium">
                                         Sources:
                                       </span>{' '}
@@ -4991,13 +5034,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                         ? 'All'
                                         : `${rule.sourceCodes.length} specific`}
                                     </span>
-                                    <span>
+                                    <span className="whitespace-nowrap">
                                       <span className="font-medium">
                                         Usage:
                                       </span>{' '}
                                       {rule.usageCount}
                                     </span>
-                                    <span>
+                                    <span className="whitespace-nowrap">
                                       <span className="font-medium">
                                         Created:
                                       </span>{' '}
@@ -5008,7 +5051,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   </div>
                                 </div>
 
-                                <div className="flex items-center space-x-2 ml-4">
+                                {/* Action buttons */}
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-2 sm:ml-4 shrink-0">
                                   <Button
                                     variant="outline"
                                     size="sm"
@@ -5017,7 +5061,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                       handleSpamProtectionView(rule)
                                     }
                                   >
-                                    View
+                                    <span className="hidden sm:inline">View</span>
+                                    <span className="sm:hidden">View</span>
                                   </Button>
                                   {checkPermission(
                                     'MOD040',
@@ -5105,13 +5150,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                         {spamProtectionStatistics && (
                           <div className="mt-8">
                             <Card className="border-0 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-neutral-800 dark:to-neutral-900 rounded-2xl border dark:border-neutral-700">
-                              <CardContent className="p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                  <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100">
+                              <CardContent className="p-4 sm:p-6">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 mb-6">
+                                  <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-gray-100">
                                     Spam Protection Statistics
                                   </h3>
-                                  <div className="flex items-center space-x-3">
-                                    <div className="flex items-center space-x-2">
+                                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-2 w-full sm:w-auto">
+                                    {/* Date Range - Stack vertically on mobile, horizontal on desktop */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
                                       <Input
                                         type="date"
                                         value={spamProtectionStartDate}
@@ -5120,9 +5166,9 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                             e.target.value
                                           )
                                         }
-                                        className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
+                                        className="text-xs sm:text-sm dark:bg-neutral-800 dark:border-neutral-700 w-full sm:w-auto"
                                       />
-                                      <span className="text-slate-500 dark:text-gray-400">to</span>
+                                      <span className="hidden sm:inline text-xs sm:text-sm text-slate-500 dark:text-gray-400 whitespace-nowrap shrink-0">to</span>
                                       <Input
                                         type="date"
                                         value={spamProtectionEndDate}
@@ -5131,17 +5177,17 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                             e.target.value
                                           )
                                         }
-                                        className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
+                                        className="text-xs sm:text-sm dark:bg-neutral-800 dark:border-neutral-700 w-full sm:w-auto"
                                       />
                                     </div>
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      className="text-slate-600 dark:text-gray-400 border-slate-300 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800"
+                                      className="text-slate-600 dark:text-gray-400 border-slate-300 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800 w-full sm:w-auto whitespace-nowrap"
                                       onClick={fetchSpamProtectionStatistics}
                                       disabled={spamProtectionStatisticsLoading}
                                     >
-                                      <BarChart3 className="w-4 h-4 mr-2" />
+                                      <BarChart3 className="w-4 h-4 sm:mr-2" />
                                       {spamProtectionStatisticsLoading
                                         ? 'Refreshing...'
                                         : 'Refresh'}
@@ -5149,10 +5195,10 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                   </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
                                   {/* Summary Stats */}
-                                  <div className="text-center p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
-                                    <div className="text-2xl font-bold text-slate-900 dark:text-gray-100">
+                                  <div className="text-center p-3 sm:p-4 bg-white/60 dark:bg-neutral-800/60 rounded-xl">
+                                    <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-gray-100">
                                       {spamProtectionStatistics?.summary
                                         ?.totalRules || 0}
                                     </div>
@@ -5321,27 +5367,27 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                     data-section="phone-numbers"
                     className="border-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-2xl"
                   >
-                  <CardContent className="p-8">
-                    <div className="flex items-center justify-between mb-8">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center">
-                          <Phone className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                  <CardContent className="p-4 sm:p-6 lg:p-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0 mb-6 sm:mb-8">
+                      <div className="flex items-start sm:items-center gap-3 sm:space-x-3">
+                        <div className="hidden sm:flex w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl sm:rounded-2xl items-center justify-center shrink-0">
+                          <Phone className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <div>
-                          <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100">
+                        <div className="flex-1 min-w-0">
+                          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900 dark:text-gray-100 break-words">
                             Phone Number Management
                           </h2>
-                          <p className="text-slate-600 dark:text-gray-400">
+                          <p className="text-sm sm:text-base text-slate-600 dark:text-gray-400 mt-1">
                             Manage your phone numbers and their capabilities
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="text-right">
-                          <p className="text-sm text-slate-500 dark:text-gray-400">
+                      <div className="flex items-center gap-3 sm:space-x-3">
+                        <div className="text-left sm:text-right">
+                          <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400">
                             Total Numbers
                           </p>
-                          <p className="text-2xl font-bold text-[#4a9430] dark:text-[#53a533]">
+                          <p className="text-xl sm:text-2xl font-bold text-[#4a9430] dark:text-[#53a533]">
                             {phoneNumberLoading
                               ? '...'
                               : phoneNumberData.length}
@@ -5352,8 +5398,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                     {/* Search and Filter Row */}
                     {checkPermission('MOD041', 'view') && (
-                      <div className="mb-4 flex items-center space-x-4">
-                        <div className="relative max-w-md">
+                      <div className="mb-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                        <div className="relative w-full sm:max-w-md">
                           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-gray-500 w-4 h-4" />
                           <Input
                             placeholder="Search phone numbers..."
@@ -5361,26 +5407,26 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             onChange={e =>
                               setPhoneNumberSearchTerm(e.target.value)
                             }
-                            className="pl-10 text-sm dark:bg-neutral-800 dark:border-neutral-700"
+                            className="pl-10 text-sm dark:bg-neutral-800 dark:border-neutral-700 w-full"
                           />
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
                           <Input
                             type="date"
                             value={phoneNumberStartDate}
                             onChange={e =>
                               setPhoneNumberStartDate(e.target.value)
                             }
-                            className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
+                            className="text-sm dark:bg-neutral-800 dark:border-neutral-700 w-full sm:w-auto"
                           />
-                          <span className="text-slate-500 dark:text-gray-400">to</span>
+                          <span className="hidden sm:inline text-slate-500 dark:text-gray-400 whitespace-nowrap shrink-0">to</span>
                           <Input
                             type="date"
                             value={phoneNumberEndDate}
                             onChange={e =>
                               setPhoneNumberEndDate(e.target.value)
                             }
-                            className="text-sm dark:bg-neutral-800 dark:border-neutral-700"
+                            className="text-sm dark:bg-neutral-800 dark:border-neutral-700 w-full sm:w-auto"
                           />
                         </div>
                       </div>
@@ -5861,34 +5907,34 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                               <AccordionContent className="px-0 pt-4">
                                 {phoneNumberStatistics ? (
                                   <Card className="border-0 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-neutral-800 dark:to-neutral-900 rounded-2xl border dark:border-neutral-700">
-                                    <CardContent className="p-6">
+                                    <CardContent className="p-4 sm:p-6">
                                       <div className="flex items-center justify-between mb-6">
-                                        <h3 className="text-lg font-semibold text-slate-900 dark:text-gray-100">
+                                        <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-gray-100">
                                           Phone Number Statistics
                                         </h3>
                                       </div>
 
-                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                                         {/* By Country */}
                                         <div>
-                                          <h4 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
+                                          <h4 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-gray-100 mb-2 sm:mb-3">
                                             By Country
                                           </h4>
-                                          <div className="space-y-2">
+                                          <div className="space-y-1.5 sm:space-y-2">
                                             {Object.entries(
                                               phoneNumberStatistics?.byCountry ||
                                                 {}
                                             ).map(([country, count]) => (
                                               <div
                                                 key={country}
-                                                className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg"
+                                                className="flex justify-between items-center p-2 sm:p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg"
                                               >
-                                                <span className="text-sm text-slate-600 dark:text-gray-400">
+                                                <span className="text-xs sm:text-sm text-slate-600 dark:text-gray-400 truncate flex-1 min-w-0 mr-2">
                                                   {country}
                                                 </span>
                                                 <Badge
                                                   variant="outline"
-                                                  className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                                                  className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 shrink-0"
                                                 >
                                                   {count}
                                                 </Badge>
@@ -5899,29 +5945,29 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                                         {/* By Number Type */}
                                         <div>
-                                          <h4 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
+                                          <h4 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-gray-100 mb-2 sm:mb-3">
                                             By Number Type
                                           </h4>
-                                          <div className="space-y-2">
-                                            <div className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
-                                              <span className="text-sm text-slate-600 dark:text-gray-400">
+                                          <div className="space-y-1.5 sm:space-y-2">
+                                            <div className="flex justify-between items-center p-2 sm:p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
+                                              <span className="text-xs sm:text-sm text-slate-600 dark:text-gray-400">
                                                 Local
                                               </span>
                                               <Badge
                                                 variant="outline"
-                                                className="text-green-600 dark:text-green-400 border-green-200 dark:border-green-800"
+                                                className="text-xs sm:text-sm text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 shrink-0"
                                               >
                                                 {phoneNumberStatistics
                                                   ?.byNumberType?.local || 0}
                                               </Badge>
                                             </div>
-                                            <div className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
-                                              <span className="text-sm text-slate-600 dark:text-gray-400">
+                                            <div className="flex justify-between items-center p-2 sm:p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
+                                              <span className="text-xs sm:text-sm text-slate-600 dark:text-gray-400">
                                                 Toll-Free
                                               </span>
                                               <Badge
                                                 variant="outline"
-                                                className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                                                className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 shrink-0"
                                               >
                                                 {phoneNumberStatistics
                                                   ?.byNumberType?.[
@@ -5929,13 +5975,13 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                                 ] || 0}
                                               </Badge>
                                             </div>
-                                            <div className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
-                                              <span className="text-sm text-slate-600 dark:text-gray-400">
+                                            <div className="flex justify-between items-center p-2 sm:p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg">
+                                              <span className="text-xs sm:text-sm text-slate-600 dark:text-gray-400">
                                                 Mobile
                                               </span>
                                               <Badge
                                                 variant="outline"
-                                                className="text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800"
+                                                className="text-xs sm:text-sm text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800 shrink-0"
                                               >
                                                 {phoneNumberStatistics
                                                   ?.byNumberType?.mobile || 0}
@@ -5946,35 +5992,35 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
                                         {/* Most Used Numbers */}
                                         <div>
-                                          <h4 className="font-semibold text-slate-900 dark:text-gray-100 mb-3">
+                                          <h4 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-gray-100 mb-2 sm:mb-3">
                                             Most Used Numbers
                                           </h4>
-                                          <div className="space-y-2 max-h-40 overflow-y-auto">
+                                          <div className="space-y-1.5 sm:space-y-2 max-h-40 sm:max-h-40 overflow-y-auto">
                                             {phoneNumberStatistics?.mostUsedNumbers
                                               ?.slice(0, 5)
                                               .map((number, index) => (
                                                 <div
                                                   key={number.id}
-                                                  className="flex justify-between items-center p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg"
+                                                  className="flex justify-between items-start sm:items-center gap-2 p-2 sm:p-2 bg-white/60 dark:bg-neutral-800/60 rounded-lg"
                                                 >
-                                                  <div className="flex items-center space-x-2">
-                                                    <span className="text-sm font-medium text-slate-500 dark:text-gray-500">
+                                                  <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+                                                    <span className="text-xs sm:text-sm font-medium text-slate-500 dark:text-gray-500 shrink-0">
                                                       #{index + 1}
                                                     </span>
-                                                    <div className="flex flex-col">
-                                                      <span className="text-sm text-slate-900 dark:text-gray-100 truncate">
+                                                    <div className="flex flex-col min-w-0 flex-1">
+                                                      <span className="text-xs sm:text-sm text-slate-900 dark:text-gray-100 truncate">
                                                         {number.friendlyName ||
                                                           number.phoneNumber}
                                                       </span>
-                                                      <span className="text-xs text-slate-500 dark:text-gray-500">
+                                                      <span className="text-xs text-slate-500 dark:text-gray-500 truncate">
                                                         {number.code}
                                                       </span>
                                                     </div>
                                                   </div>
-                                                  <div className="flex flex-col items-end">
+                                                  <div className="flex flex-col items-end gap-1 shrink-0">
                                                     <Badge
                                                       variant="outline"
-                                                      className="text-xs text-slate-600 dark:text-gray-400 dark:border-neutral-700 mb-1"
+                                                      className="text-xs text-slate-600 dark:text-gray-400 dark:border-neutral-700 whitespace-nowrap"
                                                     >
                                                       {
                                                         number.totalCallsReceived
@@ -5983,7 +6029,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                                     </Badge>
                                                     <Badge
                                                       variant="outline"
-                                                      className="text-xs text-slate-600 dark:text-gray-400 dark:border-neutral-700"
+                                                      className="text-xs text-slate-600 dark:text-gray-400 dark:border-neutral-700 whitespace-nowrap"
                                                     >
                                                       {number.totalSmsReceived}{' '}
                                                       SMS
@@ -5997,9 +6043,9 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                     </CardContent>
                                   </Card>
                                 ) : (
-                                  <div className="text-center py-8">
-                                    <BarChart3 className="w-12 h-12 text-slate-400 dark:text-neutral-500 mx-auto mb-4" />
-                                    <p className="text-slate-600 dark:text-gray-400">
+                                  <div className="text-center py-6 sm:py-8">
+                                    <BarChart3 className="w-10 h-10 sm:w-12 sm:h-12 text-slate-400 dark:text-neutral-500 mx-auto mb-3 sm:mb-4" />
+                                    <p className="text-sm sm:text-base text-slate-600 dark:text-gray-400">
                                       No statistics available
                                     </p>
                                   </div>
@@ -6010,8 +6056,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                         </div>
                       </>
                     )}
-                    {/* Table Header */}
-                    <div className="bg-slate-50 dark:bg-neutral-800 rounded-xl p-4 border border-slate-200 dark:border-neutral-700 mb-4">
+                    {/* Table Header - Desktop Only */}
+                    <div className="hidden md:block bg-slate-50 dark:bg-neutral-800 rounded-xl p-4 border border-slate-200 dark:border-neutral-700 mb-4">
                       <div className="grid grid-cols-12 gap-4 text-sm font-semibold text-slate-700 dark:text-gray-300">
                         <div className="col-span-3">Phone Number</div>
                         <div className="col-span-2">Assigned Source</div>
@@ -6059,7 +6105,8 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             key={phoneNumber._id}
                             className="bg-white dark:bg-neutral-800 rounded-xl p-4 border border-slate-100 dark:border-neutral-700 hover:border-[#53a533]/20 hover:shadow-md transition-all duration-200"
                           >
-                            <div className="grid grid-cols-12 gap-4 items-center">
+                            {/* Desktop Table View */}
+                            <div className="hidden md:grid grid-cols-12 gap-4 items-center">
                               {/* Phone Number */}
                               <div className="col-span-3">
                                 <div className="flex items-center space-x-3">
@@ -6280,6 +6327,229 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                                 </div>
                               </div>
                             </div>
+
+                            {/* Mobile Card View */}
+                            <div className="md:hidden space-y-3">
+                              {/* Phone Number */}
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-[#53a533]/10 dark:bg-[#53a533]/20 rounded-lg flex items-center justify-center shrink-0">
+                                  <Phone className="w-5 h-5 text-[#4a9430] dark:text-[#53a533]" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-mono font-semibold text-base text-slate-900 dark:text-gray-100 truncate">
+                                    {phoneNumber.friendlyName ||
+                                      phoneNumber.numberType}
+                                  </p>
+                                  <p className="text-xs text-slate-500 dark:text-gray-400 truncate">
+                                    {phoneNumber.formattedPhoneNumber}
+                                  </p>
+                                </div>
+                                <div className="shrink-0">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="w-8 h-8 p-0 text-slate-500 dark:text-gray-400 hover:text-[#4a9430] dark:hover:text-[#53a533] hover:bg-[#53a533]/5 dark:hover:bg-[#53a533]/10"
+                                        title="More Options"
+                                      >
+                                        <MoreHorizontal className="w-4 h-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          handlePhoneNumberView(phoneNumber)
+                                        }
+                                        className="cursor-pointer"
+                                      >
+                                        <BarChart3 className="w-4 h-4 mr-2" />
+                                        View
+                                      </DropdownMenuItem>
+                                      {(checkPermission('MOD041', 'edit') ||
+                                        checkPermission('MOD042', 'edit')) && (
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            handlePhoneNumberEdit(phoneNumber)
+                                          }
+                                          className="cursor-pointer"
+                                        >
+                                          <Edit className="w-4 h-4 mr-2" />
+                                          Edit
+                                        </DropdownMenuItem>
+                                      )}
+                                      {((checkPermission('MOD041', 'assign') ||
+                                        checkPermission(
+                                          'MOD042',
+                                          'assign'
+                                        )) ||
+                                        (phoneNumber.assignedSource &&
+                                          (checkPermission('MOD041', 'release') ||
+                                            checkPermission(
+                                              'MOD042',
+                                              'release'
+                                            ))) &&
+                                          phoneNumber.assignedSource) && (
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            if (phoneNumber.assignedSource) {
+                                              handleReleaseSourceClick(
+                                                phoneNumber
+                                              )
+                                            } else {
+                                              setSelectedPhoneNumberForAssignment(
+                                                phoneNumber
+                                              )
+                                              setSelectedAssignmentSource(null)
+                                              setAssignError(null)
+                                              setAssignmentSourceSearchQuery('')
+                                              setAssignToSourceModalOpen(true)
+                                              fetchAssignmentSources()
+                                            }
+                                          }}
+                                          className={`cursor-pointer ${
+                                            phoneNumber.assignedSource
+                                              ? 'text-orange-600 focus:text-orange-600'
+                                              : 'text-blue-600 focus:text-blue-600'
+                                          }`}
+                                        >
+                                          {phoneNumber.assignedSource ? (
+                                            <>
+                                              <Unlink className="w-4 h-4 mr-2" />
+                                              Release
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Link className="w-4 h-4 mr-2" />
+                                              Assign
+                                            </>
+                                          )}
+                                        </DropdownMenuItem>
+                                      )}
+                                      {(checkPermission('MOD041', 'delete') ||
+                                        checkPermission(
+                                          'MOD042',
+                                          'delete'
+                                        )) && (
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            handleDeletePhoneNumber(phoneNumber)
+                                          }
+                                          className="cursor-pointer text-red-600 focus:text-red-600"
+                                        >
+                                          <Trash2 className="w-4 h-4 mr-2" />
+                                          Delete
+                                        </DropdownMenuItem>
+                                      )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              </div>
+
+                              {/* Details Grid */}
+                              <div className="grid grid-cols-2 gap-3">
+                                {/* Assigned Source */}
+                                <div>
+                                  <p className="text-xs text-slate-500 dark:text-gray-400 mb-1">
+                                    Assigned Source
+                                  </p>
+                                  {phoneNumber.assignedSource ? (
+                                    <p className="text-sm font-medium text-slate-900 dark:text-gray-100">
+                                      {phoneNumber.assignedSource}
+                                    </p>
+                                  ) : (
+                                    <p className="text-sm text-slate-400 dark:text-gray-500 italic">
+                                      Unassigned
+                                    </p>
+                                  )}
+                                </div>
+
+                                {/* Status */}
+                                <div>
+                                  <p className="text-xs text-slate-500 dark:text-gray-400 mb-1">
+                                    Status
+                                  </p>
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-xs ${
+                                      phoneNumber.status === 'active'
+                                        ? 'text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
+                                        : phoneNumber.status === 'assigned'
+                                          ? 'text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20'
+                                          : phoneNumber.status === 'inactive'
+                                            ? 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20'
+                                            : 'text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20'
+                                    }`}
+                                  >
+                                    {phoneNumber.status === 'assigned' &&
+                                    phoneNumber.assignedSource
+                                      ? 'Assigned'
+                                      : phoneNumber.status}
+                                  </Badge>
+                                </div>
+
+                                {/* Calls */}
+                                <div>
+                                  <p className="text-xs text-slate-500 dark:text-gray-400 mb-1">
+                                    Calls
+                                  </p>
+                                  <p className="text-sm font-semibold text-slate-900 dark:text-gray-100">
+                                    {phoneNumber.totalCallsReceived || 0}
+                                  </p>
+                                </div>
+
+                                {/* SMS */}
+                                <div>
+                                  <p className="text-xs text-slate-500 dark:text-gray-400 mb-1">
+                                    SMS
+                                  </p>
+                                  <p className="text-sm font-semibold text-slate-900 dark:text-gray-100">
+                                    {phoneNumber.totalSmsReceived || 0}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Capabilities */}
+                              <div>
+                                <p className="text-xs text-slate-500 dark:text-gray-400 mb-2">
+                                  Capabilities
+                                </p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {phoneNumber.capabilities.voice && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs text-green-600 dark:text-green-400 border-green-200 dark:border-green-800"
+                                    >
+                                      Voice
+                                    </Badge>
+                                  )}
+                                  {phoneNumber.capabilities.sms && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                                    >
+                                      SMS
+                                    </Badge>
+                                  )}
+                                  {phoneNumber.capabilities.mms && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800"
+                                    >
+                                      MMS
+                                    </Badge>
+                                  )}
+                                  {phoneNumber.capabilities.fax && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800"
+                                    >
+                                      Fax
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         ))
                       )}
@@ -6345,16 +6615,16 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
               {/* Buy New Numbers */}
               {checkPermission('MOD041', 'purchase') && (
                 <Card className="border-0 bg-white/70 dark:bg-neutral-800/70 backdrop-blur-sm rounded-2xl">
-                  <CardContent className="p-8">
-                    <div className="flex items-center space-x-3 mb-8">
-                      <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-2xl flex items-center justify-center">
-                        <Plus className="w-8 h-8 text-green-600 dark:text-green-400" />
+                  <CardContent className="p-4 sm:p-6 lg:p-8">
+                    <div className="flex items-start sm:items-center gap-3 sm:space-x-3 mb-6 sm:mb-8">
+                      <div className="hidden sm:flex w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl sm:rounded-2xl items-center justify-center shrink-0">
+                        <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 dark:text-green-400" />
                       </div>
-                      <div>
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-gray-100">
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900 dark:text-gray-100 break-words">
                           Purchase New Phone Numbers
                         </h2>
-                        <p className="text-slate-600 dark:text-gray-400">
+                        <p className="text-sm sm:text-base text-slate-600 dark:text-gray-400 mt-1">
                           Add dedicated tracking numbers for your marketing
                           campaigns
                         </p>
