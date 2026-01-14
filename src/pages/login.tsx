@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Head from 'next/head'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
@@ -234,12 +235,11 @@ export default function Login(): React.JSX.Element {
 
                 {/* Footer Links */}
                 <div className="mt-6 text-center space-y-2">
-                  <a
-                    href="#"
-                    className="text-sm text-[#53a533] hover:text-[#4a9430] font-medium"
-                  >
-                    Forgot your password?
-                  </a>
+                  <Link href="/forgot-password" legacyBehavior passHref>
+                    <a className="text-sm text-[#53a533] hover:text-[#4a9430] font-medium">
+                      Forgot your password?
+                    </a>
+                  </Link>
                   <div className="text-sm text-gray-500 dark:text-gray-400">
                     Need help?{' '}
                     <a

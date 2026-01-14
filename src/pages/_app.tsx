@@ -24,7 +24,8 @@ const LoadingComponent = () => (
 
 function AppContent({ Component, pageProps }: AppProps) {
   const router = useRouter()
-  const isLoginPage = router.pathname === '/login'
+  const publicRoutes = ['/login', '/forgot-password']
+  const isPublicRoute = publicRoutes.includes(router.pathname)
 
   return (
     <div className={inter.className}>
@@ -33,7 +34,7 @@ function AppContent({ Component, pageProps }: AppProps) {
         libraries={['places']}
       >
         <AuthGuard>
-          {isLoginPage ? (
+          {isPublicRoute ? (
             <Component {...pageProps} />
           ) : (
             <Layout>

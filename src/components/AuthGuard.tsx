@@ -9,6 +9,8 @@ interface AuthGuardProps {
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const { isAuthenticated, loading, hasValidTokens } = useAuth()
   const router = useRouter()
+  const publicRoutes = ['/login', '/forgot-password']
+  const isPublicRoute = publicRoutes.includes(router.pathname)
 
   // Debug logging
   useEffect(() => {
@@ -17,25 +19,20 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
       isAuthenticated,
       loading,
       hasValidTokens,
-      isLoginPage: router.pathname === '/login',
+      isPublicRoute,
     })
-  }, [router.pathname, isAuthenticated, loading, hasValidTokens])
+  }, [router.pathname, isAuthenticated, loading, hasValidTokens, isPublicRoute])
 
   useEffect(() => {
     // If user is on login page and is authenticated with valid tokens, redirect to dashboard
-    if (
-      router.pathname === '/login' &&
-      !loading &&
-      isAuthenticated &&
-      hasValidTokens
-    ) {
+    if (router.pathname === '/login' && !loading && isAuthenticated && hasValidTokens) {
       console.log('Redirecting authenticated user from login to dashboard')
       router.push('/dashboard')
       return
     }
 
-    // Skip authentication check for login page
-    if (router.pathname === '/login') {
+    // Skip authentication check for public routes
+    if (isPublicRoute) {
       return
     }
 
@@ -47,7 +44,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   }, [isAuthenticated, hasValidTokens, loading, router])
 
   // Show loading spinner while checking authentication (except on login page)
-  if (loading && router.pathname !== '/login') {
+  if (loading && !isPublicRoute) {
     console.log('Showing loading spinner')
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -59,9 +56,9 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     )
   }
 
-  // For login page, always render children
-  if (router.pathname === '/login') {
-    console.log('Rendering login page')
+  // For public routes, always render children
+  if (isPublicRoute) {
+    console.log('Rendering public page')
     return <>{children}</>
   }
 

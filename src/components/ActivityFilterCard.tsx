@@ -271,101 +271,100 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
         <div className="">
           <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
             {/* User ID Filter - Searchable Dropdown - Hide when tenant is selected */}
-            {filterTenantId === 'all' && (
-              <div className="space-y-2 w-full sm:min-w-0 sm:flex-1 sm:max-w-xs">
-                <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  User
-                </Label>
-                <Popover
-                  open={userDropdownOpen}
-                  onOpenChange={handleUserDropdownClose}
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={userDropdownOpen}
-                      className="w-full justify-between text-left"
-                    >
-                      <span className="truncate flex-1 mr-2">
-                        {getSelectedUserName()}
-                      </span>
-                      <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="w-[var(--radix-popover-trigger-width)] p-0 max-w-[calc(100vw-2rem)] sm:max-w-none"
-                    align="start"
+            <div className="space-y-2 w-full sm:min-w-0 sm:flex-1 sm:max-w-xs">
+              <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                User
+              </Label>
+              <Popover
+                open={userDropdownOpen}
+                onOpenChange={handleUserDropdownClose}
+              >
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={userDropdownOpen}
+                    className="w-full justify-between text-left"
+                    disabled={filterTenantId !== 'all'}
                   >
-                    <Command shouldFilter={false}>
-                      <CommandInput
-                        placeholder="Search users..."
-                        value={userSearchTerm}
-                        onValueChange={setUserSearchTerm}
-                        className="h-9"
-                      />
-                      <CommandList className="max-h-[300px] sm:max-h-[400px]">
-                        {loadingUsers ? (
-                          <CommandEmpty>Loading users...</CommandEmpty>
-                        ) : users.length === 0 ? (
-                          <CommandEmpty>No users found.</CommandEmpty>
-                        ) : (
-                          <CommandGroup>
+                    <span className="truncate flex-1 mr-2">
+                      {getSelectedUserName()}
+                    </span>
+                    <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-[var(--radix-popover-trigger-width)] p-0 max-w-[calc(100vw-2rem)] sm:max-w-none"
+                  align="start"
+                >
+                  <Command shouldFilter={false}>
+                    <CommandInput
+                      placeholder="Search users..."
+                      value={userSearchTerm}
+                      onValueChange={setUserSearchTerm}
+                      className="h-9"
+                    />
+                    <CommandList className="max-h-[300px] sm:max-h-[400px]">
+                      {loadingUsers ? (
+                        <CommandEmpty>Loading users...</CommandEmpty>
+                      ) : users.length === 0 ? (
+                        <CommandEmpty>No users found.</CommandEmpty>
+                      ) : (
+                        <CommandGroup>
+                          <CommandItem
+                            value="all"
+                            onSelect={() => {
+                              setFilterUserId('all')
+                              setUserDropdownOpen(false)
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${
+                                filterUserId === 'all'
+                                  ? 'opacity-100'
+                                  : 'opacity-0'
+                              }`}
+                            />
+                            All Users
+                          </CommandItem>
+                          {users.map(user => (
                             <CommandItem
-                              value="all"
+                              key={user._id}
+                              value={user._id}
                               onSelect={() => {
-                                setFilterUserId('all')
+                                setFilterUserId(user._id)
+                                setFilterTenantId('all') // Clear tenant when user is selected
                                 setUserDropdownOpen(false)
                               }}
                             >
                               <Check
                                 className={`mr-2 h-4 w-4 ${
-                                  filterUserId === 'all'
+                                  filterUserId === user._id
                                     ? 'opacity-100'
                                     : 'opacity-0'
                                 }`}
                               />
-                              All Users
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-medium truncate">
+                                  {user.name}
+                                </span>
+                                <span className="text-sm text-muted-foreground truncate">
+                                  {user.username}{' '}
+                                  {user.email && `• ${user.email}`}
+                                </span>
+                              </div>
                             </CommandItem>
-                            {users.map(user => (
-                              <CommandItem
-                                key={user._id}
-                                value={user._id}
-                                onSelect={() => {
-                                  setFilterUserId(user._id)
-                                  setFilterTenantId('all') // Clear tenant when user is selected
-                                  setUserDropdownOpen(false)
-                                }}
-                              >
-                                <Check
-                                  className={`mr-2 h-4 w-4 ${
-                                    filterUserId === user._id
-                                      ? 'opacity-100'
-                                      : 'opacity-0'
-                                  }`}
-                                />
-                                <div className="flex flex-col min-w-0">
-                                  <span className="font-medium truncate">
-                                    {user.name}
-                                  </span>
-                                  <span className="text-sm text-muted-foreground truncate">
-                                    {user.username}{' '}
-                                    {user.email && `• ${user.email}`}
-                                  </span>
-                                </div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        )}
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            )}
+                          ))}
+                        </CommandGroup>
+                      )}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
 
             {/* Tenant ID Filter - Searchable Dropdown - Only show for P1 users and when no specific user is selected */}
-            {getUserType() === 'P1' && filterUserId === 'all' && (
+            {getUserType() === 'P1' && (
               <div className="space-y-2 w-full sm:min-w-0 sm:flex-1 sm:max-w-xs">
                 <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   Tenant
@@ -380,6 +379,7 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
                       role="combobox"
                       aria-expanded={tenantDropdownOpen}
                       className="w-full justify-between text-left"
+                      disabled={filterUserId !== 'all'}
                     >
                       <span className="truncate flex-1 mr-2">
                         {getSelectedTenantName()}

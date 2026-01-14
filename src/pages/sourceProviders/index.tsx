@@ -22,6 +22,8 @@ import {
   Loader2,
   Trash2,
   Shield,
+  Check,
+  ChevronsUpDown,
 } from 'lucide-react'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
@@ -49,12 +51,22 @@ import {
   AlertDialogTitle,
 } from '@/src/components/ui/alert-dialog'
 import { Company, CompaniesResponse } from '@/src/constants/interface/company'
+import { Package, PackagesResponse } from '@/src/constants/interface/package'
 import { apiService } from '@/src/services/api'
 import { useAppSelector } from '@/src/store/hooks'
 import { toast } from 'sonner'
 import { TableLoading } from '@/src/components/ui/loading'
 import { usePermissions } from '@/src/hooks/usePermissions'
 import { useDebounce } from '@/src/hooks/useDebounce'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/src/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/src/components/ui/popover'
 
 const getTypeBadgeColor = (type: string) => {
   switch (type) {
@@ -114,6 +126,13 @@ export default function SourceProvidersPage(): React.JSX.Element {
   const [entriesPerPage, setEntriesPerPage] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'Active' | 'Inactive'>(
+    'all'
+  )
+  const [selectedPackageId, setSelectedPackageId] = useState('')
+  const [packages, setPackages] = useState<Package[]>([])
+  const [packagesLoading, setPackagesLoading] = useState(false)
+  const [packageOpen, setPackageOpen] = useState(false)
 
   // Debounced search term (500ms delay)
   const debouncedSearchTerm = useDebounce(searchTerm, 500)
@@ -141,6 +160,12 @@ export default function SourceProvidersPage(): React.JSX.Element {
       if (debouncedSearchTerm) {
         url += `&search=${encodeURIComponent(debouncedSearchTerm)}`
       }
+      if (statusFilter && statusFilter !== 'all') {
+        url += `&status=${encodeURIComponent(statusFilter)}`
+      }
+      if (selectedPackageId) {
+        url += `&packageId=${encodeURIComponent(selectedPackageId)}`
+      }
       const response = await apiService.get(url)
       const responseData: CompaniesResponse = response.data
 
@@ -166,7 +191,14 @@ export default function SourceProvidersPage(): React.JSX.Element {
     } finally {
       setLoading(false)
     }
-  }, [tenantId, currentPage, entriesPerPage, debouncedSearchTerm])
+  }, [
+    tenantId,
+    currentPage,
+    entriesPerPage,
+    debouncedSearchTerm,
+    statusFilter,
+    selectedPackageId,
+  ])
 
   // Fetch source providers on component mount and when dependencies change
   useEffect(() => {
@@ -178,6 +210,8 @@ export default function SourceProvidersPage(): React.JSX.Element {
     currentPage,
     entriesPerPage,
     debouncedSearchTerm,
+    statusFilter,
+    selectedPackageId,
     fetchSourceProviders,
   ])
 
@@ -186,7 +220,27 @@ export default function SourceProvidersPage(): React.JSX.Element {
     if (tenantId) {
       setCurrentPage(1) // Reset to first page when searching
     }
-  }, [debouncedSearchTerm, tenantId])
+  }, [debouncedSearchTerm, statusFilter, selectedPackageId, tenantId])
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      setPackagesLoading(true)
+      try {
+        const response = await apiService.get('/v1/packages?page=1&limit=100')
+        const responseData: PackagesResponse = response.data
+        if (responseData?.success) {
+          setPackages(responseData.data)
+        }
+      } catch (err) {
+        console.error('Error fetching packages:', err)
+        toast.error('Failed to load packages')
+      } finally {
+        setPackagesLoading(false)
+      }
+    }
+
+    fetchPackages()
+  }, [])
 
   const handleDeleteSourceProvider = (sourceProvider: Company) => {
     setSourceProviderToDelete(sourceProvider)
@@ -275,20 +329,117 @@ export default function SourceProvidersPage(): React.JSX.Element {
         {tenantId && (
           <Card>
             <CardContent className="pt-6">
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                     Search
-                  </span>
+                  </Label>
+                  <div className="relative w-full">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                    <Input
+                      placeholder="Search source providers..."
+                      className="pl-10"
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className="relative w-full">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                  <Input
-                    placeholder="Search source providers..."
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                  />
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    Status
+                  </Label>
+                  <Select
+                    value={statusFilter}
+                    onValueChange={value =>
+                      setStatusFilter(value as 'all' | 'Active' | 'Inactive')
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    Package
+                  </Label>
+                  <Popover open={packageOpen} onOpenChange={setPackageOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={packageOpen}
+                        className="w-full justify-between"
+                      >
+                        {selectedPackageId
+                          ? packages.find(pkg => pkg._id === selectedPackageId)?.name ||
+                            'Selected package'
+                          : 'All packages'}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search package..." />
+                        <CommandList>
+                          {packagesLoading ? (
+                            <CommandEmpty>Loading packages...</CommandEmpty>
+                          ) : (
+                            <>
+                              <CommandEmpty>No packages found.</CommandEmpty>
+                              <CommandGroup>
+                                <CommandItem
+                                  value="all"
+                                  onSelect={() => {
+                                    setSelectedPackageId('')
+                                    setPackageOpen(false)
+                                  }}
+                                >
+                                  <Check
+                                    className={`mr-2 h-4 w-4 ${
+                                      selectedPackageId === '' ? 'opacity-100' : 'opacity-0'
+                                    }`}
+                                  />
+                                  All packages
+                                </CommandItem>
+                                {packages.map(pkg => (
+                                  <CommandItem
+                                    key={pkg._id}
+                                    value={pkg.name}
+                                    onSelect={() => {
+                                      setSelectedPackageId(pkg._id)
+                                      setPackageOpen(false)
+                                    }}
+                                  >
+                                    <Check
+                                      className={`mr-2 h-4 w-4 ${
+                                        selectedPackageId === pkg._id
+                                          ? 'opacity-100'
+                                          : 'opacity-0'
+                                      }`}
+                                    />
+                                    <div className="flex flex-col">
+                                      <span>{pkg.name}</span>
+                                      <span className="text-xs text-neutral-500">
+                                        {pkg.type} - ${pkg.price}
+                                      </span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </>
+                          )}
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             </CardContent>

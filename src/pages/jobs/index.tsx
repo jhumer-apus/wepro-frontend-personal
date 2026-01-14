@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React from 'react'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import {
   Card,
   CardContent,
@@ -60,6 +60,7 @@ import {
   Calculator,
   CreditCard,
   Send,
+  Trash2,
 } from 'lucide-react'
 import {
   Table,
@@ -69,6 +70,12 @@ import {
   TableRow,
   TableCell,
 } from '@/src/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/src/components/ui/dropdown-menu'
 // import { useJobStatuses } from "@/src/context/JobStatusContext";
 import {
   Popover,
@@ -2373,6 +2380,7 @@ const JobsIndex: React.FC = (): React.JSX.Element => {
   const [showEstimateModal, setShowEstimateModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [dataColumn, setDataColumn] = useState('revenue')
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   // Add state for invoice creation modal
   const [invoiceForm, setInvoiceForm] = useState({
@@ -2522,6 +2530,36 @@ const JobsIndex: React.FC = (): React.JSX.Element => {
       default:
         return 'bg-gray-500'
     }
+  }
+
+  const statusOptions = useMemo(
+    () => Array.from(new Set(jobs.map(job => job.status || 'Pending'))),
+    [jobs]
+  )
+
+  const priorityOptions = useMemo(
+    () => Array.from(new Set(jobs.map(job => job.priority || 'Medium'))),
+    [jobs]
+  )
+
+  const technicianOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          jobs
+            .map(job => job.assignedTechnician)
+            .filter((tech): tech is string => Boolean(tech))
+        )
+      ),
+    [jobs]
+  )
+
+  const handleClearFilters = () => {
+    setStatusFilter('all')
+    setPriorityFilter('all')
+    setDispatchTechnicianFilter('all')
+    setSearchQuery('')
+    setSortBy('priority')
   }
 
   const formatTime = (time: string) => {
@@ -3891,9 +3929,31 @@ const JobsIndex: React.FC = (): React.JSX.Element => {
                             </span>
                           </TableCell>
                           <TableCell>
-                            <Button size="icon" variant="ghost">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <MoreVertical className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem className="flex items-center gap-2">
+                                  <Eye className="h-4 w-4" />
+                                  View job
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="flex items-center gap-2">
+                                  <Edit className="h-4 w-4" />
+                                  Edit job
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="flex items-center gap-2 text-red-600 hover:text-red-700">
+                                  <Trash2 className="h-4 w-4" />
+                                  Delete job
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -4353,10 +4413,131 @@ const JobsIndex: React.FC = (): React.JSX.Element => {
           >
             List
           </Button>
-          <Button variant="outline">
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
+          <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline">
+                <Filter className="w-4 h-4 mr-2" />
+                Filter
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              className="w-80 space-y-4"
+              sideOffset={8}
+            >
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-600">
+                  Search
+                </label>
+                <Input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search jobs, clients, descriptions"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-600">
+                  Status
+                </label>
+                <Select
+                  value={statusFilter}
+                  onValueChange={value => setStatusFilter(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {statusOptions.map(status => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-600">
+                    Priority
+                  </label>
+                  <Select
+                    value={priorityFilter}
+                    onValueChange={value => setPriorityFilter(value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All priorities" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      {priorityOptions.map(priority => (
+                        <SelectItem key={priority} value={priority}>
+                          {priority}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-600">
+                    Technician
+                  </label>
+                  <Select
+                    value={dispatchTechnicianFilter}
+                    onValueChange={value => setDispatchTechnicianFilter(value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All technicians" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      {technicianOptions.map(tech => (
+                        <SelectItem key={tech} value={tech}>
+                          {tech}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-600">
+                  Sort by
+                </label>
+                <Select value={sortBy} onValueChange={value => setSortBy(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sort jobs" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="priority">Priority</SelectItem>
+                    <SelectItem value="time">Time</SelectItem>
+                    <SelectItem value="distance">Distance</SelectItem>
+                    <SelectItem value="revenue">Revenue</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleClearFilters()
+                    setFiltersOpen(false)
+                  }}
+                >
+                  Clear
+                </Button>
+                <Button size="sm" onClick={() => setFiltersOpen(false)}>
+                  Apply
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Dialog open={showNewJobDialog} onOpenChange={setShowNewJobDialog}>
             <DialogTrigger asChild>
               <Button className="wepro-button-gradient text-white shadow-lg hover:shadow-xl transition-all duration-200">
