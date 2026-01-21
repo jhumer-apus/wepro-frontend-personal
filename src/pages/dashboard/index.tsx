@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { JobStat } from '@/src/constants/interface/dashboard'
 import {
   jobsStats,
@@ -9,10 +9,6 @@ import {
   topTechnicians,
   aiInsights,
 } from '@/src/constants/dummyData/dashboard'
-import ActivityStatistics from '@/src/components/ActivityStatistics'
-import ActivityFilterCard, {
-  FilterState,
-} from '@/src/components/ActivityFilterCard'
 import { GoogleMap, Marker } from '@react-google-maps/api'
 import {
   Dialog,
@@ -32,6 +28,13 @@ import { Badge } from '@/src/components/ui/badge'
 import { Progress } from '@/src/components/ui/progress'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/src/components/ui/tabs'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/src/components/ui/select'
+import {
   TrendingUp,
   TrendingDown,
   DollarSign,
@@ -47,10 +50,8 @@ import {
   Target,
   Filter,
   CheckCircle,
-  BarChart3,
   PieChart,
   Star,
-  Activity,
   PhoneCall,
   PhoneIncoming,
   PhoneOutgoing,
@@ -58,9 +59,6 @@ import {
   Map,
   Navigation,
   Receipt,
-  TrendingUpDown,
-  SlidersHorizontal,
-  Move,
   Maximize2,
   ChevronDown,
   Sparkles,
@@ -80,6 +78,20 @@ type FranchiseDataset = {
   upcomingAppointments: Array<Record<string, string>>
   topTechnicians: Array<Record<string, string | number>>
 }
+
+const dateRangeOptions = [
+  { label: 'Today', value: 'today' },
+  { label: 'This Week (Sun - Today)', value: 'week-sun-today' },
+  { label: 'This Week (Mon - Today)', value: 'week-mon-today' },
+  { label: 'Last 7 Days', value: 'last-7-days' },
+  { label: 'Last Week (Sun - Sat)', value: 'last-week-sun-sat' },
+  { label: 'Last Week (Mon - Sun)', value: 'last-week-mon-sun' },
+  { label: 'Last Business Week (Mon - Fri)', value: 'last-business-week' },
+  { label: 'Last 14 Days', value: 'last-14-days' },
+  { label: 'This Month', value: 'this-month' },
+  { label: 'Last 30 Days', value: 'last-30-days' },
+  { label: 'Last Month', value: 'last-month' },
+]
 
 // Dummy franchise slices to drive the Franchise tabs
 const franchiseData: Record<FranchiseKey, FranchiseDataset> = {
@@ -110,28 +122,12 @@ const franchiseData: Record<FranchiseKey, FranchiseDataset> = {
         subtitle: 'Houston Metro',
       },
       {
-        name: 'Jobs Created',
-        value: '35',
-        change: '+7.1%',
-        changeType: 'positive' as const,
-        icon: Plus,
-        subtitle: 'This week',
-      },
-      {
         name: 'Completed Today',
         value: '7',
         change: '+2',
         changeType: 'positive' as const,
         icon: CheckCircle,
         subtitle: 'vs yesterday',
-      },
-      {
-        name: 'Online Bookings',
-        value: '14',
-        change: '+9.8%',
-        changeType: 'positive' as const,
-        icon: Calendar,
-        subtitle: 'This week',
       },
     ],
     revenueData: [
@@ -145,12 +141,6 @@ const franchiseData: Record<FranchiseKey, FranchiseDataset> = {
         name: 'Total Profit',
         value: '$24,910',
         change: '+8.2%',
-        changeType: 'positive' as const,
-      },
-      {
-        name: 'Profit Margin',
-        value: '30.2%',
-        change: '+1.4%',
         changeType: 'positive' as const,
       },
     ],
@@ -215,28 +205,12 @@ const franchiseData: Record<FranchiseKey, FranchiseDataset> = {
         subtitle: 'Dallas',
       },
       {
-        name: 'Jobs Created',
-        value: '24',
-        change: '+4.0%',
-        changeType: 'positive' as const,
-        icon: Plus,
-        subtitle: 'This week',
-      },
-      {
         name: 'Completed Today',
         value: '5',
         change: '+1',
         changeType: 'positive' as const,
         icon: CheckCircle,
         subtitle: 'vs yesterday',
-      },
-      {
-        name: 'Online Bookings',
-        value: '11',
-        change: '+6.2%',
-        changeType: 'positive' as const,
-        icon: Calendar,
-        subtitle: 'This week',
       },
     ],
     revenueData: [
@@ -250,12 +224,6 @@ const franchiseData: Record<FranchiseKey, FranchiseDataset> = {
         name: 'Total Profit',
         value: '$18,120',
         change: '+5.4%',
-        changeType: 'positive' as const,
-      },
-      {
-        name: 'Profit Margin',
-        value: '29.2%',
-        change: '+0.9%',
         changeType: 'positive' as const,
       },
     ],
@@ -310,14 +278,11 @@ const timeRangeData: Record<TimeRangeKey, Partial<FranchiseDataset>> = {
     jobsStats: [
       { name: 'Total Jobs', value: '412', change: '+9.8%', changeType: 'positive' as const, icon: Briefcase, subtitle: 'This week' },
       { name: 'New Clients', value: '68', change: '+6.2%', changeType: 'positive' as const, icon: PhoneIncoming, subtitle: 'This week' },
-      { name: 'Jobs Created', value: '112', change: '+10.5%', changeType: 'positive' as const, icon: Plus, subtitle: 'This week' },
       { name: 'Completed Today', value: '21', change: '+5', changeType: 'positive' as const, icon: CheckCircle, subtitle: 'vs yesterday' },
-      { name: 'Online Bookings', value: '54', change: '+12.4%', changeType: 'positive' as const, icon: Calendar, subtitle: 'This week' },
     ],
     revenueData: [
       { name: 'Total Revenue', value: '$284,610', change: '+14.2%', changeType: 'positive' as const },
       { name: 'Total Profit', value: '$81,430', change: '+11.9%', changeType: 'positive' as const },
-      { name: 'Profit Margin', value: '28.6%', change: '+1.1%', changeType: 'positive' as const },
     ],
     topSources: [
       { name: 'Same Day Garage', value: 42.1, count: 166, revenue: '$78,210' },
@@ -354,14 +319,11 @@ const timeRangeData: Record<TimeRangeKey, Partial<FranchiseDataset>> = {
     jobsStats: [
       { name: 'Total Jobs', value: '365', change: '+3.4%', changeType: 'positive' as const, icon: Briefcase, subtitle: 'Last week' },
       { name: 'New Clients', value: '54', change: '+2.1%', changeType: 'positive' as const, icon: PhoneIncoming, subtitle: 'Last week' },
-      { name: 'Jobs Created', value: '94', change: '+4.7%', changeType: 'positive' as const, icon: Plus, subtitle: 'Last week' },
       { name: 'Completed Today', value: '18', change: '+3', changeType: 'positive' as const, icon: CheckCircle, subtitle: 'vs prior day' },
-      { name: 'Online Bookings', value: '47', change: '+6.9%', changeType: 'positive' as const, icon: Calendar, subtitle: 'Last week' },
     ],
     revenueData: [
       { name: 'Total Revenue', value: '$241,320', change: '+9.3%', changeType: 'positive' as const },
       { name: 'Total Profit', value: '$69,870', change: '+7.8%', changeType: 'positive' as const },
-      { name: 'Profit Margin', value: '28.9%', change: '+0.6%', changeType: 'positive' as const },
     ],
     topSources: [
       { name: 'Same Day Garage', value: 40.2, count: 150, revenue: '$68,940' },
@@ -400,6 +362,92 @@ const franchiseCenters: Record<FranchiseKey, { lat: number; lng: number }> = {
   all: { lat: 29.7604, lng: -95.3698 }, // Houston
   franchise1: { lat: 29.7604, lng: -95.3698 }, // Houston Metro
   franchise2: { lat: 32.7767, lng: -96.797 }, // Dallas
+}
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+
+const addDays = (date: Date, days: number) => {
+  const d = new Date(date)
+  d.setDate(d.getDate() + days)
+  return d
+}
+
+const startOfWeekSun = (date: Date) => addDays(date, -date.getDay())
+const startOfWeekMon = (date: Date) => addDays(date, -((date.getDay() + 6) % 7))
+
+const dateRangeToDisplay = (value: string) => {
+  const today = new Date()
+  let start = today
+  let end = today
+
+  switch (value) {
+    case 'today':
+      start = today
+      end = today
+      break
+    case 'week-sun-today':
+      start = startOfWeekSun(today)
+      end = today
+      break
+    case 'week-mon-today':
+      start = startOfWeekMon(today)
+      end = today
+      break
+    case 'last-7-days':
+      start = addDays(today, -6)
+      end = today
+      break
+    case 'last-14-days':
+      start = addDays(today, -13)
+      end = today
+      break
+    case 'last-week-sun-sat': {
+      const thisWeekStart = startOfWeekSun(today)
+      start = addDays(thisWeekStart, -7)
+      end = addDays(start, 6)
+      break
+    }
+    case 'last-week-mon-sun': {
+      const thisWeekStart = startOfWeekMon(today)
+      start = addDays(thisWeekStart, -7)
+      end = addDays(start, 6)
+      break
+    }
+    case 'last-business-week': {
+      const thisWeekStart = startOfWeekMon(today)
+      start = addDays(thisWeekStart, -7)
+      end = addDays(start, 4)
+      break
+    }
+    case 'this-month':
+      start = new Date(today.getFullYear(), today.getMonth(), 1)
+      end = today
+      break
+    case 'last-30-days':
+      start = addDays(today, -29)
+      end = today
+      break
+    case 'last-month': {
+      const year = today.getFullYear()
+      const month = today.getMonth()
+      start = new Date(year, month - 1, 1)
+      end = new Date(year, month, 0)
+      break
+    }
+    default:
+      start = today
+      end = today
+      break
+  }
+
+  const startStr = formatDate(start)
+  const endStr = formatDate(end)
+  return startStr === endStr ? startStr : `${startStr} – ${endStr}`
 }
 
 const teamPhotos = [
@@ -452,23 +500,15 @@ const mapContainerStyle = { width: '100%', height: '320px' }
 
 const DashboardIndex: React.FC = (): React.JSX.Element => {
   // Filter state for shared filtering across sections
-  const [filters, setFilters] = useState<FilterState>({
-    dateRangeFilter: 'All',
-    customStartDate: '',
-    customEndDate: '',
-    filterUserId: 'all',
-    filterTenantId: 'all',
-  })
-  const [selectedFranchise, setSelectedFranchise] =
-    useState<FranchiseKey>('all')
-  const [selectedTimeRange, setSelectedTimeRange] =
-    useState<TimeRangeKey>('today')
+  const selectedFranchise: FranchiseKey = 'all'
+  const selectedTimeRange: TimeRangeKey = 'today'
+  const [dispatcherType, setDispatcherType] = useState('all')
+  const [selectedDateRange, setSelectedDateRange] = useState('today')
+  const currentDateRangeLabel = dateRangeToDisplay(selectedDateRange)
   const [markerBuffer, setMarkerBuffer] = useState(false)
   const [photoIcons, setPhotoIcons] = useState<(google.maps.Icon | null)[]>([])
   const [showInvoicesModal, setShowInvoicesModal] = useState(false)
   const [invoicePage, setInvoicePage] = useState(1)
-  const [showCallsModal, setShowCallsModal] = useState(false)
-  const [callPage, setCallPage] = useState(1)
 
   const allInvoices = [
     { id: '#INV-2301', customer: 'Johnson Electronics', amount: '$1,245', status: 'Overdue', due: 'Mar 12' },
@@ -481,14 +521,11 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
     { id: '#INV-2308', customer: 'Clearwater Pools', amount: '$890', status: 'Open', due: 'Mar 25' },
     { id: '#INV-2309', customer: 'Northside Retail', amount: '$1,540', status: 'Overdue', due: 'Mar 10' },
   ]
-  const callAnalyticsData = [
-    { flow: 'In House Numbers', calls: 142, answered: 128, missed: 14, conversion: '72%', trend: '+8.5%' },
-    { flow: 'Main Call Flow', calls: 89, answered: 76, missed: 13, conversion: '68%', trend: '+12.3%' },
-    { flow: 'Smart Route Back', calls: 34, answered: 32, missed: 2, conversion: '85%', trend: '+5.2%' },
-    { flow: 'After Hours IVR', calls: 51, answered: 29, missed: 22, conversion: '38%', trend: '-2.1%' },
-    { flow: 'Weekend Queue', calls: 47, answered: 35, missed: 12, conversion: '61%', trend: '+3.4%' },
-    { flow: 'Spanish Line', calls: 23, answered: 21, missed: 2, conversion: '74%', trend: '+4.0%' },
-    { flow: 'VIP Priority', calls: 12, answered: 12, missed: 0, conversion: '91%', trend: '+6.7%' },
+  const serviceAreas = [
+    { name: 'Houston Metro', jobs: 126, revenue: '$58,200', sla: '92% on-time', trend: '+4.3%' },
+    { name: 'Dallas Urban', jobs: 98, revenue: '$43,110', sla: '89% on-time', trend: '+3.1%' },
+    { name: 'Suburban Ring', jobs: 74, revenue: '$31,480', sla: '94% on-time', trend: '+2.4%' },
+    { name: 'Emergency Zone', jobs: 28, revenue: '$14,920', sla: '88% on-time', trend: '+6.8%' },
   ]
   const invoicePageSize = 5
   const invoicePageCount = Math.ceil(allInvoices.length / invoicePageSize)
@@ -496,35 +533,13 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
     (invoicePage - 1) * invoicePageSize,
     invoicePage * invoicePageSize
   )
-  const callPageSize = 5
-  const callPageCount = Math.ceil(callAnalyticsData.length / callPageSize)
-  const paginatedCalls = callAnalyticsData.slice(
-    (callPage - 1) * callPageSize,
-    callPage * callPageSize
-  )
 
   // Handle filter changes
-  const handleFilterChange = useCallback((newFilters: FilterState) => {
-    setFilters(newFilters)
-  }, [])
-
-  const handleFranchiseChange = useCallback((value: string) => {
-    const key = (value as FranchiseKey) || 'all'
-    setSelectedFranchise(key)
-    setFilters(prev => ({ ...prev, filterTenantId: key }))
-  }, [])
-
-  const handleTimeRangeChange = useCallback((value: string) => {
-    const key = (value as TimeRangeKey) || 'today'
-    setSelectedTimeRange(key)
-    setFilters(prev => ({ ...prev, dateRangeFilter: key }))
-  }, [])
-
   useEffect(() => {
     // allow Google markers to animate after map loads
     const timer = setTimeout(() => setMarkerBuffer(true), 500)
     return () => clearTimeout(timer)
-  }, [selectedFranchise, selectedTimeRange])
+  }, [])
 
   // Preload round photo icons as canvas-based data URLs to avoid CORS/layout issues
   useEffect(() => {
@@ -630,103 +645,69 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="overview" className="flex-1 sm:flex-none">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="flex-1 sm:flex-none">
-              Activity Statistics
-            </TabsTrigger>
-            <TabsTrigger value="assistant" className="flex-1 sm:flex-none">
-              WePro AI Assistant
-            </TabsTrigger>
-          </TabsList>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            Switch tabs to focus on high-level metrics or deep activity trends.
-          </p>
-        </div>
-
         <TabsContent value="overview" className="space-y-6">
           {/* Global Controls */}
           <Card className="border-0 shadow-lg bg-gradient-to-r from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-800">
             <CardContent className="p-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex flex-wrap items-center gap-6">
-                  {/* Franchise Filter */}
+                  {/* Dispatcher Type */}
                   <div className="flex items-center space-x-3">
                     <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-                      Franchise:
+                      Dispatcher Type:
                     </span>
-                    <Tabs
-                      value={selectedFranchise}
-                      onValueChange={handleFranchiseChange}
-                      className="w-fit"
+                    <Select
+                      value={dispatcherType}
+                    onValueChange={value => {
+                      setDispatcherType(value)
+                    }}
                     >
-                      <TabsList className="h-9 bg-white dark:bg-neutral-800 shadow-sm">
-                        <TabsTrigger value="all" className="text-sm px-4">
-                          All Locations
-                        </TabsTrigger>
-                        <TabsTrigger value="franchise1" className="text-sm px-4">
-                          Houston Metro
-                        </TabsTrigger>
-                        <TabsTrigger value="franchise2" className="text-sm px-4">
-                          Dallas
-                        </TabsTrigger>
-                      </TabsList>
-                    </Tabs>
+                      <SelectTrigger className="w-40 h-9">
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  {/* Time Range Filter */}
+                  {/* Date Range */}
                   <div className="flex items-center space-x-3">
                     <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-                      Time Range:
+                      Date Range:
                     </span>
-                    <Tabs
-                      value={selectedTimeRange}
-                      onValueChange={handleTimeRangeChange}
-                      className="w-fit"
+                    <Select
+                      value={selectedDateRange}
+                    onValueChange={value => {
+                      setSelectedDateRange(value)
+                    }}
                     >
-                      <TabsList className="h-9 bg-white dark:bg-neutral-800 shadow-sm">
-                        <TabsTrigger value="today" className="text-sm px-4">
-                          Today
-                        </TabsTrigger>
-                        <TabsTrigger value="week" className="text-sm px-4">
-                          This Week
-                        </TabsTrigger>
-                        <TabsTrigger value="lastweek" className="text-sm px-4">
-                          Last Week
-                        </TabsTrigger>
-                      </TabsList>
-                    </Tabs>
+                      <SelectTrigger className="w-56 h-9">
+                        <SelectValue placeholder="Today" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {dateRangeOptions.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-
-                {/* Dashboard Controls */}
-                <div className="flex items-center space-x-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shadow-sm hover:shadow-md transition-all duration-200"
-                  >
-                    <Move className="w-4 h-4 mr-2" />
-                    Customize
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shadow-sm hover:shadow-md transition-all duration-200"
-                  >
-                    <SlidersHorizontal className="w-4 h-4 mr-2" />
-                    Settings
-                  </Button>
+                <div className="flex items-center text-sm font-semibold text-neutral-700 dark:text-neutral-200 mt-2">
+                  <Calendar className="w-4 h-4 mr-2 text-neutral-600 dark:text-neutral-300" />
+                  <span className="mr-1">Coverage:</span>
+                  <span className="text-neutral-900 dark:text-neutral-100">
+                    {currentDateRangeLabel}
+                  </span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Jobs Summary */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 lg:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 lg:gap-6">
             {selectedData.jobsStats.map((stat, index) => {
               const Icon = stat.icon as React.ComponentType<{ className?: string }>
               return (
@@ -849,7 +830,7 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <div className="p-2 bg-gradient-to-br from-purple-500 to-violet-500 rounded-lg mr-3">
-                    <BarChart3 className="w-5 h-5 text-white" />
+                    <PieChart className="w-5 h-5 text-white" />
                   </div>
                   Daily Sales
                 </CardTitle>
@@ -1202,163 +1183,6 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
               </CardContent>
             </Card>
 
-            {/* Jobs by Status Chart */}
-            <Card className="lg:col-span-6 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-lg mr-3">
-                      <PieChart className="w-5 h-5 text-white" />
-                    </div>
-                    Jobs by Status
-                  </div>
-                  <Tabs defaultValue="week" className="w-fit">
-                    <TabsList className="h-8">
-                      <TabsTrigger value="week" className="text-xs">
-                        This Week
-                      </TabsTrigger>
-                      <TabsTrigger value="month" className="text-xs">
-                        This Month
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    {
-                      name: 'Done Jobs',
-                      value: 189,
-                      percentage: 76.5,
-                      color: 'bg-green-500',
-                    },
-                    {
-                      name: 'Open Jobs',
-                      value: 47,
-                      percentage: 19,
-                      color: 'bg-blue-500',
-                    },
-                    {
-                      name: 'Canceled Jobs',
-                      value: 11,
-                      percentage: 4.5,
-                      color: 'bg-red-500',
-                    },
-                  ].map(status => (
-                    <div
-                      key={status.name}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div
-                          className={`w-4 h-4 rounded-full ${status.color}`}
-                        ></div>
-                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                          {status.name}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                          {status.value}
-                        </span>
-                        <div className="text-xs text-neutral-500">
-                          {status.percentage}%
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity Feed */}
-            <Card className="lg:col-span-6 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg mr-3">
-                    <Activity className="w-5 h-5 text-white" />
-                  </div>
-                  Recent Activity
-                  <div className="ml-3 flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-neutral-500">Live</span>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    {
-                      user: 'Mike R.',
-                      action: 'Completed job #4521',
-                      time: '5 mins ago',
-                      type: 'completion',
-                      details: 'Garage Door Installation - $450',
-                    },
-                    {
-                      user: 'Lisa M.',
-                      action: 'Started job #4522',
-                      time: '12 mins ago',
-                      type: 'start',
-                      details: 'HVAC Maintenance - $280',
-                    },
-                    {
-                      user: 'System',
-                      action: 'New appointment scheduled',
-                      time: '18 mins ago',
-                      type: 'system',
-                      details: 'Auto-scheduled via AI',
-                    },
-                    {
-                      user: 'Alex K.',
-                      action: 'Updated customer notes',
-                      time: '25 mins ago',
-                      type: 'update',
-                      details: 'Added follow-up requirements',
-                    },
-                  ].map((activity, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-4 p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800"
-                    >
-                      <div className="relative">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-neutral-400 to-neutral-600 text-white text-xs font-bold shadow-md">
-                          {activity.user
-                            .split(' ')
-                            .map(n => n[0])
-                            .join('')}
-                        </div>
-                        <div
-                          className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
-                            activity.type === 'completion'
-                              ? 'bg-emerald-500'
-                              : activity.type === 'start'
-                                ? 'bg-blue-500'
-                                : activity.type === 'system'
-                                  ? 'bg-purple-500'
-                                  : 'bg-yellow-500'
-                          }`}
-                        ></div>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-neutral-900 dark:text-neutral-100">
-                          <span className="font-medium">{activity.user}</span>{' '}
-                          {activity.action}
-                        </p>
-                        <p className="text-xs text-neutral-500 mb-1">
-                          {activity.time}
-                        </p>
-                        <p className="text-xs text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-700 rounded px-2 py-1 inline-block">
-                          {activity.details}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Top Technicians */}
             <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader>
@@ -1371,7 +1195,7 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-              {selectedData.topTechnicians.map((tech, index) => (
+                  {selectedData.topTechnicians.map((tech, index) => (
                     <div
                       key={tech.name}
                       className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800"
@@ -1418,194 +1242,8 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
               </CardContent>
             </Card>
 
-            {/* Invoices Panel */}
-            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <div className="p-2 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg mr-3">
-                    <Receipt className="w-5 h-5 text-white" />
-                  </div>
-                  Invoices
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  {
-                    name: 'Outstanding Invoices',
-                    value: 23,
-                    amount: '$18,450',
-                    color: 'bg-yellow-500',
-                  },
-                  {
-                    name: 'Overdue (30+ days)',
-                    value: 5,
-                    amount: '$3,240',
-                    color: 'bg-red-500',
-                  },
-                  {
-                    name: 'Paid This Week',
-                    value: 18,
-                    amount: '$14,280',
-                    color: 'bg-green-500',
-                  },
-                ].map(stat => (
-                  <div
-                    key={stat.name}
-                    className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-4 h-4 rounded-full ${stat.color}`}></div>
-                      <div>
-                        <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                          {stat.name}
-                        </p>
-                        <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                          {stat.value} invoices
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                        {stat.amount}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-            <Button
-              variant="outline"
-              className="w-full mt-4"
-              onClick={() => setShowInvoicesModal(true)}
-            >
-                  <FileText className="w-4 h-4 mr-2" />
-                  View All Invoices
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Top Call Flows */}
-            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <div className="p-2 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg mr-3">
-                    <TrendingUpDown className="w-5 h-5 text-white" />
-                  </div>
-                  Top Call Flows
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  {
-                    name: 'In House Numbers',
-                    calls: 142,
-                    trend: '+8.5%',
-                    conversion: '72%',
-                  },
-                  {
-                    name: 'Main Call Flow',
-                    calls: 89,
-                    trend: '+12.3%',
-                    conversion: '68%',
-                  },
-                  {
-                    name: 'Smart Route Back',
-                    calls: 34,
-                    trend: '+5.2%',
-                    conversion: '85%',
-                  },
-                ].map(flow => (
-                  <div
-                    key={flow.name}
-                    className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                        {flow.name}
-                      </p>
-                      <p className="text-xs text-neutral-500">
-                        {flow.calls} calls • {flow.conversion} conversion
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <TrendingUp className="w-3 h-3 text-emerald-500" />
-                      <span className="text-sm font-medium text-emerald-600">
-                        {flow.trend}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-            <Button
-              variant="outline"
-              className="w-full mt-4"
-              onClick={() => setShowCallsModal(true)}
-            >
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  View Call Analytics
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Leads Funnel */}
-            <Card className="lg:col-span-6 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <div className="p-2 bg-gradient-to-br from-violet-500 to-purple-500 rounded-lg mr-3">
-                    <Target className="w-5 h-5 text-white" />
-                  </div>
-                  Leads Funnel
-                  <Badge variant="secondary" className="ml-3">
-                    68.5% conversion
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  {
-                    stage: 'New Leads',
-                    count: 156,
-                    percentage: 100,
-                    conversion: '100%',
-                  },
-                  {
-                    stage: 'Contacted',
-                    count: 124,
-                    percentage: 79.5,
-                    conversion: '79.5%',
-                  },
-                  {
-                    stage: 'Qualified',
-                    count: 89,
-                    percentage: 57.1,
-                    conversion: '71.8%',
-                  },
-                  {
-                    stage: 'Converted',
-                    count: 61,
-                    percentage: 39.1,
-                    conversion: '68.5%',
-                  },
-                ].map(stage => (
-                  <div key={stage.stage} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                        {stage.stage}
-                      </span>
-                      <div className="text-right">
-                        <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                          {stage.count}
-                        </span>
-                        <span className="text-xs text-emerald-600 ml-2 font-semibold">
-                          {stage.conversion}
-                        </span>
-                      </div>
-                    </div>
-                    <Progress value={stage.percentage} className="h-3" />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
             {/* Top Job Types */}
-            <Card className="lg:col-span-6 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg mr-3">
@@ -1661,251 +1299,280 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
               </CardContent>
             </Card>
 
-            {/* Recent Calls */}
-            <Card className="lg:col-span-6 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            {/* Jobs by Status Chart */}
+            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg mr-3">
-                    <PhoneCall className="w-5 h-5 text-white" />
+                  <div className="p-2 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-lg mr-3">
+                    <PieChart className="w-5 h-5 text-white" />
                   </div>
-                  Recent Calls
-                  <Badge variant="secondary" className="ml-3">
-                    4 today
-                  </Badge>
+                  Jobs by Status
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {[
                     {
-                      number: '(555) 123-4567',
-                      duration: '4:32',
-                      type: 'incoming',
-                      status: 'answered',
-                      time: '10:15 AM',
-                      customer: 'Sarah Johnson',
-                      outcome: 'Appointment booked',
+                      name: 'Done Jobs',
+                      value: 189,
+                      percentage: 76.5,
+                      color: 'bg-green-500',
                     },
                     {
-                      number: '(555) 987-6543',
-                      duration: '2:18',
-                      type: 'outgoing',
-                      status: 'completed',
-                      time: '9:45 AM',
-                      customer: 'Mike Davis',
-                      outcome: 'Follow-up call',
+                      name: 'Open Jobs',
+                      value: 47,
+                      percentage: 19,
+                      color: 'bg-blue-500',
                     },
                     {
-                      number: '(555) 456-7890',
-                      duration: '0:00',
-                      type: 'incoming',
-                      status: 'missed',
-                      time: '9:20 AM',
-                      customer: 'Unknown',
-                      outcome: 'Callback needed',
+                      name: 'Canceled Jobs',
+                      value: 11,
+                      percentage: 4.5,
+                      color: 'bg-red-500',
                     },
-                    {
-                      number: '(555) 234-5678',
-                      duration: '6:45',
-                      type: 'incoming',
-                      status: 'answered',
-                      time: '8:55 AM',
-                      customer: 'Lisa Chen',
-                      outcome: 'Quote provided',
-                    },
-                  ].map((call, index) => (
+                  ].map(status => (
                     <div
-                      key={index}
-                      className="flex items-center justify-between p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800"
+                      key={status.name}
+                      className="flex items-center justify-between"
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="p-2 rounded-lg bg-neutral-100 dark:bg-neutral-700">
-                          {call.type === 'incoming' ? (
-                            <PhoneIncoming
-                              className={`w-4 h-4 ${call.status === 'missed' ? 'text-red-500' : 'text-emerald-500'}`}
-                            />
-                          ) : (
-                            <PhoneOutgoing className="w-4 h-4 text-blue-500" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                            {call.customer || call.number}
-                          </p>
-                          <p className="text-xs text-neutral-500">
-                            {call.time} • {call.duration} • {call.outcome}
-                          </p>
+                        <div
+                          className={`w-4 h-4 rounded-full ${status.color}`}
+                        ></div>
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                          {status.name}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                          {status.value}
+                        </span>
+                        <div className="text-xs text-neutral-500">
+                          {status.percentage}%
                         </div>
                       </div>
-                      <Badge
-                        variant={
-                          call.status === 'missed'
-                            ? 'destructive'
-                            : call.status === 'answered'
-                              ? 'default'
-                              : 'secondary'
-                        }
-                        className="text-xs"
-                      >
-                        {call.status}
-                      </Badge>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Payouts Panel */}
-            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 border-l-green-500">
+            {/* Invoices Panel */}
+            <Card className="lg:col-span-6 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <div className="p-2 bg-gradient-to-br from-emerald-500 to-green-500 rounded-lg mr-3">
-                    <CreditCard className="w-5 h-5 text-white" />
+                  <div className="p-2 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg mr-3">
+                    <Receipt className="w-5 h-5 text-white" />
                   </div>
-                  Payouts
-                  <div className="ml-auto">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  </div>
+                  Invoices
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="text-center p-6 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg">
-                  <div className="text-3xl font-bold mb-1">$12,847</div>
-                  <div className="text-emerald-100">Total Balance</div>
-                  <div className="flex items-center justify-center mt-2 text-emerald-200">
-                    <TrendingUp className="w-4 h-4 mr-1" />
-                    <span className="text-sm">+$2,340 this week</span>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800">
-                    <div className="flex items-center space-x-2">
-                      <Zap className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                        Available Instantly
-                      </span>
+                {[
+                  {
+                    name: 'Outstanding Invoices',
+                    value: 23,
+                    amount: '$18,450',
+                    color: 'bg-yellow-500',
+                  },
+                  {
+                    name: 'Overdue (30+ days)',
+                    value: 5,
+                    amount: '$3,240',
+                    color: 'bg-red-500',
+                  },
+                  {
+                    name: 'Paid This Week',
+                    value: 18,
+                    amount: '$14,280',
+                    color: 'bg-green-500',
+                  },
+                ].map(stat => (
+                  <div
+                    key={stat.name}
+                    className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-4 h-4 rounded-full ${stat.color}`}></div>
+                      <div>
+                        <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                          {stat.name}
+                        </p>
+                        <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                          {stat.value} invoices
+                        </p>
+                      </div>
                     </div>
-                    <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-                      $8,420
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800">
-                    <div className="flex items-center space-x-2">
-                      <Timer className="w-4 h-4 text-yellow-500" />
-                      <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                        Pending (2-3 days)
-                      </span>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                        {stat.amount}
+                      </p>
                     </div>
-                    <span className="font-semibold text-neutral-900 dark:text-neutral-100">
-                      $4,427
-                    </span>
                   </div>
-                </div>
-                <Button className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg">
-                  <Zap className="w-4 h-4 mr-2" />
-                  Get Paid Now
+                ))}
+                <Button
+                  variant="outline"
+                  className="w-full mt-4"
+                  onClick={() => setShowInvoicesModal(true)}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  View All Invoices
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Unpaid Jobs */}
-            <Card className="lg:col-span-8 border-0 shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 border-l-red-500">
+            {/* Service Areas */}
+            <Card className="lg:col-span-6 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader>
+                <CardTitle className="flex items-center">
+                  <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg mr-3">
+                    <Map className="w-5 h-5 text-white" />
+                  </div>
+                  Service Areas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {serviceAreas.map(area => (
+                  <div
+                    key={area.name}
+                    className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                        {area.name}
+                      </p>
+                      <p className="text-xs text-neutral-500">
+                        {area.jobs} jobs • {area.revenue}
+                      </p>
+                      <div className="flex items-center space-x-2 text-xs text-neutral-500 mt-1">
+                        <Badge variant="outline">{area.sla}</Badge>
+                        <span className="flex items-center text-emerald-600 font-medium">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          {area.trend}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                        Coverage
+                      </p>
+                      <p className="text-xs text-neutral-500">Route ready</p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Payouts Panel */}
+            <Card className="lg:col-span-12 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="pb-4">
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <div className="p-2 bg-gradient-to-br from-red-500 to-pink-500 rounded-lg mr-3">
-                      <AlertCircle className="w-5 h-5 text-white" />
+                    <div className="p-2 bg-gradient-to-br from-emerald-500 to-green-500 rounded-lg mr-3">
+                      <CreditCard className="w-5 h-5 text-white" />
                     </div>
-                    Unpaid Jobs
-                    <Badge variant="destructive" className="ml-3">
-                      3 overdue
-                    </Badge>
+                    <div>
+                      <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                        Payouts
+                      </p>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                        Funds movement across accounts
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                      Active
+                    </span>
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {[
-                    {
-                      customer: 'Johnson Electronics',
-                      amount: '$1,245',
-                      daysOverdue: 15,
-                      job: '#4518',
-                      priority: 'high',
-                    },
-                    {
-                      customer: 'Metro Apartments',
-                      amount: '$890',
-                      daysOverdue: 8,
-                      job: '#4512',
-                      priority: 'medium',
-                    },
-                    {
-                      customer: 'Smith Residence',
-                      amount: '$425',
-                      daysOverdue: 3,
-                      job: '#4520',
-                      priority: 'low',
-                    },
-                  ].map((job, index) => (
-                    <div
-                      key={index}
-                      className="p-4 rounded-xl border-2 border-red-200 dark:border-red-800 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950 dark:to-pink-950"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 text-sm">
-                          {job.customer}
-                        </h4>
-                        <div className="flex items-center space-x-2">
-                          <Badge
-                            variant={
-                              job.priority === 'high'
-                                ? 'destructive'
-                                : job.priority === 'medium'
-                                  ? 'secondary'
-                                  : 'outline'
-                            }
-                            className="text-xs"
-                          >
-                            {job.priority}
-                          </Badge>
-                          <Badge variant="destructive" className="text-xs">
-                            {job.daysOverdue}d
-                          </Badge>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div className="lg:col-span-2 p-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div>
+                        <p className="text-sm text-emerald-100">Total Balance</p>
+                        <p className="text-4xl font-bold">$12,847</p>
+                        <div className="flex items-center mt-2 text-emerald-100">
+                          <TrendingUp className="w-4 h-4 mr-1" />
+                          <span className="text-sm">+$2,340 this week</span>
                         </div>
                       </div>
-                      <p className="text-xl font-bold text-red-600 dark:text-red-400 mb-1">
-                        {job.amount}
-                      </p>
-                      <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-3">
-                        Job {job.job}
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full text-xs border-red-300 hover:bg-red-50"
-                      >
-                        <Phone className="w-3 h-3 mr-1" />
-                        Contact Customer
-                      </Button>
+                      <div className="text-right">
+                        <p className="text-xs uppercase text-emerald-100">Next payout</p>
+                        <p className="text-xl font-semibold">Tomorrow, 9:00 AM</p>
+                        <p className="text-xs text-emerald-100 mt-1">ACH • Ending 2841</p>
+                      </div>
                     </div>
-                  ))}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                      {[
+                        { label: 'Available Instantly', value: '$8,420', icon: Zap, tone: 'from-white/20 to-white/10' },
+                        { label: 'Pending (2-3 days)', value: '$4,427', icon: Timer, tone: 'from-white/15 to-white/5' },
+                        { label: 'Completed This Week', value: '$18,910', icon: CheckCircle, tone: 'from-white/10 to-white/0' },
+                      ].map(item => {
+                        const Icon = item.icon
+                        return (
+                          <div
+                            key={item.label}
+                            className="p-3 rounded-xl bg-white/10 text-white flex items-center justify-between shadow-sm"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className={`p-2 rounded-lg bg-gradient-to-br ${item.tone}`}>
+                                <Icon className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <p className="text-xs text-emerald-100">{item.label}</p>
+                                <p className="text-sm font-semibold">{item.value}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                          Instant transfer
+                        </p>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                          Move funds to your bank in minutes
+                        </p>
+                      </div>
+                      <Badge variant="secondary">0.5% fee</Badge>
+                    </div>
+                    <Button className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg">
+                      <Zap className="w-4 h-4 mr-2" />
+                      Get Paid Now
+                    </Button>
+                    <div className="space-y-3">
+                      {[
+                        { label: 'Last instant payout', value: '$1,120 • Today 10:15 AM' },
+                        { label: 'ACH payouts queued', value: '2 • Expected by Friday' },
+                      ].map(item => (
+                        <div
+                          key={item.label}
+                          className="flex items-center justify-between p-3 rounded-lg bg-white dark:bg-neutral-800"
+                        >
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                            {item.label}
+                          </p>
+                          <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                            {item.value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
+
           </div>
-        </TabsContent>
-
-        <TabsContent value="activity" className="space-y-6">
-          {/* Global Filters */}
-          <ActivityFilterCard
-            onFilterChange={handleFilterChange}
-            initialFilters={filters}
-            showTitle={true}
-          />
-
-          {/* Activity Statistics Section */}
-          <ActivityStatistics filters={filters} />
         </TabsContent>
 
         <TabsContent value="assistant" className="space-y-6">
@@ -1995,7 +1662,7 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                 <div className="space-y-4">
                   <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
                     <h4 className="font-semibold text-white mb-4 flex items-center">
-                      <BarChart3 className="w-5 h-5 mr-2" />
+                      <PieChart className="w-5 h-5 mr-2" />
                       AI Performance Today
                     </h4>
                     <div className="space-y-4">
@@ -2137,74 +1804,6 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
         </DialogContent>
       </Dialog>
 
-      {/* Call Analytics Modal */}
-      <Dialog
-        open={showCallsModal}
-        onOpenChange={open => {
-          setShowCallsModal(open)
-          if (!open) setCallPage(1)
-        }}
-      >
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Call Analytics</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            {paginatedCalls.map(flow => (
-              <div
-                key={flow.flow}
-                className="flex items-center justify-between p-3 rounded-lg border border-neutral-200 dark:border-neutral-700"
-              >
-                <div>
-                  <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                    {flow.flow}
-                  </div>
-                  <div className="text-xs text-neutral-500">
-                    Conversion: {flow.conversion} • Trend: {flow.trend}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <div className="text-neutral-700 dark:text-neutral-200">
-                    Calls: <span className="font-semibold">{flow.calls}</span>
-                  </div>
-                  <div className="text-emerald-600 dark:text-emerald-400">
-                    Answered: <span className="font-semibold">{flow.answered}</span>
-                  </div>
-                  <div className="text-red-500">
-                    Missed: <span className="font-semibold">{flow.missed}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <DialogFooter className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="text-xs text-neutral-500">
-              Page {callPage} of {callPageCount}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={callPage <= 1}
-                onClick={() => setCallPage(p => Math.max(1, p - 1))}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={callPage >= callPageCount}
-                onClick={() => setCallPage(p => Math.min(callPageCount, p + 1))}
-              >
-                Next
-              </Button>
-              <Button variant="outline" onClick={() => setShowCallsModal(false)}>
-                Close
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

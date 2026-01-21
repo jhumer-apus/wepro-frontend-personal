@@ -2,9 +2,7 @@ import { JobStat } from '@/src/constants/interface/dashboard'
 import Lucide, {
   Briefcase,
   PhoneIncoming,
-  Plus,
   CheckCircle,
-  Calendar,
 } from 'lucide-react'
 
 export const jobsStats: JobStat[] = [
@@ -25,28 +23,12 @@ export const jobsStats: JobStat[] = [
     subtitle: 'This week',
   },
   {
-    name: 'Jobs Created',
-    value: '67',
-    change: '+12.3%',
-    changeType: 'positive' as const,
-    icon: Plus,
-    subtitle: 'This week',
-  },
-  {
     name: 'Completed Today',
     value: '12',
     change: '+4',
     changeType: 'positive' as const,
     icon: CheckCircle,
     subtitle: 'vs yesterday',
-  },
-  {
-    name: 'Online Bookings',
-    value: '28',
-    change: '+15.7%',
-    changeType: 'positive' as const,
-    icon: Calendar,
-    subtitle: 'This week',
   },
 ]
 
@@ -88,12 +70,6 @@ export const revenueData: Record<string, string | number>[] = [
     name: 'Total Profit',
     value: '$47,354',
     change: '+18.2%',
-    changeType: 'positive' as const,
-  },
-  {
-    name: 'Profit Margin',
-    value: '30.2%',
-    change: '+2.1%',
     changeType: 'positive' as const,
   },
 ]
