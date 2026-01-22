@@ -2380,7 +2380,41 @@ const JobsIndex: React.FC = (): React.JSX.Element => {
   const [showEstimateModal, setShowEstimateModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [dataColumn, setDataColumn] = useState('revenue')
-  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [showFiltersPanel, setShowFiltersPanel] = useState(false)
+  const showDataColumnOptions = [
+    'Sr No.',
+    'Job Id',
+    'Client Name',
+    'Company Name',
+    'Phone Number',
+    'Full Address',
+    'Industry',
+  ]
+  const topTagOptions = [
+    'Urgent',
+    'Follow Up',
+    'Warranty',
+    'Inspection',
+    'Service',
+    'Installation',
+  ]
+  const formatInputDate = (date: Date) => date.toISOString().split('T')[0]
+  const [showDataColumns, setShowDataColumns] = useState<string[]>(
+    showDataColumnOptions
+  )
+  const [dateRangePreset, setDateRangePreset] = useState<
+    'today' | 'last7' | 'last30' | 'custom'
+  >('today')
+  const [startDateFilter, setStartDateFilter] = useState(
+    formatInputDate(new Date())
+  )
+  const [endDateFilter, setEndDateFilter] = useState(formatInputDate(new Date()))
+  const [jobTypeFilterTop, setJobTypeFilterTop] = useState('all')
+  const [agentFilterTop, setAgentFilterTop] = useState('all')
+  const [selectedTagNote, setSelectedTagNote] = useState('none')
+  const [selectedTagFilter, setSelectedTagFilter] = useState('all')
+  const [tagBucket, setTagBucket] = useState<string[]>([])
+  const [bulkStatusSelection, setBulkStatusSelection] = useState('none')
 
   // Add state for invoice creation modal
   const [invoiceForm, setInvoiceForm] = useState({
@@ -2456,6 +2490,89 @@ const JobsIndex: React.FC = (): React.JSX.Element => {
     },
   ])
 
+  useEffect(() => {
+    if (dateRangePreset === 'custom') return
+    const today = new Date()
+    const end = new Date(today)
+    const start = new Date(today)
+
+    if (dateRangePreset === 'last7') {
+      start.setDate(today.getDate() - 6)
+    }
+    if (dateRangePreset === 'last30') {
+      start.setDate(today.getDate() - 29)
+    }
+
+    setStartDateFilter(formatInputDate(start))
+    setEndDateFilter(formatInputDate(end))
+  }, [dateRangePreset])
+
+  const handleToggleShowDataColumn = (column: string) => {
+    setShowDataColumns(prev =>
+      prev.includes(column)
+        ? prev.filter(item => item !== column)
+        : [...prev, column]
+    )
+  }
+
+  const tagBucketLower = useMemo(
+    () => tagBucket.map(tag => tag.toLowerCase()),
+    [tagBucket]
+  )
+
+  const filterDateRange = useMemo(
+    () => ({
+      start: startDateFilter ? new Date(`${startDateFilter}T00:00:00`) : null,
+      end: endDateFilter ? new Date(`${endDateFilter}T23:59:59`) : null,
+    }),
+    [startDateFilter, endDateFilter]
+  )
+
+  const jobTypeOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          jobs.map(job => job.jobType).filter((type): type is string => Boolean(type))
+        )
+      ),
+    [jobs]
+  )
+
+  const agentOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          jobs
+            .map(job => job.assignedTechnician)
+            .filter((agent): agent is string => Boolean(agent))
+        )
+      ),
+    [jobs]
+  )
+
+  const handleApplyTopFilters = () => {
+    if (
+      startDateFilter &&
+      endDateFilter &&
+      new Date(startDateFilter) > new Date(endDateFilter)
+    ) {
+      setEndDateFilter(startDateFilter)
+    }
+  }
+
+  const handleExportJobs = () => {
+    console.info('Export jobs', {
+      showDataColumns,
+      dateRangePreset,
+      startDateFilter,
+      endDateFilter,
+      jobTypeFilterTop,
+      agentFilterTop,
+      selectedTagFilter,
+      tagBucket,
+    })
+  }
+
   // Filter and sort jobs
   const filteredJobs = jobs
     .filter(job => {
@@ -2473,9 +2590,42 @@ const JobsIndex: React.FC = (): React.JSX.Element => {
         job.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.jobDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.id.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesJobType =
+        jobTypeFilterTop === 'all' ||
+        (job.jobType || '').toLowerCase() === jobTypeFilterTop.toLowerCase()
+      const matchesAgentTop =
+        agentFilterTop === 'all' ||
+        (job.assignedTechnician || '').toLowerCase() ===
+          agentFilterTop.toLowerCase()
+      const matchesTagFilter =
+        (selectedTagFilter === 'all' && tagBucketLower.length === 0) ||
+        (job.jobTags || []).some(tag => {
+          const normalized = (tag || '').toLowerCase()
+          return (
+            (selectedTagFilter !== 'all' &&
+              normalized === selectedTagFilter.toLowerCase()) ||
+            tagBucketLower.includes(normalized)
+          )
+        })
+      const jobDate =
+        job.startDate && !Number.isNaN(new Date(job.startDate).getTime())
+          ? new Date(job.startDate)
+          : null
+      const matchesDateRange =
+        !filterDateRange.start ||
+        !filterDateRange.end ||
+        !jobDate ||
+        (jobDate >= filterDateRange.start && jobDate <= filterDateRange.end)
 
       return (
-        matchesStatus && matchesPriority && matchesTechnician && matchesSearch
+        matchesStatus &&
+        matchesPriority &&
+        matchesTechnician &&
+        matchesSearch &&
+        matchesJobType &&
+        matchesAgentTop &&
+        matchesTagFilter &&
+        matchesDateRange
       )
     })
     .sort((a, b) => {
@@ -2560,6 +2710,15 @@ const JobsIndex: React.FC = (): React.JSX.Element => {
     setDispatchTechnicianFilter('all')
     setSearchQuery('')
     setSortBy('priority')
+    setJobTypeFilterTop('all')
+    setAgentFilterTop('all')
+    setSelectedTagFilter('all')
+    setSelectedTagNote('none')
+    setTagBucket([])
+    setBulkStatusSelection('none')
+    setDateRangePreset('today')
+    setStartDateFilter(formatInputDate(new Date()))
+    setEndDateFilter(formatInputDate(new Date()))
   }
 
   const formatTime = (time: string) => {
@@ -4390,12 +4549,12 @@ const JobsIndex: React.FC = (): React.JSX.Element => {
   // 5. In the payments section, use (payment.paymentType || 'Payment') and (payment.depositForJob || '')
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+          <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
             Dispatch Board
-          </h1>
+          </h2>
           <p className="text-neutral-600 dark:text-neutral-400 mt-1">
             Real-time job management and technician coordination
           </p>
@@ -4413,138 +4572,11 @@ const JobsIndex: React.FC = (): React.JSX.Element => {
           >
             List
           </Button>
-          <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline">
-                <Filter className="w-4 h-4 mr-2" />
-                Filter
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              align="end"
-              className="w-80 space-y-4"
-              sideOffset={8}
-            >
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-gray-600">
-                  Search
-                </label>
-                <Input
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search jobs, clients, descriptions"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-gray-600">
-                  Status
-                </label>
-                <Select
-                  value={statusFilter}
-                  onValueChange={value => setStatusFilter(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    {statusOptions.map(status => (
-                      <SelectItem key={status} value={status}>
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-gray-600">
-                    Priority
-                  </label>
-                  <Select
-                    value={priorityFilter}
-                    onValueChange={value => setPriorityFilter(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All priorities" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      {priorityOptions.map(priority => (
-                        <SelectItem key={priority} value={priority}>
-                          {priority}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-gray-600">
-                    Technician
-                  </label>
-                  <Select
-                    value={dispatchTechnicianFilter}
-                    onValueChange={value => setDispatchTechnicianFilter(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All technicians" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      {technicianOptions.map(tech => (
-                        <SelectItem key={tech} value={tech}>
-                          {tech}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-gray-600">
-                  Sort by
-                </label>
-                <Select value={sortBy} onValueChange={value => setSortBy(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sort jobs" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="priority">Priority</SelectItem>
-                    <SelectItem value="time">Time</SelectItem>
-                    <SelectItem value="distance">Distance</SelectItem>
-                    <SelectItem value="revenue">Revenue</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    handleClearFilters()
-                    setFiltersOpen(false)
-                  }}
-                >
-                  Clear
-                </Button>
-                <Button size="sm" onClick={() => setFiltersOpen(false)}>
-                  Apply
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <Button variant="outline" onClick={() => setShowFiltersPanel(v => !v)}>
+            <Filter className="w-4 h-4 mr-2" />
+            {showFiltersPanel ? 'Hide Filters' : 'Filter'}
+          </Button>
           <Dialog open={showNewJobDialog} onOpenChange={setShowNewJobDialog}>
-            <DialogTrigger asChild>
-              <Button className="wepro-button-gradient text-white shadow-lg hover:shadow-xl transition-all duration-200">
-                <Plus className="w-4 h-4 mr-2" />
-                Create New Job
-              </Button>
-            </DialogTrigger>
             <DialogContent
               className={`${viewMode === 'single' ? 'sm:max-w-6xl' : 'sm:max-w-4xl'} max-h-[90vh] overflow-y-auto`}
             >
@@ -4757,6 +4789,300 @@ const JobsIndex: React.FC = (): React.JSX.Element => {
               </div>
             </DialogContent>
           </Dialog>
+        </div>
+      </div>
+
+      <div
+        className={`rounded-xl shadow-sm overflow-hidden transition-[max-height,opacity,transform,padding,margin,border-width] duration-300 ease-in-out ${
+          showFiltersPanel
+            ? 'bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-4 space-y-4 opacity-100 scale-100 max-h-[3200px] mt-0 pointer-events-auto'
+            : 'bg-transparent border-0 p-0 space-y-0 opacity-0 scale-95 max-h-0 -mt-2 pointer-events-none'
+        }`}
+        aria-hidden={!showFiltersPanel}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+              Jobs
+            </h1>
+            <Badge variant="outline" className="text-xs">
+              Dispatch
+            </Badge>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:text-white"
+            >
+              Add Tag
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="bg-blue-500 text-white border-blue-500 hover:bg-blue-600 hover:text-white"
+            >
+              Add Tag Notes
+            </Button>
+            <Select value={selectedTagNote} onValueChange={setSelectedTagNote}>
+              <SelectTrigger className="w-36 h-9">
+                <SelectValue placeholder="Select Tag Note" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="customer-notes">Customer Notes</SelectItem>
+                <SelectItem value="special-access">Special Access</SelectItem>
+                <SelectItem value="payment-issue">Payment Issue</SelectItem>
+                <SelectItem value="safety">Safety</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={selectedTagFilter}
+              onValueChange={value => setSelectedTagFilter(value)}
+            >
+              <SelectTrigger className="w-32 h-9">
+                <SelectValue placeholder="Select Tags" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tags</SelectItem>
+                {topTagOptions.map(tag => (
+                  <SelectItem key={tag} value={tag.toLowerCase()}>
+                    {tag}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-w-[160px] justify-between"
+                >
+                  <span className="truncate">
+                    {tagBucket.length ? tagBucket.join(', ') : 'Nothing selected'}
+                  </span>
+                  <span className="text-xs text-neutral-500">▼</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-60 p-3 space-y-2">
+                <p className="text-xs font-semibold text-neutral-600">
+                  Select tags
+                </p>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {topTagOptions.map(tag => (
+                    <label
+                      key={tag}
+                      className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-200"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={tagBucket.includes(tag)}
+                        onChange={() =>
+                          setTagBucket(prev =>
+                            prev.includes(tag)
+                              ? prev.filter(item => item !== tag)
+                              : [...prev, tag]
+                          )
+                        }
+                        className="h-4 w-4 rounded border-neutral-300 text-[#53a533] focus:ring-[#53a533]"
+                      />
+                      <span>{tag}</span>
+                    </label>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-3">
+          <div className="xl:col-span-5 space-y-1">
+            <Label className="text-xs text-neutral-600 dark:text-neutral-300">
+              Show Data
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-between truncate"
+                >
+                  <span className="truncate">
+                    {showDataColumns.length
+                      ? showDataColumns.join(', ')
+                      : 'Select columns'}
+                  </span>
+                  <span className="text-xs text-neutral-500">▼</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 p-3 space-y-3">
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {showDataColumnOptions.map(option => (
+                    <label
+                      key={option}
+                      className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-200"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={showDataColumns.includes(option)}
+                        onChange={() => handleToggleShowDataColumn(option)}
+                        className="h-4 w-4 rounded border-neutral-300 text-[#53a533] focus:ring-[#53a533]"
+                      />
+                      <span>{option}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowDataColumns(showDataColumnOptions)}
+                  >
+                    Reset
+                  </Button>
+                  <Button size="sm" variant="outline">
+                    Apply
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="xl:col-span-3 space-y-1">
+            <Label className="text-xs text-neutral-600 dark:text-neutral-300">
+              Job Type
+            </Label>
+            <Select
+              value={jobTypeFilterTop}
+              onValueChange={value => setJobTypeFilterTop(value)}
+            >
+              <SelectTrigger className="w-full h-10">
+                <SelectValue placeholder="Select Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {jobTypeOptions.map(type => (
+                  <SelectItem key={type} value={type.toLowerCase()}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="xl:col-span-3 space-y-1">
+            <Label className="text-xs text-neutral-600 dark:text-neutral-300">
+              Agents
+            </Label>
+            <Select
+              value={agentFilterTop}
+              onValueChange={value => setAgentFilterTop(value)}
+            >
+              <SelectTrigger className="w-full h-10">
+                <SelectValue placeholder="Select agents" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Agents</SelectItem>
+                {agentOptions.map(agent => (
+                  <SelectItem key={agent} value={agent.toLowerCase()}>
+                    {agent}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-3">
+          <div className="xl:col-span-2 space-y-1">
+            <Label className="text-xs text-neutral-600 dark:text-neutral-300">
+              Date Range
+            </Label>
+            <Select
+              value={dateRangePreset}
+              onValueChange={value => setDateRangePreset(value)}
+            >
+              <SelectTrigger className="w-full h-10">
+                <SelectValue placeholder="Today" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="last7">Last 7 Days</SelectItem>
+                <SelectItem value="last30">Last 30 Days</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="xl:col-span-3 space-y-1">
+            <Label className="text-xs text-neutral-600 dark:text-neutral-300">
+              Start Date
+            </Label>
+            <Input
+              type="date"
+              value={startDateFilter}
+              onChange={e => setStartDateFilter(e.target.value)}
+              disabled={dateRangePreset !== 'custom'}
+              className="h-10"
+            />
+          </div>
+          <div className="xl:col-span-3 space-y-1">
+            <Label className="text-xs text-neutral-600 dark:text-neutral-300">
+              End Date
+            </Label>
+            <Input
+              type="date"
+              value={endDateFilter}
+              onChange={e => setEndDateFilter(e.target.value)}
+              disabled={dateRangePreset !== 'custom'}
+              className="h-10"
+            />
+          </div>
+          <div className="xl:col-span-4 flex items-end justify-end gap-2">
+            <Button
+              className="bg-emerald-500 hover:bg-emerald-600 text-white"
+              onClick={handleApplyTopFilters}
+            >
+              Filter
+            </Button>
+            <Button
+              className="bg-amber-400 hover:bg-amber-500 text-white"
+              onClick={handleExportJobs}
+            >
+              Export
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-3 items-center">
+          <div className="xl:col-span-6 space-y-1">
+            <Label className="text-xs text-neutral-600 dark:text-neutral-300">
+              Select status change to selected job
+            </Label>
+            <Select
+              value={bulkStatusSelection}
+              onValueChange={value => setBulkStatusSelection(value)}
+            >
+              <SelectTrigger className="w-full h-10">
+                <SelectValue placeholder="Select status change" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {statusOptions.map(status => (
+                  <SelectItem key={status} value={String(status)}>
+                    {status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="xl:col-span-6 flex flex-wrap items-end justify-end gap-2">
+            <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+              Change Status
+            </Button>
+            <Button className="bg-blue-700 hover:bg-blue-800 text-white">
+              Bulk status change
+            </Button>
+          </div>
         </div>
       </div>
       {/* View switcher */}

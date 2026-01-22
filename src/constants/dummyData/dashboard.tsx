@@ -15,7 +15,7 @@ export const jobsStats: JobStat[] = [
     subtitle: 'This month',
   },
   {
-    name: 'New Clients',
+    name: 'First Time Callers',
     value: '43',
     change: '+8.5%',
     changeType: 'positive' as const,
@@ -23,7 +23,7 @@ export const jobsStats: JobStat[] = [
     subtitle: 'This week',
   },
   {
-    name: 'Completed Today',
+    name: 'Completed Jobs',
     value: '12',
     change: '+4',
     changeType: 'positive' as const,

@@ -42,16 +42,16 @@ interface NavigationItem {
 }
 
 const secondaryNavigation: NavigationItem[] = [
-  {
-    name: 'AI Assistant',
-    href: '/ai',
-    icon: Zap,
-    badge: 'AI',
-  },
-  {
-    name: 'Settings',
-    href: '/settings',
-    icon: Settings,
+  // {
+  //   name: 'AI Assistant',
+  //   href: '/ai',
+  //   icon: Zap,
+  //   badge: 'AI',
+  // },
+  // {
+  //   name: 'Settings',
+  //   href: '/settings',
+  //   icon: Settings,
     // moduleCodes: {
     //   P1: ['MOD012', 'MOD014'],
     //   P2: ['MOD013', 'MOD015'],
@@ -60,7 +60,7 @@ const secondaryNavigation: NavigationItem[] = [
     //   P5: ['MOD012', 'MOD014', 'MOD013', 'MOD015'],
     //   Tenant: ['MOD013', 'MOD015'],
     // }
-  },
+  // },
 ]
 
 export function Sidebar(): React.JSX.Element {
@@ -89,11 +89,6 @@ export function Sidebar(): React.JSX.Element {
       name: 'Jobs',
       href: '/jobs',
       icon: Briefcase,
-    },
-    {
-      name: getUserType() === 'P1' ? 'Admin Team' : 'Team',
-      href: '/team',
-      icon: Users,
       moduleCodes: {
         P1: ['MOD002', 'MOD003'],
         P2: ['MOD007', 'MOD006'],
@@ -103,6 +98,19 @@ export function Sidebar(): React.JSX.Element {
         Tenant: ['MOD007', 'MOD006'],
       },
     },
+    // {
+    //   name: getUserType() === 'P1' ? 'Admin Team' : 'Team',
+    //   href: '/team',
+    //   icon: Users,
+    //   moduleCodes: {
+    //     P1: ['MOD002', 'MOD003'],
+    //     P2: ['MOD007', 'MOD006'],
+    //     P3: ['MOD007', 'MOD006'],
+    //     P4: ['MOD007', 'MOD006'],
+    //     P5: ['MOD002', 'MOD003', 'MOD007', 'MOD006'],
+    //     Tenant: ['MOD007', 'MOD006'],
+    //   },
+    // },
     {
       name: 'Reports',
       href: '/reports',
@@ -126,19 +134,19 @@ export function Sidebar(): React.JSX.Element {
       href: '/schedule',
       icon: Calendar,
     },
-    {
-      name: 'WePro Phone',
-      href: '/calls',
-      icon: PhoneCall,
-      moduleCodes: {
-        P1: ['MOD042'],
-        P2: ['MOD039', 'MOD041', 'MOD043'],
-        P3: ['MOD039', 'MOD041', 'MOD043'],
-        P4: ['MOD039', 'MOD041', 'MOD043'],
-        P5: ['MOD039', 'MOD041', 'MOD043'],
-        Tenant: ['MOD039', 'MOD041', 'MOD043'],
-      },
-    },
+    // {
+    //   name: 'WePro Phone',
+    //   href: '/calls',
+    //   icon: PhoneCall,
+    //   moduleCodes: {
+    //     P1: ['MOD042'],
+    //     P2: ['MOD039', 'MOD041', 'MOD043'],
+    //     P3: ['MOD039', 'MOD041', 'MOD043'],
+    //     P4: ['MOD039', 'MOD041', 'MOD043'],
+    //     P5: ['MOD039', 'MOD041', 'MOD043'],
+    //     Tenant: ['MOD039', 'MOD041', 'MOD043'],
+    //   },
+    // },
     {
       name: 'Analytics',
       href: '/analytics',
@@ -154,24 +162,24 @@ export function Sidebar(): React.JSX.Element {
       href: '/packages',
       icon: Package,
     },
-    {
-      name: 'Service Packages',
-      href: '/servicePackages',
-      icon: Package,
-      moduleCodes: {
-        P5: ['MOD043'],
-        Tenant: ['MOD043'],
-      },
-    },
-    {
-      name: 'Get Paid with WePro',
-      href: '/stripeAccounts',
-      icon: CreditCard,
-      moduleCodes: {
-        P5: ['MOD047'],
-        Tenant: ['MOD047'],
-      },
-    },
+    // {
+    //   name: 'Service Packages',
+    //   href: '/servicePackages',
+    //   icon: Package,
+    //   moduleCodes: {
+    //     P5: ['MOD043'],
+    //     Tenant: ['MOD043'],
+    //   },
+    // },
+    // {
+    //   name: 'Get Paid with WePro',
+    //   href: '/stripeAccounts',
+    //   icon: CreditCard,
+    //   moduleCodes: {
+    //     P5: ['MOD047'],
+    //     Tenant: ['MOD047'],
+    //   },
+    // },
     {
       name: 'Companies',
       href: '/companies',
@@ -200,19 +208,19 @@ export function Sidebar(): React.JSX.Element {
         P5: ['MOD005'],
       },
     },
-    {
-      name: 'Timesheet',
-      href: '/timesheet',
-      icon: Clock,
-      moduleCodes: {
-        P1: ['MOD016'],
-        P2: ['MOD009'],
-        P3: ['MOD009'],
-        P4: ['MOD009'],
-        P5: ['MOD009', 'MOD016'],
-        Tenant: ['MOD009'],
-      },
-    },
+    // {
+    //   name: 'Timesheet',
+    //   href: '/timesheet',
+    //   icon: Clock,
+    //   moduleCodes: {
+    //     P1: ['MOD016'],
+    //     P2: ['MOD009'],
+    //     P3: ['MOD009'],
+    //     P4: ['MOD009'],
+    //     P5: ['MOD009', 'MOD016'],
+    //     Tenant: ['MOD009'],
+    //   },
+    // },
     {
       name: 'Billing',
       href: '/billing',

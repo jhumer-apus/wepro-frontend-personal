@@ -65,6 +65,11 @@ import {
   RefreshCw,
   Settings as SettingsIcon,
   Briefcase,
+  MessageSquare,
+  Eye,
+  MapPin,
+  User,
+  Info,
 } from 'lucide-react'
 
 type FranchiseKey = 'all' | 'franchise1' | 'franchise2'
@@ -114,7 +119,7 @@ const franchiseData: Record<FranchiseKey, FranchiseDataset> = {
         subtitle: 'Houston Metro',
       },
       {
-        name: 'New Clients',
+        name: 'First Time Callers',
         value: '21',
         change: '+4.2%',
         changeType: 'positive' as const,
@@ -122,7 +127,7 @@ const franchiseData: Record<FranchiseKey, FranchiseDataset> = {
         subtitle: 'Houston Metro',
       },
       {
-        name: 'Completed Today',
+        name: 'Completed Jobs',
         value: '7',
         change: '+2',
         changeType: 'positive' as const,
@@ -197,7 +202,7 @@ const franchiseData: Record<FranchiseKey, FranchiseDataset> = {
         subtitle: 'Dallas',
       },
       {
-        name: 'New Clients',
+        name: 'First Time Callers',
         value: '14',
         change: '+1.8%',
         changeType: 'positive' as const,
@@ -205,7 +210,7 @@ const franchiseData: Record<FranchiseKey, FranchiseDataset> = {
         subtitle: 'Dallas',
       },
       {
-        name: 'Completed Today',
+        name: 'Completed Jobs',
         value: '5',
         change: '+1',
         changeType: 'positive' as const,
@@ -273,12 +278,71 @@ const franchiseData: Record<FranchiseKey, FranchiseDataset> = {
 
 // Time range overrides to simulate different periods (generic across franchises)
 const timeRangeData: Record<TimeRangeKey, Partial<FranchiseDataset>> = {
-  today: {},
+  today: {
+    upcomingAppointments: [
+      {
+        jobId: 'job-2993741',
+        clientName: 'No Client Name',
+        service: 'Motorcycle Key',
+        source: 'Wepro Dev',
+        agent: '',
+        address: 'No Address',
+        timeWindow: 'Sun Jan 25, 2026 2:00 AM – 2026-01-25 04:00:00',
+        relativeTime: 'In 2 Days 23 Hours 48 Minutes',
+        tag: 'Motorcycle Key',
+        tagTone: 'bg-blue-500',
+        statusTag: 'Not Confirmed',
+        statusTone: 'bg-orange-500',
+      },
+      {
+        jobId: 'job-3005274',
+        clientName: 'Sam',
+        service: 'Service',
+        source: 'Wepro Dev',
+        agent: 'AI Agent job Testing',
+        address: '123456 Main Street',
+        timeWindow: 'Wed Jan 21, 2026 8:24 PM – No Limit',
+        relativeTime: '5 Hours 47 Minutes Ago',
+        tag: 'Service',
+        tagTone: 'bg-blue-500',
+        statusTag: 'Not Confirmed',
+        statusTone: 'bg-orange-500',
+      },
+      {
+        jobId: 'job-3005277',
+        clientName: 'No Client Name',
+        service: 'Service',
+        source: 'Wepro Dev',
+        agent: 'AI Agent job Testing',
+        address: 'No Address',
+        timeWindow: 'Wed Jan 21, 2026 8:25 PM – No Limit',
+        relativeTime: '5 Hours 46 Minutes Ago',
+        tag: 'Service',
+        tagTone: 'bg-blue-500',
+        statusTag: 'Not Confirmed',
+        statusTone: 'bg-orange-500',
+      },
+      {
+        jobId: 'job-3005278',
+        clientName: 'Sam',
+        service: 'Service',
+        source: 'Wepro Dev',
+        agent: 'AI Agent job Testing',
+        address: 'No Address',
+        timeWindow: 'Wed Jan 21, 2026 8:25 PM – No Limit',
+        relativeTime: '5 Hours 46 Minutes Ago',
+        tag: 'Service',
+        tagTone: 'bg-blue-500',
+        statusTag: 'Not Confirmed',
+        statusTone: 'bg-orange-500',
+      },
+    ],
+  },
   week: {
     jobsStats: [
       { name: 'Total Jobs', value: '412', change: '+9.8%', changeType: 'positive' as const, icon: Briefcase, subtitle: 'This week' },
-      { name: 'New Clients', value: '68', change: '+6.2%', changeType: 'positive' as const, icon: PhoneIncoming, subtitle: 'This week' },
-      { name: 'Completed Today', value: '21', change: '+5', changeType: 'positive' as const, icon: CheckCircle, subtitle: 'vs yesterday' },
+      { name: 'First Time Callers', value: '68', change: '+6.2%', changeType: 'positive' as const, icon: PhoneIncoming, subtitle: 'This week' },
+      { name: 'Completed Jobs', value: '21', change: '+5', changeType: 'positive' as const, icon: CheckCircle, subtitle: 'vs yesterday' },
     ],
     revenueData: [
       { name: 'Total Revenue', value: '$284,610', change: '+14.2%', changeType: 'positive' as const },
@@ -318,8 +382,8 @@ const timeRangeData: Record<TimeRangeKey, Partial<FranchiseDataset>> = {
   lastweek: {
     jobsStats: [
       { name: 'Total Jobs', value: '365', change: '+3.4%', changeType: 'positive' as const, icon: Briefcase, subtitle: 'Last week' },
-      { name: 'New Clients', value: '54', change: '+2.1%', changeType: 'positive' as const, icon: PhoneIncoming, subtitle: 'Last week' },
-      { name: 'Completed Today', value: '18', change: '+3', changeType: 'positive' as const, icon: CheckCircle, subtitle: 'vs prior day' },
+      { name: 'First Time Callers', value: '54', change: '+2.1%', changeType: 'positive' as const, icon: PhoneIncoming, subtitle: 'Last week' },
+      { name: 'Completed Jobs', value: '18', change: '+3', changeType: 'positive' as const, icon: CheckCircle, subtitle: 'vs prior day' },
     ],
     revenueData: [
       { name: 'Total Revenue', value: '$241,320', change: '+9.3%', changeType: 'positive' as const },
@@ -450,6 +514,32 @@ const dateRangeToDisplay = (value: string) => {
   return startStr === endStr ? startStr : `${startStr} – ${endStr}`
 }
 
+const mapDateRangeToTimeKey = (value: string): TimeRangeKey => {
+  if (value.includes('last')) return 'lastweek'
+  if (value.includes('week')) return 'week'
+  return 'today'
+}
+
+const prng = (key: string, salt: string) => {
+  const str = `${key}-${salt}`
+  let hash = 0
+  for (let i = 0; i < str.length; i += 1) {
+    hash = (hash * 31 + str.charCodeAt(i)) % 1000000007
+  }
+  return (hash % 1000) / 1000
+}
+
+const adjustValueString = (value: string, delta: number) => {
+  const isCurrency = value.trim().startsWith('$')
+  const isPercent = value.includes('%')
+  const numeric = parseInt(value.replace(/[^0-9]/g, ''), 10)
+  if (Number.isNaN(numeric)) return value
+  const adjusted = Math.max(0, numeric + delta)
+  if (isPercent) return `${adjusted}%`
+  if (isCurrency) return `$${adjusted.toLocaleString()}`
+  return adjusted.toLocaleString()
+}
+
 const teamPhotos = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=128&h=128&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=128&h=128&fit=crop&crop=face',
@@ -496,7 +586,7 @@ const teamMembersBase = [
   },
 ]
 
-const mapContainerStyle = { width: '100%', height: '320px' }
+const mapContainerStyle = { width: '100%', height: '100%' }
 
 const DashboardIndex: React.FC = (): React.JSX.Element => {
   // Filter state for shared filtering across sections
@@ -507,6 +597,7 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
   const currentDateRangeLabel = dateRangeToDisplay(selectedDateRange)
   const [markerBuffer, setMarkerBuffer] = useState(false)
   const [photoIcons, setPhotoIcons] = useState<(google.maps.Icon | null)[]>([])
+  const [mapFilter, setMapFilter] = useState<'all' | 'job' | 'technician'>('all')
   const [showInvoicesModal, setShowInvoicesModal] = useState(false)
   const [invoicePage, setInvoicePage] = useState(1)
 
@@ -526,6 +617,122 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
     { name: 'Dallas Urban', jobs: 98, revenue: '$43,110', sla: '89% on-time', trend: '+3.1%' },
     { name: 'Suburban Ring', jobs: 74, revenue: '$31,480', sla: '94% on-time', trend: '+2.4%' },
     { name: 'Emergency Zone', jobs: 28, revenue: '$14,920', sla: '88% on-time', trend: '+6.8%' },
+  ]
+  const estimateInvoiceStats = [
+    {
+      title: 'Pending Invoices Count',
+      value: '0',
+      color: 'text-amber-600',
+      badgeColor: 'bg-amber-400',
+    },
+    {
+      title: 'Pending Invoices Amount',
+      value: '$0',
+      color: 'text-amber-600',
+      badgeColor: 'bg-amber-400',
+    },
+    {
+      title: 'Pending Estimates',
+      value: '$0',
+      subtitle: '0 pending (0 total)',
+      color: 'text-indigo-600',
+      badgeColor: 'bg-indigo-500',
+    },
+    {
+      title: 'Accepted Estimates',
+      value: '$0',
+      subtitle: '0 accepted',
+      color: 'text-emerald-600',
+      badgeColor: 'bg-emerald-500',
+    },
+  ]
+  const agentStats = [
+    {
+      name: 'Msg Sent',
+      value: '1,240',
+      change: '+4.3%',
+      changeType: 'positive' as const,
+      icon: MessageSquare,
+      color: 'bg-blue-500',
+    },
+    {
+      name: 'Msg Received',
+      value: '1,180',
+      change: '+3.8%',
+      changeType: 'positive' as const,
+      icon: MessageSquare,
+      color: 'bg-cyan-500',
+    },
+    {
+      name: 'Total Msg',
+      value: '2,420',
+      change: '+4.1%',
+      changeType: 'positive' as const,
+      icon: MessageSquare,
+      color: 'bg-sky-500',
+    },
+    {
+      name: 'Incoming Calls',
+      value: '320',
+      change: '+2.0%',
+      changeType: 'positive' as const,
+      icon: PhoneIncoming,
+      color: 'bg-emerald-500',
+    },
+    {
+      name: 'Outgoing Calls',
+      value: '285',
+      change: '+1.4%',
+      changeType: 'positive' as const,
+      icon: PhoneOutgoing,
+      color: 'bg-amber-500',
+    },
+    {
+      name: 'Total Calls',
+      value: '605',
+      change: '+1.8%',
+      changeType: 'positive' as const,
+      icon: PhoneCall,
+      color: 'bg-indigo-500',
+    },
+    {
+      name: 'Online Agents',
+      value: '18',
+      change: '+2',
+      changeType: 'positive' as const,
+      icon: CheckCircle,
+      color: 'bg-emerald-600',
+    },
+    {
+      name: 'Busy Agents',
+      value: '7',
+      change: '+0.5',
+      changeType: 'positive' as const,
+      icon: AlertCircle,
+      color: 'bg-yellow-500',
+    },
+    {
+      name: 'Offline Agents',
+      value: '5',
+      change: '-1',
+      changeType: 'negative' as const,
+      icon: Timer,
+      color: 'bg-slate-500',
+    },
+  ]
+  const payoutDispatchers = [
+    {
+      name: 'VS DISPATCH',
+      note: 'No Stripe record setup for this dispatcher.',
+    },
+    {
+      name: 'LockSmith 24/7',
+      note: 'No Stripe record setup for this dispatcher.',
+    },
+    {
+      name: 'Locksmith GDS',
+      note: 'No Stripe record setup for this dispatcher.',
+    },
   ]
   const invoicePageSize = 5
   const invoicePageCount = Math.ceil(allInvoices.length / invoicePageSize)
@@ -594,25 +801,84 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
     }
   }, [])
 
+  const effectiveTimeRange: TimeRangeKey =
+    mapDateRangeToTimeKey(selectedDateRange) || selectedTimeRange
   const baseFranchiseData =
     franchiseData[selectedFranchise] || franchiseData.all
-  const selectedData = {
+  const baseSelected = {
     jobsStats:
-      timeRangeData[selectedTimeRange].jobsStats || baseFranchiseData.jobsStats,
+      timeRangeData[effectiveTimeRange].jobsStats || baseFranchiseData.jobsStats,
     revenueData:
-      timeRangeData[selectedTimeRange].revenueData ||
+      timeRangeData[effectiveTimeRange].revenueData ||
       baseFranchiseData.revenueData,
     topSources:
-      timeRangeData[selectedTimeRange].topSources || baseFranchiseData.topSources,
+      timeRangeData[effectiveTimeRange].topSources || baseFranchiseData.topSources,
     salesMetrics:
-      timeRangeData[selectedTimeRange].salesMetrics ||
+      timeRangeData[effectiveTimeRange].salesMetrics ||
       baseFranchiseData.salesMetrics,
     upcomingAppointments:
-      timeRangeData[selectedTimeRange].upcomingAppointments ||
+      timeRangeData[effectiveTimeRange].upcomingAppointments ||
       baseFranchiseData.upcomingAppointments,
     topTechnicians:
-      timeRangeData[selectedTimeRange].topTechnicians ||
+      timeRangeData[effectiveTimeRange].topTechnicians ||
       baseFranchiseData.topTechnicians,
+  }
+
+  const filterKey = `${dispatcherType}-${selectedDateRange}`
+  const noise = (salt: string, scale = 25) =>
+    Math.floor(prng(filterKey, salt) * scale) - Math.floor(scale / 2)
+
+  const jobsStatsBase = (baseSelected.jobsStats ??
+    baseFranchiseData.jobsStats ??
+    []) as JobStat[]
+  const revenueDataBase = (baseSelected.revenueData ??
+    baseFranchiseData.revenueData ??
+    []) as typeof baseFranchiseData.revenueData
+  const topSourcesBase = (baseSelected.topSources ??
+    baseFranchiseData.topSources ??
+    []) as typeof baseFranchiseData.topSources
+  const salesMetricsBase = (baseSelected.salesMetrics ??
+    baseFranchiseData.salesMetrics ??
+    []) as typeof baseFranchiseData.salesMetrics
+  const upcomingAppointmentsBase = (baseSelected.upcomingAppointments ??
+    baseFranchiseData.upcomingAppointments ??
+    []) as typeof baseFranchiseData.upcomingAppointments
+  const topTechniciansBase = (baseSelected.topTechnicians ??
+    baseFranchiseData.topTechnicians ??
+    []) as typeof baseFranchiseData.topTechnicians
+
+  const selectedData: FranchiseDataset = {
+    jobsStats: jobsStatsBase.map((stat, idx) => ({
+      ...stat,
+      value: adjustValueString(stat.value, noise(`job-${idx}`, 40)),
+      change: `${stat.change}`,
+    })) as JobStat[],
+    revenueData: revenueDataBase.map((item, idx) => ({
+      ...item,
+      value: adjustValueString(String(item.value), noise(`rev-${idx}`, 5000)),
+      change: `${item.change}`,
+    })) as FranchiseDataset['revenueData'],
+    topSources: topSourcesBase.map((item, idx) => ({
+      ...item,
+      value: Math.max(
+        1,
+        Number(item.value) + Math.round(prng(filterKey, `src-${idx}`) * 8 - 4)
+      ),
+    })) as FranchiseDataset['topSources'],
+    salesMetrics: salesMetricsBase.map((item, idx) => ({
+      ...item,
+      value: adjustValueString(String(item.value), noise(`sales-${idx}`, 300)),
+      change: `${item.change}`,
+    })) as FranchiseDataset['salesMetrics'],
+    upcomingAppointments: upcomingAppointmentsBase.map((item, idx) => ({
+      ...item,
+      value: adjustValueString(String((item as any).value ?? '0'), noise(`appt-${idx}`, 120)),
+    })) as FranchiseDataset['upcomingAppointments'],
+    topTechnicians: topTechniciansBase.map((tech, idx) => ({
+      ...tech,
+      jobs: Math.max(1, Number(tech.jobs) + noise(`tech-j-${idx}`, 6)),
+      revenue: adjustValueString(String(tech.revenue), noise(`tech-r-${idx}`, 800)),
+    })) as FranchiseDataset['topTechnicians'],
   }
 
   const mapCenter =
@@ -622,6 +888,11 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
     lat: mapCenter.lat + member.offset.lat,
     lng: mapCenter.lng + member.offset.lng,
   }))
+  const filteredTeamMembers = teamMembers.filter(member => {
+    if (mapFilter === 'all') return true
+    if (mapFilter === 'job') return Boolean(member.job)
+    return !member.job
+  })
 
   return (
     <div className="space-y-6">
@@ -825,14 +1096,14 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
               </CardContent>
             </Card>
 
-            {/* Daily Sales Metrics */}
+            {/* Sales Overview */}
             <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <div className="p-2 bg-gradient-to-br from-purple-500 to-violet-500 rounded-lg mr-3">
                     <PieChart className="w-5 h-5 text-white" />
                   </div>
-                  Daily Sales
+                  Sales Overview
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -874,19 +1145,44 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                       <span className="text-xs text-neutral-500">Live GPS</span>
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shadow-sm hover:shadow-md transition-all duration-200"
-                  >
-                    <Maximize2 className="w-4 h-4 mr-2" />
-                    Full Screen
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-1 flex items-center">
+                      {[
+                        { key: 'all', label: 'All' },
+                        { key: 'job', label: 'Job' },
+                        { key: 'technician', label: 'Technician' },
+                      ].map(option => (
+                        <Button
+                          key={option.key}
+                          size="sm"
+                          variant={mapFilter === option.key ? 'default' : 'ghost'}
+                          className={`h-8 px-3 text-xs rounded-full ${
+                            mapFilter === option.key
+                              ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                              : 'text-neutral-600 dark:text-neutral-300'
+                          }`}
+                          onClick={() =>
+                            setMapFilter(option.key as 'all' | 'job' | 'technician')
+                          }
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shadow-sm hover:shadow-md transition-all duration-200"
+                    >
+                      <Maximize2 className="w-4 h-4 mr-2" />
+                      Full Screen
+                    </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
             {/* Live Map */}
-            <div className="h-80 rounded-xl mb-6 relative overflow-hidden shadow-inner">
+            <div className="h-[460px] md:h-[560px] rounded-xl relative overflow-hidden shadow-inner">
               <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={mapCenter}
@@ -906,7 +1202,7 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                   ],
                 }}
               >
-                {teamMembers.map((member, index) => (
+                {filteredTeamMembers.map((member, index) => (
                   <Marker
                     key={member.name}
                     position={{ lat: member.lat, lng: member.lng }}
@@ -994,118 +1290,6 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
               </div>
             </div>
 
-                {/* Team Status List */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    {
-                      name: 'Mike Rodriguez',
-                      status: 'On Job',
-                      location: 'Downtown Houston',
-                      eta: '15 min',
-                      efficiency: 95,
-                      currentJob: '#4521',
-                    },
-                    {
-                      name: 'Lisa Martinez',
-                      status: 'Available',
-                      location: 'Midtown',
-                      eta: 'Available',
-                      efficiency: 92,
-                      currentJob: null,
-                    },
-                    {
-                      name: 'Alex Kim',
-                      status: 'On Job',
-                      location: 'The Heights',
-                      eta: '30 min',
-                      efficiency: 89,
-                      currentJob: '#4522',
-                    },
-                    {
-                      name: 'Sarah Johnson',
-                      status: 'Off Duty',
-                      location: 'Home',
-                      eta: 'N/A',
-                      efficiency: 91,
-                      currentJob: null,
-                    },
-                  ].map((member, index) => (
-                    <div
-                      key={member.name}
-                      className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-white to-neutral-50 dark:from-neutral-800 dark:to-neutral-900 shadow-sm hover:shadow-md transition-all duration-200 border border-neutral-200 dark:border-neutral-700"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="relative">
-                          <div className="w-12 h-12 rounded-full overflow-hidden shadow-md">
-                            <img
-                              src={`https://images.unsplash.com/photo-${
-                                index === 0
-                                  ? '1507003211169-0a1dd7228f2d'
-                                  : index === 1
-                                    ? '1494790108755-2616b612b786'
-                                    : index === 2
-                                      ? '1472099645785-5658abf4ff4e'
-                                      : '1438761681033-6461ffad8d80'
-                              }?w=48&h=48&fit=crop&crop=face`}
-                              alt={member.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div
-                            className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                              member.status === 'Available'
-                                ? 'bg-green-500'
-                                : member.status === 'On Job'
-                                  ? 'bg-blue-500'
-                                  : 'bg-gray-400'
-                            }`}
-                          ></div>
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                            {member.name}
-                          </p>
-                          <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                            {member.location}
-                          </p>
-                          {member.currentJob && (
-                            <p className="text-xs text-blue-600 dark:text-blue-400">
-                              Working on {member.currentJob}
-                            </p>
-                          )}
-                          <div className="flex items-center mt-1">
-                            <div className="w-16 bg-neutral-200 dark:bg-neutral-700 rounded-full h-1.5">
-                              <div
-                                className="bg-green-500 h-1.5 rounded-full"
-                                style={{ width: `${member.efficiency}%` }}
-                              ></div>
-                            </div>
-                            <span className="ml-2 text-xs text-neutral-500">
-                              {member.efficiency}%
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge
-                          variant={
-                            member.status === 'Available'
-                              ? 'default'
-                              : member.status === 'On Job'
-                                ? 'secondary'
-                                : 'outline'
-                          }
-                          className="text-xs mb-1"
-                        >
-                          {member.status}
-                        </Badge>
-                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                          {member.eta}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </CardContent>
             </Card>
 
@@ -1117,66 +1301,119 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                     <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg mr-3">
                       <Calendar className="w-5 h-5 text-white" />
                     </div>
-                    Coming Up Today
+                    Upcoming Jobs
                     <Badge variant="secondary" className="ml-3">
-                  {selectedData.upcomingAppointments.length}
+                      {selectedData.upcomingAppointments.length}
                     </Badge>
                   </div>
+                  <Button variant="outline" size="sm" className="text-xs h-8 px-3">
+                    View All
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-              {selectedData.upcomingAppointments.map((appointment, index) => (
+                <div className="h-[460px] md:h-[560px] space-y-4 overflow-y-scroll">
+                  {selectedData.upcomingAppointments.map((appointment, index) => (
                     <div
                       key={index}
-                      className="p-4 rounded-xl bg-gradient-to-r from-white to-neutral-50 dark:from-neutral-800 dark:to-neutral-900 shadow-sm hover:shadow-md transition-all duration-200 border border-neutral-200 dark:border-neutral-700"
+                      className="p-5 md:p-6 rounded-xl bg-gradient-to-r from-white to-neutral-50 dark:from-neutral-800 dark:to-neutral-900 shadow-sm hover:shadow-md transition-all duration-200 border border-neutral-200 dark:border-neutral-700 space-y-3"
                     >
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 text-sm">
-                          {appointment.customer}
-                        </h4>
-                        <Badge
-                          variant={
-                            appointment.status === 'confirmed'
-                              ? 'default'
-                              : 'outline'
-                          }
-                          className="text-xs"
-                        >
-                          {appointment.status}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
-                        {appointment.service}
-                      </p>
-                      <div className="grid grid-cols-2 gap-2 text-xs text-neutral-500">
-                        <span className="flex items-center">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {appointment.time}
-                        </span>
-                        <span className="flex items-center">
-                          <DollarSign className="w-3 h-3 mr-1" />
-                          {appointment.value}
-                        </span>
-                      </div>
-                      <div className="flex space-x-2 mt-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2 text-xs"
-                        >
-                          <Phone className="w-3 h-3 mr-1" />
-                          Call
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2 text-xs"
-                        >
-                          <Navigation className="w-3 h-3 mr-1" />
-                          Route
-                        </Button>
-                      </div>
+                      {(() => {
+                        const jobId = (appointment as any).jobId || appointment.customer
+                        const clientName =
+                          (appointment as any).clientName ||
+                          appointment.service ||
+                          appointment.customer
+                        const tag = (appointment as any).tag
+                        const tagTone = (appointment as any).tagTone || 'bg-blue-500'
+                        const statusTag =
+                          (appointment as any).statusTag || appointment.status
+                        const statusTone =
+                          (appointment as any).statusTone || 'bg-orange-500'
+                        const source =
+                          (appointment as any).source ||
+                          (appointment as any).technician ||
+                          ''
+                        const agent = (appointment as any).agent || ''
+                        const address = (appointment as any).address || 'No Address'
+                        const timeWindow =
+                          (appointment as any).timeWindow || appointment.time
+                        const relativeTime =
+                          (appointment as any).relativeTime ||
+                          (appointment as any).duration ||
+                          ''
+
+                        return (
+                          <div className="space-y-3">
+                            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                              <div className="flex items-start gap-3">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-sm md:text-base font-bold text-emerald-600">
+                                      {jobId}
+                                    </span>
+                                    <Eye className="w-3.5 h-3.5 text-neutral-400" />
+                                    <span className="text-sm md:text-base font-semibold text-neutral-800 dark:text-neutral-100">
+                                      {clientName}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center flex-wrap gap-2 text-xs text-neutral-500">
+                                    <span className="font-semibold text-neutral-600 dark:text-neutral-300">
+                                      Source:
+                                    </span>
+                                    <span className="text-neutral-700 dark:text-neutral-300">
+                                      {source || '—'}
+                                    </span>
+                                    {agent ? (
+                                      <>
+                                        <User className="w-3 h-3 text-neutral-400" />
+                                        <span className="text-neutral-700 dark:text-neutral-300">
+                                          {agent}
+                                        </span>
+                                      </>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 justify-start md:justify-end">
+                                {tag ? (
+                                  <Badge
+                                    className={`text-[11px] font-semibold text-white px-3 py-1 rounded-full ${tagTone}`}
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ) : null}
+                                {statusTag ? (
+                                  <Badge
+                                    className={`text-[11px] font-semibold text-white px-3 py-1 rounded-full ${statusTone}`}
+                                  >
+                                    {statusTag}
+                                  </Badge>
+                                ) : null}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm">
+                              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
+                                <MapPin className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                                <span className="font-semibold leading-snug">{address}</span>
+                              </span>
+                              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
+                                <Calendar className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                                <span className="font-semibold leading-snug">{timeWindow}</span>
+                              </span>
+                              {relativeTime ? (
+                                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
+                                  <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                  <span className="font-semibold leading-snug">
+                                    {relativeTime}
+                                  </span>
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                        )
+                      })()}
                     </div>
                   ))}
                 </div>
@@ -1330,6 +1567,18 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                       percentage: 4.5,
                       color: 'bg-red-500',
                     },
+                    {
+                      name: 'Custom A',
+                      value: 14,
+                      percentage: 5.6,
+                      color: 'bg-amber-500',
+                    },
+                    {
+                      name: 'Custom B',
+                      value: 9,
+                      percentage: 3.4,
+                      color: 'bg-purple-500',
+                    },
                   ].map(status => (
                     <div
                       key={status.name}
@@ -1357,72 +1606,99 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
               </CardContent>
             </Card>
 
-            {/* Invoices Panel */}
-            <Card className="lg:col-span-6 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            {/* Agents */}
+            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <div className="p-2 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg mr-3">
-                    <Receipt className="w-5 h-5 text-white" />
+                  <div className="p-2 bg-gradient-to-br from-emerald-500 to-green-500 rounded-lg mr-3">
+                    <PhoneCall className="w-5 h-5 text-white" />
                   </div>
-                  Invoices
+                  Agents
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  {
-                    name: 'Outstanding Invoices',
-                    value: 23,
-                    amount: '$18,450',
-                    color: 'bg-yellow-500',
-                  },
-                  {
-                    name: 'Overdue (30+ days)',
-                    value: 5,
-                    amount: '$3,240',
-                    color: 'bg-red-500',
-                  },
-                  {
-                    name: 'Paid This Week',
-                    value: 18,
-                    amount: '$14,280',
-                    color: 'bg-green-500',
-                  },
-                ].map(stat => (
-                  <div
-                    key={stat.name}
-                    className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-4 h-4 rounded-full ${stat.color}`}></div>
-                      <div>
-                        <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                          {stat.name}
-                        </p>
+              <CardContent className="space-y-3">
+                {agentStats.map(stat => {
+                  const Icon = stat.icon
+                  const changeColor =
+                    stat.changeType === 'positive'
+                      ? 'text-emerald-600'
+                      : 'text-red-600'
+                  return (
+                    <div
+                      key={stat.name}
+                      className="flex items-center justify-between"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-4 h-4 rounded-full ${stat.color}`}></div>
+                        <div className="flex items-center space-x-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                          <span>{stat.name}</span>
+                          <Icon className="w-4 h-4 text-neutral-400" />
+                        </div>
+                      </div>
+                      <div className="text-right">
                         <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                          {stat.value} invoices
+                          {stat.value}
+                        </p>
+                        <p className={`text-xs font-semibold ${changeColor}`}>
+                          {stat.change}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                        {stat.amount}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  className="w-full mt-4"
-                  onClick={() => setShowInvoicesModal(true)}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  View All Invoices
-                </Button>
+                  )
+                })}
               </CardContent>
             </Card>
 
+            {/* Estimates & Invoices Panel */}
+            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-3">
+                  <div className="p-2 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg">
+                    <Receipt className="w-5 h-5 text-white" />
+                  </div>
+                  <span>Estimates & Invoices</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {estimateInvoiceStats.map(item => (
+                  <div
+                    key={item.title}
+                    className="flex items-center justify-between px-4 py-3 rounded-xl bg-gradient-to-r from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-800 border border-neutral-200/70 dark:border-neutral-800 shadow-sm"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-3 h-3 rounded-full ${item.badgeColor} shadow-sm shadow-black/10`}
+                      ></div>
+                      <div>
+                        <p className={`text-sm font-semibold ${item.color}`}>
+                          {item.title}
+                        </p>
+                        {item.subtitle && (
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                            {item.subtitle}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className={`text-lg font-bold ${item.color}`}>
+                      {item.value}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+              <div className="px-6 pb-4 pt-1">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowInvoicesModal(true)}
+                >
+                  View All
+                </Button>
+              </div>
+            </Card>
+
             {/* Service Areas */}
-            <Card className="lg:col-span-6 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg mr-3">
@@ -1465,110 +1741,44 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
 
             {/* Payouts Panel */}
             <Card className="lg:col-span-12 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-              <CardHeader className="pb-4">
+              <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <div className="p-2 bg-gradient-to-br from-emerald-500 to-green-500 rounded-lg mr-3">
+                    <div className="p-2 bg-gradient-to-br from-emerald-500 to-green-500 rounded-lg mr-3 shadow-sm">
                       <CreditCard className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                        Payouts
-                      </p>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                        Funds movement across accounts
+                      <p className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+                        Credit Card Payouts
+                        <Info className="w-4 h-4 text-neutral-400" />
                       </p>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                      Active
-                    </span>
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  <div className="lg:col-span-2 p-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 text-white shadow-lg">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div>
-                        <p className="text-sm text-emerald-100">Total Balance</p>
-                        <p className="text-4xl font-bold">$12,847</p>
-                        <div className="flex items-center mt-2 text-emerald-100">
-                          <TrendingUp className="w-4 h-4 mr-1" />
-                          <span className="text-sm">+$2,340 this week</span>
-                        </div>
+              <CardContent className="space-y-4">
+                {payoutDispatchers.map(dispatcher => (
+                  <div
+                    key={dispatcher.name}
+                    className="rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm overflow-hidden"
+                  >
+                    <div className="px-4 py-3 flex items-center justify-between bg-neutral-50 dark:bg-neutral-900/80">
+                      <div className="text-sky-700 dark:text-sky-200 font-semibold text-sm uppercase tracking-wide">
+                        {dispatcher.name}
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs uppercase text-emerald-100">Next payout</p>
-                        <p className="text-xl font-semibold">Tomorrow, 9:00 AM</p>
-                        <p className="text-xs text-emerald-100 mt-1">ACH • Ending 2841</p>
-                      </div>
+                      <Badge
+                        variant="outline"
+                        className="text-xs border-sky-300 text-sky-700 dark:text-sky-200 dark:border-sky-500 bg-sky-50 dark:bg-sky-900/20"
+                      >
+                        Action Required
+                      </Badge>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                      {[
-                        { label: 'Available Instantly', value: '$8,420', icon: Zap, tone: 'from-white/20 to-white/10' },
-                        { label: 'Pending (2-3 days)', value: '$4,427', icon: Timer, tone: 'from-white/15 to-white/5' },
-                        { label: 'Completed This Week', value: '$18,910', icon: CheckCircle, tone: 'from-white/10 to-white/0' },
-                      ].map(item => {
-                        const Icon = item.icon
-                        return (
-                          <div
-                            key={item.label}
-                            className="p-3 rounded-xl bg-white/10 text-white flex items-center justify-between shadow-sm"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <div className={`p-2 rounded-lg bg-gradient-to-br ${item.tone}`}>
-                                <Icon className="w-4 h-4" />
-                              </div>
-                              <div>
-                                <p className="text-xs text-emerald-100">{item.label}</p>
-                                <p className="text-sm font-semibold">{item.value}</p>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })}
+                    <div className="px-4 py-3 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-200 flex items-start gap-2 text-sm leading-relaxed border-t border-amber-100 dark:border-amber-800/60">
+                      <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-500 dark:text-amber-300" />
+                      <span>{dispatcher.note}</span>
                     </div>
                   </div>
-
-                  <div className="space-y-4 p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                          Instant transfer
-                        </p>
-                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                          Move funds to your bank in minutes
-                        </p>
-                      </div>
-                      <Badge variant="secondary">0.5% fee</Badge>
-                    </div>
-                    <Button className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg">
-                      <Zap className="w-4 h-4 mr-2" />
-                      Get Paid Now
-                    </Button>
-                    <div className="space-y-3">
-                      {[
-                        { label: 'Last instant payout', value: '$1,120 • Today 10:15 AM' },
-                        { label: 'ACH payouts queued', value: '2 • Expected by Friday' },
-                      ].map(item => (
-                        <div
-                          key={item.label}
-                          className="flex items-center justify-between p-3 rounded-lg bg-white dark:bg-neutral-800"
-                        >
-                          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                            {item.label}
-                          </p>
-                          <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                            {item.value}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                ))}
               </CardContent>
             </Card>
 
@@ -1726,7 +1936,7 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
         </TabsContent>
       </Tabs>
 
-      {/* Invoices Modal */}
+      {/* Estimates & Invoices Modal */}
       <Dialog
         open={showInvoicesModal}
         onOpenChange={open => {
@@ -1736,7 +1946,7 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
       >
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>All Invoices</DialogTitle>
+            <DialogTitle>All Estimates & Invoices</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             {paginatedInvoices.map(invoice => (
