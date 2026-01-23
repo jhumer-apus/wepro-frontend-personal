@@ -9,7 +9,7 @@ import {
   topTechnicians,
   aiInsights,
 } from '@/src/constants/dummyData/dashboard'
-import { GoogleMap, Marker } from '@react-google-maps/api'
+import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api'
 import {
   Dialog,
   DialogContent,
@@ -589,6 +589,10 @@ const teamMembersBase = [
 const mapContainerStyle = { width: '100%', height: '100%' }
 
 const DashboardIndex: React.FC = (): React.JSX.Element => {
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+  })
   // Filter state for shared filtering across sections
   const selectedFranchise: FranchiseKey = 'all'
   const selectedTimeRange: TimeRangeKey = 'today'
@@ -752,7 +756,9 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
   useEffect(() => {
     let cancelled = false
     const loadIcons = async () => {
-      if (typeof window === 'undefined' || typeof google === 'undefined') return
+      if (!isLoaded || typeof window === 'undefined') return
+      const g = (window as typeof window & { google?: typeof google }).google
+      if (!g) return
       const promises = teamPhotos.map(
         url =>
           new Promise<google.maps.Icon | null>(resolve => {
@@ -784,8 +790,8 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
               const dataUrl = canvas.toDataURL()
               resolve({
                 url: dataUrl,
-                scaledSize: new google.maps.Size(size, size),
-                anchor: new google.maps.Point(r, r),
+                scaledSize: new g.maps.Size(size, size),
+                anchor: new g.maps.Point(r, r),
               })
             }
             img.onerror = () => resolve(null)
@@ -799,7 +805,7 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [isLoaded])
 
   const effectiveTimeRange: TimeRangeKey =
     mapDateRangeToTimeKey(selectedDateRange) || selectedTimeRange
@@ -893,6 +899,13 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
     if (mapFilter === 'job') return Boolean(member.job)
     return !member.job
   })
+  const dropAnimation =
+    isLoaded &&
+    markerBuffer &&
+    typeof window !== 'undefined' &&
+    (window as typeof window & { google?: typeof google }).google
+      ? (window as typeof window & { google: typeof google }).google.maps.Animation.DROP
+      : undefined
 
   return (
     <div className="space-y-6">
@@ -938,6 +951,9 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="vs-dispatch">VS Dispatch</SelectItem>
+                        <SelectItem value="locksmith-24-7">LockSmith 24/7</SelectItem>
+                        <SelectItem value="locksmith-gds">Locksmith GDS</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1183,54 +1199,53 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
               <CardContent>
             {/* Live Map */}
             <div className="h-[460px] md:h-[560px] rounded-xl relative overflow-hidden shadow-inner">
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={mapCenter}
-                zoom={12}
-                options={{
-                  disableDefaultUI: true,
-                  zoomControl: true,
-                  streetViewControl: false,
-                  mapTypeControl: false,
-                  fullscreenControl: false,
-                  styles: [
-                    {
-                      featureType: 'poi',
-                      elementType: 'labels',
-                      stylers: [{ visibility: 'off' }],
-                    },
-                  ],
-                }}
-              >
-                {filteredTeamMembers.map((member, index) => (
-                  <Marker
-                    key={member.name}
-                    position={{ lat: member.lat, lng: member.lng }}
-                    title={`${member.name}${member.job ? ` - Job ${member.job}` : ''}`}
-                    animation={
-                      markerBuffer && typeof google !== 'undefined'
-                        ? google.maps.Animation.DROP
-                        : undefined
-                    }
-                    icon={
-                      photoIcons[index % photoIcons.length] ||
-                      undefined
-                    }
-                    label={
-                      !photoIcons[index % photoIcons.length]
-                        ? {
-                            text: member.name
-                              .split(' ')
-                              .map(n => n[0])
-                              .join(''),
-                            className:
-                              'bg-white text-neutral-800 px-2 py-1 rounded-full text-[10px] font-semibold shadow-md',
-                          }
-                        : undefined
-                    }
-                  />
-                ))}
-              </GoogleMap>
+              {isLoaded ? (
+                <GoogleMap
+                  mapContainerStyle={mapContainerStyle}
+                  center={mapCenter}
+                  zoom={12}
+                  options={{
+                    disableDefaultUI: true,
+                    zoomControl: true,
+                    streetViewControl: false,
+                    mapTypeControl: false,
+                    fullscreenControl: false,
+                    styles: [
+                      {
+                        featureType: 'poi',
+                        elementType: 'labels',
+                        stylers: [{ visibility: 'off' }],
+                      },
+                    ],
+                  }}
+                >
+                  {filteredTeamMembers.map((member, index) => (
+                    <Marker
+                      key={member.name}
+                      position={{ lat: member.lat, lng: member.lng }}
+                      title={`${member.name}${member.job ? ` - Job ${member.job}` : ''}`}
+                      animation={dropAnimation}
+                      icon={photoIcons[index % photoIcons.length] || undefined}
+                      label={
+                        !photoIcons[index % photoIcons.length]
+                          ? {
+                              text: member.name
+                                .split(' ')
+                                .map(n => n[0])
+                                .join(''),
+                              className:
+                                'bg-white text-neutral-800 px-2 py-1 rounded-full text-[10px] font-semibold shadow-md',
+                            }
+                          : undefined
+                      }
+                    />
+                  ))}
+                </GoogleMap>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-neutral-50 dark:bg-neutral-900 text-neutral-500 text-sm">
+                  Loading map...
+                </div>
+              )}
 
               {/* Map overlay controls */}
               <div className="absolute top-4 right-4 flex flex-col space-y-2">
