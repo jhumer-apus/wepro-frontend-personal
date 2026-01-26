@@ -96,16 +96,6 @@ import {
   ChevronsUpDown,
   Check,
 } from "lucide-react";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableCaption,
-} from "@/src/components/ui/table";
 import { cn } from "@/src/lib/utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/src/components/ui/tabs';
 import { Checkbox } from "@/src/components/ui/checkbox";
@@ -125,6 +115,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/src/components/ui/command";
+import JobsTable from "@/src/components/jobs/JobsTable";
 
 // Technician interface with proper typing
 interface Technician {
@@ -2858,6 +2849,7 @@ export default function Jobs() {
   });
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [mobilePage, setMobilePage] = useState(1);
 
   useEffect(() => {
     try { localStorage.setItem('jobs.pinnedStatuses', JSON.stringify(pinnedStatuses)); } catch {}
@@ -3946,6 +3938,8 @@ export default function Jobs() {
       (currentPage - 1) * entriesPerPage,
       currentPage * entriesPerPage
     );
+    const mobileJobs = filteredJobs.slice(0, mobilePage * entriesPerPage);
+    const mobileHasMore = mobilePage * entriesPerPage < filteredJobs.length;
     const rowsPerStatus = density === 'ultra' ? 20 : density === 'compact' ? 10 : 3;
     const showCol = {
       details: visibleClientFields.srNo || visibleClientFields.jobId || visibleClientFields.jobType || visibleClientFields.industryName,
@@ -3958,6 +3952,15 @@ export default function Jobs() {
       technician: visibleClientFields.technician,
       status: visibleClientFields.status || visibleClientFields.jobMasked,
       actions: true,
+    };
+
+    const handleRowToggle = (jobId: string, checked: boolean) => {
+      setSelectedRows(prev => {
+        const next = new Set(prev);
+        if (checked) next.add(jobId);
+        else next.delete(jobId);
+        return next;
+      });
     };
 
     const columnOptions: [keyof VisibleClientFields, string][] = [
@@ -3993,14 +3996,14 @@ export default function Jobs() {
     return (
       <div className="space-y-6">
         {/* Premium Header with Enhanced Stats */}
-        <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-blue-950/20 dark:to-indigo-950/20 rounded-3xl p-8 pb-6 border border-slate-200/50 dark:border-slate-700/50 shadow-xl backdrop-blur-sm">
-          <div className="flex flex-col gap-4 mb-8">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-blue-900 dark:from-slate-100 dark:to-blue-100 bg-clip-text text-transparent mb-3">
+        <div className="relative rounded-3xl p-4 md:p-8 pb-5 md:pb-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm md:shadow-xl bg-white dark:bg-slate-900 md:bg-gradient-to-br md:from-slate-50 md:via-blue-50 md:to-indigo-50 md:dark:from-slate-900 md:dark:via-blue-950/20 md:dark:to-indigo-950/20 backdrop-blur-sm">
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div className="space-y-2">
+                <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-slate-900 to-blue-900 dark:from-slate-100 dark:to-blue-100 bg-clip-text text-transparent">
                   Jobs Dashboard
                 </h2>
-                <p className="text-slate-600 dark:text-slate-400 text-lg">
+                <p className="text-slate-600 dark:text-slate-400 text-sm md:text-lg leading-relaxed">
                   {selectedStatus === "All" 
                     ? "Comprehensive job management and tracking system" 
                     : `${selectedStatus} Jobs - ${filteredCount} total`}
@@ -4039,189 +4042,397 @@ export default function Jobs() {
                   </div>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button size="sm">Add Tag</Button>
-                <Button size="sm">Add Tag Notes</Button>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="h-9 w-36 text-xs justify-between"
-                    >
-                      {quickTagNotes.length === 0
-                        ? 'All Tag Notes'
-                        : `${quickTagNotes.length} selected`}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0 w-56" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search tag notes..." />
-                      <CommandList>
-                        <CommandEmpty>No tag note found.</CommandEmpty>
-                        <CommandGroup>
-                          <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
-                            <button
-                              type="button"
-                              className="underline-offset-4 hover:underline"
-                              onClick={() => setQuickTagNotes([...quickTagNoteOptions])}
-                            >
-                              Select all
-                            </button>
-                            <button
-                              type="button"
-                              className="underline-offset-4 hover:underline"
-                              onClick={() => setQuickTagNotes([])}
-                            >
-                              Deselect all
-                            </button>
-                          </div>
-                          <CommandItem
-                            value="all-tag-notes"
-                            onSelect={() => setQuickTagNotes([])}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Show filters"
+                    className="h-9 w-9 absolute right-3 top-3 md:hidden"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80 p-0 md:hidden">
+                  <div className="p-3 space-y-2">
+                      <Button size="sm" className="w-full text-sm">
+                        Add Tag
+                      </Button>
+                      <Button size="sm" className="w-full text-sm">
+                        Add Tag Notes
+                      </Button>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="h-10 w-full text-sm justify-between"
                           >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${
-                                quickTagNotes.length === 0 ? 'opacity-100' : 'opacity-0'
-                              }`}
-                            />
-                            All Tag Notes
-                          </CommandItem>
-                          {quickTagNoteOptions.map(tagNote => (
-                            <CommandItem
-                              key={tagNote}
-                              value={tagNote}
-                              onSelect={() => {
-                                setQuickTagNotes(prev => {
-                                  if (prev.includes(tagNote)) {
-                                    return prev.filter(t => t !== tagNote);
-                                  }
-                                  return [...prev, tagNote];
-                                });
-                              }}
-                            >
-                              <Check
-                                className={`mr-2 h-4 w-4 ${
-                                  quickTagNotes.includes(tagNote) ? 'opacity-100' : 'opacity-0'
-                                }`}
-                              />
-                              {tagNote}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="h-9 w-32 text-xs justify-between"
-                    >
-                      {quickTags.length === 0 ? 'All Tags' : `${quickTags.length} selected`}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0 w-52" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search tags..." />
-                      <CommandList>
-                        <CommandEmpty>No tag found.</CommandEmpty>
-                        <CommandGroup>
-                          <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
-                            <button
-                              type="button"
-                              className="underline-offset-4 hover:underline"
-                              onClick={() => setQuickTags([...quickTagOptions])}
-                            >
-                              Select all
-                            </button>
-                            <button
-                              type="button"
-                              className="underline-offset-4 hover:underline"
-                              onClick={() => setQuickTags([])}
-                            >
-                              Deselect all
-                            </button>
-                          </div>
-                          <CommandItem
-                            value="all-tags"
-                            onSelect={() => setQuickTags([])}
+                            {quickTagNotes.length === 0
+                              ? 'All Tag Notes'
+                              : `${quickTagNotes.length} selected`}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0 w-56" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search tag notes..." />
+                            <CommandList>
+                              <CommandEmpty>No tag note found.</CommandEmpty>
+                              <CommandGroup>
+                                <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
+                                  <button
+                                    type="button"
+                                    className="underline-offset-4 hover:underline"
+                                    onClick={() => setQuickTagNotes([...quickTagNoteOptions])}
+                                  >
+                                    Select all
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="underline-offset-4 hover:underline"
+                                    onClick={() => setQuickTagNotes([])}
+                                  >
+                                    Deselect all
+                                  </button>
+                                </div>
+                                <CommandItem
+                                  value="all-tag-notes"
+                                  onSelect={() => setQuickTagNotes([])}
+                                >
+                                  <Check
+                                    className={`mr-2 h-4 w-4 ${
+                                      quickTagNotes.length === 0 ? 'opacity-100' : 'opacity-0'
+                                    }`}
+                                  />
+                                  All Tag Notes
+                                </CommandItem>
+                                {quickTagNoteOptions.map(tagNote => (
+                                  <CommandItem
+                                    key={tagNote}
+                                    value={tagNote}
+                                    onSelect={() => {
+                                      setQuickTagNotes(prev => {
+                                        if (prev.includes(tagNote)) {
+                                          return prev.filter(t => t !== tagNote);
+                                        }
+                                        return [...prev, tagNote];
+                                      });
+                                    }}
+                                  >
+                                    <Check
+                                      className={`mr-2 h-4 w-4 ${
+                                        quickTagNotes.includes(tagNote) ? 'opacity-100' : 'opacity-0'
+                                      }`}
+                                    />
+                                    {tagNote}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="h-10 w-full text-sm justify-between"
                           >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${
-                                quickTags.length === 0 ? 'opacity-100' : 'opacity-0'
-                              }`}
-                            />
-                            All Tags
-                          </CommandItem>
-                          {quickTagOptions.map(tag => (
+                            {quickTags.length === 0 ? 'All Tags' : `${quickTags.length} selected`}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0 w-52" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search tags..." />
+                            <CommandList>
+                              <CommandEmpty>No tag found.</CommandEmpty>
+                              <CommandGroup>
+                                <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
+                                  <button
+                                    type="button"
+                                    className="underline-offset-4 hover:underline"
+                                    onClick={() => setQuickTags([...quickTagOptions])}
+                                  >
+                                    Select all
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="underline-offset-4 hover:underline"
+                                    onClick={() => setQuickTags([])}
+                                  >
+                                    Deselect all
+                                  </button>
+                                </div>
+                                <CommandItem
+                                  value="all-tags"
+                                  onSelect={() => setQuickTags([])}
+                                >
+                                  <Check
+                                    className={`mr-2 h-4 w-4 ${
+                                      quickTags.length === 0 ? 'opacity-100' : 'opacity-0'
+                                    }`}
+                                  />
+                                  All Tags
+                                </CommandItem>
+                                {quickTagOptions.map(tag => (
+                                  <CommandItem
+                                    key={tag}
+                                    value={tag}
+                                    onSelect={() => {
+                                      setQuickTags(prev => {
+                                        if (prev.includes(tag)) {
+                                          return prev.filter(t => t !== tag);
+                                        }
+                                        return [...prev, tag];
+                                      });
+                                    }}
+                                  >
+                                    <Check
+                                      className={`mr-2 h-4 w-4 ${
+                                        quickTags.includes(tag) ? 'opacity-100' : 'opacity-0'
+                                      }`}
+                                    />
+                                    {tag}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="h-10 w-full text-sm justify-between"
+                          >
+                            {quickSingleChoice
+                              ? quickSingleOptions.find(opt => opt.value === quickSingleChoice)?.label || 'Select an option'
+                              : 'Nothing selected'}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0 w-48" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search..." />
+                            <CommandList>
+                              <CommandEmpty>No option found.</CommandEmpty>
+                              <CommandGroup>
+                                {quickSingleOptions.map(opt => (
+                                  <CommandItem
+                                    key={opt.value}
+                                    value={opt.label}
+                                    onSelect={() => setQuickSingleChoice(opt.value)}
+                                  >
+                                    <Check
+                                      className={`mr-2 h-4 w-4 ${
+                                        quickSingleChoice === opt.value ? 'opacity-100' : 'opacity-0'
+                                      }`}
+                                    />
+                                    {opt.label}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <div className="hidden md:block w-full md:w-auto">
+                <div className="grid grid-cols-1 gap-2 md:flex md:flex-wrap md:items-center md:gap-2 bg-slate-50 dark:bg-slate-800/40 md:bg-transparent md:dark:bg-transparent border border-slate-200/60 dark:border-slate-700/60 md:border-0 rounded-2xl p-3">
+                  <Button size="sm" className="w-full md:w-auto text-sm">
+                    Add Tag
+                  </Button>
+                  <Button size="sm" className="w-full md:w-auto text-sm">
+                    Add Tag Notes
+                  </Button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="h-10 w-full md:w-36 text-sm justify-between"
+                      >
+                        {quickTagNotes.length === 0
+                          ? 'All Tag Notes'
+                          : `${quickTagNotes.length} selected`}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-56" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search tag notes..." />
+                        <CommandList>
+                          <CommandEmpty>No tag note found.</CommandEmpty>
+                          <CommandGroup>
+                            <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
+                              <button
+                                type="button"
+                                className="underline-offset-4 hover:underline"
+                                onClick={() => setQuickTagNotes([...quickTagNoteOptions])}
+                              >
+                                Select all
+                              </button>
+                              <button
+                                type="button"
+                                className="underline-offset-4 hover:underline"
+                                onClick={() => setQuickTagNotes([])}
+                              >
+                                Deselect all
+                              </button>
+                            </div>
                             <CommandItem
-                              key={tag}
-                              value={tag}
-                              onSelect={() => {
-                                setQuickTags(prev => {
-                                  if (prev.includes(tag)) {
-                                    return prev.filter(t => t !== tag);
-                                  }
-                                  return [...prev, tag];
-                                });
-                              }}
+                              value="all-tag-notes"
+                              onSelect={() => setQuickTagNotes([])}
                             >
                               <Check
                                 className={`mr-2 h-4 w-4 ${
-                                  quickTags.includes(tag) ? 'opacity-100' : 'opacity-0'
+                                  quickTagNotes.length === 0 ? 'opacity-100' : 'opacity-0'
                                 }`}
                               />
-                              {tag}
+                              All Tag Notes
                             </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="h-9 w-40 text-xs justify-between"
-                    >
-                      {quickSingleChoice
-                        ? quickSingleOptions.find(opt => opt.value === quickSingleChoice)?.label || 'Select an option'
-                        : 'Nothing selected'}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0 w-48" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search..." />
-                      <CommandList>
-                        <CommandEmpty>No option found.</CommandEmpty>
-                        <CommandGroup>
-                          {quickSingleOptions.map(opt => (
+                            {quickTagNoteOptions.map(tagNote => (
+                              <CommandItem
+                                key={tagNote}
+                                value={tagNote}
+                                onSelect={() => {
+                                  setQuickTagNotes(prev => {
+                                    if (prev.includes(tagNote)) {
+                                      return prev.filter(t => t !== tagNote);
+                                    }
+                                    return [...prev, tagNote];
+                                  });
+                                }}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${
+                                    quickTagNotes.includes(tagNote) ? 'opacity-100' : 'opacity-0'
+                                  }`}
+                                />
+                                {tagNote}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="h-10 w-full md:w-32 text-sm justify-between"
+                      >
+                        {quickTags.length === 0 ? 'All Tags' : `${quickTags.length} selected`}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-52" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search tags..." />
+                        <CommandList>
+                          <CommandEmpty>No tag found.</CommandEmpty>
+                          <CommandGroup>
+                            <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
+                              <button
+                                type="button"
+                                className="underline-offset-4 hover:underline"
+                                onClick={() => setQuickTags([...quickTagOptions])}
+                              >
+                                Select all
+                              </button>
+                              <button
+                                type="button"
+                                className="underline-offset-4 hover:underline"
+                                onClick={() => setQuickTags([])}
+                              >
+                                Deselect all
+                              </button>
+                            </div>
                             <CommandItem
-                              key={opt.value}
-                              value={opt.label}
-                              onSelect={() => setQuickSingleChoice(opt.value)}
+                              value="all-tags"
+                              onSelect={() => setQuickTags([])}
                             >
                               <Check
                                 className={`mr-2 h-4 w-4 ${
-                                  quickSingleChoice === opt.value ? 'opacity-100' : 'opacity-0'
+                                  quickTags.length === 0 ? 'opacity-100' : 'opacity-0'
                                 }`}
                               />
-                              {opt.label}
+                              All Tags
                             </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                            {quickTagOptions.map(tag => (
+                              <CommandItem
+                                key={tag}
+                                value={tag}
+                                onSelect={() => {
+                                  setQuickTags(prev => {
+                                    if (prev.includes(tag)) {
+                                      return prev.filter(t => t !== tag);
+                                    }
+                                    return [...prev, tag];
+                                  });
+                                }}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${
+                                    quickTags.includes(tag) ? 'opacity-100' : 'opacity-0'
+                                  }`}
+                                />
+                                {tag}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="h-10 w-full md:w-40 text-sm justify-between"
+                      >
+                        {quickSingleChoice
+                          ? quickSingleOptions.find(opt => opt.value === quickSingleChoice)?.label || 'Select an option'
+                          : 'Nothing selected'}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-48" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search..." />
+                        <CommandList>
+                          <CommandEmpty>No option found.</CommandEmpty>
+                          <CommandGroup>
+                            {quickSingleOptions.map(opt => (
+                              <CommandItem
+                                key={opt.value}
+                                value={opt.label}
+                                onSelect={() => setQuickSingleChoice(opt.value)}
+                              >
+                                <Check
+                                  className={`mr-2 h-4 w-4 ${
+                                    quickSingleChoice === opt.value ? 'opacity-100' : 'opacity-0'
+                                  }`}
+                                />
+                                {opt.label}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
             </div>
           </div>
@@ -4601,10 +4812,10 @@ export default function Jobs() {
 
         {/* Premium Table View with Status Grouping */}
         {/* Jobs Table (companies-style) */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden pt-6">
+        <div className="bg-transparent border-0 shadow-none md:bg-white md:dark:bg-slate-900 rounded-lg md:border md:border-slate-200 md:dark:border-slate-800 md:shadow-xl overflow-hidden pt-6">
 
             {/* Table Controls */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 md:px-6 px-0 mb-4">
               <div className="flex items-center gap-2">
                 <Label
                   htmlFor="entries"
@@ -4634,307 +4845,27 @@ export default function Jobs() {
             </div>
 
             <div className="overflow-x-auto">
-              <Table className="min-w-full">
-                <TableHeader>
-                  <TableRow className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
-                    <TableHead className="w-10 text-left align-top"></TableHead>
-                    <TableHead className={`font-semibold text-slate-900 dark:text-slate-100 ${density==='ultra'?'py-2':'py-3'} text-left w-[260px]`}>Job Details</TableHead>
-                    <TableHead className={`font-semibold text-slate-900 dark:text-slate-100 ${density==='ultra'?'py-2':'py-3'} text-left w-[240px]`}>Client Info</TableHead>
-                    <TableHead className={`font-semibold text-slate-900 dark:text-slate-100 ${density==='ultra'?'py-2':'py-3'} text-left w-[180px] whitespace-nowrap`}>Schedule</TableHead>
-                    <TableHead className={`font-semibold text-slate-900 dark:text-slate-100 ${density==='ultra'?'py-2':'py-3'} text-left w-[260px]`}>Location</TableHead>
-                    <TableHead className={`font-semibold text-slate-900 dark:text-slate-100 ${density==='ultra'?'py-2':'py-3'} text-left w-[160px]`}>Source</TableHead>
-                    <TableHead className={`font-semibold text-slate-900 dark:text-slate-100 ${density==='ultra'?'py-2':'py-3'} text-left w-[140px]`}>Created</TableHead>
-                    <TableHead className={`font-semibold text-slate-900 dark:text-slate-100 ${density==='ultra'?'py-2':'py-3'} text-left w-[200px]`}>Technician</TableHead>
-                    <TableHead className={`font-semibold text-slate-900 dark:text-slate-100 ${density==='ultra'?'py-2':'py-3'} text-left w-[220px]`}>Status</TableHead>
-                    <TableHead className={`font-semibold text-slate-900 dark:text-slate-100 ${density==='ultra'?'py-2':'py-3'} text-center w-[120px] sticky right-0 bg-white dark:bg-slate-900 border-l border-slate-300 dark:border-slate-700 shadow-[ -8px_0_12px_-8px_rgba(0,0,0,0.18)] dark:shadow-[ -8px_0_12px_-8px_rgba(0,0,0,0.5)] z-10`}>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pagedJobs.map((job) => {
-                    const status = getStatusObj(getJobStatus(job));
-                    const timeAgo = getTimeAgo(job.lastUpdated || job.startDate);
-                    const scheduledTime = new Date(job.startDate + ' ' + job.startTime);
-                    const timeUntilScheduled = getTimeUntil(scheduledTime);
-                    
-                    return (
-                      <TableRow key={job.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 border-b border-slate-100 dark:border-slate-700">
-                        <TableCell className={`${density==='ultra'?'py-1': density==='compact'?'py-2':'py-3'} w-10 align-top`}>
-                          <Checkbox
-                            aria-label={`Select job ${job.id}`}
-                            checked={selectedRows.has(job.id)}
-                            onCheckedChange={checked => {
-                              setSelectedRows(prev => {
-                                const next = new Set(prev);
-                                if (checked) next.add(job.id);
-                                else next.delete(job.id);
-                                return next;
-                              });
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell className={`${density==='ultra'?'py-1': density==='compact'?'py-2':'py-3'} align-top min-w-[260px]`}>
-                          <div className={`${density==='ultra'?'space-y-0.5': density==='compact'?'space-y-1':'space-y-2'}`}>
-                            <div className="flex items-center space-x-3">
-                              <div className={`${density==='ultra'?'w-7 h-7': density==='compact'?'w-8 h-8':'w-10 h-10'} bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center`}>
-                                <span className={`text-white font-bold ${density==='ultra'?'text-[10px]': density==='compact'?'text-xs':'text-sm'}`}>{job.id.split('-')[2]}</span>
-                              </div>
-                              <div className="min-w-0">
-                                <p className={`${density==='ultra'?'text-[11px]':'text-sm'} font-semibold text-slate-900 dark:text-slate-100 truncate`}>{job.jobType}</p>
-                                <p className={`${density==='ultra'?'text-[10px]':'text-sm'} text-slate-600 dark:text-slate-400 truncate`}>{job.jobDescription}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400">
-                              <span className="flex items-center gap-1 whitespace-nowrap"><Clock className="w-3 h-3" /><span>{timeAgo}</span></span>
-                              <span className="flex items-center gap-1 whitespace-nowrap"><DollarSign className="w-3 h-3" /><span>${job.revenue}</span></span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className={`${density==='ultra'?'py-1': density==='compact'?'py-2':'py-3'} align-top min-w-[240px]`}>
-                          <div className={`${density==='ultra'?'space-y-0.5': density==='compact'?'space-y-1':'space-y-2'}`}>
-                            {visibleClientFields.clientName && (
-                              <div className="min-w-0">
-                                <p className={`${density==='ultra'?'text-[11px]':'text-sm'} font-semibold text-slate-900 dark:text-slate-100 truncate`}>{job.clientName}</p>
-                                {visibleClientFields.companyName && (
-                                  <p className={`${density==='ultra'?'text-[10px]':'text-sm'} text-slate-600 dark:text-slate-400 truncate`}>{job.companyName}</p>
-                                )}
-                              </div>
-                            )}
-                            {visibleClientFields.phoneNumber && (
-                              <div className={`flex items-center space-x-2 ${density==='ultra'?'text-[10px]':'text-sm'} text-slate-500 dark:text-slate-400`}>
-                                <Phone className="w-3 h-3" />
-                                <span>{job.phoneNumber}</span>
-                              </div>
-                            )}
-                            {visibleClientFields.phoneNumber2 && (job as any).phoneNumber2 && (
-                              <div className={`flex items-center space-x-2 ${density==='ultra'?'text-[10px]':'text-sm'} text-slate-500 dark:text-slate-400`}>
-                                <Phone className="w-3 h-3" />
-                                <span>{(job as any).phoneNumber2}</span>
-                              </div>
-                            )}
-                            {visibleClientFields.email && (
-                              <div className={`flex items-center space-x-2 ${density==='ultra'?'text-[10px]':'text-sm'} text-slate-500 dark:text-slate-400 truncate`}>
-                                <Mail className="w-3 h-3" />
-                                <span className="truncate">{job.email}</span>
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className={`${density==='ultra'?'py-1': density==='compact'?'py-2':'py-3'} align-top min-w-[180px]`}>
-                          <div className={`${density==='ultra'?'space-y-0.5': density==='compact'?'space-y-1':'space-y-2'}`}>
-                            <div className="flex items-center space-x-2">
-                              <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                              <div className={`${density==='ultra'?'text-[11px]':'text-sm'} font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
-                                {new Date(job.startDate).toLocaleDateString('en-US', { 
-                                  weekday: 'short', 
-                                  month: 'short', 
-                                  day: '2-digit'
-                                })}
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Clock className="w-3.5 h-3.5 text-slate-500" />
-                              <div className={`${density==='ultra'?'text-[11px]':'text-sm'} font-semibold ${new Date(job.startDate + ' ' + job.startTime) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}`}>
-                                {job.startTime}
-                              </div>
-                              {new Date(job.startDate + ' ' + job.startTime) < new Date() && (
-                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                              )}
-                            </div>
-                            <div className={`text-[10px] font-bold ${new Date(job.startDate + ' ' + job.startTime) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                              {new Date(job.startDate + ' ' + job.startTime) < new Date() ? 'PAST DUE' : timeUntilScheduled}
-                            </div>
-                            <div className="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                              Duration: {job.estimatedDuration}
-                            </div>
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className={`${density==='ultra'?'py-1': density==='compact'?'py-2':'py-3'} align-top min-w-[260px]`}>
-                          <div className={`${density==='ultra'?'space-y-0.5': 'space-y-1'}`}>
-                            <p className={`${density==='ultra'?'text-[11px]':'text-sm'} text-slate-700 dark:text-slate-300 truncate`}>{job.location}</p>
-                            <p className={`${density==='ultra'?'text-[10px]':'text-sm'} text-slate-600 dark:text-slate-400 truncate`}>{job.city}, {job.state} {job.zipCode}</p>
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className={`${density==='ultra'?'py-1': density==='compact'?'py-2':'py-3'} align-top min-w-[160px]`}>
-                          <div className={`${density==='ultra'?'space-y-0.5': density==='compact'?'space-y-1':'space-y-2'}`}>
-                            <div className="flex items-center space-x-2">
-                              <Globe className="w-3.5 h-3.5 text-slate-500" />
-                              <span className={`${density==='ultra'?'text-[11px]':'text-sm'} font-medium text-slate-900 dark:text-slate-100 capitalize truncate`}>
-                                {job.source === 'yelp' ? 'Yelp' : 
-                                 job.source === 'google-ads' ? 'Google Ads' : 
-                                 job.source === 'facebook' ? 'Facebook' : 
-                                 job.source === 'referral' ? 'Referral' : 
-                                 job.source === 'website' ? 'Website' : 
-                                 job.source === 'phone' ? 'Phone Call' : 
-                                 job.source === 'contract' ? 'Contract' : 
-                                 job.source || 'Direct'}
-                              </span>
-                            </div>
-                            <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                              Lead Source
-                            </div>
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className={`${density==='ultra'?'py-1': density==='compact'?'py-2':'py-3'} align-top min-w-[140px]`}>
-                          <div className={`${density==='ultra'?'space-y-0.5': density==='compact'?'space-y-1':'space-y-2'}`}>
-                            <div className="flex items-center space-x-2">
-                              <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                              <span className={`${density==='ultra'?'text-[11px]':'text-sm'} font-medium text-slate-900 dark:text-slate-100`}>
-                                {new Date(job.createdAt || job.lastUpdated).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: '2-digit',
-                                  year: '2-digit'
-                                })}
-                              </span>
-                            </div>
-                            <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                              {new Date(job.createdAt || job.lastUpdated).toLocaleTimeString('en-US', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </div>
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className={`${density==='ultra'?'py-1': density==='compact'?'py-2':'py-3'} align-top min-w-[200px]`}>
-                           <div className={`${density==='ultra'?'space-y-0.5': density==='compact'?'space-y-1':'space-y-2'}`}>
-                             <div className="flex items-center space-x-2">
-                               <User className={`w-3.5 h-3.5 ${job.assignedTechnician ? 'text-green-500' : 'text-red-500'}`} />
-                               <span className={`${density==='ultra'?'text-[11px]':'text-sm'} font-medium ${job.assignedTechnician ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'} truncate`}>
-                                 {job.assignedTechnician ? `Assigned: ${job.assignedTechnician}` : 'UNASSIGNED'}
-                               </span>
-                             </div>
-                           </div>
-                         </TableCell>
-                        
-                        <TableCell className={`${density==='ultra'?'py-1': density==='compact'?'py-2':'py-3'} align-top min-w-[220px]`}>
-                          <div className={`${density==='ultra'?'space-y-1': density==='compact'?'space-y-1.5':'space-y-3'}`}>
-                            {/* Status Badge with dropdown */}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button
-                                  type="button"
-                                  className="cursor-pointer text-[10px] font-semibold px-2.5 py-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-300 dark:focus:ring-slate-600"
-                                  style={{ backgroundColor: status.color + '20', color: status.color }}
-                                >
-                                  {status.name}
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-44">
-                                {jobStatuses.map(statusOption => (
-                                  <DropdownMenuItem
-                                    key={statusOption.id}
-                                    className="flex items-center gap-2"
-                                    onClick={() => {
-                                      // Wire up to your actual status change handler here
-                                      // e.g., handleChangeJobStatus(job.id, statusOption.name)
-                                    }}
-                                  >
-                                    <span
-                                      className="inline-block h-2 w-2 rounded-full"
-                                      style={{ backgroundColor: statusOption.color }}
-                                    />
-                                    <span>{statusOption.name}</span>
-                                  </DropdownMenuItem>
-                                ))}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                            
-                            {/* Time in Status */}
-                            <div className="flex items-center space-x-2">
-                              <Clock className="w-3 h-3 text-slate-500" />
-                              <span className="text-[10px] text-slate-600 dark:text-slate-400">
-                                {timeAgo} in status
-                              </span>
-                            </div>
-                            
-                            {/* Tag Note - Priority & Payment */}
-                            <Badge 
-                              variant="secondary" 
-                              className={`text-[10px] px-2 py-0.5 ${
-                                job.priority === 'High' 
-                                  ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                                  : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                              }`}
-                            >
-                              {job.priority === 'High' ? 'NEED TO COLLECT PAYMENT' : 'OPPORTUNITY'}
-                            </Badge>
-                            
-                            {/* Call Indicator */}
-                            <div className="flex items-center space-x-2">
-                              <Phone className={`w-3 h-3 ${job.noteTags?.includes('called') ? 'text-green-500' : 'text-slate-400'}`} />
-                              <span className="text-[10px] text-slate-600 dark:text-slate-400">
-                                {job.noteTags?.includes('called') ? 'Client Called' : 'No Call Yet'}
-                              </span>
-                            </div>
-
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell className={`${density==='ultra'?'py-1': density==='compact'?'py-2':'py-3'} text-center w-[120px] sticky right-0 bg-white dark:bg-slate-900 border-l border-slate-300 dark:border-slate-700 shadow-[ -8px_0_12px_-8px_rgba(0,0,0,0.18)] dark:shadow-[ -8px_0_12px_-8px_rgba(0,0,0,0.5)]`}>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-8 w-8 p-0"
-                                aria-label="Actions"
-                              >
-                                <MoreVertical className={`${density==='ultra'?'w-3.5 h-3.5':'w-4 h-4'}`} />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem className="flex items-center gap-2">
-                                <Edit className="w-4 h-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuSub>
-                                <DropdownMenuSubTrigger className="flex items-center gap-2">
-                                  <RefreshCw className="w-4 h-4" />
-                                  Change Status
-                                </DropdownMenuSubTrigger>
-                                <DropdownMenuSubContent className="w-44">
-                                  {jobStatuses.map(statusOption => (
-                                    <DropdownMenuItem
-                                      key={statusOption.id}
-                                      className="flex items-center gap-2"
-                                      onClick={() => {
-                                        // Wire up to your actual status change handler here
-                                        // e.g., handleChangeJobStatus(job.id, statusOption.name)
-                                      }}
-                                    >
-                                      <span
-                                        className="inline-block h-2 w-2 rounded-full"
-                                        style={{ backgroundColor: statusOption.color }}
-                                      />
-                                      <span>{statusOption.name}</span>
-                                    </DropdownMenuItem>
-                                  ))}
-                                </DropdownMenuSubContent>
-                              </DropdownMenuSub>
-                              <DropdownMenuItem
-                                className="flex items-center gap-2 text-red-600"
-                                onClick={() => handleOpenDeleteSingle(job)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+              <JobsTable
+                jobs={pagedJobs}
+                density={density}
+                visibleClientFields={visibleClientFields}
+                selectedRows={selectedRows}
+                jobStatuses={jobStatuses}
+                getStatusObj={getStatusObj}
+                getJobStatus={getJobStatus}
+                getTimeAgo={getTimeAgo}
+                getTimeUntil={getTimeUntil}
+                onToggleRow={handleRowToggle}
+                onDelete={handleOpenDeleteSingle}
+                mobileJobs={mobileJobs}
+                onLoadMore={() => setMobilePage(p => p + 1)}
+                hasMoreMobile={mobileHasMore}
+                mobileLoading={false}
+              />
             </div>
 
             {/* Pagination Controls */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-4 px-6 pb-6 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+            <div className="hidden md:flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-4 px-6 pb-6 pt-4 border-t border-neutral-200 dark:border-neutral-700">
               <div className="text-sm text-neutral-600 dark:text-neutral-400">
                 Showing {(currentPage - 1) * entriesPerPage + 1} to{' '}
                 {Math.min(currentPage * entriesPerPage, filteredCount)} of {filteredCount} entries
