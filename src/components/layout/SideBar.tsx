@@ -111,29 +111,29 @@ export function Sidebar(): React.JSX.Element {
     //     Tenant: ['MOD007', 'MOD006'],
     //   },
     // },
-    {
-      name: 'Reports',
-      href: '/reports',
-      icon: FileBarChart,
-      moduleCodes: {
-        P1: ['MOD017'],
-        P2: ['MOD010'],
-        P3: ['MOD010'],
-        P4: ['MOD010'],
-        P5: ['MOD010', 'MOD017'],
-        Tenant: ['MOD010'],
-      },
-    },
-    {
-      name: 'Customers',
-      href: '/customers',
-      icon: Home,
-    },
-    {
-      name: 'Schedule',
-      href: '/schedule',
-      icon: Calendar,
-    },
+    // {
+    //   name: 'Reports',
+    //   href: '/reports',
+    //   icon: FileBarChart,
+    //   moduleCodes: {
+    //     P1: ['MOD017'],
+    //     P2: ['MOD010'],
+    //     P3: ['MOD010'],
+    //     P4: ['MOD010'],
+    //     P5: ['MOD010', 'MOD017'],
+    //     Tenant: ['MOD010'],
+    //   },
+    // },
+    // {
+    //   name: 'Customers',
+    //   href: '/customers',
+    //   icon: Home,
+    // },
+    // {
+    //   name: 'Schedule',
+    //   href: '/schedule',
+    //   icon: Calendar,
+    // },
     // {
     //   name: 'WePro Phone',
     //   href: '/calls',
