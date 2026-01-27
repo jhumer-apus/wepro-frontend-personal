@@ -4055,12 +4055,12 @@ export default function Jobs() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80 p-0 md:hidden">
                   <div className="p-3 space-y-2">
-                      <Button size="sm" className="w-full text-sm">
+                      {/* <Button size="sm" className="w-full text-sm">
                         Add Tag
                       </Button>
                       <Button size="sm" className="w-full text-sm">
                         Add Tag Notes
-                      </Button>
+                      </Button> */}
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -4212,7 +4212,7 @@ export default function Jobs() {
                           >
                             {quickSingleChoice
                               ? quickSingleOptions.find(opt => opt.value === quickSingleChoice)?.label || 'Select an option'
-                              : 'Nothing selected'}
+                              : 'All Sources'}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </PopoverTrigger>
@@ -4246,12 +4246,12 @@ export default function Jobs() {
               </DropdownMenu>
               <div className="hidden md:block w-full md:w-auto">
                 <div className="grid grid-cols-1 gap-2 md:flex md:flex-wrap md:items-center md:gap-2 bg-slate-50 dark:bg-slate-800/40 md:bg-transparent md:dark:bg-transparent border border-slate-200/60 dark:border-slate-700/60 md:border-0 rounded-2xl p-3">
-                  <Button size="sm" className="w-full md:w-auto text-sm">
+                  {/* <Button size="sm" className="w-full md:w-auto text-sm">
                     Add Tag
                   </Button>
                   <Button size="sm" className="w-full md:w-auto text-sm">
                     Add Tag Notes
-                  </Button>
+                  </Button> */}
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -4403,7 +4403,7 @@ export default function Jobs() {
                       >
                         {quickSingleChoice
                           ? quickSingleOptions.find(opt => opt.value === quickSingleChoice)?.label || 'Select an option'
-                          : 'Nothing selected'}
+                          : 'All Sources'}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
@@ -4763,8 +4763,8 @@ export default function Jobs() {
               </SheetTrigger>
               <SheetContent side="right" className="w-full sm:max-w-md">
                 <SheetHeader>
-                  <SheetTitle>Show Data</SheetTitle>
-                  <SheetDescription>Select fields to display. Saved locally.</SheetDescription>
+                  <SheetTitle>Manage Columns</SheetTitle>
+                  {/* <SheetDescription>Select fields to display. Saved locally.</SheetDescription> */}
                 </SheetHeader>
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   {columnOptions.map(([key,label]) => (
