@@ -76,7 +76,7 @@ export default function DashboardLayout({
         <Header onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
 
         <main className="flex-1 overflow-auto bg-neutral-50 dark:bg-neutral-950">
-          <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          <div className="container mx-auto px-4 py-6 sm:px-4">
             {children}
           </div>
         </main>

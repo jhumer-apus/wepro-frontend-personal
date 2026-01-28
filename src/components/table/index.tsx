@@ -1,0 +1,260 @@
+import React from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/src/components/ui/table";
+import { Button } from "@/src/components/ui/button";
+import { Card, CardContent } from "@/src/components/ui/card";
+import { Label } from "@/src/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
+
+type ColumnConfig = {
+  columnName: string;
+  cell: keyof any | ((row: any) => React.ReactNode);
+  sortKey?: string;
+};
+
+type JobsTableProps = {
+  rows: any[];
+  mobileRows?: any[];
+  columns: ColumnConfig[];
+  mobileCard?: (row: any) => React.ReactNode;
+  onSort?: (column: string) => void;
+  activeSortKey?: string;
+  sortDirection?: "asc" | "desc";
+  mobileLoading?: boolean;
+  pageSize: number;
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  onPageSizeChange: (value: string) => void;
+  onPageChange: (page: number) => void;
+};
+
+const JobsTable: React.FC<JobsTableProps> = ({
+  rows,
+  mobileRows,
+  columns,
+  mobileCard,
+  onSort,
+  activeSortKey,
+  sortDirection = "asc",
+  mobileLoading = false,
+  pageSize,
+  currentPage,
+  totalPages,
+  totalCount,
+  onPageSizeChange,
+  onPageChange,
+}) => {
+  const startEntry = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const endEntry = Math.min(currentPage * pageSize, totalCount);
+  const mobileItems = mobileRows ?? rows;
+  const inferredHasMore = mobileItems.length < totalCount;
+
+  return (
+    <div className="bg-transparent border-0 shadow-none md:bg-white md:dark:bg-slate-900 rounded-lg md:border md:border-slate-200 md:dark:border-slate-800 md:shadow-xl overflow-hidden pt-6">
+      {/* Table Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 md:px-6 px-0 mb-4">
+        <div className="flex items-center gap-2">
+          <Label
+            htmlFor="entries"
+            className="text-sm text-neutral-600 dark:text-neutral-400"
+          >
+            Show
+          </Label>
+          <Select value={pageSize.toString()} onValueChange={onPageSizeChange}>
+            <SelectTrigger className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[10, 20, 30, 40, 50, 100].map(num => (
+                <SelectItem key={num} value={num.toString()}>
+                  {num}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Label className="text-sm text-neutral-600 dark:text-neutral-400">
+            entries
+          </Label>
+        </div>
+      </div>
+
+      <div className="px-0">
+        {/* Desktop table */}
+        <div className="hidden md:block">
+          <Table className="min-w-[900px] border-collapse">
+            <TableHeader className="sticky top-0 z-10">
+              <TableRow className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
+                {columns.map((col, idx) => {
+                  const sortKey =
+                    col.sortKey ??
+                    (typeof col.cell === "string" ? col.cell : undefined);
+                  const isActive = !!sortKey && activeSortKey === sortKey;
+                  return (
+                  <TableHead
+                    key={`${col.columnName}-${idx}`}
+                    className={`font-semibold text-slate-900 dark:text-slate-100 py-3 text-left align-middle select-none ${
+                      sortKey ? "cursor-pointer" : "cursor-default"
+                    }`}
+                    onClick={() => sortKey && onSort?.(sortKey)}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      <span>{col.columnName}</span>
+                      {sortKey ? (
+                        <span
+                          className={`text-xs ${
+                            isActive ? "text-blue-600" : "text-slate-400"
+                          }`}
+                        >
+                          {isActive ? (sortDirection === "asc" ? "▲" : "▼") : "⇅"}
+                        </span>
+                      ) : null}
+                    </span>
+                  </TableHead>
+                  );
+                })}
+              </TableRow>
+            </TableHeader>
+            <TableBody >
+              {rows.map(row => {
+                return (
+                  <TableRow key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 border-b border-slate-100 dark:border-slate-700">
+                    {columns.map((col, idx) => {
+                      const content =
+                        typeof col.cell === "function"
+                          ? col.cell(row)
+                          : row[col.cell as keyof typeof row];
+                      return (
+                        <TableCell
+                          key={`${col.columnName}-${row.id}-${idx}`}
+                          className={`py-3 align-top`}
+                        >
+                          {content}
+                    </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Mobile cards */}
+        <div className="md:hidden">
+          {mobileItems.map(row => {
+            if (mobileCard) {
+              return mobileCard(row);
+            }
+
+            const entries = Object.entries(row ?? {});
+
+            return (
+              <Card key={row.id} className="border-slate-200 dark:border-slate-800 shadow-sm mb-3">
+                <CardContent className="space-y-3 text-sm">
+                  {entries.map(([key, value], idx) => {
+                    const content =
+                      value === null || value === undefined
+                        ? String(value)
+                        : typeof value === "object"
+                          ? JSON.stringify(value)
+                          : String(value);
+                    return (
+                      <div key={`${key}-${row.id}-${idx}`} className="space-y-1">
+                        <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                          {key}
+                        </div>
+                        <div className="text-sm text-slate-700 dark:text-slate-200">
+                          {content}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            );
+          })}
+
+          {onPageChange ? (
+            <div className="pt-2 pb-4 flex justify-center">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={!inferredHasMore || mobileLoading}
+                className="w-full"
+              >
+                {mobileLoading ? "Loading..." : inferredHasMore ? "Load More" : "No more records"}
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="hidden md:flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 pb-6 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+          Showing {startEntry} to {endEntry} of {totalCount} entries
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onPageChange(pageNum)}
+                  className="w-8 h-8 p-0"
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default JobsTable;
+

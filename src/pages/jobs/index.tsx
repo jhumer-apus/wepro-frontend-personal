@@ -1,10 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import dynamic from "next/dynamic";
 import { type DateValueType } from "react-tailwindcss-datepicker";
-
-const Datepicker = dynamic(() => import("react-tailwindcss-datepicker"), {
-  ssr: false,
-});
+import InputDatepicker from "@/src/components/input/datepicker";
 import { useRouter } from "next/router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
@@ -121,7 +117,8 @@ import {
   CommandItem,
   CommandList,
 } from "@/src/components/ui/command";
-import JobsTable from "@/src/components/jobs/JobsTable";
+import Table from "@/src/components/table";
+import SelectInput from "@/src/components/input/select";
 
 // Technician interface with proper typing
 interface Technician {
@@ -205,6 +202,7 @@ export default function Jobs() {
     try { return (localStorage.getItem('jobs.density') as any) || 'comfortable'; } catch { return 'comfortable'; }
   });
   useEffect(()=>{ try { localStorage.setItem('jobs.density', density); } catch {} }, [density]);
+  const [jobLeadFilter, setJobLeadFilter] = useState<'all' | 'job' | 'lead'>('all');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   
   // Additional missing filters
@@ -2769,6 +2767,7 @@ export default function Jobs() {
   const [dispatchTechnicianFilter, setDispatchTechnicianFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<string>("priority");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [showJobDetails, setShowJobDetails] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -2788,6 +2787,7 @@ export default function Jobs() {
   const [quickTagNotes, setQuickTagNotes] = useState<string[]>([]);
   const [quickTags, setQuickTags] = useState<string[]>([]);
   const [quickSingleChoice, setQuickSingleChoice] = useState<string>('');
+  const [quickDispatches, setQuickDispatches] = useState<string[]>([]);
   const [showAddTagNoteModal, setShowAddTagNoteModal] = useState(false);
   const [newTagNoteName, setNewTagNoteName] = useState('');
   const [showAddTagModal, setShowAddTagModal] = useState(false);
@@ -2829,7 +2829,9 @@ export default function Jobs() {
   const quickSingleOptions = [
     { label: 'None', value: 'none' },
     { label: 'Option 1', value: 'option-1' },
+    { label: 'Option 2', value: 'option-2' },
   ];
+  const quickDispatchOptions = ['Dispatch 1', 'Dispatch 2', 'Dispatch 3'];
   useEffect(() => {
     if (selectedDateRange === 'custom-picker') return;
     const presetRange = getRangeDates(selectedDateRange);
@@ -3097,34 +3099,75 @@ export default function Jobs() {
     { id: 'PAY-001', date: '2024-06-25', amount: 320, method: 'Credit Card', status: 'Completed' },
   ]);
 
+  const compareJobs = (a: any, b: any, by: string, dir: "asc" | "desc") => {
+    const direction = dir === "asc" ? 1 : -1;
+    switch (by) {
+      case "priority": {
+        const priorityOrder = { "Critical": 4, "High": 3, "Medium": 2, "Low": 1 };
+        return (priorityOrder[b.priority as keyof typeof priorityOrder] - priorityOrder[a.priority as keyof typeof priorityOrder]) * direction;
+      }
+      case "time":
+        return (new Date(a.startTime).getTime() - new Date(b.startTime).getTime()) * direction;
+      case "distance":
+        return ((a.distance ?? 0) - (b.distance ?? 0)) * direction;
+      case "revenue":
+        return ((b.revenue ?? 0) - (a.revenue ?? 0)) * direction;
+      case "jobType":
+        return (a.jobType || "").localeCompare(b.jobType || "") * direction;
+      case "clientName":
+        return (a.clientName || "").localeCompare(b.clientName || "") * direction;
+      case "startDate":
+        return (new Date(a.startDate).getTime() - new Date(b.startDate).getTime()) * direction;
+      case "location":
+        return (a.location || "").localeCompare(b.location || "") * direction;
+      case "source":
+        return (a.source || "").localeCompare(b.source || "") * direction;
+      case "createdAt":
+        return (new Date(a.createdAt || a.lastUpdated).getTime() - new Date(b.createdAt || b.lastUpdated).getTime()) * direction;
+      case "assignedTechnician":
+        return (a.assignedTechnician || "").localeCompare(b.assignedTechnician || "") * direction;
+      case "status":
+        return (a.status || "").localeCompare(b.status || "") * direction;
+      default: {
+        if (by && by in a && by in b) {
+          const av = a[by as keyof typeof a];
+          const bv = b[by as keyof typeof b];
+          if (typeof av === "number" && typeof bv === "number") return (av - bv) * direction;
+          if (av instanceof Date && bv instanceof Date) return (av.getTime() - bv.getTime()) * direction;
+          if (typeof av === "string" && typeof bv === "string") return av.localeCompare(bv) * direction;
+        }
+        return 0;
+      }
+    }
+  };
+
+  const handleSortColumn = (column: string) => {
+    setSortBy(prev => {
+      const nextBy = column;
+      const nextDir = prev === column ? (sortDir === "asc" ? "desc" : "asc") : "asc";
+      setSortDir(nextDir);
+      setJobs(prevJobs => [...prevJobs].sort((a, b) => compareJobs(a, b, nextBy, nextDir)));
+      return nextBy;
+    });
+  };
+
   // Filter and sort jobs
   const filteredJobs = jobs
     .filter(job => {
       const matchesStatus = statusFilter === "all" || job.status.toLowerCase() === statusFilter.toLowerCase();
       const matchesPriority = priorityFilter === "all" || job.priority.toLowerCase() === priorityFilter.toLowerCase();
       const matchesTechnician = dispatchTechnicianFilter === "all" || job.assignedTechnician === dispatchTechnicianFilter;
+      const matchesLeadType =
+        jobLeadFilter === "all" ||
+        (((job as { jobLeadType?: string }).jobLeadType || "job") as string).toLowerCase() === jobLeadFilter;
       const matchesSearch = searchQuery === "" || 
         job.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.jobDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.id.toLowerCase().includes(searchQuery.toLowerCase());
       
-      return matchesStatus && matchesPriority && matchesTechnician && matchesSearch;
+      return matchesStatus && matchesPriority && matchesTechnician && matchesLeadType && matchesSearch;
     })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "priority":
-          const priorityOrder = { "Critical": 4, "High": 3, "Medium": 2, "Low": 1 };
-          return priorityOrder[b.priority as keyof typeof priorityOrder] - priorityOrder[a.priority as keyof typeof priorityOrder];
-        case "time":
-          return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
-        case "distance":
-          return a.distance - b.distance;
-        case "revenue":
-          return b.revenue - a.revenue;
-        default:
-          return 0;
-      }
-    });
+    .sort((a, b) => compareJobs(a, b, sortBy, sortDir));
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -3946,6 +3989,11 @@ export default function Jobs() {
       if (selectedStatus !== "All" && getJobStatus(job) !== selectedStatus) {
         return false;
       }
+      // Lead/Job type filtering
+      const jobType = (((job as { jobLeadType?: string }).jobLeadType || "job") as string).toLowerCase();
+      if (jobLeadFilter !== "all" && jobType !== jobLeadFilter) {
+        return false;
+      }
       
       // Date range filtering
       if (dateRangeFilter !== "all") {
@@ -4049,7 +4097,6 @@ export default function Jobs() {
       currentPage * entriesPerPage
     );
     const mobileJobs = filteredJobs.slice(0, mobilePage * entriesPerPage);
-    const mobileHasMore = mobilePage * entriesPerPage < filteredJobs.length;
     const rowsPerStatus = density === 'ultra' ? 20 : density === 'compact' ? 10 : 3;
     const showCol = {
       details: visibleClientFields.srNo || visibleClientFields.jobId || visibleClientFields.jobType || visibleClientFields.industryName,
@@ -4072,6 +4119,435 @@ export default function Jobs() {
         return next;
       });
     };
+
+    const onChangeStatus: ((rowId: string, statusName: string) => void) | undefined = undefined;
+
+    const mobileCard = (row) => {
+      const status = getStatusObj(getJobStatus(row));
+      const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
+      const scheduledTime = new Date(`${row.startDate} ${row.startTime}`);
+      const timeUntilScheduled = getTimeUntil(scheduledTime);
+      return (
+        <Card key={row.id} className="border-slate-200 dark:border-slate-800 shadow-sm mb-3">
+          <CardHeader className="pb-2 flex flex-row items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                aria-label={`Select job ${row.id}`}
+                checked={selectedRows.has(row.id)}
+                onCheckedChange={checked => handleRowToggle(row.id, Boolean(checked))}
+                className="mt-1"
+              />
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <CardTitle className="text-base">{row.jobType}</CardTitle>
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px]"
+                    style={{ backgroundColor: `${status.color}20`, color: status.color }}
+                  >
+                    {status.name}
+                  </Badge>
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap">
+                  <DollarSign className="w-3 h-3" />
+                  ${row.revenue}
+                  <Clock className="w-3 h-3" />
+                  {timeAgo}
+                </div>
+              </div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem className="flex items-center gap-2">
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4" />
+                    Change Status
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-44">
+                    {jobStatuses.map(statusOption => (
+                      <DropdownMenuItem
+                        key={statusOption.id}
+                        className="flex items-center gap-2"
+                        onClick={() => onChangeStatus?.(row.id, statusOption.name)}
+                      >
+                        <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: statusOption.color }} />
+                        <span>{statusOption.name}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                {/* <DropdownMenuItem className="flex items-center gap-2 text-red-600" onClick={() => onDelete(job)}>
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </DropdownMenuItem> */}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </CardHeader>
+
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex flex-wrap items-center gap-2 text-slate-600 dark:text-slate-300">
+              <User className="w-4 h-4" />
+              {row.clientName}
+              {row.companyName ? <span className="text-xs text-slate-500">• {row.companyName}</span> : null}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-slate-600 dark:text-slate-300">
+              <Phone className="w-4 h-4" />
+              <span>{row.phoneNumber}</span>
+              {row.email ? (
+                <>
+                  <Mail className="w-4 h-4 ml-2" />
+                  <span className="truncate max-w-[160px]">{row.email}</span>
+                </>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-slate-600 dark:text-slate-300">
+              <Calendar className="w-4 h-4" />
+              <span>
+                {new Date(row.startDate).toLocaleDateString("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "2-digit",
+                })}
+                , {row.startTime}
+              </span>
+              <Badge variant="secondary" className="text-[10px]">
+                {new Date(`${row.startDate} ${row.startTime}`) < new Date() ? "Past due" : timeUntilScheduled}
+              </Badge>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-slate-600 dark:text-slate-300">
+              <MapPin className="w-4 h-4" />
+              <span className="truncate">{row.location}</span>
+              <span className="text-xs text-slate-500">
+                {row.city}, {row.state} {row.zipCode}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-slate-600 dark:text-slate-300">
+              <Globe className="w-4 h-4" />
+              <span className="capitalize">
+                {row.source === "yelp"
+                  ? "Yelp"
+                  : row.source === "google-ads"
+                    ? "Google Ads"
+                    : row.source === "facebook"
+                      ? "Facebook"
+                      : row.source === "referral"
+                        ? "Referral"
+                        : row.source === "website"
+                          ? "Website"
+                          : row.source === "phone"
+                            ? "Phone Call"
+                            : row.source === "contract"
+                              ? "Contract"
+                              : row.source || "Direct"}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-slate-600 dark:text-slate-300">
+              <User className={`w-4 h-4 ${row.assignedTechnician ? "text-green-500" : "text-red-500"}`} />
+              <span className="font-semibold">
+                {row.assignedTechnician ? `Assigned: ${row.assignedTechnician}` : "Unassigned"}
+              </span>
+              <Badge
+                variant="secondary"
+                className={`text-[10px] ${row.priority === "High" ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}
+              >
+                {row.priority === "High" ? "Need payment" : "Opportunity"}
+              </Badge>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+              <Clock className="w-3 h-3" />
+              {timeAgo} • {row.estimatedDuration || "—"} • {row.jobCategory || "General"}
+            </div>
+          </CardContent>
+        </Card>
+      );
+    };
+
+    const tableColumns = [
+      {
+        columnName: "",
+        sortKey: "",
+        cell: (row) => (
+          
+          <div className="flex items-center">
+            <div className={`${density === 'ultra' ? 'h-7' : density === 'compact' ? 'h-8' : 'h-10'} flex items-center justify-center`}>
+              <Checkbox
+                aria-label={`Select job ${row.id}`}
+                checked={selectedRows.has(row.id)}
+                onCheckedChange={checked => handleRowToggle(row.id, Boolean(checked))}
+              />
+            </div>
+          </div>
+        ),
+      },
+      {
+        columnName: "Job Details",
+        sortKey: "jobType",
+        cell: (row) => {
+          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
+          return (
+            <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+              <div className="flex flex-col space-y-1">
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => window.open(`/jobs/${row.id}/view`, '_blank')}
+                    className={`${density === 'ultra' ? 'h-7 px-3' : density === 'compact' ? 'h-8 px-3' : 'h-10 px-4'} bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                  >
+                    <span className={`text-white font-bold ${density === 'ultra' ? 'text-[10px]' : density === 'compact' ? 'text-xs' : 'text-sm'}`}>
+                      {row.id}
+                    </span>
+                  </button>
+                </div>
+                <div className="min-w-0">
+                  <p
+                    className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-semibold text-slate-900 dark:text-slate-100 truncate cursor-pointer hover:underline`}
+                    onClick={() => window.open(`/jobs/${row.id}/view`, '_blank')}
+                  >
+                    {row.jobType}
+                  </p>
+                  <p
+                    className={`${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-600 dark:text-slate-400 truncate cursor-pointer hover:underline`}
+                    onClick={() => window.open(`/jobs/${row.id}/view`, '_blank')}
+                  >
+                    {row.jobDescription}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400">
+                <span className="flex items-center gap-1 whitespace-nowrap">
+                  <Clock className="w-3 h-3" />
+                  <span>{timeAgo}</span>
+                </span>
+                <span className="flex items-center gap-1 whitespace-nowrap">
+                  <span>${row.revenue}</span>
+                </span>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        columnName: "Client Info",
+        sortKey: "clientName",
+        cell: (row) => (
+          <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+            {visibleClientFields.clientName && (
+              <div className="min-w-0">
+                <p className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-semibold text-slate-900 dark:text-slate-100 truncate`}>{row.clientName}</p>
+                {visibleClientFields.companyName && (
+                  <p className={`${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-600 dark:text-slate-400 truncate`}>{row.companyName}</p>
+                )}
+              </div>
+            )}
+            {visibleClientFields.phoneNumber && (
+              <div className={`flex items-center space-x-2 ${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-500 dark:text-slate-400`}>
+                <Phone className="w-3 h-3" />
+                <span>{row.phoneNumber}</span>
+              </div>
+            )}
+            {visibleClientFields.phoneNumber2 && (row as any).phoneNumber2 && (
+              <div className={`flex items-center space-x-2 ${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-500 dark:text-slate-400`}>
+                <Phone className="w-3 h-3" />
+                <span>{(row as any).phoneNumber2}</span>
+              </div>
+            )}
+            {visibleClientFields.email && (
+              <div className={`flex items-center space-x-2 ${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-500 dark:text-slate-400 truncate`}>
+                <Mail className="w-3 h-3" />
+                <span className="truncate">{row.email}</span>
+              </div>
+            )}
+          </div>
+        ),
+      },
+      {
+        columnName: "Schedule",
+        sortKey: "startDate",
+        cell: (row) => {
+          const scheduledTime = new Date(`${row.startDate} ${row.startTime}`);
+          const timeUntilScheduled = getTimeUntil(scheduledTime);
+          return (
+            <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                <div className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
+                  {new Date(row.startDate).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: '2-digit',
+                  })}
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Clock className="w-3.5 h-3.5 text-slate-500" />
+                <div className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-semibold ${new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}`}>
+                  {row.startTime}
+                </div>
+                {new Date(`${row.startDate} ${row.startTime}`) < new Date() && <div className="w-2 h-2 bg-red-500 rounded-full" />}
+              </div>
+              <div className={`text-[10px] font-bold ${new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                {new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'PAST DUE' : timeUntilScheduled}
+              </div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                Duration: {row.estimatedDuration}
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        columnName: "Location",
+        sortKey: "location",
+        cell: (row) => (
+          <div className={`${density === 'ultra' ? 'space-y-0.5' : 'space-y-1'}`}>
+            <p className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} text-slate-700 dark:text-slate-300 truncate`}>{row.location}</p>
+            <p className={`${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-600 dark:text-slate-400 truncate`}>
+              {row.city}, {row.state} {row.zipCode}
+            </p>
+          </div>
+        ),
+      },
+      {
+        columnName: "Source",
+        sortKey: "source",
+        cell: (row) => (
+          <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+            <div className="flex items-center space-x-2">
+              <Globe className="w-3.5 h-3.5 text-slate-500" />
+              <span className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-medium text-slate-900 dark:text-slate-100 capitalize truncate`}>
+                {row.source === 'yelp'
+                  ? 'Yelp'
+                  : row.source === 'google-ads'
+                    ? 'Google Ads'
+                    : row.source === 'facebook'
+                      ? 'Facebook'
+                      : row.source === 'referral'
+                        ? 'Referral'
+                        : row.source === 'website'
+                          ? 'Website'
+                          : row.source === 'phone'
+                            ? 'Phone Call'
+                            : row.source === 'contract'
+                              ? 'Contract'
+                              : row.source || 'Direct'}
+              </span>
+            </div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">Lead Source</div>
+          </div>
+        ),
+      },
+      {
+        columnName: "Created",
+        sortKey: "createdAt",
+        cell: (row) => (
+          <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+            <div className="flex items-center space-x-2">
+              <Calendar className="w-3.5 h-3.5 text-slate-500" />
+              <span className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-medium text-slate-900 dark:text-slate-100`}>
+                {new Date(row.createdAt || row.lastUpdated).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: '2-digit',
+                  year: '2-digit',
+                })}
+              </span>
+            </div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">
+              {new Date(row.createdAt || row.lastUpdated).toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </div>
+          </div>
+        ),
+      },
+      {
+        columnName: "Technician",
+        sortKey: "assignedTechnician",
+        cell: (row) => (
+          <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+            <div className="flex items-center space-x-2">
+              <User className={`w-3.5 h-3.5 ${row.assignedTechnician ? 'text-green-500' : 'text-red-500'}`} />
+              <span className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-medium ${row.assignedTechnician ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'} truncate`}>
+                {row.assignedTechnician ? `Assigned: ${row.assignedTechnician}` : 'UNASSIGNED'}
+              </span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        columnName: "Status",
+        sortKey: "status",
+        cell: (row) => {
+          const status = getStatusObj(getJobStatus(row));
+          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
+          return (
+            <div className={`${density === 'ultra' ? 'space-y-1' : density === 'compact' ? 'space-y-1.5' : 'space-y-3'}`}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="cursor-pointer text-[10px] font-semibold px-2.5 py-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-300 dark:focus:ring-slate-600"
+                    style={{ backgroundColor: `${status.color}20`, color: status.color }}
+                  >
+                    {status.name}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  {jobStatuses.map(statusOption => (
+                    <DropdownMenuItem
+                      key={statusOption.id}
+                      className="flex items-center gap-2"
+                      onClick={() => onChangeStatus?.(row.id, statusOption.name)}
+                    >
+                      <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: statusOption.color }} />
+                      <span>{statusOption.name}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <div className="flex items-center space-x-2">
+                <Clock className="w-3 h-3 text-slate-500" />
+                <span className="text-[10px] text-slate-600 dark:text-slate-400">{timeAgo} in status</span>
+              </div>
+
+              <Badge
+                variant="secondary"
+                className={`text-[10px] px-2 py-0.5 ${
+                  row.priority === 'High'
+                    ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                }`}
+              >
+                {row.priority === 'High' ? 'NEED TO COLLECT PAYMENT' : 'OPPORTUNITY'}
+              </Badge>
+
+              <div className="flex items-center space-x-2">
+                <Phone className={`w-3 h-3 ${row.noteTags?.includes('called') ? 'text-green-500' : 'text-slate-400'}`} />
+                <span className="text-[10px] text-slate-600 dark:text-slate-400">
+                  {row.noteTags?.includes('called') ? 'Client Called' : 'No Call Yet'}
+                </span>
+              </div>
+            </div>
+          );
+        },
+      },
+    ];
 
     const columnOptions: [keyof VisibleClientFields, string][] = [
       ["srNo", "Sr No."],
@@ -4106,7 +4582,51 @@ export default function Jobs() {
     return (
       <div className="space-y-6">
         {/* Premium Header with Enhanced Stats */}
-        <div className="relative rounded-3xl p-4 md:p-8 pb-5 md:pb-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm md:shadow-xl bg-white dark:bg-slate-900 md:bg-gradient-to-br md:from-slate-50 md:via-blue-50 md:to-indigo-50 md:dark:from-slate-900 md:dark:via-blue-950/20 md:dark:to-indigo-950/20 backdrop-blur-sm">
+        <div className="flex sm:hidden items-end w-full justify-end gap-2 md:hidden">
+          <div className="flex flex-row items-center w-full gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
+            {([
+              { key: "all", label: "All" },
+              { key: "job", label: "Jobs" },
+              { key: "lead", label: "Leads" },
+            ] as const).map(item => (
+              <Button
+                key={item.key}
+                variant="ghost"
+                className={`flex-1 h-8 rounded-full px-4 text-xs ${
+                  jobLeadFilter === item.key
+                    ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                    : "text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700"
+                }`}
+                onClick={() => setJobLeadFilter(item.key)}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="hidden sm:flex items-end w-full justify-end gap-2 md:hidden">
+          <div className="flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
+            {([
+              { key: "all", label: "All" },
+              { key: "job", label: "Jobs" },
+              { key: "lead", label: "Leads" },
+            ] as const).map(item => (
+              <Button
+                key={item.key}
+                variant="ghost"
+                className={`h-8 rounded-full px-4 text-xs ${
+                  jobLeadFilter === item.key
+                    ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                    : "text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700"
+                }`}
+                onClick={() => setJobLeadFilter(item.key)}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="relative rounded-3xl p-4 md:p-8 pb-5 md:pb-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm md:shadow-xl bg-white dark:bg-slate-900 md:bg-gradient-to-br md:from-slate-50 md:via-blue-50 md:to-indigo-50 md:dark:from-slate-900 md:dark:via-blue-950/20 md:dark:to-indigo-950/20">
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
               <div className="space-y-2">
@@ -4118,242 +4638,29 @@ export default function Jobs() {
                     ? "Comprehensive job management and tracking system" 
                     : `${selectedStatus} Jobs - ${filteredCount} total`}
                 </p>
-                {(dateRangeFilter !== "all" || jobPriorityFilter !== "all" || assignedTechFilter !== "all" || jobSourceFilter !== "all" || customStartDate || customEndDate) && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <span className="text-sm text-slate-500 dark:text-slate-400">Active filters:</span>
-                    {dateRangeFilter !== "all" && (
-                      <Badge variant="secondary" className="text-xs">
-                        Date: {
-                          dateRangeFilter === "upcoming" ? "Upcoming" : 
-                          dateRangeFilter === "past" ? "Past" : 
-                          dateRangeFilter === "today" ? "Today" :
-                          dateRangeFilter === "this-week" ? "This Week" :
-                          dateRangeFilter === "this-month" ? "This Month" :
-                          dateRangeFilter === "custom" ? `Custom: ${customStartDate} to ${customEndDate}` :
-                          "Scheduled"
-                        }
-                      </Badge>
-                    )}
-                    {jobPriorityFilter !== "all" && (
-                      <Badge variant="secondary" className="text-xs">
-                        Priority: {jobPriorityFilter}
-                      </Badge>
-                    )}
-                    {assignedTechFilter !== "all" && (
-                      <Badge variant="secondary" className="text-xs">
-                        Tech: {assignedTechFilter === "assigned" ? "Assigned" : assignedTechFilter === "unassigned" ? "Unassigned" : assignedTechFilter}
-                      </Badge>
-                    )}
-                    {jobSourceFilter !== "all" && (
-                      <Badge variant="secondary" className="text-xs">
-                        Source: {jobSourceFilter}
-                      </Badge>
-                    )}
-                  </div>
-                )}
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    aria-label="Show filters"
-                    className="h-9 w-9 absolute right-3 top-3 md:hidden"
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80 p-0 md:hidden">
-                  <div className="p-3 space-y-2">
-                      {/* <Button size="sm" className="w-full text-sm">
-                        Add Tag
-                      </Button>
-                      <Button size="sm" className="w-full text-sm">
-                        Add Tag Notes
-                      </Button> */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className="h-10 w-full text-sm justify-between"
-                          >
-                            {quickTagNotes.length === 0
-                              ? 'All Tag Notes'
-                              : `${quickTagNotes.length} selected`}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-0 w-56" align="start">
-                          <Command>
-                            <CommandInput placeholder="Search tag notes..." />
-                            <CommandList>
-                              <CommandEmpty>No tag note found.</CommandEmpty>
-                              <CommandGroup>
-                                <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
-                                  <button
-                                    type="button"
-                                    className="underline-offset-4 hover:underline"
-                                    onClick={() => setQuickTagNotes([...quickTagNoteOptions])}
-                                  >
-                                    Select all
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="underline-offset-4 hover:underline"
-                                    onClick={() => setQuickTagNotes([])}
-                                  >
-                                    Deselect all
-                                  </button>
-                                </div>
-                                <CommandItem
-                                  value="all-tag-notes"
-                                  onSelect={() => setQuickTagNotes([])}
-                                >
-                                  <Check
-                                    className={`mr-2 h-4 w-4 ${
-                                      quickTagNotes.length === 0 ? 'opacity-100' : 'opacity-0'
-                                    }`}
-                                  />
-                                  All Tag Notes
-                                </CommandItem>
-                                {quickTagNoteOptions.map(tagNote => (
-                                  <CommandItem
-                                    key={tagNote}
-                                    value={tagNote}
-                                    onSelect={() => {
-                                      setQuickTagNotes(prev => {
-                                        if (prev.includes(tagNote)) {
-                                          return prev.filter(t => t !== tagNote);
-                                        }
-                                        return [...prev, tagNote];
-                                      });
-                                    }}
-                                  >
-                                    <Check
-                                      className={`mr-2 h-4 w-4 ${
-                                        quickTagNotes.includes(tagNote) ? 'opacity-100' : 'opacity-0'
-                                      }`}
-                                    />
-                                    {tagNote}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className="h-10 w-full text-sm justify-between"
-                          >
-                            {quickTags.length === 0 ? 'All Tags' : `${quickTags.length} selected`}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-0 w-52" align="start">
-                          <Command>
-                            <CommandInput placeholder="Search tags..." />
-                            <CommandList>
-                              <CommandEmpty>No tag found.</CommandEmpty>
-                              <CommandGroup>
-                                <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
-                                  <button
-                                    type="button"
-                                    className="underline-offset-4 hover:underline"
-                                    onClick={() => setQuickTags([...quickTagOptions])}
-                                  >
-                                    Select all
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="underline-offset-4 hover:underline"
-                                    onClick={() => setQuickTags([])}
-                                  >
-                                    Deselect all
-                                  </button>
-                                </div>
-                                <CommandItem
-                                  value="all-tags"
-                                  onSelect={() => setQuickTags([])}
-                                >
-                                  <Check
-                                    className={`mr-2 h-4 w-4 ${
-                                      quickTags.length === 0 ? 'opacity-100' : 'opacity-0'
-                                    }`}
-                                  />
-                                  All Tags
-                                </CommandItem>
-                                {quickTagOptions.map(tag => (
-                                  <CommandItem
-                                    key={tag}
-                                    value={tag}
-                                    onSelect={() => {
-                                      setQuickTags(prev => {
-                                        if (prev.includes(tag)) {
-                                          return prev.filter(t => t !== tag);
-                                        }
-                                        return [...prev, tag];
-                                      });
-                                    }}
-                                  >
-                                    <Check
-                                      className={`mr-2 h-4 w-4 ${
-                                        quickTags.includes(tag) ? 'opacity-100' : 'opacity-0'
-                                      }`}
-                                    />
-                                    {tag}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className="h-10 w-full text-sm justify-between"
-                          >
-                            {quickSingleChoice
-                              ? quickSingleOptions.find(opt => opt.value === quickSingleChoice)?.label || 'Select an option'
-                              : 'All Sources'}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-0 w-48" align="start">
-                          <Command>
-                            <CommandInput placeholder="Search..." />
-                            <CommandList>
-                              <CommandEmpty>No option found.</CommandEmpty>
-                              <CommandGroup>
-                                {quickSingleOptions.map(opt => (
-                                  <CommandItem
-                                    key={opt.value}
-                                    value={opt.label}
-                                    onSelect={() => setQuickSingleChoice(opt.value)}
-                                  >
-                                    <Check
-                                      className={`mr-2 h-4 w-4 ${
-                                        quickSingleChoice === opt.value ? 'opacity-100' : 'opacity-0'
-                                      }`}
-                                    />
-                                    {opt.label}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="md:flex items-start gap-2 hidden">
+                <div className="flex items-center gap-1 rounded-full bg-slate-50 dark:bg-slate-800 px-1 py-1 h-10">
+                  {([
+                    { key: "all", label: "All" },
+                    { key: "job", label: "Jobs" },
+                    { key: "lead", label: "Leads" },
+                  ] as const).map(item => (
+                    <Button
+                      key={item.key}
+                      variant="ghost"
+                      className={`h-8 rounded-full px-4 text-xs ${
+                        jobLeadFilter === item.key
+                          ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700"
+                      }`}
+                      onClick={() => setJobLeadFilter(item.key)}
+                    >
+                      {item.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -4369,407 +4676,113 @@ export default function Jobs() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(prev => !prev)}
+              >
+                {showFilters ? "Hide Filters" : "Show Filters"}
+              </Button>
             </div>
             
+            {showFilters && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Job Type</p>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="h-10 w-full justify-between"
-                    >
-                      {quickJobTypes.length === 0
-                        ? 'All job types'
-                        : `${quickJobTypes.length} selected`}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0 w-full" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search job types..." />
-                      <CommandList>
-                        <CommandEmpty>No job type found.</CommandEmpty>
-                        <CommandGroup>
-                          <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
-                            <button
-                              type="button"
-                              className="underline-offset-4 hover:underline"
-                              onClick={() => setQuickJobTypes(['Repair', 'Install', 'Maintenance', 'Emergency', 'Inspection'])}
-                            >
-                              Select all
-                            </button>
-                            <button
-                              type="button"
-                              className="underline-offset-4 hover:underline"
-                              onClick={() => setQuickJobTypes([])}
-                            >
-                              Deselect all
-                            </button>
-                          </div>
-                          <CommandItem
-                            value="all-job-types"
-                            onSelect={() => setQuickJobTypes([])}
-                          >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${
-                                quickJobTypes.length === 0 ? 'opacity-100' : 'opacity-0'
-                              }`}
-                            />
-                            All job types
-                          </CommandItem>
-                          {['Repair', 'Install', 'Maintenance', 'Emergency', 'Inspection'].map(type => (
-                            <CommandItem
-                              key={type}
-                              value={type}
-                              onSelect={() => {
-                                setQuickJobTypes(prev => {
-                                  if (prev.includes(type)) {
-                                    return prev.filter(t => t !== type);
-                                  }
-                                  return [...prev, type];
-                                });
-                              }}
-                            >
-                              <Check
-                                className={`mr-2 h-4 w-4 ${
-                                  quickJobTypes.includes(type) ? 'opacity-100' : 'opacity-0'
-                                }`}
-                              />
-                              {type}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Agents</p>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="h-10 w-full justify-between"
-                    >
-                      {quickAgents.length === 0
-                        ? 'All agents'
-                        : `${quickAgents.length} selected`}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0 w-full" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search agents..." />
-                      <CommandList>
-                        <CommandEmpty>No agent found.</CommandEmpty>
-                        <CommandGroup>
-                          <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
-                            <button
-                              type="button"
-                              className="underline-offset-4 hover:underline"
-                              onClick={() => setQuickAgents([...quickAgentOptions])}
-                            >
-                              Select all
-                            </button>
-                            <button
-                              type="button"
-                              className="underline-offset-4 hover:underline"
-                              onClick={() => setQuickAgents([])}
-                            >
-                              Deselect all
-                            </button>
-                          </div>
-                          <CommandItem
-                            value="all-agents"
-                            onSelect={() => setQuickAgents([])}
-                          >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${
-                                quickAgents.length === 0 ? 'opacity-100' : 'opacity-0'
-                              }`}
-                            />
-                            All agents
-                          </CommandItem>
-                          {quickAgentOptions.map(agent => (
-                            <CommandItem
-                              key={agent}
-                              value={agent}
-                              onSelect={() => {
-                                setQuickAgents(prev => {
-                                  if (prev.includes(agent)) {
-                                    return prev.filter(a => a !== agent);
-                                  }
-                                  return [...prev, agent];
-                                });
-                              }}
-                            >
-                              <Check
-                                className={`mr-2 h-4 w-4 ${
-                                  quickAgents.includes(agent) ? 'opacity-100' : 'opacity-0'
-                                }`}
-                              />
-                              {agent}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Date Range (presets)</p>
-                </div>
-                <Select value={selectedDateRange} onValueChange={value => setSelectedDateRange(value)}>
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder="Select date range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {dateRangeOptions.map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1 relative z-[80]">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">&nbsp;</p>
-                </div>
-                {isClient && (
-                  <div className={`relative ${selectedDateRange !== 'custom-picker' ? 'opacity-60 pointer-events-none' : ''}`}>
-                    <Datepicker
-                      value={dateRangeValue}
-                      onChange={handleDateRangeChange}
-                      showShortcuts
-                      primaryColor="blue"
-                      containerClassName="w-full z-[80]"
-                      inputClassName="w-full h-10 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-700 px-3 text-sm"
-                      toggleClassName="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"
-                      disabled={selectedDateRange !== 'custom-picker'}
-                    />
-                  </div>
-                )}
-              </div>
+              <SelectInput
+                label="Job Type"
+                options={['Repair', 'Install', 'Maintenance', 'Emergency', 'Inspection'].map(type => ({
+                  label: type,
+                  value: type,
+                }))}
+                placeholder="All job types"
+                value={quickJobTypes}
+                multiselect
+                onSelect={val => setQuickJobTypes(Array.isArray(val) ? val : [])}
+                onSearch={() => {}}
+              />
+              <SelectInput
+                label="Agents"
+                options={quickAgentOptions.map(agent => ({
+                  label: agent,
+                  value: agent,
+                }))}
+                placeholder="All agents"
+                value={quickAgents}
+                multiselect
+                onSelect={val => setQuickAgents(Array.isArray(val) ? val : [])}
+                onSearch={() => {}}
+              />
+              <SelectInput
+                label="Date Range (presets)"
+                options={dateRangeOptions}
+                placeholder="Select date range"
+                value={selectedDateRange}
+                onSelect={val => {
+                  const next = Array.isArray(val) ? (val[0] ?? '') : val;
+                  setSelectedDateRange(next);
+                  if (next === 'custom-picker') {
+                    setDateRangeValue({ startDate: null, endDate: null });
+                  }
+                }}
+              />
+              <InputDatepicker
+                value={dateRangeValue}
+                onChange={handleDateRangeChange}
+                disabled={selectedDateRange !== 'custom-picker'}
+                label={"\xA0"}
+              />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Tag Notes</p>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="h-10 w-full justify-between"
-                    >
-                      {quickTagNotes.length === 0
-                        ? 'All Tag Notes'
-                        : `${quickTagNotes.length} selected`}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0 w-full" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search tag notes..." />
-                      <CommandList>
-                        <CommandEmpty>No tag note found.</CommandEmpty>
-                        <CommandGroup>
-                          <div className="px-3 py-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-center"
-                              onClick={() => setShowAddTagNoteModal(true)}
-                            >
-                              Add Tag Notes
-                            </Button>
-                          </div>
-                          <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
-                            <button
-                              type="button"
-                              className="underline-offset-4 hover:underline"
-                              onClick={() => setQuickTagNotes([...quickTagNoteOptions])}
-                            >
-                              Select all
-                            </button>
-                            <button
-                              type="button"
-                              className="underline-offset-4 hover:underline"
-                              onClick={() => setQuickTagNotes([])}
-                            >
-                              Deselect all
-                            </button>
-                          </div>
-                          <CommandItem
-                            value="all-tag-notes"
-                            onSelect={() => setQuickTagNotes([])}
-                          >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${
-                                quickTagNotes.length === 0 ? 'opacity-100' : 'opacity-0'
-                              }`}
-                            />
-                            All Tag Notes
-                          </CommandItem>
-                          {quickTagNoteOptions.map(tagNote => (
-                            <CommandItem
-                              key={tagNote}
-                              value={tagNote}
-                              onSelect={() => {
-                                setQuickTagNotes(prev => {
-                                  if (prev.includes(tagNote)) {
-                                    return prev.filter(t => t !== tagNote);
-                                  }
-                                  return [...prev, tagNote];
-                                });
-                              }}
-                            >
-                              <Check
-                                className={`mr-2 h-4 w-4 ${
-                                  quickTagNotes.includes(tagNote) ? 'opacity-100' : 'opacity-0'
-                                }`}
-                              />
-                              {tagNote}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Tags</p>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="h-10 w-full justify-between"
-                    >
-                      {quickTags.length === 0 ? 'All Tags' : `${quickTags.length} selected`}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0 w-full" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search tags..." />
-                      <CommandList>
-                        <CommandEmpty>No tag found.</CommandEmpty>
-                        <CommandGroup>
-                          <div className="px-3 py-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-center"
-                              onClick={() => setShowAddTagModal(true)}
-                            >
-                              Add Tag
-                            </Button>
-                          </div>
-                          <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
-                            <button
-                              type="button"
-                              className="underline-offset-4 hover:underline"
-                              onClick={() => setQuickTags([...quickTagOptions])}
-                            >
-                              Select all
-                            </button>
-                            <button
-                              type="button"
-                              className="underline-offset-4 hover:underline"
-                              onClick={() => setQuickTags([])}
-                            >
-                              Deselect all
-                            </button>
-                          </div>
-                          <CommandItem
-                            value="all-tags"
-                            onSelect={() => setQuickTags([])}
-                          >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${
-                                quickTags.length === 0 ? 'opacity-100' : 'opacity-0'
-                              }`}
-                            />
-                            All Tags
-                          </CommandItem>
-                          {quickTagOptions.map(tag => (
-                            <CommandItem
-                              key={tag}
-                              value={tag}
-                              onSelect={() => {
-                                setQuickTags(prev => {
-                                  if (prev.includes(tag)) {
-                                    return prev.filter(t => t !== tag);
-                                  }
-                                  return [...prev, tag];
-                                });
-                              }}
-                            >
-                              <Check
-                                className={`mr-2 h-4 w-4 ${
-                                  quickTags.includes(tag) ? 'opacity-100' : 'opacity-0'
-                                }`}
-                              />
-                              {tag}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Sources</p>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="h-10 w-full justify-between"
-                    >
-                      {quickSingleChoice
-                        ? quickSingleOptions.find(opt => opt.value === quickSingleChoice)?.label || 'Select an option'
-                        : 'All Sources'}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0 w-full" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search..." />
-                      <CommandList>
-                        <CommandEmpty>No option found.</CommandEmpty>
-                        <CommandGroup>
-                          {quickSingleOptions.map(opt => (
-                            <CommandItem
-                              key={opt.value}
-                              value={opt.label}
-                              onSelect={() => setQuickSingleChoice(opt.value)}
-                            >
-                              <Check
-                                className={`mr-2 h-4 w-4 ${
-                                  quickSingleChoice === opt.value ? 'opacity-100' : 'opacity-0'
-                                }`}
-                              />
-                              {opt.label}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
+            )}
+            {showFilters && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
+              <SelectInput
+                label="Tag Notes"
+                options={quickTagNoteOptions.map(tagNote => ({
+                  label: tagNote,
+                  value: tagNote,
+                }))}
+                placeholder="All Tag Notes"
+                value={quickTagNotes}
+                multiselect
+                onSelect={val => setQuickTagNotes(Array.isArray(val) ? val : [])}
+                onSearch={() => {}}
+                actionLabel="Add Tag Notes"
+                onAction={() => setShowAddTagNoteModal(true)}
+              />
+              <SelectInput
+                label="Tags"
+                options={quickTagOptions.map(tag => ({
+                  label: tag,
+                  value: tag,
+                }))}
+                placeholder="All Tags"
+                value={quickTags}
+                multiselect
+                onSelect={val => setQuickTags(Array.isArray(val) ? val : [])}
+                onSearch={() => {}}
+                actionLabel="Add Tag"
+                onAction={() => setShowAddTagModal(true)}
+              />
+              <SelectInput
+                label="Sources"
+                options={quickSingleOptions}
+                placeholder="All Sources"
+                value={quickSingleChoice}
+                onSelect={val => setQuickSingleChoice(Array.isArray(val) ? (val[0] ?? '') : val)}
+                onSearch={() => {}}
+              />
+              <SelectInput
+                label="Dispatch"
+                options={quickDispatchOptions.map(dispatch => ({
+                  label: dispatch,
+                  value: dispatch,
+                }))}
+                placeholder="All dispatches"
+                value={quickDispatches}
+                multiselect
+                onSelect={val => setQuickDispatches(Array.isArray(val) ? val : [])}
+                onSearch={() => {}}
+              />
             </div>
+            )}
           </div>
 
 
@@ -4834,7 +4847,7 @@ export default function Jobs() {
               <div className="flex items-center gap-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline">
                       Change Status ({selectedRows.size})
                     </Button>
                   </DropdownMenuTrigger>
@@ -4857,13 +4870,34 @@ export default function Jobs() {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button
+                <div className="flex items-center gap-2 bg-gray-200 rounded-md">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const selectedId = Array.from(selectedRows)[0];
+                      const job =
+                        filteredJobs.find(j => j.id === selectedId) ||
+                        jobs.find(j => j.id === selectedId);
+                      if (!job) return;
+                      setSelectedJob(job);
+                      setEditFormData(job);
+                      setIsEditing(true);
+                      setShowJobDetails(true);
+                    }}
+                    disabled={selectedRows.size !== 1}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                  {selectedRows.size > 1 ? <p className="text-xs text-gray-500 pr-4 pl-1">Select only one job to edit</p> : null}
+                </div>
+                {/* <Button
                   variant="destructive"
                   size="sm"
                   onClick={handleOpenDeleteBulk}
                 >
                   Delete ({selectedRows.size})
-                </Button>
+                </Button> */}
               </div>
             )}
             
@@ -4871,7 +4905,7 @@ export default function Jobs() {
           <div className="flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
               <span className="font-semibold">Density:</span>
-              <div className="flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-1 py-1">
+              <div className="flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
                 {[
                   { key: 'comfortable', label: 'Comfortable' },
                   { key: 'compact', label: 'Compact' },
@@ -4879,9 +4913,8 @@ export default function Jobs() {
                 ].map(item => (
                   <Button
                     key={item.key}
-                    size="sm"
                     variant="ghost"
-                    className={`h-7 rounded-full px-3 text-xs ${
+                    className={`h-8 rounded-full px-3 text-xs ${
                       density === item.key
                         ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                         : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700'
@@ -4893,7 +4926,7 @@ export default function Jobs() {
                 ))}
               </div>
             </div>
-            <Button variant="outline" size="sm" className="border-slate-300 dark:border-slate-700 rounded-full gap-2">
+            <Button variant="outline" className="border-slate-300 dark:border-slate-700 rounded-full gap-2">
               <Download className="w-4 h-4" />
               Export
             </Button>
@@ -4901,7 +4934,6 @@ export default function Jobs() {
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
-                  size="sm"
                   className="rounded-full border-slate-300 dark:border-slate-700 px-3 gap-2"
                   title="Show/Hide Columns"
                 >
@@ -4959,110 +4991,25 @@ export default function Jobs() {
         </div>
 
         {/* Premium Table View with Status Grouping */}
-        {/* Jobs Table (companies-style) */}
-        <div className="bg-transparent border-0 shadow-none md:bg-white md:dark:bg-slate-900 rounded-lg md:border md:border-slate-200 md:dark:border-slate-800 md:shadow-xl overflow-hidden pt-6">
-
-            {/* Table Controls */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 md:px-6 px-0 mb-4">
-              <div className="flex items-center gap-2">
-                <Label
-                  htmlFor="entries"
-                  className="text-sm text-neutral-600 dark:text-neutral-400"
-                >
-                  Show
-                </Label>
-                <Select
-                  value={entriesPerPage.toString()}
-                  onValueChange={handleEntriesChange}
-                >
-                  <SelectTrigger className="w-20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[10, 20, 30, 40, 50, 100].map(num => (
-                      <SelectItem key={num} value={num.toString()}>
-                        {num}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Label className="text-sm text-neutral-600 dark:text-neutral-400">
-                  entries
-                </Label>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <JobsTable
-                jobs={pagedJobs}
-                density={density}
-                visibleClientFields={visibleClientFields}
-                selectedRows={selectedRows}
-                jobStatuses={jobStatuses}
-                getStatusObj={getStatusObj}
-                getJobStatus={getJobStatus}
-                getTimeAgo={getTimeAgo}
-                getTimeUntil={getTimeUntil}
-                onToggleRow={handleRowToggle}
-                onDelete={handleOpenDeleteSingle}
-                mobileJobs={mobileJobs}
-                onLoadMore={() => setMobilePage(p => p + 1)}
-                hasMoreMobile={mobileHasMore}
-                mobileLoading={false}
-              />
-            </div>
-
-            {/* Pagination Controls */}
-            <div className="hidden md:flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-4 px-6 pb-6 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-              <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                Showing {(currentPage - 1) * entriesPerPage + 1} to{' '}
-                {Math.min(currentPage * entriesPerPage, filteredCount)} of {filteredCount} entries
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => handlePageChange(pageNum)}
-                        className="w-8 h-8 p-0"
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  })}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage >= totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </div>
+        {/* Table (companies-style) */}
+        <Table
+          rows={pagedJobs}
+          mobileRows={mobileJobs}
+          columns={tableColumns}
+          mobileCard={mobileCard}
+          onSort={handleSortColumn}
+          activeSortKey={sortBy}
+          sortDirection={sortDir}
+          pageSize={entriesPerPage}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalCount={filteredCount}
+          onPageSizeChange={handleEntriesChange}
+          onPageChange={page => {
+            handlePageChange(page);
+            setMobilePage(page);
+          }}
+        />
       </div>
     );
   };
