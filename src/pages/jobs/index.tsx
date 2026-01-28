@@ -1,4 +1,10 @@
 import { useState, useRef, useEffect } from "react";
+import dynamic from "next/dynamic";
+import { type DateValueType } from "react-tailwindcss-datepicker";
+
+const Datepicker = dynamic(() => import("react-tailwindcss-datepicker"), {
+  ssr: false,
+});
 import { useRouter } from "next/router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
@@ -167,6 +173,11 @@ export default function Jobs() {
   const [dateRangeFilter, setDateRangeFilter] = useState<string>("all");
   const [customStartDate, setCustomStartDate] = useState<string>("");
   const [customEndDate, setCustomEndDate] = useState<string>("");
+  const [isClient, setIsClient] = useState(false);
+  const [dateRangeValue, setDateRangeValue] = useState<DateValueType>({
+    startDate: null,
+    endDate: null,
+  });
   const [jobPriorityFilter, setJobPriorityFilter] = useState<string>("all");
   const [assignedTechFilter, setAssignedTechFilter] = useState<string>("all");
   const [jobSourceFilter, setJobSourceFilter] = useState<string>("all");
@@ -221,6 +232,18 @@ export default function Jobs() {
     return statusList[idx];
   };
 
+  const handleDateRangeChange = (value: DateValueType) => {
+    setDateRangeValue(value || { startDate: null, endDate: null });
+    setSelectedDateRange('custom-picker');
+  };
+
+  const renderDateRangeLabel = () => {
+    const start = dateRangeValue?.startDate;
+    const end = dateRangeValue?.endDate;
+    if (!start || !end) return "Select range";
+    return `${start} – ${end}`;
+  };
+
   const [selectedTechnician, setSelectedTechnician] = useState<string | null>(
     null,
   );
@@ -232,6 +255,10 @@ export default function Jobs() {
     const newValue = Array.isArray(newParam) ? newParam[0] : newParam;
     if (newValue === "1") setShowNewJobDialog(true);
   }, [router.isReady, router.query]);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     const handler = () => setShowNewJobDialog(true);
@@ -2756,12 +2783,36 @@ export default function Jobs() {
   const [showFilters, setShowFilters] = useState(false);
   const [quickJobTypes, setQuickJobTypes] = useState<string[]>([]);
   const [quickAgents, setQuickAgents] = useState<string[]>([]);
+  const initialQuickTagNoteOptions = ['Tag Note 1', 'Tag Note 2'];
+  const [quickTagNoteOptions, setQuickTagNoteOptions] = useState<string[]>(initialQuickTagNoteOptions);
   const [quickTagNotes, setQuickTagNotes] = useState<string[]>([]);
   const [quickTags, setQuickTags] = useState<string[]>([]);
   const [quickSingleChoice, setQuickSingleChoice] = useState<string>('');
+  const [showAddTagNoteModal, setShowAddTagNoteModal] = useState(false);
+  const [newTagNoteName, setNewTagNoteName] = useState('');
+  const [showAddTagModal, setShowAddTagModal] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagTextColor, setNewTagTextColor] = useState('#000000');
+  const [newTagBgColor, setNewTagBgColor] = useState('#000000');
+  const handleSaveTagNote = () => {
+    const name = newTagNoteName.trim();
+    if (!name) return;
+    setQuickTagNoteOptions(prev => prev.includes(name) ? prev : [...prev, name]);
+    setQuickTagNotes(prev => prev.includes(name) ? prev : [...prev, name]);
+    setNewTagNoteName('');
+    setShowAddTagNoteModal(false);
+  };
+  const handleSaveTag = () => {
+    const name = newTagName.trim();
+    if (!name) return;
+    setQuickTags(prev => prev.includes(name) ? prev : [...prev, name]);
+    setNewTagName('');
+    setShowAddTagModal(false);
+  };
   const [selectedDateRange, setSelectedDateRange] = useState('today');
   const dateRangeOptions = [
     { label: 'Today', value: 'today' },
+    { label: 'Custom Dates', value: 'custom-picker' },
     { label: 'This Week (Sun - Today)', value: 'week-sun-today' },
     { label: 'This Week (Mon - Today)', value: 'week-mon-today' },
     { label: 'Last 7 Days', value: 'last-7-days' },
@@ -2774,12 +2825,18 @@ export default function Jobs() {
     { label: 'Last Month', value: 'last-month' },
   ];
   const quickAgentOptions = ['Agent 1', 'Agent 2', 'Agent 3'];
-  const quickTagNoteOptions = ['Tag Note 1', 'Tag Note 2'];
   const quickTagOptions = ['Tag 1', 'Tag 2'];
   const quickSingleOptions = [
     { label: 'None', value: 'none' },
     { label: 'Option 1', value: 'option-1' },
   ];
+  useEffect(() => {
+    if (selectedDateRange === 'custom-picker') return;
+    const presetRange = getRangeDates(selectedDateRange);
+    if (presetRange) {
+      setDateRangeValue(presetRange as unknown as DateValueType);
+    }
+  }, [selectedDateRange]);
   const formatDateShort = (date: Date) =>
     date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const addDays = (date: Date, days: number) => {
@@ -2838,6 +2895,59 @@ export default function Jobs() {
     const startStr = formatDateShort(start);
     const endStr = formatDateShort(end);
     return startStr === endStr ? startStr : `${startStr} – ${endStr}`;
+  };
+  const getRangeDates = (value: string) => {
+    const today = new Date();
+    let start = today;
+    let end = today;
+    switch (value) {
+      case 'week-sun-today':
+        start = startOfWeekSun(today);
+        break;
+      case 'week-mon-today':
+        start = startOfWeekMon(today);
+        break;
+      case 'last-7-days':
+        start = addDays(today, -6);
+        break;
+      case 'last-14-days':
+        start = addDays(today, -13);
+        break;
+      case 'last-30-days':
+        start = addDays(today, -29);
+        break;
+      case 'last-week-sun-sat':
+        start = addDays(startOfWeekSun(today), -7);
+        end = addDays(start, 6);
+        break;
+      case 'last-week-mon-sun':
+        start = addDays(startOfWeekMon(today), -7);
+        end = addDays(start, 6);
+        break;
+      case 'last-business-week':
+        start = addDays(startOfWeekMon(today), -7);
+        end = addDays(start, 4);
+        break;
+      case 'this-month':
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+        end = today;
+        break;
+      case 'last-month': {
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        start = new Date(year, month - 1, 1);
+        end = new Date(year, month, 0);
+        break;
+      }
+      case 'today':
+        start = today;
+        end = today;
+        break;
+      default:
+        return null;
+    }
+    const fmt = (d: Date) => d.toISOString().split('T')[0];
+    return { startDate: fmt(start), endDate: fmt(end) };
   };
   const [pinnedStatuses, setPinnedStatuses] = useState<string[]>(() => {
     try {
@@ -4244,196 +4354,6 @@ export default function Jobs() {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <div className="hidden md:block w-full md:w-auto">
-                <div className="grid grid-cols-1 gap-2 md:flex md:flex-wrap md:items-center md:gap-2 bg-slate-50 dark:bg-slate-800/40 md:bg-transparent md:dark:bg-transparent border border-slate-200/60 dark:border-slate-700/60 md:border-0 rounded-2xl p-3">
-                  {/* <Button size="sm" className="w-full md:w-auto text-sm">
-                    Add Tag
-                  </Button>
-                  <Button size="sm" className="w-full md:w-auto text-sm">
-                    Add Tag Notes
-                  </Button> */}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className="h-10 w-full md:w-36 text-sm justify-between"
-                      >
-                        {quickTagNotes.length === 0
-                          ? 'All Tag Notes'
-                          : `${quickTagNotes.length} selected`}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0 w-56" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search tag notes..." />
-                        <CommandList>
-                          <CommandEmpty>No tag note found.</CommandEmpty>
-                          <CommandGroup>
-                            <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
-                              <button
-                                type="button"
-                                className="underline-offset-4 hover:underline"
-                                onClick={() => setQuickTagNotes([...quickTagNoteOptions])}
-                              >
-                                Select all
-                              </button>
-                              <button
-                                type="button"
-                                className="underline-offset-4 hover:underline"
-                                onClick={() => setQuickTagNotes([])}
-                              >
-                                Deselect all
-                              </button>
-                            </div>
-                            <CommandItem
-                              value="all-tag-notes"
-                              onSelect={() => setQuickTagNotes([])}
-                            >
-                              <Check
-                                className={`mr-2 h-4 w-4 ${
-                                  quickTagNotes.length === 0 ? 'opacity-100' : 'opacity-0'
-                                }`}
-                              />
-                              All Tag Notes
-                            </CommandItem>
-                            {quickTagNoteOptions.map(tagNote => (
-                              <CommandItem
-                                key={tagNote}
-                                value={tagNote}
-                                onSelect={() => {
-                                  setQuickTagNotes(prev => {
-                                    if (prev.includes(tagNote)) {
-                                      return prev.filter(t => t !== tagNote);
-                                    }
-                                    return [...prev, tagNote];
-                                  });
-                                }}
-                              >
-                                <Check
-                                  className={`mr-2 h-4 w-4 ${
-                                    quickTagNotes.includes(tagNote) ? 'opacity-100' : 'opacity-0'
-                                  }`}
-                                />
-                                {tagNote}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className="h-10 w-full md:w-32 text-sm justify-between"
-                      >
-                        {quickTags.length === 0 ? 'All Tags' : `${quickTags.length} selected`}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0 w-52" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search tags..." />
-                        <CommandList>
-                          <CommandEmpty>No tag found.</CommandEmpty>
-                          <CommandGroup>
-                            <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
-                              <button
-                                type="button"
-                                className="underline-offset-4 hover:underline"
-                                onClick={() => setQuickTags([...quickTagOptions])}
-                              >
-                                Select all
-                              </button>
-                              <button
-                                type="button"
-                                className="underline-offset-4 hover:underline"
-                                onClick={() => setQuickTags([])}
-                              >
-                                Deselect all
-                              </button>
-                            </div>
-                            <CommandItem
-                              value="all-tags"
-                              onSelect={() => setQuickTags([])}
-                            >
-                              <Check
-                                className={`mr-2 h-4 w-4 ${
-                                  quickTags.length === 0 ? 'opacity-100' : 'opacity-0'
-                                }`}
-                              />
-                              All Tags
-                            </CommandItem>
-                            {quickTagOptions.map(tag => (
-                              <CommandItem
-                                key={tag}
-                                value={tag}
-                                onSelect={() => {
-                                  setQuickTags(prev => {
-                                    if (prev.includes(tag)) {
-                                      return prev.filter(t => t !== tag);
-                                    }
-                                    return [...prev, tag];
-                                  });
-                                }}
-                              >
-                                <Check
-                                  className={`mr-2 h-4 w-4 ${
-                                    quickTags.includes(tag) ? 'opacity-100' : 'opacity-0'
-                                  }`}
-                                />
-                                {tag}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className="h-10 w-full md:w-40 text-sm justify-between"
-                      >
-                        {quickSingleChoice
-                          ? quickSingleOptions.find(opt => opt.value === quickSingleChoice)?.label || 'Select an option'
-                          : 'All Sources'}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0 w-48" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search..." />
-                        <CommandList>
-                          <CommandEmpty>No option found.</CommandEmpty>
-                          <CommandGroup>
-                            {quickSingleOptions.map(opt => (
-                              <CommandItem
-                                key={opt.value}
-                                value={opt.label}
-                                onSelect={() => setQuickSingleChoice(opt.value)}
-                              >
-                                <Check
-                                  className={`mr-2 h-4 w-4 ${
-                                    quickSingleChoice === opt.value ? 'opacity-100' : 'opacity-0'
-                                  }`}
-                                />
-                                {opt.label}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -4450,7 +4370,8 @@ export default function Jobs() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Job Type</p>
                 <Popover>
@@ -4603,10 +4524,7 @@ export default function Jobs() {
               </div>
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Date Range</p>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    {getQuickRangeLabel(selectedDateRange)}
-                  </span>
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Date Range (presets)</p>
                 </div>
                 <Select value={selectedDateRange} onValueChange={value => setSelectedDateRange(value)}>
                   <SelectTrigger className="h-10">
@@ -4621,12 +4539,242 @@ export default function Jobs() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1 relative z-[80]">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">&nbsp;</p>
+                </div>
+                {isClient && (
+                  <div className={`relative ${selectedDateRange !== 'custom-picker' ? 'opacity-60 pointer-events-none' : ''}`}>
+                    <Datepicker
+                      value={dateRangeValue}
+                      onChange={handleDateRangeChange}
+                      showShortcuts
+                      primaryColor="blue"
+                      containerClassName="w-full z-[80]"
+                      inputClassName="w-full h-10 bg-white dark:bg-slate-800 rounded-md border border-slate-300 dark:border-slate-700 px-3 text-sm"
+                      toggleClassName="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"
+                      disabled={selectedDateRange !== 'custom-picker'}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Tag Notes</p>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="h-10 w-full justify-between"
+                    >
+                      {quickTagNotes.length === 0
+                        ? 'All Tag Notes'
+                        : `${quickTagNotes.length} selected`}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0 w-full" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search tag notes..." />
+                      <CommandList>
+                        <CommandEmpty>No tag note found.</CommandEmpty>
+                        <CommandGroup>
+                          <div className="px-3 py-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full justify-center"
+                              onClick={() => setShowAddTagNoteModal(true)}
+                            >
+                              Add Tag Notes
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
+                            <button
+                              type="button"
+                              className="underline-offset-4 hover:underline"
+                              onClick={() => setQuickTagNotes([...quickTagNoteOptions])}
+                            >
+                              Select all
+                            </button>
+                            <button
+                              type="button"
+                              className="underline-offset-4 hover:underline"
+                              onClick={() => setQuickTagNotes([])}
+                            >
+                              Deselect all
+                            </button>
+                          </div>
+                          <CommandItem
+                            value="all-tag-notes"
+                            onSelect={() => setQuickTagNotes([])}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${
+                                quickTagNotes.length === 0 ? 'opacity-100' : 'opacity-0'
+                              }`}
+                            />
+                            All Tag Notes
+                          </CommandItem>
+                          {quickTagNoteOptions.map(tagNote => (
+                            <CommandItem
+                              key={tagNote}
+                              value={tagNote}
+                              onSelect={() => {
+                                setQuickTagNotes(prev => {
+                                  if (prev.includes(tagNote)) {
+                                    return prev.filter(t => t !== tagNote);
+                                  }
+                                  return [...prev, tagNote];
+                                });
+                              }}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  quickTagNotes.includes(tagNote) ? 'opacity-100' : 'opacity-0'
+                                }`}
+                              />
+                              {tagNote}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Tags</p>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="h-10 w-full justify-between"
+                    >
+                      {quickTags.length === 0 ? 'All Tags' : `${quickTags.length} selected`}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0 w-full" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search tags..." />
+                      <CommandList>
+                        <CommandEmpty>No tag found.</CommandEmpty>
+                        <CommandGroup>
+                          <div className="px-3 py-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full justify-center"
+                              onClick={() => setShowAddTagModal(true)}
+                            >
+                              Add Tag
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
+                            <button
+                              type="button"
+                              className="underline-offset-4 hover:underline"
+                              onClick={() => setQuickTags([...quickTagOptions])}
+                            >
+                              Select all
+                            </button>
+                            <button
+                              type="button"
+                              className="underline-offset-4 hover:underline"
+                              onClick={() => setQuickTags([])}
+                            >
+                              Deselect all
+                            </button>
+                          </div>
+                          <CommandItem
+                            value="all-tags"
+                            onSelect={() => setQuickTags([])}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${
+                                quickTags.length === 0 ? 'opacity-100' : 'opacity-0'
+                              }`}
+                            />
+                            All Tags
+                          </CommandItem>
+                          {quickTagOptions.map(tag => (
+                            <CommandItem
+                              key={tag}
+                              value={tag}
+                              onSelect={() => {
+                                setQuickTags(prev => {
+                                  if (prev.includes(tag)) {
+                                    return prev.filter(t => t !== tag);
+                                  }
+                                  return [...prev, tag];
+                                });
+                              }}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  quickTags.includes(tag) ? 'opacity-100' : 'opacity-0'
+                                }`}
+                              />
+                              {tag}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Sources</p>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="h-10 w-full justify-between"
+                    >
+                      {quickSingleChoice
+                        ? quickSingleOptions.find(opt => opt.value === quickSingleChoice)?.label || 'Select an option'
+                        : 'All Sources'}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-0 w-full" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search..." />
+                      <CommandList>
+                        <CommandEmpty>No option found.</CommandEmpty>
+                        <CommandGroup>
+                          {quickSingleOptions.map(opt => (
+                            <CommandItem
+                              key={opt.value}
+                              value={opt.label}
+                              onSelect={() => setQuickSingleChoice(opt.value)}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  quickSingleChoice === opt.value ? 'opacity-100' : 'opacity-0'
+                                }`}
+                              />
+                              {opt.label}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           </div>
 
 
           {/* Compact, scalable Status bar */}
-          <div className="sticky top-0 z-10 backdrop-blur supports-[backdrop-filter]:backdrop-blur px-1 py-2 mt-8">
+          <div className="sticky top-0 backdrop-blur supports-[backdrop-filter]:backdrop-blur px-1 py-2 mt-8">
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
               <button
                 onClick={() => setSelectedStatus('All')}
@@ -6066,6 +6214,100 @@ export default function Jobs() {
             </Button>
             <Button onClick={handleRecordPayment} className="bg-green-600 hover:bg-green-700">
               Record Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Tag Note Modal */}
+      <Dialog open={showAddTagNoteModal} onOpenChange={setShowAddTagNoteModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Add Tag Note</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="Tag"
+              value={newTagNoteName}
+              onChange={(e) => setNewTagNoteName(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddTagNoteModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveTagNote} disabled={!newTagNoteName.trim()}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Tag Modal */}
+      <Dialog open={showAddTagModal} onOpenChange={setShowAddTagModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Add Tag</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                placeholder="Tag"
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Text Color</Label>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-12 h-12 rounded-full border-2 border-neutral-200 dark:border-neutral-700 shadow-sm cursor-pointer overflow-hidden"
+                    style={{ backgroundColor: newTagTextColor }}
+                    onClick={() => document.getElementById('new_tag_text_color')?.click()}
+                  >
+                    <input
+                      id="new_tag_text_color"
+                      type="color"
+                      value={newTagTextColor}
+                      onChange={(e) => setNewTagTextColor(e.target.value)}
+                      className="opacity-0 w-full h-full cursor-pointer"
+                    />
+                  </div>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 font-mono">
+                    {newTagTextColor}
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Background Color</Label>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-12 h-12 rounded-full border-2 border-neutral-200 dark:border-neutral-700 shadow-sm cursor-pointer overflow-hidden"
+                    style={{ backgroundColor: newTagBgColor }}
+                    onClick={() => document.getElementById('new_tag_bg_color')?.click()}
+                  >
+                    <input
+                      id="new_tag_bg_color"
+                      type="color"
+                      value={newTagBgColor}
+                      onChange={(e) => setNewTagBgColor(e.target.value)}
+                      className="opacity-0 w-full h-full cursor-pointer"
+                    />
+                  </div>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400 font-mono">
+                    {newTagBgColor}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddTagModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveTag} disabled={!newTagName.trim()}>
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>

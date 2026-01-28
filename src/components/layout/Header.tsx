@@ -239,7 +239,7 @@ export function Header({ onMenuClick }: HeaderProps): React.JSX.Element {
                 Since {formatTime(timesheetData.since)}
               </div>
             )}
-            <Button
+            {/* <Button
               onClick={handleClockAction}
               disabled={isLoading}
               className={`h-10 px-4 rounded-xl transition-all duration-200 font-medium ${
@@ -254,7 +254,7 @@ export function Header({ onMenuClick }: HeaderProps): React.JSX.Element {
                 : timesheetStatus === 'IN'
                   ? 'Clock Out'
                   : 'Clock In'}
-            </Button>
+            </Button> */}
           </div>
         )}
 
