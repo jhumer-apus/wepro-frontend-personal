@@ -21,7 +21,7 @@ const InputDatepicker = ({
   label,
 }: DatepickerProps) => {
   return (
-    <div className="space-y-1 z-[80]">
+    <div className="space-y-1 z-[20]">
       {label ? (
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">

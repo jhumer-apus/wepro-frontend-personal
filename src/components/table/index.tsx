@@ -17,11 +17,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/src/components/ui/sheet";
+import { Checkbox } from "@/src/components/ui/checkbox";
+import { Columns3, Download } from "lucide-react";
 
 type ColumnConfig = {
   columnName: string;
   cell: keyof any | ((row: any) => React.ReactNode);
   sortKey?: string;
+};
+
+export type ColumnOption = {
+  key: string;
+  label: string;
+  selected: boolean;
 };
 
 type JobsTableProps = {
@@ -40,6 +49,10 @@ type JobsTableProps = {
   onPageSizeChange: (value: string) => void;
   onPageChange: (page: number) => void;
   maxHeightClassName?: string;
+  onExport?: () => void;
+  onColumnsChange?: (nextOptions: ColumnOption[]) => void;
+  columnOptions?: ColumnOption[];
+  headerRightComponent?: React.ReactNode;
 };
 
 const JobsTable: React.FC<JobsTableProps> = ({
@@ -58,6 +71,10 @@ const JobsTable: React.FC<JobsTableProps> = ({
   onPageSizeChange,
   onPageChange,
   maxHeightClassName,
+  onExport,
+  onColumnsChange,
+  columnOptions,
+  headerRightComponent,
 }) => {
   const startEntry = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endEntry = Math.min(currentPage * pageSize, totalCount);
@@ -76,7 +93,7 @@ const JobsTable: React.FC<JobsTableProps> = ({
             Show
           </Label>
           <Select value={pageSize.toString()} onValueChange={onPageSizeChange}>
-            <SelectTrigger className="w-20">
+            <SelectTrigger className="w-20 h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -91,6 +108,59 @@ const JobsTable: React.FC<JobsTableProps> = ({
             entries
           </Label>
         </div>
+        {(onExport || (onColumnsChange && columnOptions && columnOptions.length > 0)) && (
+          <div className="flex items-center gap-2 sm:ml-auto">
+            {onExport && (
+              <Button
+                variant="outline"
+                className="border-slate-300 dark:border-slate-700 rounded-full gap-2"
+                onClick={onExport}
+                size="sm"
+              >
+                <Download className="w-4 h-4" />
+                Export
+              </Button>
+            )}
+            {onColumnsChange && columnOptions && columnOptions.length > 0 ? (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="rounded-full border-slate-300 dark:border-slate-700 px-3 gap-2"
+                    title="Show/Hide Columns"
+                    size="sm"
+                  >
+                    <Columns3 className="w-4 h-4" />
+                    <span className="text-sm">Columns</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full sm:max-w-md">
+                  <SheetHeader>
+                    <SheetTitle>Manage Columns</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    {columnOptions.map(option => (
+                      <label key={option.key} className="flex items-center gap-2 text-sm">
+                        <Checkbox
+                          checked={option.selected}
+                          onCheckedChange={() => {
+                            if (!onColumnsChange || !columnOptions) return;
+                            const nextOptions = columnOptions.map(opt =>
+                              opt.key === option.key ? { ...opt, selected: !opt.selected } : opt
+                            );
+                            onColumnsChange(nextOptions);
+                          }}
+                        />
+                        {option.label}
+                      </label>
+                    ))}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            ) : null}
+          </div>
+        )}
+        {headerRightComponent && headerRightComponent}
       </div>
 
       <div className="px-0">
@@ -107,7 +177,7 @@ const JobsTable: React.FC<JobsTableProps> = ({
                   return (
                   <TableHead
                     key={`${col.columnName}-${idx}`}
-                    className={`font-semibold text-slate-900 dark:text-slate-100 py-3 text-left align-middle select-none ${
+                    className={`h-10 font-semibold text-slate-900 dark:text-slate-100 text-left align-middle select-none ${
                       sortKey ? "cursor-pointer" : "cursor-default"
                     }`}
                     onClick={() => sortKey && onSort?.(sortKey)}
@@ -130,26 +200,37 @@ const JobsTable: React.FC<JobsTableProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody >
-              {rows.map(row => {
-                return (
-                  <TableRow key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 border-b border-slate-100 dark:border-slate-700">
-                    {columns.map((col, idx) => {
-                      const content =
-                        typeof col.cell === "function"
-                          ? col.cell(row)
-                          : row[col.cell as keyof typeof row];
-                      return (
-                        <TableCell
-                          key={`${col.columnName}-${row.id}-${idx}`}
-                          className={`py-3 align-top`}
-                        >
-                          {content}
-                    </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                );
-              })}
+              {rows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="py-20 text-center text-sm text-slate-500 dark:text-slate-400"
+                  >
+                    No records to show
+                  </TableCell>
+                </TableRow>
+              ) : (
+                rows.map(row => {
+                  return (
+                    <TableRow key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 border-b border-slate-100 dark:border-slate-700">
+                      {columns.map((col, idx) => {
+                        const content =
+                          typeof col.cell === "function"
+                            ? col.cell(row)
+                            : row[col.cell as keyof typeof row];
+                        return (
+                          <TableCell
+                            key={`${col.columnName}-${row.id}-${idx}`}
+                            className={`py-3 align-top`}
+                          >
+                            {content}
+                      </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </div>
@@ -206,7 +287,7 @@ const JobsTable: React.FC<JobsTableProps> = ({
       </div>
 
       {/* Pagination Controls */}
-      <div className="hidden md:flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 pb-6 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+      <div className="hidden md:flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-3 border-t border-neutral-200 dark:border-neutral-700">
         <div className="text-sm text-neutral-600 dark:text-neutral-400">
           Showing {startEntry} to {endEntry} of {totalCount} entries
         </div>
