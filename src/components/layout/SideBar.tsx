@@ -29,6 +29,8 @@ import {
   FileText,
   Megaphone,
   FileBarChart,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 
 interface NavigationItem {
@@ -63,7 +65,15 @@ const secondaryNavigation: NavigationItem[] = [
   // },
 ]
 
-export function Sidebar(): React.JSX.Element {
+interface SidebarProps {
+  isCollapsed?: boolean
+  onToggleCollapse?: () => void
+}
+
+export function Sidebar({
+  isCollapsed = false,
+  onToggleCollapse,
+}: SidebarProps): React.JSX.Element {
   const router = useRouter()
   const location: string = router.pathname
   const { user } = useUser()
@@ -299,21 +309,54 @@ export function Sidebar(): React.JSX.Element {
   return (
     <div className="flex h-full flex-col border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
       {/* Logo */}
-      <div className="flex items-center justify-center h-16 px-4 border-b border-neutral-200 dark:border-neutral-800 flex-shrink-0">
-        <Link
-          href="/dashboard"
-          className="flex items-center justify-center w-full py-3 hover:scale-105 transition-transform duration-200"
-        >
-          <img
-            src={mounted && resolvedTheme === 'dark' ? logoAlt.src : logo.src}
-            alt="WePro Logo"
-            className="h-6 w-auto object-contain max-w-[160px] filter drop-shadow-sm"
-          />
-        </Link>
+      <div
+        className={cn(
+          'relative flex items-center h-16 border-b border-neutral-200 dark:border-neutral-800 flex-shrink-0',
+          isCollapsed ? 'px-3 justify-center' : 'px-4 justify-between'
+        )}
+      >
+        {!isCollapsed &&
+          <Link
+            href="/dashboard"
+            className={cn(
+              'flex items-center py-3 transition-transform duration-200',
+              isCollapsed ? 'hover:scale-100' : 'hover:scale-105'
+            )}
+          >
+            <img
+              src={mounted && resolvedTheme === 'dark' ? logoAlt.src : logo.src}
+              alt="WePro Logo"
+              className={cn(
+                'h-6 w-auto object-contain filter drop-shadow-sm',
+                isCollapsed ? 'max-w-[40px]' : 'max-w-[160px]'
+              )}
+            />
+          </Link>
+        }
+        {onToggleCollapse && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            // className="hidden lg:inline-flex absolute right-3 h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-sm transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
+            className="hidden lg:inline-flex block h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-sm transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-4 py-4 overflow-y-auto">
+      <nav
+        className={cn(
+          'flex-1 space-y-1 px-4 py-4 overflow-y-auto',
+          isCollapsed && 'px-2'
+        )}
+      >
         {filteredNavigation.map(item => {
           const isActive = location.startsWith(item.href)
           return (
@@ -321,21 +364,25 @@ export function Sidebar(): React.JSX.Element {
               key={item.name}
               href={item.href}
               className={cn(
-                'group flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
+                'group flex items-center rounded-xl py-3 text-sm font-medium transition-all duration-200',
+                isCollapsed ? 'justify-center px-3' : 'px-4',
                 isActive
                   ? 'bg-gradient-to-r from-brandGreen-900 to-brandGreen-300 text-white shadow-lg shadow-brandGreen-900/25'
                   : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100'
               )}
+              title={item.name}
+              aria-label={item.name}
             >
               <item.icon
                 className={cn(
-                  'mr-3 h-5 w-5 transition-colors',
+                  'h-5 w-5 transition-colors',
+                  !isCollapsed && 'mr-3',
                   isActive
                     ? 'text-white'
                     : 'text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300'
                 )}
               />
-              {item.name}
+              {!isCollapsed && <span className="truncate">{item.name}</span>}
             </Link>
           )
         })}
@@ -348,22 +395,26 @@ export function Sidebar(): React.JSX.Element {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  'group flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200',
+                  'group flex items-center rounded-xl py-3 text-sm font-medium transition-all duration-200',
+                  isCollapsed ? 'justify-center px-3' : 'px-4',
                   isActive
                     ? 'bg-gradient-to-r from-[#53a533] to-[#53a533] text-white shadow-lg shadow-[#53a533]/25'
                     : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100'
                 )}
+                title={item.name}
+                aria-label={item.name}
               >
                 <item.icon
                   className={cn(
-                    'mr-3 h-5 w-5 transition-colors',
+                    'h-5 w-5 transition-colors',
+                    !isCollapsed && 'mr-3',
                     isActive
                       ? 'text-white'
                       : 'text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300'
                   )}
                 />
-                {item.name}
-                {item.badge && (
+                {!isCollapsed && <span className="truncate">{item.name}</span>}
+                {!isCollapsed && item.badge && (
                   <span className="ml-auto rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-2 py-1 text-xs font-semibold text-white shadow-lg">
                     {item.badge}
                   </span>

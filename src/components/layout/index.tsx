@@ -13,6 +13,7 @@ export default function DashboardLayout({
   children: React.ReactNode
 }): React.JSX.Element {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false)
   const { isAuthenticated, loading } = useAppSelector(
     (state: RootState) => state.auth
   )
@@ -58,8 +59,15 @@ export default function DashboardLayout({
       )}
 
       {/* Sidebar */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col">
-        <Sidebar />
+      <div
+        className={`hidden lg:flex lg:flex-col transition-all duration-300 ${
+          isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64'
+        }`}
+      >
+        <Sidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+        />
       </div>
 
       {/* Mobile sidebar */}
@@ -76,7 +84,11 @@ export default function DashboardLayout({
         <Header onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
 
         <main className="flex-1 overflow-auto bg-neutral-50 dark:bg-neutral-950">
-          <div className="container mx-auto px-4 py-6 sm:px-4">
+          <div
+            className={`container mx-auto px-4 py-6 sm:px-4 ${
+              isSidebarCollapsed ? 'max-w-[1800px]' : ''
+            }`}
+          >
             {children}
           </div>
         </main>

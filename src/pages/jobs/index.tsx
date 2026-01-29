@@ -4528,7 +4528,7 @@ export default function Jobs() {
 
               <Badge
                 variant="secondary"
-                className={`text-[10px] px-2 py-0.5 ${
+                className={`text-[10px] px-2 py-0.5 whitespace-nowrap ${
                   row.priority === 'High'
                     ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                     : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
@@ -4580,9 +4580,9 @@ export default function Jobs() {
     ];
 
     return (
-      <div className="space-y-6">
+      <div>
         {/* Premium Header with Enhanced Stats */}
-        <div className="flex sm:hidden items-end w-full justify-end gap-2 md:hidden">
+        <div className="mb-6 flex sm:hidden items-end w-full justify-end gap-2 md:hidden">
           <div className="flex flex-row items-center w-full gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
             {([
               { key: "all", label: "All" },
@@ -4594,7 +4594,7 @@ export default function Jobs() {
                 variant="ghost"
                 className={`flex-1 h-8 rounded-full px-4 text-xs ${
                   jobLeadFilter === item.key
-                    ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                    ? "bg-brandGreen-900 text-white hover:bg-brandGreen-600"
                     : "text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700"
                 }`}
                 onClick={() => setJobLeadFilter(item.key)}
@@ -4604,7 +4604,7 @@ export default function Jobs() {
             ))}
           </div>
         </div>
-        <div className="hidden sm:flex items-end w-full justify-end gap-2 md:hidden">
+        <div className="mb-6 hidden sm:flex items-end w-full justify-end gap-2 md:hidden">
           <div className="flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
             {([
               { key: "all", label: "All" },
@@ -4616,7 +4616,7 @@ export default function Jobs() {
                 variant="ghost"
                 className={`h-8 rounded-full px-4 text-xs ${
                   jobLeadFilter === item.key
-                    ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                    ? "bg-brandGreen-900 text-white hover:bg-brandGreen-600"
                     : "text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700"
                 }`}
                 onClick={() => setJobLeadFilter(item.key)}
@@ -4626,21 +4626,16 @@ export default function Jobs() {
             ))}
           </div>
         </div>
-        <div className="relative rounded-3xl p-4 md:p-8 pb-5 md:pb-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm md:shadow-xl bg-white dark:bg-slate-900 md:bg-gradient-to-br md:from-slate-50 md:via-blue-50 md:to-indigo-50 md:dark:from-slate-900 md:dark:via-blue-950/20 md:dark:to-indigo-950/20">
+        <div className="mb-6 relative rounded-3xl p-4 md:p-5 pb-5 md:pb-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm md:shadow-xl bg-white dark:bg-slate-900 md:bg-gradient-to-br md:from-slate-50 md:via-blue-50 md:to-indigo-50 md:dark:from-slate-900 md:dark:via-blue-950/20 md:dark:to-indigo-950/20">
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
               <div className="space-y-2">
                 <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-slate-900 to-blue-900 dark:from-slate-100 dark:to-blue-100 bg-clip-text text-transparent">
                   Jobs Dashboard
                 </h2>
-                <p className="text-slate-600 dark:text-slate-400 text-sm md:text-lg leading-relaxed">
-                  {selectedStatus === "All" 
-                    ? "Comprehensive job management and tracking system" 
-                    : `${selectedStatus} Jobs - ${filteredCount} total`}
-                </p>
               </div>
               <div className="md:flex items-start gap-2 hidden">
-                <div className="flex items-center gap-1 rounded-full bg-slate-50 dark:bg-slate-800 px-1 py-1 h-10">
+                <div className="flex items-center gap-1 rounded-full bg-slate-50 border border-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
                   {([
                     { key: "all", label: "All" },
                     { key: "job", label: "Jobs" },
@@ -4651,7 +4646,7 @@ export default function Jobs() {
                       variant="ghost"
                       className={`h-8 rounded-full px-4 text-xs ${
                         jobLeadFilter === item.key
-                          ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                          ? "bg-brandGreen-900 text-white hover:bg-brandGreen-600"
                           : "text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700"
                       }`}
                       onClick={() => setJobLeadFilter(item.key)}
@@ -4665,7 +4660,7 @@ export default function Jobs() {
           </div>
 
            {/* Slim toolbar */}
-          <div className="flex flex-col gap-3 mb-4">
+          <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -4783,67 +4778,70 @@ export default function Jobs() {
               />
             </div>
             )}
-          </div>
 
+            {showFilters && (
+            <div className="sticky top-0 backdrop-blur supports-[backdrop-filter]:backdrop-blur px-1 py-2 mt-8">
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                <button
+                  onClick={() => setSelectedStatus('All')}
+                  className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs ${selectedStatus==='All' ? 'bg-slate-900 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
+                >
+                  <span className="inline-block h-2 w-2 rounded-full bg-slate-500"></span>
+                  All
+                  <span className="opacity-70 hidden sm:inline">{totalJobs}</span>
+                </button>
 
-          {/* Compact, scalable Status bar */}
-          <div className="sticky top-0 backdrop-blur supports-[backdrop-filter]:backdrop-blur px-1 py-2 mt-8">
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-              <button
-                onClick={() => setSelectedStatus('All')}
-                className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs ${selectedStatus==='All' ? 'bg-slate-900 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
-              >
-                <span className="inline-block h-2 w-2 rounded-full bg-slate-500"></span>
-                All
-                <span className="opacity-70 hidden sm:inline">{totalJobs}</span>
-              </button>
-
-              {[...jobStatuses]
-                .sort((a,b)=>{
-                  const ai = statusOrder.indexOf(a.name);
-                  const bi = statusOrder.indexOf(b.name);
-                  const av = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
-                  const bv = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
-                  return av - bv;
-                })
-                .map((s, idx)=>{
-                  const count = jobs.filter(j=>getJobStatus(j)===s.name).length;
-                  const sel = selectedStatus===s.name;
-                  return (
-                    <button key={s.id}
-                      draggable
-                      onDragStart={()=>setDragIndex(idx)}
-                      onDragOver={(e)=>e.preventDefault()}
-                      onDrop={()=>{
-                        if (dragIndex===null) return;
-                        const names = [...statusOrder.length? statusOrder : jobStatuses.map(js=>js.name)];
-                        const from = dragIndex;
-                        const to = idx;
-                        const ordered = [...names];
-                        const [moved] = ordered.splice(from,1);
-                        ordered.splice(to,0,moved);
-                        setStatusOrder(ordered);
-                        setDragIndex(null);
-                      }}
-                      onClick={()=>setSelectedStatus(s.name)}
-                      className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs whitespace-nowrap ${sel? 'bg-slate-900 text-white':'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}>
-                      <span className="inline-block h-2 w-2 rounded-full" style={{backgroundColor:s.color}}></span>
-                      {s.name}
-                      {count>0 && <span className="opacity-70 hidden sm:inline">{count}</span>}
-                    </button>
-                  );
-                })}
-              {/* More dropdown removed for simplicity; horizontal scroll holds all */}
+                {[...jobStatuses]
+                  .sort((a,b)=>{
+                    const ai = statusOrder.indexOf(a.name);
+                    const bi = statusOrder.indexOf(b.name);
+                    const av = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
+                    const bv = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
+                    return av - bv;
+                  })
+                  .map((s, idx)=>{
+                    const count = jobs.filter(j=>getJobStatus(j)===s.name).length;
+                    const sel = selectedStatus===s.name;
+                    return (
+                      <button key={s.id}
+                        draggable
+                        onDragStart={()=>setDragIndex(idx)}
+                        onDragOver={(e)=>e.preventDefault()}
+                        onDrop={()=>{
+                          if (dragIndex===null) return;
+                          const names = [...statusOrder.length? statusOrder : jobStatuses.map(js=>js.name)];
+                          const from = dragIndex;
+                          const to = idx;
+                          const ordered = [...names];
+                          const [moved] = ordered.splice(from,1);
+                          ordered.splice(to,0,moved);
+                          setStatusOrder(ordered);
+                          setDragIndex(null);
+                        }}
+                        onClick={()=>setSelectedStatus(s.name)}
+                        className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs whitespace-nowrap ${sel? 'bg-slate-900 text-white':'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}>
+                        <span className="inline-block h-2 w-2 rounded-full" style={{backgroundColor:s.color}}></span>
+                        {s.name}
+                        {count>0 && <span className="opacity-70 hidden sm:inline">{count}</span>}
+                      </button>
+                    );
+                  })}
+                {/* More dropdown removed for simplicity; horizontal scroll holds all */}
+              </div>
             </div>
+            )}
           </div>
+
+
+          
           
           {/* Summary removed (duplicated by status pills) */}
         </div>
 
         {/* Bulk actions + Column toggle */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 px-1">
-          <div className="flex flex-wrap items-center gap-3">
-            {selectedRows.size > 0 && (
+        {selectedRows.size > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 px-1">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -4899,97 +4897,63 @@ export default function Jobs() {
                   Delete ({selectedRows.size})
                 </Button> */}
               </div>
-            )}
-            
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-              <span className="font-semibold">Density:</span>
-              <div className="flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
-                {[
-                  { key: 'comfortable', label: 'Comfortable' },
-                  { key: 'compact', label: 'Compact' },
-                  { key: 'ultra', label: 'Ultra' },
-                ].map(item => (
-                  <Button
-                    key={item.key}
-                    variant="ghost"
-                    className={`h-8 rounded-full px-3 text-xs ${
-                      density === item.key
-                        ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                        : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700'
-                    }`}
-                    onClick={() => setDensity(item.key as typeof density)}
-                  >
-                    {item.label}
-                  </Button>
-                ))}
-              </div>
             </div>
-            <Button variant="outline" className="border-slate-300 dark:border-slate-700 rounded-full gap-2">
-              <Download className="w-4 h-4" />
-              Export
-            </Button>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="rounded-full border-slate-300 dark:border-slate-700 px-3 gap-2"
-                  title="Show/Hide Columns"
-                >
-                  <Columns3 className="w-4 h-4" />
-                  <span className="text-sm">Columns</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:max-w-md">
-                <SheetHeader>
-                  <SheetTitle>Manage Columns</SheetTitle>
-                  {/* <SheetDescription>Select fields to display. Saved locally.</SheetDescription> */}
-                </SheetHeader>
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  {columnOptions.map(([key,label]) => (
-                    <label key={key} className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" className="h-4 w-4" checked={visibleClientFields[key]} onChange={()=>toggleVisibleField(key)} />
-                      {label}
-                    </label>
+            <div className="flex items-center gap-2">
+              {/* <div className="hidden sm:flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                <span className="font-semibold">Density:</span>
+                <div className="flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
+                  {[
+                    { key: 'comfortable', label: 'Comfortable' },
+                    { key: 'compact', label: 'Compact' },
+                    { key: 'ultra', label: 'Ultra' },
+                  ].map(item => (
+                    <Button
+                      key={item.key}
+                      variant="ghost"
+                      className={`h-8 rounded-full px-3 text-xs ${
+                        density === item.key
+                          ? 'bg-brandGreen-900 text-white hover:bg-brandGreen-600'
+                          : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700'
+                      }`}
+                      onClick={() => setDensity(item.key as typeof density)}
+                    >
+                      {item.label}
+                    </Button>
                   ))}
                 </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-          {/* <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full border-slate-300 dark:border-slate-700 px-3 gap-2"
-                title="Show/Hide Columns"
-              >
-                <Columns3 className="w-4 h-4" />
-                <span className="text-sm">Columns</span>
+              </div> */}
+              {/* <Button variant="outline" className="border-slate-300 dark:border-slate-700 rounded-full gap-2">
+                <Download className="w-4 h-4" />
+                Export
               </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-64">
-              <div className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                Columns
-              </div>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {columnOptions.map(([key, label]) => (
-                  <label key={key} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4"
-                      checked={visibleClientFields[key]}
-                      onChange={() => toggleVisibleField(key)}
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover> */}
-        </div>
-
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="rounded-full border-slate-300 dark:border-slate-700 px-3 gap-2"
+                    title="Show/Hide Columns"
+                  >
+                    <Columns3 className="w-4 h-4" />
+                    <span className="text-sm">Columns</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full sm:max-w-md">
+                  <SheetHeader>
+                    <SheetTitle>Manage Columns</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    {columnOptions.map(([key,label]) => (
+                      <label key={key} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" className="h-4 w-4" checked={visibleClientFields[key]} onChange={()=>toggleVisibleField(key)} />
+                        {label}
+                      </label>
+                    ))}
+                  </div>
+                </SheetContent>
+              </Sheet> */}
+            </div>
+          </div>
+        )}
         {/* Premium Table View with Status Grouping */}
         {/* Table (companies-style) */}
         <Table
@@ -5009,6 +4973,7 @@ export default function Jobs() {
             handlePageChange(page);
             setMobilePage(page);
           }}
+          maxHeightClassName={"max-h-[calc(100vh-450px)]"}
         />
       </div>
     );
@@ -5397,267 +5362,8 @@ export default function Jobs() {
 
   return (
     <div>
-      <div className="flex items-center justify-end">
-        <div className="flex space-x-3">
-          <Dialog open={showNewJobDialog} onOpenChange={setShowNewJobDialog}>
-            {/* Trigger is in global header; this Dialog opens via URL (?new=1) or window event */}
-            <DialogContent
-              className={`${viewMode === "single" ? "sm:max-w-6xl" : "sm:max-w-4xl"} max-h-[90vh] overflow-y-auto`}
-            >
-              <DialogHeader>
-                <div className="flex items-center justify-between">
-                  <DialogTitle className="text-2xl font-bold text-gray-900">
-                    Create New Service Job
-                  </DialogTitle>
-
-                  {/* View Mode Toggle */}
-                  <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                    <Button
-                      variant={viewMode === "wizard" ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => setViewMode("wizard")}
-                      className={`text-xs ${viewMode === "wizard" ? "bg-white shadow-sm" : ""}`}
-                    >
-                      📋 Step-by-step
-                    </Button>
-                    <Button
-                      variant={viewMode === "single" ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => setViewMode("single")}
-                      className={`text-xs ${viewMode === "single" ? "bg-white shadow-sm" : ""}`}
-                    >
-                      📄 All in one
-                    </Button>
-                  </div>
-                </div>
-              </DialogHeader>
-
-              {/* Source Announcement in Dialog */}
-              {formData.source && (
-                <div className="bg-gradient-to-r from-yellow-100 via-yellow-50 to-orange-100 border border-yellow-300 rounded-lg p-4 mx-6 mt-4">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-yellow-200 rounded-full flex items-center justify-center">
-                        <span className="text-sm">📢</span>
-                      </div>
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <h4 className="text-sm font-semibold text-yellow-800 mb-1">
-                        Active Offer -{" "}
-                        {formData.source === "yelp"
-                          ? "Yelp"
-                          : formData.source === "google-ads"
-                            ? "Google Ads"
-                            : formData.source === "facebook"
-                              ? "Facebook"
-                              : formData.source === "referral"
-                                ? "Referral"
-                                : formData.source === "website"
-                                  ? "Website"
-                                  : "Direct Call"}{" "}
-                        Customer
-                      </h4>
-                      <p className="text-sm text-yellow-700">
-                        {formData.source === "yelp" &&
-                          "🎉 10% off all services for Yelp customers!"}
-                        {formData.source === "google-ads" &&
-                          "💰 Free estimate for Google customers!"}
-                        {formData.source === "facebook" &&
-                          "👍 Special Facebook customer pricing available!"}
-                        {formData.source === "referral" &&
-                          "🤝 Thank you for the referral! Special discount applied."}
-                        {formData.source === "website" &&
-                          "🌐 Web customer special - priority scheduling available!"}
-                        {formData.source === "phone" &&
-                          "📞 Direct call customer - premium service included!"}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => updateFormData("source", "")}
-                      className="text-yellow-600 hover:text-yellow-800 hover:bg-yellow-200 h-6 w-6 p-0"
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              <div className="py-6">
-                {viewMode === "wizard" && renderStepIndicator()}
-
-                <div className={viewMode === "wizard" ? "min-h-[500px]" : ""}>
-                  {viewMode === "wizard" ? (
-                    <>
-                      {currentStep === 1 && renderStep1()}
-                      {currentStep === 2 && renderStep2()}
-                      {currentStep === 3 && renderStep3()}
-                      {currentStep === 4 && renderStep4()}
-                    </>
-                  ) : (
-                    renderSingleScreen()
-                  )}
-                </div>
-
-                {/* Navigation Buttons */}
-                <div className="flex items-center justify-between pt-8 border-t border-gray-200 mt-8">
-                  <div className="flex items-center space-x-4">
-                    {viewMode === "wizard" && currentStep > 1 && (
-                      <Button
-                        variant="outline"
-                        onClick={prevStep}
-                        className="flex items-center"
-                      >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back
-                      </Button>
-                    )}
-
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        resetForm();
-                        setShowNewJobDialog(false);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    {viewMode === "wizard" ? (
-                      currentStep < totalSteps ? (
-                        <Button
-                          onClick={nextStep}
-                          className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white flex items-center"
-                          disabled={
-                            (currentStep === 1 &&
-                              (!formData.clientName ||
-                                !formData.phoneNumber)) ||
-                            (currentStep === 2 &&
-                              (!formData.location ||
-                                !formData.city ||
-                                !formData.state)) ||
-                            (currentStep === 3 &&
-                              (!formData.jobCategory ||
-                                !formData.jobType ||
-                                !formData.jobDescription))
-                          }
-                        >
-                          Continue
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={() => {
-                            console.log("Creating job with data:", {
-                              formData,
-                              selectedTechnician,
-                            });
-                            resetForm();
-                            setShowNewJobDialog(false);
-                            alert(
-                              "🎉 Job created successfully! The technician has been notified.",
-                            );
-                          }}
-                          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white flex items-center px-8"
-                          disabled={
-                            !selectedTechnician ||
-                            !formData.startDate ||
-                            (selectedDuration === "Custom Time" &&
-                              (!customStartTime || !customEndTime))
-                          }
-                        >
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Create Job
-                        </Button>
-                      )
-                    ) : (
-                      // Single screen mode - always show create button
-                      <Button
-                        onClick={() => {
-                          console.log("Creating job with data:", {
-                            formData,
-                            selectedTechnician,
-                          });
-                          resetForm();
-                          setShowNewJobDialog(false);
-                          alert(
-                            "🎉 Job created successfully! The technician has been notified.",
-                          );
-                        }}
-                        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white flex items-center px-8"
-                        disabled={
-                          !formData.clientName ||
-                          !formData.phoneNumber ||
-                          !formData.location ||
-                          !formData.city ||
-                          !formData.state ||
-                          !formData.jobCategory ||
-                          !formData.jobType ||
-                          !formData.jobDescription ||
-                          (!noTechnician && !selectedTechnician) ||
-                          (!noSchedule && (!formData.startDate || (selectedDuration === "Custom Time" && (!customStartTime || !customEndTime))))
-                        }
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Create Job
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {deleteMode === 'bulk' ? 'Delete Jobs' : 'Delete Job'}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {deleteMode === 'bulk' ? (
-                  <>
-                    Are you sure you want to delete{' '}
-                    <strong>{selectedRows.size}</strong> selected job
-                    {selectedRows.size > 1 ? 's' : ''}? This action cannot be
-                    undone.
-                  </>
-                ) : (
-                  <>
-                    Are you sure you want to delete{' '}
-                    <strong>{jobToDelete?.clientName || jobToDelete?.id}</strong>?
-                    This action cannot be undone.
-                  </>
-                )}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={handleDeleteCancel} disabled={deleting}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                disabled={deleting}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                {deleting ? (
-                  <>
-                    <ButtonLoading message="Deleting..." />
-                    Deleting...
-                  </>
-                ) : (
-                  'Delete'
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
       {/* Jobs List View */}
-      <div className="mt-8">
+      <div>
         {renderListView()}
         {renderJobDetails()}
       </div>

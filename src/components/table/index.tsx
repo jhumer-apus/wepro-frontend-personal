@@ -39,6 +39,7 @@ type JobsTableProps = {
   totalCount: number;
   onPageSizeChange: (value: string) => void;
   onPageChange: (page: number) => void;
+  maxHeightClassName?: string;
 };
 
 const JobsTable: React.FC<JobsTableProps> = ({
@@ -56,6 +57,7 @@ const JobsTable: React.FC<JobsTableProps> = ({
   totalCount,
   onPageSizeChange,
   onPageChange,
+  maxHeightClassName,
 }) => {
   const startEntry = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endEntry = Math.min(currentPage * pageSize, totalCount);
@@ -63,9 +65,9 @@ const JobsTable: React.FC<JobsTableProps> = ({
   const inferredHasMore = mobileItems.length < totalCount;
 
   return (
-    <div className="bg-transparent border-0 shadow-none md:bg-white md:dark:bg-slate-900 rounded-lg md:border md:border-slate-200 md:dark:border-slate-800 md:shadow-xl overflow-hidden pt-6">
+    <div className="bg-transparent border-0 shadow-none md:bg-white md:dark:bg-slate-900 rounded-lg md:border md:border-slate-200 md:dark:border-slate-800 md:shadow-xl overflow-hidden">
       {/* Table Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 md:px-6 px-0 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 md:px-4 px-0 py-3">
         <div className="flex items-center gap-2">
           <Label
             htmlFor="entries"
@@ -94,7 +96,7 @@ const JobsTable: React.FC<JobsTableProps> = ({
       <div className="px-0">
         {/* Desktop table */}
         <div className="hidden md:block">
-          <Table className="min-w-[900px] border-collapse">
+          <Table className="min-w-[900px] border-collapse" maxHeightClassName={maxHeightClassName}>
             <TableHeader className="sticky top-0 z-10">
               <TableRow className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
                 {columns.map((col, idx) => {
