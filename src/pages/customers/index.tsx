@@ -55,6 +55,7 @@ import {
   XCircle,
   Eye,
   Users,
+  Table,
 } from 'lucide-react'
 import {
   customers,
@@ -62,6 +63,8 @@ import {
   Customer,
   Notes,
 } from '@/src/constants/dummyData/customers'
+import JobsTable from '@/src/components/table'
+import { CustomerCard } from '@/src/components/customer/CustomerCard'
 
 const CustomersIndex: React.FC = (): React.JSX.Element => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
@@ -118,6 +121,89 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
     setSelectedCustomer(mockCustomerDetails)
     setShowProfile(true)
   }
+
+  const customerColumns = [
+    {
+      columnName: "Customer",
+      cell: (row:Customer) => (
+        <div className="flex items-center gap-3">
+          <img
+            src={row.avatar}
+            alt={row.name}
+            className="h-8 w-8 rounded-full object-cover"
+          />
+          <div>
+            <div className="font-medium">{row.name}</div>
+            <div className="text-xs text-muted-foreground">{row.email}</div>
+          </div>
+        </div>
+      ),
+      sortKey: "name",
+    },
+    {
+      columnName: "Phone",
+      cell: "phone",
+    },
+    {
+      columnName: "Address",
+      cell: "address",
+    },
+    {
+      columnName: "Join Date",
+      cell: (row:Customer) => new Date(row.joinDate).toLocaleDateString(),
+      sortKey: "joinDate",
+    },
+    {
+      columnName: "Jobs",
+      cell: "totalJobs",
+      sortKey: "totalJobs",
+    },
+    {
+      columnName: "Total Spent",
+      cell: (row:Customer) => `$${row.totalSpent.toLocaleString()}`,
+      sortKey: "totalSpent",
+    },
+    {
+      columnName: "Last Contact",
+      cell: "lastContact",
+    },
+    {
+      columnName: "Status",
+      cell: (row:Customer) => (
+        <span
+          className={`px-2 py-1 text-xs rounded-full ${
+            row.status === "active"
+              ? "bg-green-100 text-green-700"
+              : "bg-gray-100 text-gray-600"
+          }`}
+        >
+          {row.status}
+        </span>
+      ),
+      sortKey: "status",
+    },
+    {
+      columnName: "Rating",
+      cell: (row:Customer) => "⭐".repeat(row.rating),
+      sortKey: "rating",
+    },
+    {
+      columnName: "Tags",
+      cell: (row:Customer) => (
+        <div className="flex flex-wrap gap-1">
+          {row.tags.map((tag: string) => (
+            <span
+              key={tag}
+              className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      ),
+    },
+  ];
+
 
   if (showProfile && selectedCustomer) {
     return (
@@ -876,8 +962,30 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
         </div>
       </div>
 
+      {/* Table */}
+      <JobsTable 
+        rows={filteredCustomers} 
+        columns={customerColumns}
+        mobileRows={filteredCustomers}
+        mobileCard={(row) => (
+          <CustomerCard
+            customer={row}
+            openCustomerProfile={openCustomerProfile}
+          />
+        )}
+        pageSize={0} 
+        currentPage={0} 
+        totalPages={0} 
+        totalCount={0} 
+        onPageSizeChange={function (value: string): void {
+          throw new Error('Function not implemented.')
+        } } onPageChange={function (page: number): void {
+        throw new Error('Function not implemented.')
+        } } 
+      />
+
       {/* Customer List */}
-      <div className="flex-1 overflow-y-auto p-6">
+      {/* <div className="flex-1 overflow-y-auto p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredCustomers.map(customer => (
             <Card
@@ -1005,7 +1113,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
             </Card>
           ))}
         </div>
-      </div>
+      </div> */}
     </div>
   )
 }

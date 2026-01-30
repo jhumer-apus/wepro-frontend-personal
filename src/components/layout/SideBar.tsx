@@ -124,11 +124,11 @@ export function Sidebar(): React.JSX.Element {
     //     Tenant: ['MOD010'],
     //   },
     // },
-    // {
-    //   name: 'Customers',
-    //   href: '/customers',
-    //   icon: Home,
-    // },
+    {
+      name: 'Customers',
+      href: '/customers',
+      icon: Home,
+    },
     // {
     //   name: 'Schedule',
     //   href: '/schedule',
@@ -232,6 +232,9 @@ export function Sidebar(): React.JSX.Element {
   const filteredNavigation = navigation.filter(item => {
     const userType = getUserType()
     if (item.name === 'Dashboard') {
+      return true
+    }
+    if (item.name === 'Customers') {
       return true
     }
     if (item.name === 'Billing Answering Subscription') {
