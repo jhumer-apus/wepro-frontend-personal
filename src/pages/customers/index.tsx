@@ -66,13 +66,19 @@ import {
 import JobsTable from '@/src/components/table'
 import { CustomerCard } from '@/src/components/customer/CustomerCard'
 
+
+
 const CustomersIndex: React.FC = (): React.JSX.Element => {
+  const [pageSize, setPageSize] = useState<number>(10)
+  const [currentPage, setCurrentPage] = useState<number>(1)
+
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   )
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [showProfile, setShowProfile] = useState<boolean>(false)
+  
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch =
@@ -203,6 +209,27 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
       ),
     },
   ];
+
+  const totalCount = filteredCustomers.length
+  const totalPages = Math.ceil(totalCount / pageSize)
+
+  const paginatedCustomers = filteredCustomers.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  )
+
+  const handlePageSizeChange = (value: string) => {
+    const newSize = Number(value)
+    setPageSize(newSize)
+    setCurrentPage(1) // reset to first page (important)
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+
+
 
 
   if (showProfile && selectedCustomer) {
@@ -963,26 +990,24 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
       </div>
 
       {/* Table */}
-      <JobsTable 
-        rows={filteredCustomers} 
+      <JobsTable
+        rows={paginatedCustomers}
         columns={customerColumns}
-        mobileRows={filteredCustomers}
+        mobileRows={paginatedCustomers}
         mobileCard={(row) => (
           <CustomerCard
             customer={row}
             openCustomerProfile={openCustomerProfile}
           />
         )}
-        pageSize={10} 
-        currentPage={1} 
-        totalPages={1} 
-        totalCount={filteredCustomers.length} 
-        onPageSizeChange={function (value: string): void {
-          throw new Error('Function not implemented.')
-        } } onPageChange={function (page: number): void {
-        throw new Error('Function not implemented.')
-        } } 
+        pageSize={pageSize}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        onPageSizeChange={handlePageSizeChange}
+        onPageChange={handlePageChange}
       />
+
 
       {/* Customer List */}
       {/* <div className="flex-1 overflow-y-auto p-6">
