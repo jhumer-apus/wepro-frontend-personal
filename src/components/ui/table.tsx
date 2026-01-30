@@ -2,18 +2,28 @@ import * as React from 'react'
 
 import { cn } from '@/src/lib/utils'
 
-const Table = React.forwardRef<
-  HTMLTableElement,
-  React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-  <div className="relative max-h-[calc(100vh-270px)] overflow-auto">
-    <table
-      ref={ref}
-      className={cn('w-full caption-bottom text-sm', className)}
-      {...props}
-    />
-  </div>
-))
+type TableProps = React.HTMLAttributes<HTMLTableElement> & {
+  maxHeightClassName?: string;
+  containerClassName?: string;
+};
+
+const Table = React.forwardRef<HTMLTableElement, TableProps>(
+  ({ className, maxHeightClassName, containerClassName, ...props }, ref) => (
+    <div
+      className={cn(
+        'relative overflow-auto',
+        maxHeightClassName ?? 'max-h-[calc(100vh-270px)]',
+        containerClassName
+      )}
+    >
+      <table
+        ref={ref}
+        className={cn('w-full caption-bottom text-sm', className)}
+        {...props}
+      />
+    </div>
+  )
+)
 Table.displayName = 'Table'
 
 const TableHeader = React.forwardRef<

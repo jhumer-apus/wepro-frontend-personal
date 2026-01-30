@@ -97,6 +97,8 @@ import {
   Tag,
   ChevronsUpDown,
   Check,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/src/components/ui/tabs';
@@ -117,8 +119,10 @@ import {
   CommandItem,
   CommandList,
 } from "@/src/components/ui/command";
-import Table from "@/src/components/table";
+import Table, { type ColumnOption as TableColumnOption } from "@/src/components/table";
 import SelectInput from "@/src/components/input/select";
+import { dummyJobs } from "@/src/constants/dummyData/jobs";
+import { type Job } from "@/src/constants/interface/jobs";
 
 // Technician interface with proper typing
 interface Technician {
@@ -2117,649 +2121,8 @@ export default function Jobs() {
       </div>
     </div>
   );
-
   // Sample jobs data for dispatch board
-  const [jobs, setJobs] = useState([
-    {
-      id: "J-2024-001",
-      clientName: "Sarah Wilson",
-      companyName: "Wilson Residence",
-      phoneNumber: "+1 (555) 123-4567",
-      email: "sarah.wilson@email.com",
-      location: "123 Main St",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77001",
-      jobCategory: "Plumbing",
-      jobType: "Repair",
-      jobDescription: "Kitchen sink clogged, water backing up into dishwasher",
-      status: "In Progress",
-      priority: "High",
-      assignedTechnician: "Mike Rodriguez",
-      technicianAvatar: "🔧",
-      startDate: "2024-01-15",
-      startTime: "09:00",
-      estimatedDuration: "2 hours",
-      actualStartTime: "09:15",
-      estimatedEndTime: "11:15",
-      source: "yelp",
-      jobTags: ["urgent", "warranty"],
-      noteTags: ["customer-notes"],
-      distance: 2.3,
-      revenue: 285.00,
-      customerRating: 4.9,
-      lastUpdated: "2024-01-15T10:30:00Z",
-      createdAt: "2024-01-15T08:00:00Z",
-      updatedAt: "2024-01-15T10:30:00Z",
-      photos: ["sink1.jpg", "sink2.jpg"],
-      notes: "Customer mentioned this is the second time this month. May need to replace pipes.",
-      partsNeeded: ["PVC pipe", "Drain cleaner"],
-      specialInstructions: "Enter through back gate, dog in yard",
-    },
-    {
-      id: "J-2024-002",
-      clientName: "Mike Chen",
-      companyName: "Chen Family Home",
-      phoneNumber: "+1 (555) 987-6543",
-      email: "mike.chen@email.com",
-      location: "456 Oak Ave",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77002",
-      jobCategory: "HVAC",
-      jobType: "Maintenance",
-      jobDescription: "Annual AC maintenance and filter replacement",
-      status: "Scheduled",
-      priority: "Medium",
-      assignedTechnician: "Jennifer Lee",
-      technicianAvatar: "⚡",
-      startDate: "2024-01-15",
-      startTime: "14:00",
-      estimatedDuration: "1.5 hours",
-      estimatedEndTime: "15:30",
-      source: "website",
-      jobTags: ["maintenance"],
-      noteTags: ["follow-up-required"],
-      distance: 3.1,
-      revenue: 195.00,
-      customerRating: 4.8,
-      lastUpdated: "2024-01-15T08:45:00Z",
-      notes: "Customer prefers afternoon appointments",
-      specialInstructions: "Park in driveway, ring doorbell twice",
-    },
-    {
-      id: "J-2024-003",
-      clientName: "Lisa Garcia",
-      companyName: "Garcia Business Center",
-      phoneNumber: "+1 (555) 456-7890",
-      email: "lisa.garcia@business.com",
-      location: "789 Business Blvd",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77003",
-      jobCategory: "Electrical",
-      jobType: "Installation",
-      jobDescription: "Install new LED lighting system in office",
-      status: "Pending",
-      priority: "Low",
-      assignedTechnician: "David Thompson",
-      technicianAvatar: "⚡",
-      startDate: "2024-01-16",
-      startTime: "10:00",
-      estimatedDuration: "4 hours",
-      estimatedEndTime: "14:00",
-      source: "referral",
-      jobTags: ["installation"],
-      noteTags: ["equipment"],
-      distance: 4.2,
-      revenue: 850.00,
-      customerRating: 5.0,
-      lastUpdated: "2024-01-15T09:20:00Z",
-      notes: "Large office space, need to coordinate with building management",
-      partsNeeded: ["LED panels", "Wiring", "Dimmer switches"],
-      specialInstructions: "Check in with security desk, building access required",
-    },
-    {
-      id: "J-2024-004",
-      clientName: "Robert Johnson",
-      companyName: "Johnson Office",
-      phoneNumber: "+1 (555) 321-6540",
-      email: "robert.johnson@office.com",
-      location: "321 Corporate Dr",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77004",
-      jobCategory: "Plumbing",
-      jobType: "Emergency",
-      jobDescription: "Burst pipe in basement, water damage",
-      status: "In Progress",
-      priority: "High",
-      assignedTechnician: "Mike Rodriguez",
-      technicianAvatar: "🔧",
-      startDate: "2024-01-15",
-      startTime: "11:00",
-      estimatedDuration: "3 hours",
-      actualStartTime: "11:30",
-      estimatedEndTime: "14:30",
-      source: "phone",
-      jobTags: ["emergency", "urgent"],
-      noteTags: ["insurance"],
-      distance: 1.8,
-      revenue: 450.00,
-      customerRating: 4.7,
-      lastUpdated: "2024-01-15T12:00:00Z",
-      createdAt: "2024-01-15T10:45:00Z",
-      updatedAt: "2024-01-15T12:00:00Z",
-      notes: "Insurance claim filed, customer needs documentation",
-      partsNeeded: ["Copper pipe", "Shut-off valve", "Drywall"],
-      specialInstructions: "Emergency access through side door",
-    },
-    {
-      id: "J-2024-005",
-      clientName: "Emily Davis",
-      companyName: "Davis Residence",
-      phoneNumber: "+1 (555) 789-0123",
-      email: "emily.davis@email.com",
-      location: "654 Pine St",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77005",
-      jobCategory: "HVAC",
-      jobType: "Repair",
-      jobDescription: "AC not cooling, thermostat issues",
-      status: "Scheduled",
-      priority: "Medium",
-      assignedTechnician: "Jennifer Lee",
-      technicianAvatar: "⚡",
-      startDate: "2024-01-16",
-      startTime: "13:00",
-      estimatedDuration: "2 hours",
-      estimatedEndTime: "15:00",
-      source: "google-ads",
-      jobTags: ["repair"],
-      noteTags: ["warranty"],
-      distance: 2.7,
-      revenue: 320.00,
-      customerRating: 4.6,
-      lastUpdated: "2024-01-15T10:15:00Z",
-      createdAt: "2024-01-15T09:00:00Z",
-      updatedAt: "2024-01-15T10:15:00Z",
-      notes: "System under warranty, check if covered",
-      partsNeeded: ["Thermostat", "Refrigerant"],
-      specialInstructions: "Park on street, no driveway access",
-    },
-    {
-      id: "J-2024-006",
-      clientName: "James Wilson",
-      companyName: "Wilson Manufacturing",
-      phoneNumber: "+1 (555) 555-1234",
-      email: "james.wilson@manufacturing.com",
-      location: "987 Industrial Blvd",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77006",
-      jobCategory: "Electrical",
-      jobType: "Maintenance",
-      jobDescription: "Monthly electrical system inspection",
-      status: "Completed",
-      priority: "Low",
-      assignedTechnician: "David Thompson",
-      technicianAvatar: "⚡",
-      startDate: "2024-01-14",
-      startTime: "08:00",
-      estimatedDuration: "1 hour",
-      actualStartTime: "08:15",
-      estimatedEndTime: "09:15",
-      actualEndTime: "09:30",
-      source: "contract",
-      jobTags: ["maintenance", "contract"],
-      noteTags: ["routine"],
-      distance: 5.1,
-      revenue: 180.00,
-      customerRating: 4.9,
-      lastUpdated: "2024-01-14T09:30:00Z",
-      createdAt: "2024-01-14T07:00:00Z",
-      updatedAt: "2024-01-14T09:30:00Z",
-      notes: "All systems operating normally",
-      partsNeeded: [],
-      specialInstructions: "Security clearance required, check in at front desk",
-    },
-    {
-      id: "J-2024-007",
-      clientName: "Maria Rodriguez",
-      companyName: "Rodriguez Restaurant",
-      phoneNumber: "+1 (555) 444-5678",
-      email: "maria.rodriguez@restaurant.com",
-      location: "555 Food Court",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77007",
-      jobCategory: "Plumbing",
-      jobType: "Installation",
-      jobDescription: "Install commercial dishwasher",
-      status: "Pending",
-      priority: "Medium",
-      assignedTechnician: "Mike Rodriguez",
-      technicianAvatar: "🔧",
-      startDate: "2024-01-17",
-      startTime: "09:00",
-      estimatedDuration: "5 hours",
-      estimatedEndTime: "14:00",
-      source: "referral",
-      jobTags: ["installation", "commercial"],
-      noteTags: ["equipment"],
-      distance: 3.3,
-      revenue: 1200.00,
-      customerRating: 4.8,
-      lastUpdated: "2024-01-15T11:45:00Z",
-      createdAt: "2024-01-15T10:30:00Z",
-      updatedAt: "2024-01-15T11:45:00Z",
-      notes: "Equipment delivered, ready for installation",
-      partsNeeded: ["Commercial dishwasher", "Plumbing fittings"],
-      specialInstructions: "Kitchen access through back door, coordinate with chef",
-    },
-    {
-      id: "J-2024-008",
-      clientName: "Thomas Brown",
-      companyName: "Brown Residence",
-      phoneNumber: "+1 (555) 666-7890",
-      email: "thomas.brown@email.com",
-      location: "777 Maple Ave",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77008",
-      jobCategory: "HVAC",
-      jobType: "Installation",
-      jobDescription: "New furnace installation",
-      status: "Scheduled",
-      priority: "High",
-      assignedTechnician: "Jennifer Lee",
-      technicianAvatar: "⚡",
-      startDate: "2024-01-16",
-      startTime: "08:00",
-      estimatedDuration: "6 hours",
-      estimatedEndTime: "14:00",
-      source: "website",
-      jobTags: ["installation", "new-system"],
-      noteTags: ["financing"],
-      distance: 2.1,
-      revenue: 2800.00,
-      customerRating: 4.7,
-      lastUpdated: "2024-01-15T14:20:00Z",
-      createdAt: "2024-01-15T13:00:00Z",
-      updatedAt: "2024-01-15T14:20:00Z",
-      notes: "Customer approved financing, equipment ordered",
-      partsNeeded: ["Furnace", "Ductwork", "Thermostat"],
-      specialInstructions: "Early start, customer will be home all day",
-    },
-    {
-      id: "J-2024-009",
-      clientName: "Alex Thompson",
-      companyName: "Thompson Residence",
-      phoneNumber: "+1 (555) 777-8888",
-      email: "alex.thompson@email.com",
-      location: "888 Sunset Blvd",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77009",
-      jobCategory: "Plumbing",
-      jobType: "Emergency",
-      jobDescription: "Burst pipe emergency call",
-      status: "Submitted",
-      priority: "High",
-      assignedTechnician: "Mike Rodriguez",
-      technicianAvatar: "🔧",
-      startDate: "2024-01-15",
-      startTime: "16:00",
-      estimatedDuration: "2 hours",
-      estimatedEndTime: "18:00",
-      source: "phone",
-      jobTags: ["emergency", "urgent"],
-      noteTags: ["insurance"],
-      distance: 1.5,
-      revenue: 350.00,
-      customerRating: 4.5,
-      lastUpdated: "2024-01-15T15:30:00Z",
-      createdAt: "2024-01-15T15:00:00Z",
-      updatedAt: "2024-01-15T15:30:00Z",
-      notes: "Emergency call received, customer very distressed",
-      partsNeeded: ["Copper pipe", "Shut-off valve"],
-      specialInstructions: "Emergency access, customer waiting",
-    },
-    {
-      id: "J-2024-010",
-      clientName: "Rachel Green",
-      companyName: "Green Office",
-      phoneNumber: "+1 (555) 999-0000",
-      email: "rachel.green@office.com",
-      location: "999 Business Center",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77010",
-      jobCategory: "Electrical",
-      jobType: "Installation",
-      jobDescription: "Office lighting upgrade",
-      status: "Not Confirmed",
-      priority: "Medium",
-      assignedTechnician: "David Thompson",
-      technicianAvatar: "⚡",
-      startDate: "2024-01-17",
-      startTime: "10:00",
-      estimatedDuration: "6 hours",
-      estimatedEndTime: "16:00",
-      source: "website",
-      jobTags: ["installation", "commercial"],
-      noteTags: ["pending-confirmation"],
-      distance: 4.5,
-      revenue: 1200.00,
-      customerRating: 4.8,
-      lastUpdated: "2024-01-15T14:15:00Z",
-      createdAt: "2024-01-15T13:45:00Z",
-      updatedAt: "2024-01-15T14:15:00Z",
-      notes: "Waiting for customer confirmation of appointment",
-      partsNeeded: ["LED panels", "Wiring", "Dimmer switches"],
-      specialInstructions: "Office hours only, coordinate with reception",
-    },
-    {
-      id: "J-2024-011",
-      clientName: "Monica Geller",
-      companyName: "Geller Restaurant",
-      phoneNumber: "+1 (555) 111-2222",
-      email: "monica.geller@restaurant.com",
-      location: "111 Food Street",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77011",
-      jobCategory: "HVAC",
-      jobType: "Repair",
-      jobDescription: "Kitchen exhaust system repair",
-      status: "Rejected",
-      priority: "Low",
-      assignedTechnician: "Jennifer Lee",
-      technicianAvatar: "⚡",
-      startDate: "2024-01-16",
-      startTime: "11:00",
-      estimatedDuration: "3 hours",
-      estimatedEndTime: "14:00",
-      source: "yelp",
-      jobTags: ["repair", "commercial"],
-      noteTags: ["customer-cancelled"],
-      distance: 3.8,
-      revenue: 450.00,
-      customerRating: 4.2,
-      lastUpdated: "2024-01-15T13:45:00Z",
-      createdAt: "2024-01-15T12:30:00Z",
-      updatedAt: "2024-01-15T13:45:00Z",
-      notes: "Customer cancelled due to budget constraints",
-      partsNeeded: ["Exhaust fan", "Ductwork"],
-      specialInstructions: "Kitchen access through back door",
-    },
-    {
-      id: "J-2024-012",
-      clientName: "Chandler Bing",
-      companyName: "Bing Residence",
-      phoneNumber: "+1 (555) 333-4444",
-      email: "chandler.bing@email.com",
-      location: "333 Comedy Ave",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77012",
-      jobCategory: "Plumbing",
-      jobType: "Maintenance",
-      jobDescription: "Annual plumbing inspection",
-      status: "No Answer",
-      priority: "Medium",
-      assignedTechnician: "Mike Rodriguez",
-      technicianAvatar: "🔧",
-      startDate: "2024-01-16",
-      startTime: "14:00",
-      estimatedDuration: "1 hour",
-      estimatedEndTime: "15:00",
-      source: "referral",
-      jobTags: ["maintenance"],
-      noteTags: ["no-response"],
-      distance: 2.2,
-      revenue: 150.00,
-      customerRating: 4.6,
-      lastUpdated: "2024-01-15T12:30:00Z",
-      createdAt: "2024-01-15T11:15:00Z",
-      updatedAt: "2024-01-15T12:30:00Z",
-      notes: "Customer not responding to calls or messages",
-      partsNeeded: [],
-      specialInstructions: "Call before arrival",
-    },
-    {
-      id: "J-2024-013",
-      clientName: "Joey Tribbiani",
-      companyName: "Tribbiani Apartment",
-      phoneNumber: "+1 (555) 555-6666",
-      email: "joey.tribbiani@email.com",
-      location: "555 Actor Lane",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77013",
-      jobCategory: "Electrical",
-      jobType: "Emergency",
-      jobDescription: "Power outage in apartment",
-      status: "Canceled",
-      priority: "High",
-      assignedTechnician: "David Thompson",
-      technicianAvatar: "⚡",
-      startDate: "2024-01-15",
-      startTime: "20:00",
-      estimatedDuration: "2 hours",
-      estimatedEndTime: "22:00",
-      source: "phone",
-      jobTags: ["emergency", "urgent"],
-      noteTags: ["customer-cancelled"],
-      distance: 1.9,
-      revenue: 300.00,
-      customerRating: 4.3,
-      lastUpdated: "2024-01-15T19:30:00Z",
-      createdAt: "2024-01-15T19:00:00Z",
-      updatedAt: "2024-01-15T19:30:00Z",
-      notes: "Customer cancelled - building management resolved issue",
-      partsNeeded: ["Circuit breaker", "Wiring"],
-      specialInstructions: "Apartment access through main entrance",
-    },
-    {
-      id: "J-2024-014",
-      clientName: "Phoebe Buffay",
-      companyName: "Buffay Residence",
-      phoneNumber: "+1 (555) 777-9999",
-      email: "phoebe.buffay@email.com",
-      location: "777 Music Street",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77014",
-      jobCategory: "HVAC",
-      jobType: "Installation",
-      jobDescription: "New AC unit installation",
-      status: "Confirmed",
-      priority: "Medium",
-      assignedTechnician: "Jennifer Lee",
-      technicianAvatar: "⚡",
-      startDate: "2024-01-18",
-      startTime: "09:00",
-      estimatedDuration: "4 hours",
-      estimatedEndTime: "13:00",
-      source: "website",
-      jobTags: ["installation", "new-system"],
-      noteTags: ["confirmed", "called"],
-      distance: 3.1,
-      revenue: 2200.00,
-      customerRating: 4.9,
-      lastUpdated: "2024-01-15T16:20:00Z",
-      createdAt: "2024-01-15T15:45:00Z",
-      updatedAt: "2024-01-15T16:20:00Z",
-      notes: "Customer confirmed appointment and payment method",
-      partsNeeded: ["AC unit", "Thermostat", "Ductwork"],
-      specialInstructions: "Early start, customer will be home",
-    },
-    {
-      id: "J-2024-015",
-      clientName: "Ross Geller",
-      companyName: "Geller Museum",
-      phoneNumber: "+1 (555) 888-1111",
-      email: "ross.geller@museum.com",
-      location: "888 Museum Drive",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77015",
-      jobCategory: "Electrical",
-      jobType: "Maintenance",
-      jobDescription: "Museum lighting system maintenance",
-      status: "Follow Up",
-      priority: "Low",
-      assignedTechnician: "David Thompson",
-      technicianAvatar: "⚡",
-      startDate: "2024-01-19",
-      startTime: "10:00",
-      estimatedDuration: "3 hours",
-      estimatedEndTime: "13:00",
-      source: "contract",
-      jobTags: ["maintenance", "contract"],
-      noteTags: ["follow-up-required"],
-      distance: 5.2,
-      revenue: 400.00,
-      customerRating: 4.7,
-      lastUpdated: "2024-01-15T17:45:00Z",
-      createdAt: "2024-01-15T17:00:00Z",
-      updatedAt: "2024-01-15T17:45:00Z",
-      notes: "Need to follow up on contract renewal",
-      partsNeeded: ["Light bulbs", "Wiring"],
-      specialInstructions: "Security clearance required, check in at front desk",
-    },
-    {
-      id: "J-2024-002",
-      clientName: "Mike Chen",
-      companyName: "Chen Family Home",
-      phoneNumber: "+1 (555) 987-6543",
-      email: "mike.chen@email.com",
-      location: "456 Oak Ave",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77002",
-      jobCategory: "HVAC",
-      jobType: "Maintenance",
-      jobDescription: "Annual AC maintenance and filter replacement",
-      status: "Scheduled",
-      priority: "Medium",
-      assignedTechnician: "Jennifer Lee",
-      technicianAvatar: "⚡",
-      startDate: "2024-01-15",
-      startTime: "14:00",
-      estimatedDuration: "1.5 hours",
-      estimatedEndTime: "15:30",
-      source: "website",
-      jobTags: ["maintenance"],
-      noteTags: ["follow-up-required"],
-      distance: 3.1,
-      revenue: 195.00,
-      customerRating: 4.8,
-      lastUpdated: "2024-01-15T08:45:00Z",
-      notes: "Customer prefers afternoon appointments",
-      specialInstructions: "Park in driveway, ring doorbell twice",
-    },
-    {
-      id: "J-2024-003",
-      clientName: "Lisa Garcia",
-      companyName: "Garcia Business Center",
-      phoneNumber: "+1 (555) 456-7890",
-      email: "lisa.garcia@business.com",
-      location: "789 Business Blvd",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77003",
-      jobCategory: "Electrical",
-      jobType: "Installation",
-      jobDescription: "Install new LED lighting system in office",
-      status: "Pending",
-      priority: "Low",
-      assignedTechnician: "David Thompson",
-      technicianAvatar: "⚡",
-      startDate: "2024-01-16",
-      startTime: "10:00",
-      estimatedDuration: "4 hours",
-      estimatedEndTime: "14:00",
-      source: "referral",
-      jobTags: ["installation"],
-      noteTags: ["equipment"],
-      distance: 4.2,
-      revenue: 850.00,
-      customerRating: 5.0,
-      lastUpdated: "2024-01-15T09:20:00Z",
-      notes: "Large office space, need to coordinate with building management",
-      partsNeeded: ["LED panels", "Wiring", "Dimmer switches"],
-      specialInstructions: "Check in with security desk, building access required",
-    },
-    {
-      id: "J-2024-004",
-      clientName: "Robert Johnson",
-      companyName: "Johnson Residence",
-      phoneNumber: "+1 (555) 321-6547",
-      email: "robert.johnson@email.com",
-      location: "321 Pine St",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77004",
-      jobCategory: "Plumbing",
-      jobType: "Emergency",
-      jobDescription: "Burst pipe in basement, water damage",
-      status: "Urgent",
-      priority: "Critical",
-      assignedTechnician: "Mike Rodriguez",
-      technicianAvatar: "🔧",
-      startDate: "2024-01-15",
-      startTime: "ASAP",
-      estimatedDuration: "3 hours",
-      actualStartTime: "11:30",
-      estimatedEndTime: "14:30",
-      source: "phone",
-      jobTags: ["emergency", "urgent"],
-      noteTags: ["safety-concern"],
-      distance: 1.8,
-      revenue: 450.00,
-      customerRating: 4.7,
-      lastUpdated: "2024-01-15T11:30:00Z",
-      notes: "Water shut off at main valve, customer very distressed",
-      partsNeeded: ["Copper pipe", "Pipe fittings", "Water damage equipment"],
-      specialInstructions: "Emergency access - customer will meet at door",
-    },
-    {
-      id: "J-2024-005",
-      clientName: "Emily Davis",
-      companyName: "Davis Apartment",
-      phoneNumber: "+1 (555) 789-0123",
-      email: "emily.davis@email.com",
-      location: "654 Apartment Dr, Unit 5B",
-      city: "Houston",
-      state: "TX",
-      zipCode: "77005",
-      jobCategory: "HVAC",
-      jobType: "Repair",
-      jobDescription: "AC not cooling, thermostat issues",
-      status: "Completed",
-      priority: "Medium",
-      assignedTechnician: "Jennifer Lee",
-      technicianAvatar: "⚡",
-      startDate: "2024-01-14",
-      startTime: "13:00",
-      estimatedDuration: "2 hours",
-      actualStartTime: "13:15",
-      actualEndTime: "15:00",
-      source: "google-ads",
-      jobTags: ["repair"],
-      noteTags: ["customer-notes"],
-      distance: 2.7,
-      revenue: 320.00,
-      customerRating: 5.0,
-      lastUpdated: "2024-01-14T15:00:00Z",
-      notes: "Thermostat battery replaced, AC filter cleaned, system working properly",
-      partsNeeded: ["Thermostat batteries", "AC filter"],
-      specialInstructions: "Apartment complex, parking in visitor spots",
-    },
-  ]);
+  const [jobs, setJobs] = useState<Job[]>(dummyJobs);
 
   const [dispatchView, setDispatchView] = useState<"board" | "list" | "calendar">("board");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -2782,7 +2145,19 @@ export default function Jobs() {
   const [showFilters, setShowFilters] = useState(false);
   const [quickJobTypes, setQuickJobTypes] = useState<string[]>([]);
   const [quickAgents, setQuickAgents] = useState<string[]>([]);
-  const initialQuickTagNoteOptions = ['Tag Note 1', 'Tag Note 2'];
+  const initialQuickTagNoteOptions = [
+    'Customer-notes',
+    'Follow-up-required',
+    'Equipment',
+    'Insurance',
+    'Warranty',
+    'Routine',
+    'Pending-confirmation',
+    'Customer-cancelled',
+    'No-response',
+    'Safety-concern',
+    'Called',
+  ];
   const [quickTagNoteOptions, setQuickTagNoteOptions] = useState<string[]>(initialQuickTagNoteOptions);
   const [quickTagNotes, setQuickTagNotes] = useState<string[]>([]);
   const [quickTags, setQuickTags] = useState<string[]>([]);
@@ -2794,6 +2169,72 @@ export default function Jobs() {
   const [newTagName, setNewTagName] = useState('');
   const [newTagTextColor, setNewTagTextColor] = useState('#000000');
   const [newTagBgColor, setNewTagBgColor] = useState('#000000');
+
+  // Track job type filter changes
+  useEffect(() => {
+    setJobs(
+      [...dummyJobs].filter(job => {
+        if (quickJobTypes.length === 0) return true;
+        return quickJobTypes.includes(job.jobType);
+      })
+    );
+  }, [quickJobTypes]);
+
+  // Track tags filter changes (normalize to lowercase to match dummy data)
+  useEffect(() => {
+    const selectedTags = quickTags.map(tag => tag.toLowerCase());
+    setJobs(
+      [...dummyJobs].filter(job => {
+        if (selectedTags.length === 0) return true;
+        const jobTags = (job.jobTags || []).map(t => t.toLowerCase());
+        return jobTags.some(tag => selectedTags.includes(tag));
+      })
+    );
+  }, [quickTags]);
+
+  // Track tag notes filter changes (normalize to lowercase to match dummy data)
+  useEffect(() => {
+    const selectedNotes = quickTagNotes.map(tag => tag.toLowerCase());
+    setJobs(
+      [...dummyJobs].filter(job => {
+        if (selectedNotes.length === 0) return true;
+        const jobNotes = (job.noteTags || []).map(t => t.toLowerCase());
+        return jobNotes.some(tag => selectedNotes.includes(tag));
+      })
+    );
+  }, [quickTagNotes]);
+
+  // Track source filter changes (normalize to lowercase to match dummy data)
+  useEffect(() => {
+    const selectedSource = (quickSingleChoice || '').toLowerCase();
+    if (!selectedSource) {
+      setJobs([...dummyJobs]);
+      return;
+    }
+    setJobs(
+      [...dummyJobs].filter(job => (job.source || '').toLowerCase() === selectedSource)
+    );
+  }, [quickSingleChoice]);
+
+  // Track date range filter changes (startDate)
+  useEffect(() => {
+    const { startDate, endDate } = dateRangeValue || {};
+    if (!startDate || !endDate) {
+      setJobs([...dummyJobs]);
+      return;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    setJobs(
+      [...dummyJobs].filter(job => {
+        const jobDate = new Date(job.startDate);
+        return jobDate >= start && jobDate <= end;
+      })
+    );
+  }, [dateRangeValue]);
+
   const handleSaveTagNote = () => {
     const name = newTagNoteName.trim();
     if (!name) return;
@@ -2825,11 +2266,14 @@ export default function Jobs() {
     { label: 'Last Month', value: 'last-month' },
   ];
   const quickAgentOptions = ['Agent 1', 'Agent 2', 'Agent 3'];
-  const quickTagOptions = ['Tag 1', 'Tag 2'];
+  const quickTagOptions = ['Urgent', 'Warranty', 'Contract', 'Commercial', 'New-system'];
   const quickSingleOptions = [
-    { label: 'None', value: 'none' },
-    { label: 'Option 1', value: 'option-1' },
-    { label: 'Option 2', value: 'option-2' },
+    { label: 'Yelp', value: 'yelp' },
+    { label: 'Website', value: 'website' },
+    { label: 'Referral', value: 'referral' },
+    { label: 'Phone', value: 'phone' },
+    { label: 'Google-ads', value: 'google-ads' },
+    { label: 'Contract', value: 'contract' },
   ];
   const quickDispatchOptions = ['Dispatch 1', 'Dispatch 2', 'Dispatch 3'];
   useEffect(() => {
@@ -2962,6 +2406,15 @@ export default function Jobs() {
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [mobilePage, setMobilePage] = useState(1);
+  const statusPillsRef = useRef<HTMLDivElement | null>(null);
+  const [isDraggingStatusPills, setIsDraggingStatusPills] = useState(false);
+  const statusDragStartX = useRef(0);
+  const statusDragStartScroll = useRef(0);
+  const statusDragMoved = useRef(false);
+  const [statusScrollState, setStatusScrollState] = useState({
+    canScrollLeft: false,
+    canScrollRight: false,
+  });
 
   useEffect(() => {
     try { localStorage.setItem('jobs.pinnedStatuses', JSON.stringify(pinnedStatuses)); } catch {}
@@ -3044,8 +2497,78 @@ export default function Jobs() {
     } catch {}
   }, [visibleClientFields]);
 
-  const toggleVisibleField = (key: keyof VisibleClientFields) =>
-    setVisibleClientFields((prev) => ({ ...prev, [key]: !prev[key] }));
+  const handleExport = () => {
+    console.log("Export clicked");
+  };
+
+  const handleColumnOptionsChange = (nextOptions: TableColumnOption[]) => {
+    setVisibleClientFields(prev => {
+      const updated = { ...prev };
+      nextOptions.forEach(option => {
+        if (option.key in updated) {
+          updated[option.key as keyof VisibleClientFields] = option.selected;
+        }
+      });
+      return updated;
+    });
+  };
+
+  const startStatusPillDrag = (event: React.MouseEvent<HTMLDivElement>) => {
+    const container = statusPillsRef.current;
+    if (!container) return;
+    setIsDraggingStatusPills(true);
+    statusDragStartX.current = event.clientX;
+    statusDragStartScroll.current = container.scrollLeft;
+    statusDragMoved.current = false;
+    container.classList.add('cursor-grabbing', 'select-none');
+  };
+
+  const handleStatusPillDrag = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDraggingStatusPills) return;
+    const container = statusPillsRef.current;
+    if (!container) return;
+    const deltaX = event.clientX - statusDragStartX.current;
+    if (Math.abs(deltaX) > 3) {
+      statusDragMoved.current = true;
+    }
+    container.scrollLeft = statusDragStartScroll.current - deltaX;
+    updateStatusPillScrollState();
+  };
+
+  const endStatusPillDrag = () => {
+    if (!isDraggingStatusPills) return;
+    setIsDraggingStatusPills(false);
+    const container = statusPillsRef.current;
+    container?.classList.remove('cursor-grabbing', 'select-none');
+    updateStatusPillScrollState();
+  };
+
+  const updateStatusPillScrollState = () => {
+    const el = statusPillsRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setStatusScrollState({
+      canScrollLeft: scrollLeft > 2,
+      canScrollRight: scrollLeft + clientWidth < scrollWidth - 2,
+    });
+  };
+
+  const scrollStatusPills = (direction: "left" | "right") => {
+    const el = statusPillsRef.current;
+    if (!el) return;
+    const delta = direction === "left" ? -220 : 220;
+    el.scrollBy({ left: delta, behavior: "smooth" });
+    setTimeout(updateStatusPillScrollState, 180);
+  };
+
+  useEffect(() => {
+    updateStatusPillScrollState();
+    const el = statusPillsRef.current;
+    if (!el) return;
+    const onScroll = () => updateStatusPillScrollState();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [showFilters]);
 
   // Add state for invoice creation modal
   const [invoiceForm, setInvoiceForm] = useState({
@@ -3127,7 +2650,7 @@ export default function Jobs() {
       case "assignedTechnician":
         return (a.assignedTechnician || "").localeCompare(b.assignedTechnician || "") * direction;
       case "status":
-        return (a.status || "").localeCompare(b.status || "") * direction;
+        return (getStatusObj(getJobStatus(a)).name || "").localeCompare(getStatusObj(getJobStatus(b)).name || "") * direction;
       default: {
         if (by && by in a && by in b) {
           const av = a[by as keyof typeof a];
@@ -4284,7 +3807,7 @@ export default function Jobs() {
         cell: (row) => (
           
           <div className="flex items-center">
-            <div className={`${density === 'ultra' ? 'h-7' : density === 'compact' ? 'h-8' : 'h-10'} flex items-center justify-center`}>
+            <div className={`${density === 'ultra' ? 'h-7' : density === 'compact' ? 'h-8' : 'h-7'} flex items-center justify-center`}>
               <Checkbox
                 aria-label={`Select job ${row.id}`}
                 checked={selectedRows.has(row.id)}
@@ -4306,12 +3829,21 @@ export default function Jobs() {
                   <button
                     type="button"
                     onClick={() => window.open(`/jobs/${row.id}/view`, '_blank')}
-                    className={`${density === 'ultra' ? 'h-7 px-3' : density === 'compact' ? 'h-8 px-3' : 'h-10 px-4'} bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                    className={`${density === 'ultra' ? 'h-7 px-3' : density === 'compact' ? 'h-8 px-3' : 'h-7 px-4'} bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
                   >
-                    <span className={`text-white font-bold ${density === 'ultra' ? 'text-[10px]' : density === 'compact' ? 'text-xs' : 'text-sm'}`}>
+                    <span className={`whitespace-nowrap text-white font-bold ${density === 'ultra' ? 'text-[10px]' : density === 'compact' ? 'text-xs' : 'text-xs'}`}>
                       {row.id}
                     </span>
                   </button>
+                  <div className="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400">
+                    <span className="flex items-center gap-1 whitespace-nowrap">
+                      <Clock className="w-3 h-3" />
+                      <span>{timeAgo}</span>
+                    </span>
+                    <span className="flex items-center gap-1 whitespace-nowrap">
+                      <span>${row.revenue}</span>
+                    </span>
+                  </div>
                 </div>
                 <div className="min-w-0">
                   <p
@@ -4328,15 +3860,6 @@ export default function Jobs() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400">
-                <span className="flex items-center gap-1 whitespace-nowrap">
-                  <Clock className="w-3 h-3" />
-                  <span>{timeAgo}</span>
-                </span>
-                <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span>${row.revenue}</span>
-                </span>
-              </div>
             </div>
           );
         },
@@ -4347,8 +3870,9 @@ export default function Jobs() {
         cell: (row) => (
           <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
             {visibleClientFields.clientName && (
-              <div className="min-w-0">
+              <div className="min-w-0 flex flex-row gap-2 items-center">
                 <p className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-semibold text-slate-900 dark:text-slate-100 truncate`}>{row.clientName}</p>
+                <div className="w-2 h-2 bg-slate-400 rounded-full" />
                 {visibleClientFields.companyName && (
                   <p className={`${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-600 dark:text-slate-400 truncate`}>{row.companyName}</p>
                 )}
@@ -4382,7 +3906,7 @@ export default function Jobs() {
           const scheduledTime = new Date(`${row.startDate} ${row.startTime}`);
           const timeUntilScheduled = getTimeUntil(scheduledTime);
           return (
-            <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+            <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-1.5'}`}>
               <div className="flex items-center space-x-2">
                 <Calendar className="w-3.5 h-3.5 text-slate-500" />
                 <div className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
@@ -4393,15 +3917,17 @@ export default function Jobs() {
                   })}
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Clock className="w-3.5 h-3.5 text-slate-500" />
-                <div className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-semibold ${new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}`}>
-                  {row.startTime}
+              <div className="flex flex-row gap-2">
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-3.5 h-3.5 text-slate-500" />
+                  <div className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-semibold ${new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}`}>
+                    {row.startTime}
+                  </div>
+                  {new Date(`${row.startDate} ${row.startTime}`) < new Date() && <div className="w-2 h-2 bg-red-500 rounded-full" />}
                 </div>
-                {new Date(`${row.startDate} ${row.startTime}`) < new Date() && <div className="w-2 h-2 bg-red-500 rounded-full" />}
-              </div>
-              <div className={`text-[10px] font-bold ${new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                {new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'PAST DUE' : timeUntilScheduled}
+                <div className={`whitespace-nowrap text-sm font-bold ${new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                  {new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'PAST DUE' : timeUntilScheduled}
+                </div>
               </div>
               <div className="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
                 Duration: {row.estimatedDuration}
@@ -4414,7 +3940,7 @@ export default function Jobs() {
         columnName: "Location",
         sortKey: "location",
         cell: (row) => (
-          <div className={`${density === 'ultra' ? 'space-y-0.5' : 'space-y-1'}`}>
+          <div className={`${density === 'ultra' ? 'space-y-0.5' : 'space-y-1.5'}`}>
             <p className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} text-slate-700 dark:text-slate-300 truncate`}>{row.location}</p>
             <p className={`${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-600 dark:text-slate-400 truncate`}>
               {row.city}, {row.state} {row.zipCode}
@@ -4426,7 +3952,7 @@ export default function Jobs() {
         columnName: "Source",
         sortKey: "source",
         cell: (row) => (
-          <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+          <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-1.5'}`}>
             <div className="flex items-center space-x-2">
               <Globe className="w-3.5 h-3.5 text-slate-500" />
               <span className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-medium text-slate-900 dark:text-slate-100 capitalize truncate`}>
@@ -4455,10 +3981,10 @@ export default function Jobs() {
         columnName: "Created",
         sortKey: "createdAt",
         cell: (row) => (
-          <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+          <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-1.5'}`}>
             <div className="flex items-center space-x-2">
               <Calendar className="w-3.5 h-3.5 text-slate-500" />
-              <span className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-medium text-slate-900 dark:text-slate-100`}>
+              <span className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
                 {new Date(row.createdAt || row.lastUpdated).toLocaleDateString('en-US', {
                   month: 'short',
                   day: '2-digit',
@@ -4496,46 +4022,47 @@ export default function Jobs() {
           const status = getStatusObj(getJobStatus(row));
           const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
           return (
-            <div className={`${density === 'ultra' ? 'space-y-1' : density === 'compact' ? 'space-y-1.5' : 'space-y-3'}`}>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="cursor-pointer text-[10px] font-semibold px-2.5 py-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-300 dark:focus:ring-slate-600"
-                    style={{ backgroundColor: `${status.color}20`, color: status.color }}
-                  >
-                    {status.name}
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  {jobStatuses.map(statusOption => (
-                    <DropdownMenuItem
-                      key={statusOption.id}
-                      className="flex items-center gap-2"
-                      onClick={() => onChangeStatus?.(row.id, statusOption.name)}
+            <div className={`${density === 'ultra' ? 'space-y-1' : density === 'compact' ? 'space-y-1.5' : 'space-y-1.5'}`}>
+              <div className="flex flex-row gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="whitespace-nowrap cursor-pointer text-[10px] font-semibold px-2.5 py-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-300 dark:focus:ring-slate-600"
+                      style={{ backgroundColor: `${status.color}20`, color: status.color }}
                     >
-                      <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: statusOption.color }} />
-                      <span>{statusOption.name}</span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      {status.name}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    {jobStatuses.map(statusOption => (
+                      <DropdownMenuItem
+                        key={statusOption.id}
+                        className="flex items-center gap-2"
+                        onClick={() => onChangeStatus?.(row.id, statusOption.name)}
+                      >
+                        <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: statusOption.color }} />
+                        <span>{statusOption.name}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Badge
+                  variant="secondary"
+                  className={`text-[10px] px-2 py-0.5 whitespace-nowrap ${
+                    row.priority === 'High'
+                      ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                      : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                  }`}
+                >
+                  {row.priority === 'High' ? 'NEED TO COLLECT PAYMENT' : 'OPPORTUNITY'}
+                </Badge>
+              </div>
 
               <div className="flex items-center space-x-2">
                 <Clock className="w-3 h-3 text-slate-500" />
                 <span className="text-[10px] text-slate-600 dark:text-slate-400">{timeAgo} in status</span>
               </div>
-
-              <Badge
-                variant="secondary"
-                className={`text-[10px] px-2 py-0.5 ${
-                  row.priority === 'High'
-                    ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                }`}
-              >
-                {row.priority === 'High' ? 'NEED TO COLLECT PAYMENT' : 'OPPORTUNITY'}
-              </Badge>
 
               <div className="flex items-center space-x-2">
                 <Phone className={`w-3 h-3 ${row.noteTags?.includes('called') ? 'text-green-500' : 'text-slate-400'}`} />
@@ -4579,10 +4106,16 @@ export default function Jobs() {
       ["createdAt", "Created At"],
     ];
 
+    const tableColumnOptions: TableColumnOption[] = columnOptions.map(([key, label]) => ({
+      key,
+      label,
+      selected: Boolean(visibleClientFields[key]),
+    }));
+
     return (
-      <div className="space-y-6">
+      <div>
         {/* Premium Header with Enhanced Stats */}
-        <div className="flex sm:hidden items-end w-full justify-end gap-2 md:hidden">
+        <div className="mb-6 flex sm:hidden items-end w-full justify-end gap-2 md:hidden">
           <div className="flex flex-row items-center w-full gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
             {([
               { key: "all", label: "All" },
@@ -4594,7 +4127,7 @@ export default function Jobs() {
                 variant="ghost"
                 className={`flex-1 h-8 rounded-full px-4 text-xs ${
                   jobLeadFilter === item.key
-                    ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                    ? "bg-brandGreen-900 text-white hover:bg-brandGreen-600"
                     : "text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700"
                 }`}
                 onClick={() => setJobLeadFilter(item.key)}
@@ -4604,7 +4137,7 @@ export default function Jobs() {
             ))}
           </div>
         </div>
-        <div className="hidden sm:flex items-end w-full justify-end gap-2 md:hidden">
+        <div className="mb-6 hidden sm:flex items-end w-full justify-end gap-2 md:hidden">
           <div className="flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
             {([
               { key: "all", label: "All" },
@@ -4616,7 +4149,7 @@ export default function Jobs() {
                 variant="ghost"
                 className={`h-8 rounded-full px-4 text-xs ${
                   jobLeadFilter === item.key
-                    ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                    ? "bg-brandGreen-900 text-white hover:bg-brandGreen-600"
                     : "text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700"
                 }`}
                 onClick={() => setJobLeadFilter(item.key)}
@@ -4626,21 +4159,16 @@ export default function Jobs() {
             ))}
           </div>
         </div>
-        <div className="relative rounded-3xl p-4 md:p-8 pb-5 md:pb-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm md:shadow-xl bg-white dark:bg-slate-900 md:bg-gradient-to-br md:from-slate-50 md:via-blue-50 md:to-indigo-50 md:dark:from-slate-900 md:dark:via-blue-950/20 md:dark:to-indigo-950/20">
+        <div className="mb-6 relative rounded-3xl p-4 md:p-5 pb-5 md:pb-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm md:shadow-xl bg-white dark:bg-slate-900 md:bg-gradient-to-br md:from-slate-50 md:via-blue-50 md:to-indigo-50 md:dark:from-slate-900 md:dark:via-blue-950/20 md:dark:to-indigo-950/20">
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
               <div className="space-y-2">
                 <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-slate-900 to-blue-900 dark:from-slate-100 dark:to-blue-100 bg-clip-text text-transparent">
                   Jobs Dashboard
                 </h2>
-                <p className="text-slate-600 dark:text-slate-400 text-sm md:text-lg leading-relaxed">
-                  {selectedStatus === "All" 
-                    ? "Comprehensive job management and tracking system" 
-                    : `${selectedStatus} Jobs - ${filteredCount} total`}
-                </p>
               </div>
               <div className="md:flex items-start gap-2 hidden">
-                <div className="flex items-center gap-1 rounded-full bg-slate-50 dark:bg-slate-800 px-1 py-1 h-10">
+                <div className="flex items-center gap-1 rounded-full bg-slate-50 border border-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
                   {([
                     { key: "all", label: "All" },
                     { key: "job", label: "Jobs" },
@@ -4651,7 +4179,7 @@ export default function Jobs() {
                       variant="ghost"
                       className={`h-8 rounded-full px-4 text-xs ${
                         jobLeadFilter === item.key
-                          ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                          ? "bg-brandGreen-900 text-white hover:bg-brandGreen-600"
                           : "text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700"
                       }`}
                       onClick={() => setJobLeadFilter(item.key)}
@@ -4665,7 +4193,7 @@ export default function Jobs() {
           </div>
 
            {/* Slim toolbar */}
-          <div className="flex flex-col gap-3 mb-4">
+          <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -4688,7 +4216,7 @@ export default function Jobs() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
               <SelectInput
                 label="Job Type"
-                options={['Repair', 'Install', 'Maintenance', 'Emergency', 'Inspection'].map(type => ({
+                options={['Repair', 'Installation', 'Maintenance', 'Emergency', 'Inspection'].map(type => ({
                   label: type,
                   value: type,
                 }))}
@@ -4783,67 +4311,111 @@ export default function Jobs() {
               />
             </div>
             )}
-          </div>
 
+            {showFilters && (
+            <div className="sticky top-0 backdrop-blur supports-[backdrop-filter]:backdrop-blur px-1 pb-0 mt-2">
+              <div className="relative">
+                {statusScrollState.canScrollLeft &&
+                  <button
+                    type="button"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                    onClick={() => scrollStatusPills("left")}
+                    disabled={!statusScrollState.canScrollLeft}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                }
+                <div
+                  ref={statusPillsRef}
+                  className={`flex items-center gap-1.5 overflow-x-auto scrollbar-none cursor-grab select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${statusScrollState.canScrollLeft ? 'pl-8' : 'pl-0'} ${statusScrollState.canScrollRight ? 'pr-8' : 'pr-0'}`}
+                  onMouseDown={startStatusPillDrag}
+                  onMouseMove={handleStatusPillDrag}
+                  onMouseUp={endStatusPillDrag}
+                  onMouseLeave={endStatusPillDrag}
+                >
+                <button
+                  onClick={() => {
+                    if (statusDragMoved.current) {
+                      statusDragMoved.current = false;
+                      return;
+                    }
+                    setSelectedStatus('All');
+                  }}
+                  className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs ${selectedStatus==='All' ? 'bg-slate-900 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
+                >
+                  <span className="inline-block h-2 w-2 rounded-full bg-slate-500"></span>
+                  All
+                  <span className="opacity-70 hidden sm:inline">{totalJobs}</span>
+                </button>
 
-          {/* Compact, scalable Status bar */}
-          <div className="sticky top-0 backdrop-blur supports-[backdrop-filter]:backdrop-blur px-1 py-2 mt-8">
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-              <button
-                onClick={() => setSelectedStatus('All')}
-                className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs ${selectedStatus==='All' ? 'bg-slate-900 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
-              >
-                <span className="inline-block h-2 w-2 rounded-full bg-slate-500"></span>
-                All
-                <span className="opacity-70 hidden sm:inline">{totalJobs}</span>
-              </button>
-
-              {[...jobStatuses]
-                .sort((a,b)=>{
-                  const ai = statusOrder.indexOf(a.name);
-                  const bi = statusOrder.indexOf(b.name);
-                  const av = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
-                  const bv = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
-                  return av - bv;
-                })
-                .map((s, idx)=>{
-                  const count = jobs.filter(j=>getJobStatus(j)===s.name).length;
-                  const sel = selectedStatus===s.name;
-                  return (
-                    <button key={s.id}
-                      draggable
-                      onDragStart={()=>setDragIndex(idx)}
-                      onDragOver={(e)=>e.preventDefault()}
-                      onDrop={()=>{
-                        if (dragIndex===null) return;
-                        const names = [...statusOrder.length? statusOrder : jobStatuses.map(js=>js.name)];
-                        const from = dragIndex;
-                        const to = idx;
-                        const ordered = [...names];
-                        const [moved] = ordered.splice(from,1);
-                        ordered.splice(to,0,moved);
-                        setStatusOrder(ordered);
-                        setDragIndex(null);
-                      }}
-                      onClick={()=>setSelectedStatus(s.name)}
-                      className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs whitespace-nowrap ${sel? 'bg-slate-900 text-white':'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}>
-                      <span className="inline-block h-2 w-2 rounded-full" style={{backgroundColor:s.color}}></span>
-                      {s.name}
-                      {count>0 && <span className="opacity-70 hidden sm:inline">{count}</span>}
-                    </button>
-                  );
-                })}
-              {/* More dropdown removed for simplicity; horizontal scroll holds all */}
+                {[...jobStatuses]
+                  .sort((a,b)=>{
+                    const ai = statusOrder.indexOf(a.name);
+                    const bi = statusOrder.indexOf(b.name);
+                    const av = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
+                    const bv = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
+                    return av - bv;
+                  })
+                  .map((s, idx)=>{
+                    const count = jobs.filter(j=>getJobStatus(j)===s.name).length;
+                    const sel = selectedStatus===s.name;
+                    return (
+                      <button key={s.id}
+                        // draggable
+                        // onDragStart={()=>setDragIndex(idx)}
+                        // onDragOver={(e)=>e.preventDefault()}
+                        // onDrop={()=>{
+                        //   if (dragIndex===null) return;
+                        //   const names = [...statusOrder.length? statusOrder : jobStatuses.map(js=>js.name)];
+                        //   const from = dragIndex;
+                        //   const to = idx;
+                        //   const ordered = [...names];
+                        //   const [moved] = ordered.splice(from,1);
+                        //   ordered.splice(to,0,moved);
+                        //   setStatusOrder(ordered);
+                        //   setDragIndex(null);
+                        // }}
+                          onClick={()=>{
+                            if (statusDragMoved.current) {
+                              statusDragMoved.current = false;
+                              return;
+                            }
+                            setSelectedStatus(s.name);
+                          }}
+                        className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs whitespace-nowrap ${sel? 'bg-slate-900 text-white':'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}>
+                        <span className="inline-block h-2 w-2 rounded-full" style={{backgroundColor:s.color}}></span>
+                        {s.name}
+                        {count>0 && <span className="opacity-70 hidden sm:inline">{count}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+                {statusScrollState.canScrollRight &&
+                  <button
+                    type="button"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                    onClick={() => scrollStatusPills("right")}
+                    disabled={!statusScrollState.canScrollRight}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                }
+                {/* More dropdown removed for simplicity; horizontal scroll holds all */}
+              </div>
             </div>
+            )}
           </div>
+
+
+          
           
           {/* Summary removed (duplicated by status pills) */}
         </div>
 
         {/* Bulk actions + Column toggle */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 px-1">
-          <div className="flex flex-wrap items-center gap-3">
-            {selectedRows.size > 0 && (
+        {selectedRows.size > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 px-1">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -4899,97 +4471,34 @@ export default function Jobs() {
                   Delete ({selectedRows.size})
                 </Button> */}
               </div>
-            )}
-            
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-              <span className="font-semibold">Density:</span>
-              <div className="flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
-                {[
-                  { key: 'comfortable', label: 'Comfortable' },
-                  { key: 'compact', label: 'Compact' },
-                  { key: 'ultra', label: 'Ultra' },
-                ].map(item => (
-                  <Button
-                    key={item.key}
-                    variant="ghost"
-                    className={`h-8 rounded-full px-3 text-xs ${
-                      density === item.key
-                        ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                        : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700'
-                    }`}
-                    onClick={() => setDensity(item.key as typeof density)}
-                  >
-                    {item.label}
-                  </Button>
-                ))}
-              </div>
             </div>
-            <Button variant="outline" className="border-slate-300 dark:border-slate-700 rounded-full gap-2">
-              <Download className="w-4 h-4" />
-              Export
-            </Button>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="rounded-full border-slate-300 dark:border-slate-700 px-3 gap-2"
-                  title="Show/Hide Columns"
-                >
-                  <Columns3 className="w-4 h-4" />
-                  <span className="text-sm">Columns</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:max-w-md">
-                <SheetHeader>
-                  <SheetTitle>Manage Columns</SheetTitle>
-                  {/* <SheetDescription>Select fields to display. Saved locally.</SheetDescription> */}
-                </SheetHeader>
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  {columnOptions.map(([key,label]) => (
-                    <label key={key} className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" className="h-4 w-4" checked={visibleClientFields[key]} onChange={()=>toggleVisibleField(key)} />
-                      {label}
-                    </label>
+            <div className="flex items-center gap-2">
+              {/* <div className="hidden sm:flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                <span className="font-semibold">Density:</span>
+                <div className="flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
+                  {[
+                    { key: 'comfortable', label: 'Comfortable' },
+                    { key: 'compact', label: 'Compact' },
+                    { key: 'ultra', label: 'Ultra' },
+                  ].map(item => (
+                    <Button
+                      key={item.key}
+                      variant="ghost"
+                      className={`h-8 rounded-full px-3 text-xs ${
+                        density === item.key
+                          ? 'bg-brandGreen-900 text-white hover:bg-brandGreen-600'
+                          : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700'
+                      }`}
+                      onClick={() => setDensity(item.key as typeof density)}
+                    >
+                      {item.label}
+                    </Button>
                   ))}
                 </div>
-              </SheetContent>
-            </Sheet>
+              </div> */}
+            </div>
           </div>
-          {/* <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full border-slate-300 dark:border-slate-700 px-3 gap-2"
-                title="Show/Hide Columns"
-              >
-                <Columns3 className="w-4 h-4" />
-                <span className="text-sm">Columns</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-64">
-              <div className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                Columns
-              </div>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {columnOptions.map(([key, label]) => (
-                  <label key={key} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4"
-                      checked={visibleClientFields[key]}
-                      onChange={() => toggleVisibleField(key)}
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover> */}
-        </div>
-
+        )}
         {/* Premium Table View with Status Grouping */}
         {/* Table (companies-style) */}
         <Table
@@ -5009,6 +4518,10 @@ export default function Jobs() {
             handlePageChange(page);
             setMobilePage(page);
           }}
+          maxHeightClassName={"max-h-[calc(100vh-420px)]"}
+          onExport={handleExport}
+          onColumnsChange={handleColumnOptionsChange}
+          columnOptions={tableColumnOptions}
         />
       </div>
     );
@@ -5397,267 +4910,8 @@ export default function Jobs() {
 
   return (
     <div>
-      <div className="flex items-center justify-end">
-        <div className="flex space-x-3">
-          <Dialog open={showNewJobDialog} onOpenChange={setShowNewJobDialog}>
-            {/* Trigger is in global header; this Dialog opens via URL (?new=1) or window event */}
-            <DialogContent
-              className={`${viewMode === "single" ? "sm:max-w-6xl" : "sm:max-w-4xl"} max-h-[90vh] overflow-y-auto`}
-            >
-              <DialogHeader>
-                <div className="flex items-center justify-between">
-                  <DialogTitle className="text-2xl font-bold text-gray-900">
-                    Create New Service Job
-                  </DialogTitle>
-
-                  {/* View Mode Toggle */}
-                  <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                    <Button
-                      variant={viewMode === "wizard" ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => setViewMode("wizard")}
-                      className={`text-xs ${viewMode === "wizard" ? "bg-white shadow-sm" : ""}`}
-                    >
-                      📋 Step-by-step
-                    </Button>
-                    <Button
-                      variant={viewMode === "single" ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => setViewMode("single")}
-                      className={`text-xs ${viewMode === "single" ? "bg-white shadow-sm" : ""}`}
-                    >
-                      📄 All in one
-                    </Button>
-                  </div>
-                </div>
-              </DialogHeader>
-
-              {/* Source Announcement in Dialog */}
-              {formData.source && (
-                <div className="bg-gradient-to-r from-yellow-100 via-yellow-50 to-orange-100 border border-yellow-300 rounded-lg p-4 mx-6 mt-4">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-yellow-200 rounded-full flex items-center justify-center">
-                        <span className="text-sm">📢</span>
-                      </div>
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <h4 className="text-sm font-semibold text-yellow-800 mb-1">
-                        Active Offer -{" "}
-                        {formData.source === "yelp"
-                          ? "Yelp"
-                          : formData.source === "google-ads"
-                            ? "Google Ads"
-                            : formData.source === "facebook"
-                              ? "Facebook"
-                              : formData.source === "referral"
-                                ? "Referral"
-                                : formData.source === "website"
-                                  ? "Website"
-                                  : "Direct Call"}{" "}
-                        Customer
-                      </h4>
-                      <p className="text-sm text-yellow-700">
-                        {formData.source === "yelp" &&
-                          "🎉 10% off all services for Yelp customers!"}
-                        {formData.source === "google-ads" &&
-                          "💰 Free estimate for Google customers!"}
-                        {formData.source === "facebook" &&
-                          "👍 Special Facebook customer pricing available!"}
-                        {formData.source === "referral" &&
-                          "🤝 Thank you for the referral! Special discount applied."}
-                        {formData.source === "website" &&
-                          "🌐 Web customer special - priority scheduling available!"}
-                        {formData.source === "phone" &&
-                          "📞 Direct call customer - premium service included!"}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => updateFormData("source", "")}
-                      className="text-yellow-600 hover:text-yellow-800 hover:bg-yellow-200 h-6 w-6 p-0"
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              <div className="py-6">
-                {viewMode === "wizard" && renderStepIndicator()}
-
-                <div className={viewMode === "wizard" ? "min-h-[500px]" : ""}>
-                  {viewMode === "wizard" ? (
-                    <>
-                      {currentStep === 1 && renderStep1()}
-                      {currentStep === 2 && renderStep2()}
-                      {currentStep === 3 && renderStep3()}
-                      {currentStep === 4 && renderStep4()}
-                    </>
-                  ) : (
-                    renderSingleScreen()
-                  )}
-                </div>
-
-                {/* Navigation Buttons */}
-                <div className="flex items-center justify-between pt-8 border-t border-gray-200 mt-8">
-                  <div className="flex items-center space-x-4">
-                    {viewMode === "wizard" && currentStep > 1 && (
-                      <Button
-                        variant="outline"
-                        onClick={prevStep}
-                        className="flex items-center"
-                      >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back
-                      </Button>
-                    )}
-
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        resetForm();
-                        setShowNewJobDialog(false);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    {viewMode === "wizard" ? (
-                      currentStep < totalSteps ? (
-                        <Button
-                          onClick={nextStep}
-                          className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white flex items-center"
-                          disabled={
-                            (currentStep === 1 &&
-                              (!formData.clientName ||
-                                !formData.phoneNumber)) ||
-                            (currentStep === 2 &&
-                              (!formData.location ||
-                                !formData.city ||
-                                !formData.state)) ||
-                            (currentStep === 3 &&
-                              (!formData.jobCategory ||
-                                !formData.jobType ||
-                                !formData.jobDescription))
-                          }
-                        >
-                          Continue
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={() => {
-                            console.log("Creating job with data:", {
-                              formData,
-                              selectedTechnician,
-                            });
-                            resetForm();
-                            setShowNewJobDialog(false);
-                            alert(
-                              "🎉 Job created successfully! The technician has been notified.",
-                            );
-                          }}
-                          className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white flex items-center px-8"
-                          disabled={
-                            !selectedTechnician ||
-                            !formData.startDate ||
-                            (selectedDuration === "Custom Time" &&
-                              (!customStartTime || !customEndTime))
-                          }
-                        >
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Create Job
-                        </Button>
-                      )
-                    ) : (
-                      // Single screen mode - always show create button
-                      <Button
-                        onClick={() => {
-                          console.log("Creating job with data:", {
-                            formData,
-                            selectedTechnician,
-                          });
-                          resetForm();
-                          setShowNewJobDialog(false);
-                          alert(
-                            "🎉 Job created successfully! The technician has been notified.",
-                          );
-                        }}
-                        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white flex items-center px-8"
-                        disabled={
-                          !formData.clientName ||
-                          !formData.phoneNumber ||
-                          !formData.location ||
-                          !formData.city ||
-                          !formData.state ||
-                          !formData.jobCategory ||
-                          !formData.jobType ||
-                          !formData.jobDescription ||
-                          (!noTechnician && !selectedTechnician) ||
-                          (!noSchedule && (!formData.startDate || (selectedDuration === "Custom Time" && (!customStartTime || !customEndTime))))
-                        }
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Create Job
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {deleteMode === 'bulk' ? 'Delete Jobs' : 'Delete Job'}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {deleteMode === 'bulk' ? (
-                  <>
-                    Are you sure you want to delete{' '}
-                    <strong>{selectedRows.size}</strong> selected job
-                    {selectedRows.size > 1 ? 's' : ''}? This action cannot be
-                    undone.
-                  </>
-                ) : (
-                  <>
-                    Are you sure you want to delete{' '}
-                    <strong>{jobToDelete?.clientName || jobToDelete?.id}</strong>?
-                    This action cannot be undone.
-                  </>
-                )}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={handleDeleteCancel} disabled={deleting}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                disabled={deleting}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                {deleting ? (
-                  <>
-                    <ButtonLoading message="Deleting..." />
-                    Deleting...
-                  </>
-                ) : (
-                  'Delete'
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
       {/* Jobs List View */}
-      <div className="mt-8">
+      <div>
         {renderListView()}
         {renderJobDetails()}
       </div>
