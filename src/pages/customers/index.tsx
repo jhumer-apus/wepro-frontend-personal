@@ -207,7 +207,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
 
   if (showProfile && selectedCustomer) {
     return (
-      <div className="h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
+      <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -879,7 +879,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
+    <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -973,10 +973,10 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
             openCustomerProfile={openCustomerProfile}
           />
         )}
-        pageSize={0} 
-        currentPage={0} 
-        totalPages={0} 
-        totalCount={0} 
+        pageSize={10} 
+        currentPage={1} 
+        totalPages={1} 
+        totalCount={filteredCustomers.length} 
         onPageSizeChange={function (value: string): void {
           throw new Error('Function not implemented.')
         } } onPageChange={function (page: number): void {
