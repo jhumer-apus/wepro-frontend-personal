@@ -652,6 +652,7 @@ export const dummyJobs: Job[] = baseJobs.map((job, idx) => {
 
   return {
     ...job,
-    startDate: `${year}-${pad(month)}-${pad(day)}`,
+    // Always use today's date for startDate so demo data stays current
+    startDate: now.toISOString().split('T')[0],
   }
 })
