@@ -6,12 +6,20 @@ import { useAppSelector } from '@/src/store/hooks'
 import { RootState } from '@/src/store'
 import { useRouter } from 'next/router'
 import { useTheme } from 'next-themes'
+import SidePanel from '@/src/components/sidePanel'
+import { useSidePanel } from '@/src/components/sidePanel'
+import { useRef } from 'react'
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }): React.JSX.Element {
+  const { state: sidePanelState } = useSidePanel()
+  const prevCollapse = useRef<boolean | null>(null)
+  const wasAutoCollapsed = useRef(false)
+  const lastPanelOpen = useRef(false)
+  const autoCollapseInProgress = useRef(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false)
   const { isAuthenticated, loading } = useAppSelector(
@@ -25,6 +33,46 @@ export default function DashboardLayout({
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Auto-collapse sidebar when side panel is open, restore on close
+  useEffect(() => {
+    const opening = sidePanelState.isOpen && !lastPanelOpen.current
+    const closing = !sidePanelState.isOpen && lastPanelOpen.current
+    lastPanelOpen.current = sidePanelState.isOpen
+
+    if (opening) {
+      if (!isSidebarCollapsed) {
+        prevCollapse.current = isSidebarCollapsed
+        wasAutoCollapsed.current = true
+        autoCollapseInProgress.current = true
+        setIsSidebarCollapsed(true)
+      } else {
+        wasAutoCollapsed.current = true
+      }
+    } else if (closing) {
+      if (wasAutoCollapsed.current && prevCollapse.current !== null) {
+        setIsSidebarCollapsed(prevCollapse.current)
+      }
+      prevCollapse.current = null
+      wasAutoCollapsed.current = false
+      autoCollapseInProgress.current = false
+    }
+
+    // clear in-progress flag once collapse applied
+    if (autoCollapseInProgress.current && isSidebarCollapsed) {
+      autoCollapseInProgress.current = false
+    }
+  }, [sidePanelState.isOpen, isSidebarCollapsed])
+
+  // If user expands sidebar while panel is open, hide the panel
+  useEffect(() => {
+    if (autoCollapseInProgress.current) return
+    if (!isSidebarCollapsed && sidePanelState.isOpen) {
+      SidePanel.close()
+      wasAutoCollapsed.current = false
+      prevCollapse.current = null
+    }
+  }, [isSidebarCollapsed, sidePanelState.isOpen])
 
   // Don't render layout for login page
   if (router.pathname === '/login') {
@@ -83,15 +131,18 @@ export default function DashboardLayout({
       <div className="flex flex-1 flex-col overflow-hidden lg:ml-0">
         <Header onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-        <main className="flex-1 overflow-auto bg-neutral-50 dark:bg-neutral-950">
-          <div
-            className={`container mx-auto px-4 py-6 sm:px-4 ${
-              isSidebarCollapsed ? 'max-w-[1800px]' : ''
-            }`}
-          >
-            {children}
-          </div>
-        </main>
+        <SidePanel.Viewport
+          minHeight="min-h-0"
+          className="flex-1  bg-neutral-50 dark:bg-neutral-950 min-h-0"
+        >
+          <main className="flex-1 overflow-auto bg-neutral-50 dark:bg-neutral-950">
+            <div
+              className={`container mx-auto px-4 py-6 sm:px-6 max-w-[1700px]`}
+            >
+              {children}
+            </div>
+          </main>
+        </SidePanel.Viewport>
       </div>
       <Toaster />
     </div>

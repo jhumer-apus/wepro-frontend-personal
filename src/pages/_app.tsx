@@ -9,6 +9,7 @@ import { AuthGuard } from '../components/AuthGuard'
 import { useRouter } from 'next/router'
 import { LoadScript } from '@react-google-maps/api'
 import { ThemeProvider } from 'next-themes'
+import SidePanel from '../components/sidePanel'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -28,7 +29,7 @@ function AppContent({ Component, pageProps }: AppProps) {
   const isPublicRoute = publicRoutes.includes(router.pathname)
 
   return (
-    <div className={inter.className}>
+    <SidePanel.Provider className={inter.className}>
       <LoadScript
         googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}
         libraries={['places']}
@@ -43,7 +44,7 @@ function AppContent({ Component, pageProps }: AppProps) {
           )}
         </AuthGuard>
       </LoadScript>
-    </div>
+    </SidePanel.Provider>
   )
 }
 

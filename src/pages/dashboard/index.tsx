@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import type { DateValueType } from 'react-tailwindcss-datepicker'
 import { JobStat } from '@/src/constants/interface/dashboard'
 import {
   jobsStats,
@@ -34,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/src/components/ui/select'
+import InputDatepicker from '@/src/components/input/datepicker'
 import {
   TrendingUp,
   TrendingDown,
@@ -598,7 +600,24 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
   const selectedTimeRange: TimeRangeKey = 'today'
   const [dispatcherType, setDispatcherType] = useState('all')
   const [selectedDateRange, setSelectedDateRange] = useState('today')
-  const currentDateRangeLabel = dateRangeToDisplay(selectedDateRange)
+  const [dateRangeValue, setDateRangeValue] = useState<DateValueType>({
+    startDate: null,
+    endDate: null,
+  })
+  const handleDateRangeChange = (value: DateValueType) => {
+    setDateRangeValue(value || { startDate: null, endDate: null })
+    setSelectedDateRange('custom-picker')
+  }
+  const formatCustomDateRangeLabel = () => {
+    const start = dateRangeValue?.startDate
+    const end = dateRangeValue?.endDate
+    if (!start || !end) return 'Select range'
+    return `${formatDate(new Date(start))} – ${formatDate(new Date(end))}`
+  }
+  const currentDateRangeLabel =
+    selectedDateRange === 'custom-picker'
+      ? formatCustomDateRangeLabel()
+      : dateRangeToDisplay(selectedDateRange)
   const [markerBuffer, setMarkerBuffer] = useState(false)
   const [photoIcons, setPhotoIcons] = useState<(google.maps.Icon | null)[]>([])
   const [mapFilter, setMapFilter] = useState<'all' | 'job' | 'technician'>('all')
@@ -963,31 +982,14 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                     <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
                       Date Range:
                     </span>
-                    <Select
-                      value={selectedDateRange}
-                    onValueChange={value => {
-                      setSelectedDateRange(value)
-                    }}
-                    >
-                      <SelectTrigger className="w-56 h-9">
-                        <SelectValue placeholder="Today" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {dateRangeOptions.map(option => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="w-72">
+                    <InputDatepicker
+                      value={dateRangeValue}
+                      onChange={handleDateRangeChange}
+                      label={undefined}
+                    />
                   </div>
-                </div>
-                <div className="flex items-center text-sm font-semibold text-neutral-700 dark:text-neutral-200 mt-2">
-                  <Calendar className="w-4 h-4 mr-2 text-neutral-600 dark:text-neutral-300" />
-                  <span className="mr-1">Coverage:</span>
-                  <span className="text-neutral-900 dark:text-neutral-100">
-                    {currentDateRangeLabel}
-                  </span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -1003,7 +1005,7 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                   className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden relative"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-800"></div>
-                  <CardContent className="p-6 relative z-10">
+                  <CardContent className="p-6 relative">
                     <div className="flex items-center justify-between mb-4">
                       <div className="p-3 bg-gradient-to-br from-brandGreen-50 to-brandGreen-100 dark:from-brandGreen-950 dark:to-brandGreen-900 rounded-xl shadow-sm">
                         <Icon className="w-6 h-6 text-brandGreen-600 dark:text-brandGreen-400" />
@@ -1805,7 +1807,7 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
           <Card className="border-0 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden border-l-8 border-l-purple-500 relative">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 opacity-95"></div>
 
-            <CardHeader className="relative z-10 pb-6">
+            <CardHeader className="relative pb-6">
               <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center text-2xl">
                   <div className="p-3 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl mr-4 shadow-lg">
@@ -1841,7 +1843,7 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="relative z-10">
+            <CardContent className="relative">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* AI Insights */}
                 <div className="lg:col-span-2 space-y-4">
