@@ -123,6 +123,7 @@ import Table, { type ColumnOption as TableColumnOption } from "@/src/components/
 import SelectInput from "@/src/components/input/select";
 import { dummyJobs } from "@/src/constants/dummyData/jobs";
 import { type Job } from "@/src/constants/interface/jobs";
+import SidePanel from "@/src/components/sidePanel";
 
 // Technician interface with proper typing
 interface Technician {
@@ -2918,6 +2919,136 @@ export default function Jobs() {
     // setSelectedJob(editFormData);
   };
 
+  const openJobPanel = (job: any) => {
+    setSelectedJob(job);
+    setEditFormData(job);
+    SidePanel.open({
+      title: job?.jobType || `Job #${job?.id}`,
+      content: () => (
+        <div className="space-y-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-xs uppercase text-slate-500">Job ID</p>
+              <p className="text-xl font-semibold text-slate-900">#{job?.id}</p>
+              <p className="text-sm text-slate-600">{job?.jobDescription || 'No description'}</p>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline">{job?.status || 'Pending'}</Badge>
+                {job?.priority && <Badge variant="secondary">{job.priority}</Badge>}
+                <Badge>${job?.revenue ?? '—'}</Badge>
+              </div>
+              {job?.distance && (
+                <p className="text-xs text-slate-500">~{job.distance} mi away</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+              <p className="text-xs uppercase text-slate-500 mb-1">Client</p>
+              <div className="space-y-1 text-sm text-slate-900">
+                <p className="font-medium">{job?.clientName || 'N/A'}</p>
+                {job?.companyName && <p className="text-slate-600">{job.companyName}</p>}
+                {job?.phoneNumber && <p className="text-slate-600">{job.phoneNumber}</p>}
+                {job?.email && <p className="text-slate-600">{job.email}</p>}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+              <p className="text-xs uppercase text-slate-500 mb-1">Schedule</p>
+              <div className="space-y-1 text-sm text-slate-900">
+                <p className="font-medium">
+                  {job?.startDate || '—'} {job?.startTime || ''}
+                </p>
+                {job?.estimatedDuration && (
+                  <p className="text-slate-600">Est. duration: {job.estimatedDuration}</p>
+                )}
+                {job?.location && <p className="text-slate-600">{job.location}</p>}
+                {(job?.city || job?.state || job?.zipCode) && (
+                  <p className="text-slate-500">
+                    {[job.city, job.state, job.zipCode].filter(Boolean).join(', ')}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+              <p className="text-xs uppercase text-slate-500 mb-1">Assignment</p>
+              <div className="space-y-1 text-sm text-slate-900">
+                <p className="font-medium">{job?.assignedTechnician || 'Unassigned'}</p>
+                {job?.source && <p className="text-slate-600">Source: {job.source}</p>}
+                {job?.jobCategory && <p className="text-slate-600">Category: {job.jobCategory}</p>}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+              <p className="text-xs uppercase text-slate-500 mb-1">Tags</p>
+              <div className="flex flex-wrap gap-2 text-xs">
+                {(job?.jobTags || []).map(tag => (
+                  <Badge key={tag} variant="outline">
+                    {tag}
+                  </Badge>
+                ))}
+                {(job?.noteTags || []).map(tag => (
+                  <Badge key={tag} variant="secondary">
+                    {tag}
+                  </Badge>
+                ))}
+                {!job?.jobTags?.length && !job?.noteTags?.length && (
+                  <span className="text-slate-500 text-sm">No tags</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {(job?.notes || job?.specialInstructions || job?.partsNeeded?.length) && (
+            <div className="grid grid-cols-1 gap-4">
+              {job?.notes && (
+                <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                  <p className="text-xs uppercase text-slate-500 mb-1">Notes</p>
+                  <p className="text-sm text-slate-700">{job.notes}</p>
+                </div>
+              )}
+              {job?.specialInstructions && (
+                <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                  <p className="text-xs uppercase text-slate-500 mb-1">Instructions</p>
+                  <p className="text-sm text-slate-700">{job.specialInstructions}</p>
+                </div>
+              )}
+              {job?.partsNeeded?.length ? (
+                <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                  <p className="text-xs uppercase text-slate-500 mb-1">Parts Needed</p>
+                  <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
+                    {job.partsNeeded.map(part => (
+                      <li key={part}>{part}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              onClick={() => {
+                setShowJobDetails(true);
+              }}
+            >
+              Open full view
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => SidePanel.close()}>
+              Close
+            </Button>
+          </div>
+        </div>
+      ),
+    });
+  };
+
   const renderJobDetails = () => (
     <Dialog open={showJobDetails} onOpenChange={setShowJobDetails}>
       <DialogContent className="w-full max-w-4xl mx-auto p-0 rounded-2xl shadow-2xl border bg-white overflow-y-auto max-h-[90vh]">
@@ -3662,7 +3793,12 @@ export default function Jobs() {
               />
               <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <CardTitle className="text-base">{row.jobType}</CardTitle>
+                  <CardTitle
+                    className="text-base cursor-pointer hover:underline"
+                    onClick={() => openJobPanel(row)}
+                  >
+                    {row.jobType}
+                  </CardTitle>
                   <Badge
                     variant="secondary"
                     className="text-[10px]"
@@ -3800,6 +3936,10 @@ export default function Jobs() {
       );
     };
 
+    const primaryTextClass = density === "ultra" ? "text-[12px]" : "text-sm";
+    const secondaryTextClass = density === "ultra" ? "text-[11px]" : "text-xs";
+    const metaTextClass = density === "ultra" ? "text-[10px]" : "text-[11px]";
+
     const tableColumns = [
       {
         columnName: "",
@@ -3824,36 +3964,48 @@ export default function Jobs() {
           const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
           return (
             <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
-              <div className="flex flex-col space-y-1">
+              <div className="flex flex-col space-y-2">
                 <div className="flex items-center space-x-2">
                   <button
                     type="button"
                     onClick={() => window.open(`/jobs/${row.id}/view`, '_blank')}
                     className={`${density === 'ultra' ? 'h-7 px-3' : density === 'compact' ? 'h-8 px-3' : 'h-7 px-4'} bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
                   >
-                    <span className={`whitespace-nowrap text-white font-bold ${density === 'ultra' ? 'text-[10px]' : density === 'compact' ? 'text-xs' : 'text-xs'}`}>
+                    <span className={`whitespace-nowrap text-white font-semibold ${secondaryTextClass}`}>
                       {row.id}
                     </span>
                   </button>
-                  <div className="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="flex items-center gap-1 whitespace-nowrap">
-                      <Clock className="w-3 h-3" />
-                      <span>{timeAgo}</span>
-                    </span>
-                    <span className="flex items-center gap-1 whitespace-nowrap">
-                      <span>${row.revenue}</span>
-                    </span>
-                  </div>
-                </div>
-                <div className="min-w-0">
-                  <p
-                    className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-semibold text-slate-900 dark:text-slate-100 truncate cursor-pointer hover:underline`}
-                    onClick={() => window.open(`/jobs/${row.id}/view`, '_blank')}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className={`h-7 w-7 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 shadow-sm`}
+                    onClick={() => openJobPanel(row)}
+                    title="View job"
                   >
-                    {row.jobType}
-                  </p>
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                  <span className={`flex items-center gap-1 whitespace-nowrap ${metaTextClass} text-slate-500 dark:text-slate-400`}>
+                    <Clock className="w-3 h-3" />
+                    <span>{timeAgo}</span>
+                  </span>
+                </div>
+                <div className="min-w-0 space-y-2">
+                  <div className="flex flex-row gap-2 items-center">
+                    <p
+                      className={`${primaryTextClass} font-semibold text-slate-900 dark:text-slate-100 truncate cursor-pointer hover:underline`}
+                      onClick={() => window.open(`/jobs/${row.id}/view`, '_blank')}
+                    >
+                      {row.jobType}
+                    </p>
+                    <div className="w-2 h-2 bg-slate-400 rounded-full" />
+                    <div className={`flex items-center space-x-3 ${metaTextClass} text-slate-500 dark:text-slate-400`}>
+                      <span className="flex items-center gap-1 whitespace-nowrap">
+                        <span>${row.revenue}</span>
+                      </span>
+                    </div>
+                  </div>
                   <p
-                    className={`${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-600 dark:text-slate-400 truncate cursor-pointer hover:underline`}
+                    className={`${secondaryTextClass} text-slate-700 dark:text-slate-300 truncate cursor-pointer hover:underline`}
                     onClick={() => window.open(`/jobs/${row.id}/view`, '_blank')}
                   >
                     {row.jobDescription}
@@ -3871,21 +4023,21 @@ export default function Jobs() {
           <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
             {visibleClientFields.clientName && (
               <div className="min-w-0 flex flex-row gap-2 items-center">
-                <p className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-semibold text-slate-900 dark:text-slate-100 truncate`}>{row.clientName}</p>
+                <p className={`${primaryTextClass} font-semibold text-slate-900 dark:text-slate-100 truncate`}>{row.clientName}</p>
                 <div className="w-2 h-2 bg-slate-400 rounded-full" />
                 {visibleClientFields.companyName && (
-                  <p className={`${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-600 dark:text-slate-400 truncate`}>{row.companyName}</p>
+                  <p className={`${secondaryTextClass} text-slate-700 dark:text-slate-300 truncate`}>{row.companyName}</p>
                 )}
               </div>
             )}
             {visibleClientFields.phoneNumber && (
-              <div className={`flex items-center space-x-2 ${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-500 dark:text-slate-400`}>
+              <div className={`flex items-center space-x-2 ${secondaryTextClass} text-slate-600 dark:text-slate-400`}>
                 <Phone className="w-3 h-3" />
                 <span>{row.phoneNumber}</span>
               </div>
             )}
             {visibleClientFields.phoneNumber2 && (row as any).phoneNumber2 && (
-              <div className={`flex items-center space-x-2 ${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-500 dark:text-slate-400`}>
+              <div className={`flex items-center space-x-2 ${secondaryTextClass} text-slate-600 dark:text-slate-400`}>
                 <Phone className="w-3 h-3" />
                 <span>{(row as any).phoneNumber2}</span>
               </div>
@@ -4159,7 +4311,7 @@ export default function Jobs() {
             ))}
           </div>
         </div>
-        <div className="mb-6 relative rounded-3xl p-4 md:p-5 pb-5 md:pb-6 border border-slate-200/60 dark:border-slate-700/60 shadow-sm md:shadow-xl bg-white dark:bg-slate-900 md:bg-gradient-to-br md:from-slate-50 md:via-blue-50 md:to-indigo-50 md:dark:from-slate-900 md:dark:via-blue-950/20 md:dark:to-indigo-950/20">
+        <div className="mb-6 relative rounded-lg p-4 md:p-5 pb-5 md:pb-6 border border-slate-200/60 dark:border-slate-700/60 shadow-none md:shadow-xl bg-white dark:bg-slate-900 md:bg-gradient-to-br md:from-slate-50 md:via-blue-50 md:to-indigo-50 md:dark:from-slate-900 md:dark:via-blue-950/20 md:dark:to-indigo-950/20">
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
               <div className="space-y-2">
@@ -4238,24 +4390,23 @@ export default function Jobs() {
                 onSelect={val => setQuickAgents(Array.isArray(val) ? val : [])}
                 onSearch={() => {}}
               />
-              <SelectInput
-                label="Date Range (presets)"
-                options={dateRangeOptions}
-                placeholder="Select date range"
-                value={selectedDateRange}
-                onSelect={val => {
-                  const next = Array.isArray(val) ? (val[0] ?? '') : val;
-                  setSelectedDateRange(next);
-                  if (next === 'custom-picker') {
-                    setDateRangeValue({ startDate: null, endDate: null });
-                  }
-                }}
-              />
               <InputDatepicker
                 value={dateRangeValue}
                 onChange={handleDateRangeChange}
                 disabled={selectedDateRange !== 'custom-picker'}
-                label={"\xA0"}
+                label={"Date Range"}
+              />
+              <SelectInput
+                label="Dispatch"
+                options={quickDispatchOptions.map(dispatch => ({
+                  label: dispatch,
+                  value: dispatch,
+                }))}
+                placeholder="All dispatches"
+                value={quickDispatches}
+                multiselect
+                onSelect={val => setQuickDispatches(Array.isArray(val) ? val : [])}
+                onSearch={() => {}}
               />
             </div>
             )}
@@ -4295,18 +4446,6 @@ export default function Jobs() {
                 placeholder="All Sources"
                 value={quickSingleChoice}
                 onSelect={val => setQuickSingleChoice(Array.isArray(val) ? (val[0] ?? '') : val)}
-                onSearch={() => {}}
-              />
-              <SelectInput
-                label="Dispatch"
-                options={quickDispatchOptions.map(dispatch => ({
-                  label: dispatch,
-                  value: dispatch,
-                }))}
-                placeholder="All dispatches"
-                value={quickDispatches}
-                multiselect
-                onSelect={val => setQuickDispatches(Array.isArray(val) ? val : [])}
                 onSearch={() => {}}
               />
             </div>
