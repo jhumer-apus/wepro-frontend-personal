@@ -154,7 +154,7 @@ export function SidePanelViewport({
       }`}
       style={gridStyle}
     >
-      <div className="min-w-0 overflow-auto">{children}</div>
+      <div className="min-w-0 overflow-auto flex">{children}</div>
 
       <aside
         className={`relative z-20 h-screen max-h-screen min-h-0 lg:h-full lg:max-h-screen overflow-hidden border-l border-neutral-200 bg-white shadow-lg transition-transform duration-300 ease-in-out dark:border-neutral-800 dark:bg-neutral-900 w-full xl:w-[400px] 2xl:w-[640px]`}

@@ -4393,7 +4393,6 @@ export default function Jobs() {
               <InputDatepicker
                 value={dateRangeValue}
                 onChange={handleDateRangeChange}
-                disabled={selectedDateRange !== 'custom-picker'}
                 label={"Date Range"}
               />
               <SelectInput
