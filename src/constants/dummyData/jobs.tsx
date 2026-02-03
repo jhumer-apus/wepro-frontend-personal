@@ -1,5 +1,12 @@
 import { Job } from '@/src/constants/interface/jobs'
 
+const technicianPool = [
+  { name: "Alex Carter", avatar: "🛠️" },
+  { name: "Priya Patel", avatar: "🔧" },
+  { name: "Noah Bennett", avatar: "⚙️" },
+  { name: "Sofia Martinez", avatar: "🪛" },
+]
+
 const baseJobs: Job[] = [
   {
     id: "J-2024-001",
@@ -649,10 +656,13 @@ export const dummyJobs: Job[] = baseJobs.map((job, idx) => {
   const year = now.getFullYear()
   const month = now.getMonth() + 1 // 1-based
   const day = Math.min(idx + 1, 28) // keep within month
+  const techFromPool = technicianPool[(idx * 3 + job.id.length) % technicianPool.length]
 
   return {
     ...job,
     // Always use today's date for startDate so demo data stays current
     startDate: now.toISOString().split('T')[0],
+    assignedTechnician: techFromPool.name,
+    technicianAvatar: techFromPool.avatar,
   }
 })

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { type DateValueType } from "react-tailwindcss-datepicker";
 import InputDatepicker from "@/src/components/input/datepicker";
 import { useRouter } from "next/router";
@@ -2277,6 +2277,13 @@ export default function Jobs() {
     { label: 'Contract', value: 'contract' },
   ];
   const quickDispatchOptions = ['Dispatch 1', 'Dispatch 2', 'Dispatch 3'];
+  const technicianOptions = useMemo(() => {
+    const names = new Set<string>();
+    dummyJobs.forEach((job: Job) => {
+      if (job.assignedTechnician) names.add(job.assignedTechnician);
+    });
+    return Array.from(names);
+  }, []);
   useEffect(() => {
     if (selectedDateRange === 'custom-picker') return;
     const presetRange = getRangeDates(selectedDateRange);
@@ -4445,6 +4452,19 @@ export default function Jobs() {
                 placeholder="All Sources"
                 value={quickSingleChoice}
                 onSelect={val => setQuickSingleChoice(Array.isArray(val) ? (val[0] ?? '') : val)}
+                onSearch={() => {}}
+              />
+              <SelectInput
+                label="Technician"
+                options={[
+                  { label: "All technicians", value: "all" },
+                  { label: "Assigned", value: "assigned" },
+                  { label: "Unassigned", value: "unassigned" },
+                  ...technicianOptions.map(name => ({ label: name, value: name })),
+                ]}
+                placeholder="All technicians"
+                value={assignedTechFilter}
+                onSelect={val => setAssignedTechFilter(Array.isArray(val) ? (val[0] ?? "all") : val)}
                 onSearch={() => {}}
               />
             </div>
