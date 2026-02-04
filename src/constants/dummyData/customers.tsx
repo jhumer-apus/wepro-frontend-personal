@@ -1,29 +1,16 @@
 export interface Customer {
   id: string
-  name: string
-  email: string
-  phone: string
-  address: string
-  avatar: string
-  joinDate: string
-  totalJobs: number
-  totalSpent: number
-  lastContact: string
-  status: string
-  rating: number
-  tags: string[]
-  notes: string | Notes[]
-  propertyType: string
-  preferredTech: string
-  emergencyContact?: string
-  billingAddress?: string
-  paymentMethod?: string
+  serialNumber?: number
+  email?: string
+  clientName?: string
+  companyName?: string
+  sourceTitle: string
+  phoneNumber?: string
+  addressUnit?: string
+  location?: string
   jobHistory?: JobHistory[]
-  alternatePhone?: string
-  customerNotes?: string
-  communications?: Communication[]
-  callRecordings?: CallRecording[]
 }
+
 
 export interface Notes {
   id: string
@@ -67,65 +54,64 @@ export interface CallRecording {
 }
 
 // Mock customer data
-export const customers: Customer[] = [
+export const customersMockData: Customer[] = [
   {
-    id: '1',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@email.com',
-    phone: '(555) 123-4567',
-    address: '123 Oak Street, Los Angeles, CA 90210',
-    avatar:
-      'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150',
-    joinDate: '2024-01-15',
-    totalJobs: 8,
-    totalSpent: 4250,
-    lastContact: '2 days ago',
-    status: 'active',
-    rating: 5,
-    tags: ['VIP', 'Repeat Customer'],
-    notes: 'Prefers morning appointments. Has two dogs.',
-    propertyType: 'Single Family Home',
-    preferredTech: 'Mike Rodriguez',
+    id: "cst-001",
+    serialNumber: 1,
+    clientName: "Juan Dela Cruz",
+    companyName: "ABC Solutions Inc.",
+    sourceTitle: "Website Inquiry",
+    email: "juan.delacruz@abcsolutions.com",
+    phoneNumber: "+63 912 345 6789",
+    addressUnit: "Unit 502, ABC Tower",
+    location: "Makati City, Philippines",
   },
   {
-    id: '2',
-    name: 'David Park',
-    email: 'david.park@email.com',
-    phone: '(555) 987-6543',
-    address: '456 Pine Ave, Beverly Hills, CA 90212',
-    avatar:
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    joinDate: '2023-11-20',
-    totalJobs: 12,
-    totalSpent: 7890,
-    lastContact: '1 week ago',
-    status: 'active',
-    rating: 4,
-    tags: ['Commercial', 'Priority'],
-    notes: 'Office building owner. Prefers afternoon service.',
-    propertyType: 'Commercial',
-    preferredTech: 'Jennifer Lee',
+    id: "cst-002",
+    serialNumber: 2,
+    clientName: "Maria Santos",
+    companyName: "BrightTech Corp",
+    sourceTitle: "Facebook Ads",
+    email: "maria.santos@brighttech.ph",
+    phoneNumber: "+63 917 888 1234",
+    addressUnit: "3rd Floor, BrightTech Building",
+    location: "Quezon City, Philippines",
   },
   {
-    id: '3',
-    name: 'Robert Chen',
-    email: 'robert.chen@email.com',
-    phone: '(555) 456-7890',
-    address: '789 Maple Dr, Santa Monica, CA 90401',
-    avatar:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-    joinDate: '2024-02-10',
-    totalJobs: 3,
-    totalSpent: 1250,
-    lastContact: '3 days ago',
-    status: 'active',
-    rating: 5,
-    tags: ['New Customer'],
-    notes: 'Tech-savvy customer. Prefers email communication.',
-    propertyType: 'Condo',
-    preferredTech: 'Alex Thompson',
+    id: "cst-003",
+    serialNumber: 3,
+    clientName: "James Lee",
+    companyName: "Lee Trading",
+    sourceTitle: "Referral",
+    email: "james.lee@leetrading.com",
+    phoneNumber: "+63 905 456 7890",
+    addressUnit: "Warehouse 2, Industrial Park",
+    location: "Cebu City, Philippines",
+  },
+  {
+    id: "cst-004",
+    serialNumber: 4,
+    clientName: "Angela Cruz",
+    companyName: "NextGen Marketing",
+    sourceTitle: "Email Campaign",
+    email: "angela.cruz@nextgen.ph",
+    phoneNumber: "+63 926 234 5678",
+    addressUnit: "Suite 1201, Skyline Tower",
+    location: "BGC, Taguig City",
+  },
+  {
+    id: "cst-005",
+    serialNumber: 5,
+    clientName: "Robert Tan",
+    companyName: "Tan Holdings",
+    sourceTitle: "Walk-in Client",
+    email: "robert.tan@tanholdings.com",
+    phoneNumber: "+63 998 765 4321",
+    addressUnit: "Office 7B, Tan Plaza",
+    location: "Davao City, Philippines",
   },
 ]
+
 
 // Mock detailed customer data for profile view
 export const mockCustomerDetails: Customer = {
