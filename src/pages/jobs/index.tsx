@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { type DateValueType } from "react-tailwindcss-datepicker";
 import InputDatepicker from "@/src/components/input/datepicker";
 import { useRouter } from "next/router";
@@ -2277,6 +2277,13 @@ export default function Jobs() {
     { label: 'Contract', value: 'contract' },
   ];
   const quickDispatchOptions = ['Dispatch 1', 'Dispatch 2', 'Dispatch 3'];
+  const technicianOptions = useMemo(() => {
+    const names = new Set<string>();
+    dummyJobs.forEach((job: Job) => {
+      if (job.assignedTechnician) names.add(job.assignedTechnician);
+    });
+    return Array.from(names);
+  }, []);
   useEffect(() => {
     if (selectedDateRange === 'custom-picker') return;
     const presetRange = getRangeDates(selectedDateRange);
@@ -4447,6 +4454,19 @@ export default function Jobs() {
                 onSelect={val => setQuickSingleChoice(Array.isArray(val) ? (val[0] ?? '') : val)}
                 onSearch={() => {}}
               />
+              <SelectInput
+                label="Technician"
+                options={[
+                  { label: "All technicians", value: "all" },
+                  { label: "Assigned", value: "assigned" },
+                  { label: "Unassigned", value: "unassigned" },
+                  ...technicianOptions.map(name => ({ label: name, value: name })),
+                ]}
+                placeholder="All technicians"
+                value={assignedTechFilter}
+                onSelect={val => setAssignedTechFilter(Array.isArray(val) ? (val[0] ?? "all") : val)}
+                onSearch={() => {}}
+              />
             </div>
             )}
 
@@ -4580,6 +4600,13 @@ export default function Jobs() {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAssignTech(true)}
+                  disabled={selectedRows.size === 0}
+                >
+                  Assign Technician ({selectedRows.size})
+                </Button>
                 <div className="flex items-center gap-2 bg-gray-200 rounded-md">
                   <Button
                     variant="outline"
@@ -4745,7 +4772,15 @@ export default function Jobs() {
     setShowAddNote(false);
   };
   const handleAssignTech = () => {
-    // Assign tech logic here
+    if (!selectedTech || selectedRows.size === 0) return;
+    setJobs(prev =>
+      prev.map(job =>
+        selectedRows.has(job.id)
+          ? { ...job, assignedTechnician: selectedTech }
+          : job,
+      ),
+    );
+    setSelectedRows(new Set());
     setShowAssignTech(false);
     setSelectedTech('');
   };
@@ -5557,6 +5592,37 @@ export default function Jobs() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+  {/* Assign Technician Modal */}
+  <Dialog open={showAssignTech} onOpenChange={setShowAssignTech}>
+    <DialogContent className="max-w-sm">
+      <DialogHeader>
+        <DialogTitle>Assign Technician</DialogTitle>
+        <DialogDescription>
+        Selected jobs: {selectedRows.size}
+        </DialogDescription>
+      </DialogHeader>
+      <div className="space-y-3">
+      <SelectInput
+        options={Array.from(new Set([...technicians.map(t => t.name), ...technicianOptions])).map(
+          name => ({ label: name, value: name }),
+        )}
+        placeholder="Choose technician"
+        value={selectedTech}
+        onSelect={val => setSelectedTech(Array.isArray(val) ? (val[0] ?? '') : val)}
+        onSearch={() => {}}
+      />
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={() => setShowAssignTech(false)}>
+          Cancel
+        </Button>
+        <Button onClick={handleAssignTech} disabled={!selectedTech}>
+          Assign
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 
       {/* Add Tag Note Modal */}
       <Dialog open={showAddTagNoteModal} onOpenChange={setShowAddTagNoteModal}>
