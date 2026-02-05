@@ -3991,7 +3991,7 @@ export default function Jobs() {
         ),
       },
       {
-        isFixed: true,
+        // isFixed: true,
         columnName: "Job Details",
         sortKey: "jobType",
         cell: (row) => {
