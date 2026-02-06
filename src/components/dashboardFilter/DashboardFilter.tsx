@@ -19,12 +19,12 @@ interface Props {
 export default function DashboardFilter(props: Props){
     const [showFilters, setShowFilters] = useState(false);
     return (
-        <div className="mb-8 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 bg-white dark:bg-slate-900 shadow-sm md:shadow-lg">
+        <div className="mb-6 relative rounded-lg p-4 md:p-5 pb-5 md:pb-6 border border-slate-200/60 dark:border-slate-700/60 shadow-none md:shadow-xl bg-white dark:bg-slate-900 md:bg-gradient-to-br md:from-slate-50 md:via-blue-50 md:to-indigo-50 md:dark:from-slate-900 md:dark:via-blue-950/20 md:dark:to-indigo-950/20">
 
             {/* ================= HEADER ================= */}
             <div className="p-5 md:p-6 space-y-5">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                         <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                             {props.title}
                         </h2>
