@@ -134,11 +134,11 @@ export function Sidebar({
     //     Tenant: ['MOD010'],
     //   },
     // },
-    {
-      name: 'Customers',
-      href: '/customers',
-      icon: Home,
-    },
+    // {
+    //   name: 'Customers',
+    //   href: '/customers',
+    //   icon: Home,
+    // },
     // {
     //   name: 'Schedule',
     //   href: '/schedule',
