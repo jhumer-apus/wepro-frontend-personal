@@ -1,35 +1,17 @@
 import React from 'react'
 import { useState } from 'react'
 import { Button } from '@/src/components/ui/button'
-import { Badge } from '@/src/components/ui/badge'
-import { Input } from '@/src/components/ui/input'
-import { Textarea } from '@/src/components/ui/textarea'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/src/components/ui/dialog'
-import {
-  Plus,
-  Search,
   Edit,
   Trash2,
   Eye,
-  Users,
 } from 'lucide-react'
-import {
-  customersMockData,
-  mockCustomerDetails,
-} from '@/src/constants/dummyData/customers'
+import { customersMockData } from '@/src/constants/dummyData/customers'
 import JobsTable from '@/src/components/table'
 import { CustomerCard } from '@/src/components/customer/CustomerCard'
-import { CustomerT } from '@/src/types/customer'
+import { CustomerT } from '@/src/constants/interface/customer'
 import { CustomerProfileView } from '@/src/components/customer/CustomerProfileView'
-import { SourceFilter } from '@/src/components/customer/SourceFilter'
 import DashboardFilter from '@/src/components/dashboardFilter/DashboardFilter'
-import { set } from 'react-hook-form'
 import SelectInput from '@/src/components/input/select'
 
 
@@ -107,21 +89,10 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
       : String(bVal).localeCompare(String(aVal))
   })
 
-
-
-
-
-  const openCustomerProfile = () => {
-    setSelectedCustomer(mockCustomerDetails)
-    setShowProfile(true)
-  }
-
   const handleViewCustomer = (customer: CustomerT) => {
     setSelectedCustomer(customer)
     setShowProfile(true)
   }
-
-
 
   const customerColumns = [
       {
@@ -296,7 +267,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
         mobileCard={(row) => (
           <CustomerCard
             customer={row}
-            openCustomerProfile={openCustomerProfile}
+            openCustomerProfile={handleViewCustomer}
           />
         )}
         onSort={handleSort}

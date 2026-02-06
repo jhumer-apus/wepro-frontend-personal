@@ -15,7 +15,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/src/components/ui/dropdown-menu"
-import { CustomerT } from "@/src/types/customer"
+import { CustomerT } from "@/src/constants/interface/customer"
 
 interface JobsCustomerTabProps {
   selectedCustomer: CustomerT

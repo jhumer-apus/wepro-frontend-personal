@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card"
 import { Button } from "@/src/components/ui/button"
 import { CreditCard, Download } from "lucide-react"
-import { CustomerT } from "@/src/types/customer"
+import { CustomerT } from "@/src/constants/interface/customer"
 
 interface BillingCustomerTabProps {
   selectedCustomer: CustomerT
@@ -45,7 +45,7 @@ export const BillingCustomerTab: React.FC<BillingCustomerTabProps> = ({
               Total Spent
             </label>
             <p className="text-2xl font-bold text-green-600">
-              ${selectedCustomer.totalSpent.toLocaleString()}
+              ${selectedCustomer?.totalSpent?.toLocaleString()}
             </p>
           </div>
         </CardContent>

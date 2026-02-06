@@ -1,4 +1,4 @@
-import { CustomerT } from "@/src/types/customer"
+import { CustomerT } from "@/src/constants/interface/customer"
 import { Card, CardContent } from "../ui/card"
 import { Avatar, AvatarFallback } from "../ui/avatar"
 import {
@@ -20,7 +20,7 @@ import { Badge } from "../ui/badge"
 
 type CustomerCardProps = {
   customer: CustomerT
-  openCustomerProfile: (id: string) => void
+  openCustomerProfile: (customer: CustomerT) => void
 }
 
 export const CustomerCard = ({
@@ -30,7 +30,7 @@ export const CustomerCard = ({
   return (
     <Card
       className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-all duration-200 cursor-pointer"
-      onClick={() => openCustomerProfile(customer.id)}
+      onClick={() => openCustomerProfile(customer)}
     >
       <CardContent className="p-6">
         <div className="flex items-start space-x-4">
@@ -73,7 +73,7 @@ export const CustomerCard = ({
                   <DropdownMenuItem
                     onClick={e => {
                       e.stopPropagation()
-                      openCustomerProfile(customer.id)
+                      openCustomerProfile(customer)
                     }}
                   >
                     <Eye className="w-4 h-4 mr-2" />
