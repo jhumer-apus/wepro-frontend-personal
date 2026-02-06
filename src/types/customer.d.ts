@@ -9,4 +9,5 @@ export interface CustomerT {
   location?: string
   sourceTitle: string
   jobHistory?: JobHistory[]
+  status: 'active' | 'inactive'
 }
