@@ -46,6 +46,12 @@ import {
   DropdownMenuSubContent,
 } from "@/src/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/src/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/src/components/ui/tooltip";
 import { ButtonLoading } from "@/src/components/ui/loading";
 import {
   MapPin,
@@ -100,7 +106,12 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import TimeAgo from "javascript-time-ago";
+import en from "javascript-time-ago/locale/en";
 import { cn } from "@/src/lib/utils";
+
+TimeAgo.addDefaultLocale(en);
+const timeAgo = new TimeAgo("en-US");
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/src/components/ui/tabs';
 import { Checkbox } from "@/src/components/ui/checkbox";
 import {
@@ -170,7 +181,6 @@ const jobStatuses: JobStatus[] = [
 ];
 
 export default function Jobs() {
-  const [selectedStatus, setSelectedStatus] = useState<string>("All");
   const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
   const [dateRangeFilter, setDateRangeFilter] = useState<string>("all");
   const [customStartDate, setCustomStartDate] = useState<string>("");
@@ -2755,23 +2765,8 @@ export default function Jobs() {
     return "scheduled";
   };
 
-  // Helper function to get time ago
-  const getTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    
-    if (diffMinutes < 60) {
-      return `${diffMinutes} minutes ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours} hours ago`;
-    } else {
-      const diffDays = Math.floor(diffHours / 24);
-      return `${diffDays} days ago`;
-    }
-  };
+  // Helper function to get time ago (using javascript-time-ago)
+  const getTimeAgo = (dateString: string) => timeAgo.format(new Date(dateString));
 
   // Helper function to get time until scheduled
   const getTimeUntil = (scheduledTime: Date) => {console.log(scheduledTime, 'lll')
@@ -3304,7 +3299,16 @@ export default function Jobs() {
                               </SelectContent>
                             </Select>
                           ) : (
-                            <div className="mt-1 text-sm">{selectedJob.priority}</div>
+                            <div className="mt-1 text-sm">
+                              {[
+                                { label: 'Yelp', value: 'yelp' },
+                                { label: 'Google Ads', value: 'google-ads' },
+                                { label: 'Facebook', value: 'facebook' },
+                                { label: 'Referral', value: 'referral' },
+                                { label: 'Website', value: 'website' },
+                                { label: 'Direct Call', value: 'phone' },
+                              ].find(o => o.value === (selectedJob as { source?: string }).source)?.label ?? (selectedJob as { source?: string }).source ?? '—'}
+                            </div>
                           )}
                         </div>
                       </CardContent>
@@ -3672,8 +3676,8 @@ export default function Jobs() {
   const renderListView = () => {
     // Enhanced filtering logic with multiple criteria
     const filteredJobs = jobs.filter(job => {
-      // Status filtering
-      if (selectedStatus !== "All" && getJobStatus(job) !== selectedStatus) {
+      // Status filtering (multi-select: empty = All; otherwise job status must be in selectedStatuses)
+      if (selectedStatuses.length > 0 && !selectedStatuses.includes(getJobStatus(job))) {
         return false;
       }
       // Lead/Job type filtering
@@ -3969,9 +3973,9 @@ export default function Jobs() {
       );
     };
 
-    const primaryTextClass = density === "ultra" ? "text-[12px]" : "text-sm";
+    const primaryTextClass = density === "ultra" ? "text-[12px]" : "text-xs";
     const secondaryTextClass = density === "ultra" ? "text-[11px]" : "text-xs";
-    const metaTextClass = density === "ultra" ? "text-[10px]" : "text-[11px]";
+    const metaTextClass = density === "ultra" ? "text-[10px]" : "text-xs";
 
     const tableColumns = [
       {
@@ -3991,13 +3995,13 @@ export default function Jobs() {
         ),
       },
       {
-        // isFixed: true,
+        isFixed: true,
         columnName: "Job Details",
         sortKey: "jobType",
         cell: (row) => {
           const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
           return (
-            <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+            <div className={`max-w-[200px] ${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
               <div className="flex flex-col space-y-2">
                 <div className="flex items-center space-x-2">
                   <button
@@ -4018,10 +4022,7 @@ export default function Jobs() {
                   >
                     <Eye className="w-4 h-4" />
                   </Button>
-                  <span className={`flex items-center gap-1 whitespace-nowrap ${metaTextClass} text-slate-500 dark:text-slate-400`}>
-                    <Clock className="w-3 h-3" />
-                    <span>{timeAgo}</span>
-                  </span>
+                  
                 </div>
                 <div className="min-w-0 space-y-2">
                   <div className="flex flex-row gap-2 items-center">
@@ -4031,19 +4032,29 @@ export default function Jobs() {
                     >
                       {row.jobType}
                     </p>
-                    <div className="w-2 h-2 bg-slate-400 rounded-full" />
+                    <div className="w-1.5 h-1.5 bg-slate-400 rounded-full" />
                     <div className={`flex items-center space-x-3 ${metaTextClass} text-slate-500 dark:text-slate-400`}>
                       <span className="flex items-center gap-1 whitespace-nowrap">
                         <span>${row.revenue}</span>
                       </span>
                     </div>
                   </div>
-                  <p
-                    className={`${secondaryTextClass} text-slate-700 dark:text-slate-300 truncate cursor-pointer hover:underline`}
-                    onClick={() => { setSelectedJob(row); setShowJobDetails(true); }}
-                  >
-                    {row.jobDescription}
-                  </p>
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p
+                          className={`${secondaryTextClass} text-slate-700 dark:text-slate-300 truncate cursor-pointer hover:underline`}
+                          onClick={() => { setSelectedJob(row); setShowJobDetails(true); }}
+                        >
+                          {row.jobDescription}
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm text-xs">
+                        {row.jobDescription}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
                 </div>
               </div>
             </div>
@@ -4058,7 +4069,7 @@ export default function Jobs() {
             {visibleClientFields.clientName && (
               <div className="min-w-0 flex flex-row gap-2 items-center">
                 <p className={`${primaryTextClass} font-semibold text-slate-900 dark:text-slate-100 truncate`}>{row.clientName}</p>
-                <div className="w-2 h-2 bg-slate-400 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full" />
                 {visibleClientFields.companyName && (
                   <p className={`${secondaryTextClass} text-slate-700 dark:text-slate-300 truncate`}>{row.companyName}</p>
                 )}
@@ -4077,7 +4088,7 @@ export default function Jobs() {
               </div>
             )}
             {visibleClientFields.email && (
-              <div className={`flex items-center space-x-2 ${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-500 dark:text-slate-400 truncate`}>
+              <div className={`flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 truncate`}>
                 <Mail className="w-3 h-3" />
                 <span className="truncate">{row.email}</span>
               </div>
@@ -4091,35 +4102,57 @@ export default function Jobs() {
         cell: (row) => {
           const scheduledTime = new Date(`${row.startDate} ${row.startTime}`);
           const timeUntilScheduled = getTimeUntil(scheduledTime);
+          const startDate = new Date(row.startDate);
+          const hasEnd = !!(row as { estimatedEndTime?: string }).estimatedEndTime || (row as { endDate?: string }).endDate;
+          const fromLabel = `${startDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}  ${row.startTime}`;
           return (
             <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-1.5'}`}>
-              <div className="flex items-center space-x-2">
-                <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                <div className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
-                  {new Date(row.startDate).toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: '2-digit',
-                  })}
-                </div>
-              </div>
-              <div className="flex flex-row gap-2">
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-3.5 h-3.5 text-slate-500" />
-                  <div className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-semibold ${new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}`}>
-                    {row.startTime}
+              {(() => {
+                
+                if (!hasEnd) {
+                  return (
+                    <div className="text-xs inline-flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
+                      <span className={`font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
+                        {fromLabel}
+                      </span>
+                    </div>
+                  );
+                }
+                const endTime = (row as { estimatedEndTime?: string }).estimatedEndTime ?? row.startTime;
+                let endDate = new Date((row as { endDate?: string }).endDate ?? row.startDate);
+                if (endDate.getTime() <= startDate.getTime()) {
+                  endDate = new Date(startDate);
+                  endDate.setDate(endDate.getDate() + 1);
+                }
+                const toLabel = `${endDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}  ${endTime}`;
+                return (
+                  <div className="text-xs inline-flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
+                    <span className={`font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap flex flex-row items-center gap-1`}>
+                      {fromLabel}
+                    </span>
+                    <span className="text-slate-400 dark:text-slate-500 font-light select-none" aria-hidden>–</span>
+                    <span className={`font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
+                      {toLabel}
+                    </span>
                   </div>
-                  {new Date(`${row.startDate} ${row.startTime}`) < new Date() && <div className="w-2 h-2 bg-red-500 rounded-full" />}
+                );
+              })()}
+              <div className="flex flex-row items-center gap-2">
+                <div className="flex flex-row gap-2">
+                  <Badge
+                    variant="outline"
+                    className={`uppercase border-transparent whitespace-nowrap text-white ${new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'}`}
+                  >
+                    {new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'PAST DUE' : timeUntilScheduled}
+                  </Badge>
                 </div>
-                <Badge
-                  variant="outline"
-                  className={`border-transparent whitespace-nowrap text-[10px] text-white ${new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'}`}
-                >
-                  {new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'PAST DUE' : timeUntilScheduled}
-                </Badge>
-              </div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                Duration: {row.estimatedDuration}
+                {hasEnd &&
+                  <div className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                    Duration: {row.estimatedDuration}
+                  </div>
+                }
               </div>
             </div>
           );
@@ -4130,8 +4163,8 @@ export default function Jobs() {
         sortKey: "location",
         cell: (row) => (
           <div className={`${density === 'ultra' ? 'space-y-0.5' : 'space-y-1.5'}`}>
-            <p className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} text-slate-700 dark:text-slate-300 truncate`}>{row.location}</p>
-            <p className={`${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-600 dark:text-slate-400 truncate`}>
+            <p className={`text-xs text-slate-700 dark:text-slate-300 truncate`}>{row.location}</p>
+            <p className={`text-xs text-slate-600 dark:text-slate-400 truncate`}>
               {row.city}, {row.state} {row.zipCode}{(row as { country?: string }).country ? `, ${(row as { country?: string }).country}` : ', USA'}
             </p>
           </div>
@@ -4141,10 +4174,10 @@ export default function Jobs() {
         columnName: "Source",
         sortKey: "source",
         cell: (row) => (
-          <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-1.5'}`}>
+          <div className={`space-y-0.5`}>
             <div className="flex items-center space-x-2">
               <Globe className="w-3.5 h-3.5 text-slate-500" />
-              <span className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-medium text-slate-900 dark:text-slate-100 capitalize truncate`}>
+              <span className={`text-xs font-medium text-slate-900 dark:text-slate-100 capitalize truncate`}>
                 {row.source === 'yelp'
                   ? 'Yelp'
                   : row.source === 'google-ads'
@@ -4169,26 +4202,38 @@ export default function Jobs() {
       {
         columnName: "Created",
         sortKey: "createdAt",
-        cell: (row) => (
-          <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-1.5'}`}>
-            <div className="flex items-center space-x-2">
-              <Calendar className="w-3.5 h-3.5 text-slate-500" />
-              <span className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
-                {new Date(row.createdAt || row.lastUpdated).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: '2-digit',
-                  year: '2-digit',
-                })}
-              </span>
+        cell: (row) => {
+          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
+          return (
+            <div className={`space-y-0.5`}>
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                <span className={`text-xs font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
+                  {new Date(row.createdAt || row.lastUpdated).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: '2-digit',
+                    year: '2-digit',
+                  })}
+                </span>
+              </div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className={`flex items-center gap-1 whitespace-nowrap text-[10px] text-slate-500 dark:text-slate-400 cursor-default`}>
+                        <Clock className="w-3 h-3" />
+                        <span>{timeAgo}</span>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {new Date(row.createdAt || row.lastUpdated).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400">
-              {new Date(row.createdAt || row.lastUpdated).toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </div>
-          </div>
-        ),
+          );
+        },
       },
       {
         columnName: "Technician",
@@ -4201,10 +4246,10 @@ export default function Jobs() {
                 setSelectedRows(new Set([row.id]));
                 setShowAssignTech(true);
               }}
-              className="flex items-center space-x-2 text-left hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded px-1 -mx-1"
+              className="flex flex-row items-center space-x-2 text-left hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded px-1 -mx-1"
             >
-              <User className={`w-3.5 h-3.5 shrink-0 ${row.assignedTechnician ? 'text-green-500' : 'text-red-500'}`} />
-              <span className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-medium ${row.assignedTechnician ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'} truncate`}>
+              <User className={`w-3.5 h-3.5 shrink-0 ${row.assignedTechnician ? 'text-green-700' : 'text-red-500'}`} />
+              <span className={`text-xs font-medium ${row.assignedTechnician ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'} truncate`}>
                 {row.assignedTechnician ? `Assigned: ${row.assignedTechnician}` : 'UNASSIGNED'}
               </span>
             </button>
@@ -4218,13 +4263,13 @@ export default function Jobs() {
           const status = getStatusObj(getJobStatus(row));
           const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
           return (
-            <div className={`${density === 'ultra' ? 'space-y-1' : density === 'compact' ? 'space-y-1.5' : 'space-y-1.5'}`}>
+            <div className={`space-y-0.5`}>
               <div className="flex flex-row gap-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      className="whitespace-nowrap cursor-pointer text-[10px] font-semibold px-2.5 py-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-300 dark:focus:ring-slate-600"
+                      className="uppercase whitespace-nowrap cursor-pointer text-[10px] font-semibold px-2.5 py-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-300 dark:focus:ring-slate-600"
                       style={{ backgroundColor: `${status.color}20`, color: status.color }}
                     >
                       {status.name}
@@ -4534,9 +4579,9 @@ export default function Jobs() {
                       statusDragMoved.current = false;
                       return;
                     }
-                    setSelectedStatus('All');
+                    setSelectedStatuses([]);
                   }}
-                  className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs ${selectedStatus==='All' ? 'bg-slate-900 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
+                  className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs ${selectedStatuses.length === 0 ? 'bg-slate-900 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
                 >
                   <span className="inline-block h-2 w-2 rounded-full bg-slate-500"></span>
                   All
@@ -4553,7 +4598,7 @@ export default function Jobs() {
                   })
                   .map((s, idx)=>{
                     const count = jobs.filter(j=>getJobStatus(j)===s.name).length;
-                    const sel = selectedStatus===s.name;
+                    const sel = selectedStatuses.includes(s.name);
                     return (
                       <button key={s.id}
                         // draggable
@@ -4575,10 +4620,15 @@ export default function Jobs() {
                               statusDragMoved.current = false;
                               return;
                             }
-                            setSelectedStatus(s.name);
+                            setSelectedStatuses(prev =>
+                              prev.includes(s.name)
+                                ? prev.filter(x => x !== s.name)
+                                : [...prev, s.name]
+                            );
                           }}
-                        className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs whitespace-nowrap ${sel? 'bg-slate-900 text-white':'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}>
-                        <span className="inline-block h-2 w-2 rounded-full" style={{backgroundColor:s.color}}></span>
+                          style={{color: sel ? 'white' : null, backgroundColor: sel ? s.color : null}}
+                        className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs whitespace-nowrap px-3 ${sel? `bg-slate-900` :'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}>
+                        <span className="inline-block h-2 w-2 rounded-full" style={{backgroundColor: sel ? 'white' : s.color}}></span>
                         {s.name}
                         {count>0 && <span className="opacity-70 hidden sm:inline">{count}</span>}
                       </button>
