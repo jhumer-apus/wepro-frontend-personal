@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -25,6 +25,8 @@ type ColumnConfig = {
   columnName: string;
   cell: keyof any | ((row: any) => React.ReactNode);
   sortKey?: string;
+  /** When true, keeps the column sticky on horizontal scroll */
+  isFixed?: boolean;
 };
 
 export type ColumnOption = {
@@ -53,6 +55,8 @@ type JobsTableProps = {
   onColumnsChange?: (nextOptions: ColumnOption[]) => void;
   columnOptions?: ColumnOption[];
   headerRightComponent?: React.ReactNode;
+  /** When set, column visibility is persisted to localStorage under this key (e.g. router.pathname) */
+  tableKey?: string;
 };
 
 const JobsTable: React.FC<JobsTableProps> = ({
@@ -75,11 +79,79 @@ const JobsTable: React.FC<JobsTableProps> = ({
   onColumnsChange,
   columnOptions,
   headerRightComponent,
+  tableKey,
 }) => {
   const startEntry = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endEntry = Math.min(currentPage * pageSize, totalCount);
   const mobileItems = mobileRows ?? rows;
   const inferredHasMore = mobileItems.length < totalCount;
+
+  const storageKey =
+    tableKey != null && tableKey !== ""
+      ? `table-column-visibility-${tableKey}`
+      : null;
+
+  const [hiddenColumnKeys, setHiddenColumnKeys] = useState<Set<string>>(() => new Set());
+  const hasLoadedFromStorage = useRef(false);
+
+  // Load from localStorage when storage key is set or changes
+  useEffect(() => {
+    if (typeof window === "undefined" || !storageKey) return;
+    hasLoadedFromStorage.current = true;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+          setHiddenColumnKeys(new Set(arr.map((x: unknown) => String(x))));
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [storageKey]);
+
+  // Save to localStorage when user toggles columns (only if we have a key and have loaded)
+  useEffect(() => {
+    if (typeof window === "undefined" || !storageKey || !hasLoadedFromStorage.current) return;
+    try {
+      const arr: string[] = [];
+      hiddenColumnKeys.forEach(k => arr.push(k));
+      localStorage.setItem(storageKey, JSON.stringify(arr));
+    } catch {
+      // ignore
+    }
+  }, [storageKey, hiddenColumnKeys]);
+
+  const toggleableColumnNames = columns
+    .filter(col => col.columnName != null && String(col.columnName).trim() !== "")
+    .map(col => col.columnName);
+
+  const optionsFromColumns: ColumnOption[] = toggleableColumnNames.map(name => ({
+    key: name,
+    label: name,
+    selected: !hiddenColumnKeys.has(name),
+  }));
+
+  const hasColumnOptions = optionsFromColumns.length > 0;
+
+  const visibleColumns = columns.filter(col => {
+    if (col.columnName == null || String(col.columnName).trim() === "") return true;
+    return !hiddenColumnKeys.has(col.columnName);
+  });
+
+  const handleColumnToggle = (columnName: string) => {
+    setHiddenColumnKeys(prev => {
+      const next = new Set(prev);
+      if (next.has(columnName)) next.delete(columnName);
+      else next.add(columnName);
+      return next;
+    });
+    const nextOptions = optionsFromColumns.map(opt =>
+      opt.key === columnName ? { ...opt, selected: !opt.selected } : opt
+    );
+    onColumnsChange?.(nextOptions);
+  };
 
   return (
     <div className="bg-transparent border-0 shadow-none md:bg-white md:dark:bg-slate-900 rounded-lg md:border md:border-slate-200 md:dark:border-slate-800 md:shadow-xl overflow-hidden">
@@ -108,7 +180,7 @@ const JobsTable: React.FC<JobsTableProps> = ({
             entries
           </Label>
         </div>
-        {(onExport || (onColumnsChange && columnOptions && columnOptions.length > 0)) && (
+        {(onExport || hasColumnOptions) && (
           <div className="flex items-center gap-2 sm:ml-auto">
             {onExport && (
               <Button
@@ -121,7 +193,7 @@ const JobsTable: React.FC<JobsTableProps> = ({
                 Export
               </Button>
             )}
-            {onColumnsChange && columnOptions && columnOptions.length > 0 ? (
+            {hasColumnOptions ? (
               <Sheet>
                 <SheetTrigger asChild>
                   <Button
@@ -139,17 +211,11 @@ const JobsTable: React.FC<JobsTableProps> = ({
                     <SheetTitle>Manage Columns</SheetTitle>
                   </SheetHeader>
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    {columnOptions.map(option => (
+                    {optionsFromColumns.map(option => (
                       <label key={option.key} className="flex items-center gap-2 text-sm">
                         <Checkbox
                           checked={option.selected}
-                          onCheckedChange={() => {
-                            if (!onColumnsChange || !columnOptions) return;
-                            const nextOptions = columnOptions.map(opt =>
-                              opt.key === option.key ? { ...opt, selected: !opt.selected } : opt
-                            );
-                            onColumnsChange(nextOptions);
-                          }}
+                          onCheckedChange={() => handleColumnToggle(option.key)}
                         />
                         {option.label}
                       </label>
@@ -169,32 +235,35 @@ const JobsTable: React.FC<JobsTableProps> = ({
           <Table className="min-w-[900px] border-collapse" maxHeightClassName={maxHeightClassName}>
             <TableHeader className="sticky top-0 z-10">
               <TableRow className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
-                {columns.map((col, idx) => {
+                {visibleColumns.map((col, idx) => {
                   const sortKey =
                     col.sortKey ??
                     (typeof col.cell === "string" ? col.cell : undefined);
                   const isActive = !!sortKey && activeSortKey === sortKey;
+                  const fixedHeadClass = col.isFixed
+                    ? "sticky left-0 z-20 bg-slate-50 dark:bg-slate-800/50"
+                    : "";
                   return (
-                  <TableHead
-                    key={`${col.columnName}-${idx}`}
-                    className={`h-10 font-semibold text-slate-900 dark:text-slate-100 text-left align-middle select-none ${
-                      sortKey ? "cursor-pointer" : "cursor-default"
-                    }`}
-                    onClick={() => sortKey && onSort?.(sortKey)}
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      <span>{col.columnName}</span>
-                      {sortKey ? (
-                        <span
-                          className={`text-xs ${
-                            isActive ? "text-blue-600" : "text-slate-400"
-                          }`}
-                        >
-                          {isActive ? (sortDirection === "asc" ? "▲" : "▼") : "⇅"}
-                        </span>
-                      ) : null}
-                    </span>
-                  </TableHead>
+                    <TableHead
+                      key={`${col.columnName}-${idx}`}
+                      className={`h-10 font-semibold text-slate-900 dark:text-slate-100 text-left align-middle select-none ${
+                        sortKey ? "cursor-pointer" : "cursor-default"
+                      } ${fixedHeadClass}`}
+                      onClick={() => sortKey && onSort?.(sortKey)}
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        <span>{col.columnName}</span>
+                        {sortKey ? (
+                          <span
+                            className={`text-xs ${
+                              isActive ? "text-blue-600" : "text-slate-400"
+                            }`}
+                          >
+                            {isActive ? (sortDirection === "asc" ? "▲" : "▼") : "⇅"}
+                          </span>
+                        ) : null}
+                      </span>
+                    </TableHead>
                   );
                 })}
               </TableRow>
@@ -203,7 +272,7 @@ const JobsTable: React.FC<JobsTableProps> = ({
               {rows.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={columns.length}
+                    colSpan={visibleColumns.length}
                     className="py-20 text-center text-sm text-slate-500 dark:text-slate-400"
                   >
                     No records to show
@@ -213,18 +282,21 @@ const JobsTable: React.FC<JobsTableProps> = ({
                 rows.map(row => {
                   return (
                     <TableRow key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 border-b border-slate-100 dark:border-slate-700">
-                      {columns.map((col, idx) => {
+                      {visibleColumns.map((col, idx) => {
                         const content =
                           typeof col.cell === "function"
                             ? col.cell(row)
                             : row[col.cell as keyof typeof row];
+                        const fixedCellClass = col.isFixed
+                          ? "sticky left-0 z-10 bg-white dark:bg-slate-900"
+                          : "";
                         return (
                           <TableCell
                             key={`${col.columnName}-${row.id}-${idx}`}
-                            className={`py-3 align-top`}
+                            className={`py-3 align-top ${fixedCellClass}`}
                           >
                             {content}
-                      </TableCell>
+                          </TableCell>
                         );
                       })}
                     </TableRow>
