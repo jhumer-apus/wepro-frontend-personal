@@ -28,6 +28,9 @@ import { CustomerCard } from '@/src/components/customer/CustomerCard'
 import { CustomerT } from '@/src/types/customer'
 import { CustomerProfileView } from '@/src/components/customer/CustomerProfileView'
 import { SourceFilter } from '@/src/components/customer/SourceFilter'
+import DashboardFilter from '@/src/components/dashboardFilter/DashboardFilter'
+import { set } from 'react-hook-form'
+import SelectInput from '@/src/components/input/select'
 
 
 
@@ -40,11 +43,13 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
     null
   )
   const [searchTerm, setSearchTerm] = useState<string>('')
-  const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [toggleStatus, setToggleStatus] = useState<string>('')
   const [showProfile, setShowProfile] = useState<boolean>(false)
 
-  // Filters
-  const [sourceFilter, setSourceFilter] = useState<string>('all')
+  /* Filters */
+  const [moreFiltersData, setMoreFiltersData] = useState({
+    source: 'all',
+  })
 
   // Sortings
   const [sortKey, setSortKey] = useState<string | null>(null)
@@ -57,14 +62,23 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
       customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.phoneNumber?.includes(searchTerm)
 
-    const matchesSource = sourceFilter === 'all' || customer.sourceTitle === sourceFilter
+    const matchesSource = moreFiltersData.source === 'all' || customer.sourceTitle === moreFiltersData.source
 
-    return matchesSearch && matchesSource
+    const matchesStatus = toggleStatus === "" || customer.status === toggleStatus
+    return matchesSearch && matchesSource && matchesStatus
   })
 
-  const sources = Array.from(
+  const sources= Array.from(
     new Set(customersMockData.map(c => c.sourceTitle).filter(Boolean))
   )
+
+  const sourcesFormatted = [
+    { label: "All", value: "all" },
+    ...sources.map(source => ({
+      label: source,
+      value: source,
+    })),
+  ]
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -102,33 +116,67 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
     setShowProfile(true)
   }
 
+  const handleViewCustomer = (customer: CustomerT) => {
+    setSelectedCustomer(customer)
+    setShowProfile(true)
+  }
+
 
 
   const customerColumns = [
       {
+        columnName: "Serial No.",
+        sortKey: "serialNumber",
+        cell: (row: CustomerT) => (
+          <span className="whitespace-nowrap">
+            {row.serialNumber ?? "—"}
+          </span>
+        ),
+      },
+      {
         columnName: "Client",
-        cell: (row: CustomerT) => row.clientName ?? "—",
         sortKey: "clientName",
+        cell: (row: CustomerT) => (
+          <span className="whitespace-nowrap">
+            {row.clientName ?? "—"}
+          </span>
+        ),
       },
       {
         columnName: "Company",
-        cell: (row: CustomerT) => row.companyName ?? "—",
         sortKey: "companyName",
-      },
-      {
-        columnName: "Source",
-        cell: (row: CustomerT) => row.sourceTitle,
-        sortKey: "sourceTitle",
+        cell: (row: CustomerT) => (
+          <span className="whitespace-nowrap">
+            {row.companyName ?? "—"}
+          </span>
+        ),
       },
       {
         columnName: "Email",
-        cell: (row: CustomerT) => row.email ?? "—",
         sortKey: "email",
+        cell: (row: CustomerT) => (
+          <span className="whitespace-nowrap">
+            {row.email ?? "—"}
+          </span>
+        ),
       },
       {
         columnName: "Phone",
-        cell: (row: CustomerT) => row.phoneNumber ?? "—",
         sortKey: "phoneNumber",
+        cell: (row: CustomerT) => (
+          <span className="whitespace-nowrap">
+            {row.phoneNumber ?? "—"}
+          </span>
+        ),
+      },
+      {
+        columnName: "Source",
+        sortKey: "sourceTitle",
+        cell: (row: CustomerT) => (
+          <span className="whitespace-nowrap">
+            {row.sourceTitle}
+          </span>
+        ),
       },
       {
         columnName: "Unit",
@@ -147,7 +195,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
           <Button
             size="sm"
             variant="ghost"
-            // onClick={() => handleViewCustomer(row.id)}
+            onClick={() => handleViewCustomer(row)}
           >
             <Eye className="w-4 h-4" />
           </Button>
@@ -194,88 +242,51 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
   }
 
 
-
+  const toggleList = [
+    { label: "All", value: "" },
+    { label: "Active", value: "active" },
+    { label: "Inactive", value: "inactive" },
+  ]
 
   /* To Be Set Soon After Finishing Table */
-  // if (showProfile && selectedCustomer) {
-  //   return (
-  //     <CustomerProfileView 
-  //       selectedCustomer={selectedCustomer} 
-  //       setShowProfile={setShowProfile} 
-  //     />
-  //   )
-  // }
 
+  if (showProfile && selectedCustomer) {
+    return (
+      <CustomerProfileView 
+        selectedCustomer={selectedCustomer} 
+        setShowProfile={setShowProfile} 
+      />
+    )
+  }
+  
   return (
     <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-brandGreen-900 to-brandGreen-500 rounded-2xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">Customers</h1>
-              <p className="text-sm text-slate-600">
-                Manage customer relationships and history
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Badge className="bg-[#53a533]/10 text-[#2f5f1f] border-[#53a533]/20">
-              {totalCount} Total Customers
-            </Badge>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="wepro-button-gradient text-white shadow-lg hover:shadow-xl transition-all duration-200">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Customer
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add New Customer</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <Input placeholder="Full Name" />
-                  <Input placeholder="Email Address" />
-                  <Input placeholder="Phone Number" />
-                  <Textarea placeholder="Address" />
-                  <Button className="w-full bg-gradient-to-r from-[#53a533] to-[#53a533] text-white">
-                    Create Customer
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="bg-white/70 backdrop-blur-sm border-b border-slate-200 px-6 py-4">
-        <div className="flex items-center space-x-4">
-          {/* Search Input */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input
-              placeholder="Search customers by name, email, or phone..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="pl-10 bg-slate-50 border-slate-200 rounded-xl"
+      <DashboardFilter 
+        title='Customer Dashboard'
+        description='Manage customer relationships and history'
+        toggleList={toggleList}
+        searchQuery={searchTerm}
+        onChangeSearchQuery={setSearchTerm}
+        onToggleChange={setToggleStatus} 
+        toggleStatus={toggleStatus} 
+        moreFilters={
+          (
+            /* Source Filter */
+            <SelectInput
+              label="Source"
+              options={sourcesFormatted}
+              placeholder="All Source"
+              value={moreFiltersData.source}
+              onSelect={val => setMoreFiltersData(prev => ({
+                ...prev,
+                source: typeof val === "string" ? val : prev.source,
+              }))}
+              onSearch={() => {}}
             />
-          </div>
-          {/* Source Filter */}
-          <SourceFilter
-            sourceFilter={sourceFilter}
-            sources={sources}
-            onChange={(value) => {
-              setSourceFilter(value)
-              setCurrentPage(1)
-            }}
-          />
-        </div>
-      </div>
+          )
+        }     
+      />
 
       {/* Table */}
       <JobsTable

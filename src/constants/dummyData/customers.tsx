@@ -1,3 +1,5 @@
+import { CustomerT } from "@/src/types/customer"
+
 export interface Customer {
   id: string
   serialNumber?: number
@@ -54,7 +56,7 @@ export interface CallRecording {
 }
 
 // Mock customer data
-export const customersMockData: Customer[] = [
+export const customersMockData: CustomerT[] = [
   {
     id: "cst-001",
     serialNumber: 1,
@@ -65,6 +67,7 @@ export const customersMockData: Customer[] = [
     phoneNumber: "+63 912 345 6789",
     addressUnit: "Unit 502, ABC Tower",
     location: "Makati City, Philippines",
+    status: "active",
   },
   {
     id: "cst-002",
@@ -76,6 +79,7 @@ export const customersMockData: Customer[] = [
     phoneNumber: "+63 917 888 1234",
     addressUnit: "3rd Floor, BrightTech Building",
     location: "Quezon City, Philippines",
+    status: "inactive",
   },
   {
     id: "cst-003",
@@ -87,6 +91,7 @@ export const customersMockData: Customer[] = [
     phoneNumber: "+63 905 456 7890",
     addressUnit: "Warehouse 2, Industrial Park",
     location: "Cebu City, Philippines",
+    status: "active",
   },
   {
     id: "cst-004",
@@ -98,6 +103,7 @@ export const customersMockData: Customer[] = [
     phoneNumber: "+63 926 234 5678",
     addressUnit: "Suite 1201, Skyline Tower",
     location: "BGC, Taguig City",
+    status: "active",
   },
   {
     id: "cst-005",
@@ -109,6 +115,7 @@ export const customersMockData: Customer[] = [
     phoneNumber: "+63 998 765 4321",
     addressUnit: "Office 7B, Tan Plaza",
     location: "Davao City, Philippines",
+    status: "inactive",
   },
 ]
 

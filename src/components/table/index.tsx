@@ -233,7 +233,7 @@ const JobsTable: React.FC<JobsTableProps> = ({
         {/* Desktop table */}
         <div className="hidden md:block">
           <Table className="min-w-[900px] border-collapse" maxHeightClassName={maxHeightClassName}>
-            <TableHeader className="sticky top-0 z-10">
+            <TableHeader className="sticky top-0 z-10 whitespace-nowrap">
               <TableRow className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
                 {visibleColumns.map((col, idx) => {
                   const sortKey =
