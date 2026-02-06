@@ -1,5 +1,12 @@
 import { Job } from '@/src/constants/interface/jobs'
 
+const technicianPool = [
+  { name: "Alex Carter", avatar: "🛠️" },
+  { name: "Priya Patel", avatar: "🔧" },
+  { name: "Noah Bennett", avatar: "⚙️" },
+  { name: "Sofia Martinez", avatar: "🪛" },
+]
+
 const baseJobs: Job[] = [
   {
     id: "J-2024-001",
@@ -11,6 +18,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77001",
+    country: "USA",
     jobCategory: "Plumbing",
     jobType: "Repair",
     jobDescription: "Kitchen sink clogged, water backing up into dishwasher",
@@ -47,6 +55,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77002",
+    country: "USA",
     jobCategory: "HVAC",
     jobType: "Maintenance",
     jobDescription: "Annual AC maintenance and filter replacement",
@@ -78,6 +87,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77003",
+    country: "USA",
     jobCategory: "Electrical",
     jobType: "Installation",
     jobDescription: "Install new LED lighting system in office",
@@ -110,6 +120,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77004",
+    country: "USA",
     jobCategory: "Plumbing",
     jobType: "Emergency",
     jobDescription: "Burst pipe in basement, water damage",
@@ -145,6 +156,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77005",
+    country: "USA",
     jobCategory: "HVAC",
     jobType: "Repair",
     jobDescription: "AC not cooling, thermostat issues",
@@ -179,6 +191,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77006",
+    country: "USA",
     jobCategory: "Electrical",
     jobType: "Maintenance",
     jobDescription: "Monthly electrical system inspection",
@@ -215,6 +228,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77007",
+    country: "USA",
     jobCategory: "Plumbing",
     jobType: "Installation",
     jobDescription: "Install commercial dishwasher",
@@ -249,6 +263,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77008",
+    country: "USA",
     jobCategory: "HVAC",
     jobType: "Installation",
     jobDescription: "New furnace installation",
@@ -283,6 +298,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77009",
+    country: "USA",
     jobCategory: "Plumbing",
     jobType: "Emergency",
     jobDescription: "Burst pipe emergency call",
@@ -317,6 +333,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77010",
+    country: "USA",
     jobCategory: "Electrical",
     jobType: "Installation",
     jobDescription: "Office lighting upgrade",
@@ -351,6 +368,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77011",
+    country: "USA",
     jobCategory: "HVAC",
     jobType: "Repair",
     jobDescription: "Kitchen exhaust system repair",
@@ -385,6 +403,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77012",
+    country: "USA",
     jobCategory: "Plumbing",
     jobType: "Maintenance",
     jobDescription: "Annual plumbing inspection",
@@ -419,6 +438,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77013",
+    country: "USA",
     jobCategory: "Electrical",
     jobType: "Emergency",
     jobDescription: "Power outage in apartment",
@@ -453,6 +473,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77014",
+    country: "USA",
     jobCategory: "HVAC",
     jobType: "Installation",
     jobDescription: "New AC unit installation",
@@ -487,6 +508,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77015",
+    country: "USA",
     jobCategory: "Electrical",
     jobType: "Maintenance",
     jobDescription: "Museum lighting system maintenance",
@@ -521,6 +543,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77002",
+    country: "USA",
     jobCategory: "HVAC",
     jobType: "Maintenance",
     jobDescription: "Annual AC maintenance and filter replacement",
@@ -552,6 +575,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77003",
+    country: "USA",
     jobCategory: "Electrical",
     jobType: "Installation",
     jobDescription: "Install new LED lighting system in office",
@@ -584,6 +608,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77004",
+    country: "USA",
     jobCategory: "Plumbing",
     jobType: "Emergency",
     jobDescription: "Burst pipe in basement, water damage",
@@ -592,7 +617,7 @@ const baseJobs: Job[] = [
     assignedTechnician: "Mike Rodriguez",
     technicianAvatar: "🔧",
     startDate: "2024-01-15",
-    startTime: "ASAP",
+    startTime: "13:20",
     estimatedDuration: "3 hours",
     actualStartTime: "11:30",
     estimatedEndTime: "14:30",
@@ -617,6 +642,7 @@ const baseJobs: Job[] = [
     city: "Houston",
     state: "TX",
     zipCode: "77005",
+    country: "USA",
     jobCategory: "HVAC",
     jobType: "Repair",
     jobDescription: "AC not cooling, thermostat issues",
@@ -649,10 +675,13 @@ export const dummyJobs: Job[] = baseJobs.map((job, idx) => {
   const year = now.getFullYear()
   const month = now.getMonth() + 1 // 1-based
   const day = Math.min(idx + 1, 28) // keep within month
+  const techFromPool = technicianPool[(idx * 3 + job.id.length) % technicianPool.length]
 
   return {
     ...job,
     // Always use today's date for startDate so demo data stays current
     startDate: now.toISOString().split('T')[0],
+    assignedTechnician: techFromPool.name,
+    technicianAvatar: techFromPool.avatar,
   }
 })

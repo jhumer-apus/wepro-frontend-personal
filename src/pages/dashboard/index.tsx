@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import type { DateValueType } from 'react-tailwindcss-datepicker'
 import { JobStat } from '@/src/constants/interface/dashboard'
 import {
@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from '@/src/components/ui/select'
 import InputDatepicker from '@/src/components/input/datepicker'
+import SelectInput from '@/src/components/input/select'
 import {
   TrendingUp,
   TrendingDown,
@@ -62,7 +63,10 @@ import {
   Navigation,
   Receipt,
   Maximize2,
+  Minimize2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Sparkles,
   RefreshCw,
   Settings as SettingsIcon,
@@ -72,6 +76,7 @@ import {
   MapPin,
   User,
   Info,
+  X,
 } from 'lucide-react'
 
 type FranchiseKey = 'all' | 'franchise1' | 'franchise2'
@@ -160,7 +165,7 @@ const franchiseData: Record<FranchiseKey, FranchiseDataset> = {
     salesMetrics: [
       { name: 'Average Ticket', value: '$465', change: '+5.5%', changeType: 'positive' as const },
       { name: 'Jobs Completed', value: '14', change: '+1', changeType: 'positive' as const },
-      { name: 'Conversion Rate', value: '66.2%', change: '+2.3%', changeType: 'positive' as const },
+    { name: 'Cancellation Rate', value: '66.2%', change: '+2.3%', changeType: 'positive' as const, subtitle: '5 out of total 52 jobs' },
     ],
     upcomingAppointments: [
       {
@@ -243,7 +248,7 @@ const franchiseData: Record<FranchiseKey, FranchiseDataset> = {
     salesMetrics: [
       { name: 'Average Ticket', value: '$440', change: '+3.1%', changeType: 'positive' as const },
       { name: 'Jobs Completed', value: '11', change: '+1', changeType: 'positive' as const },
-      { name: 'Conversion Rate', value: '64.0%', change: '+1.2%', changeType: 'positive' as const },
+      { name: 'Cancellation Rate', value: '64.0%', change: '+1.2%', changeType: 'positive' as const, subtitle: '5 out of total 52 jobs' },
     ],
     upcomingAppointments: [
       {
@@ -359,7 +364,7 @@ const timeRangeData: Record<TimeRangeKey, Partial<FranchiseDataset>> = {
     salesMetrics: [
       { name: 'Average Ticket', value: '$505', change: '+9.1%', changeType: 'positive' as const },
       { name: 'Jobs Completed', value: '78', change: '+12', changeType: 'positive' as const },
-      { name: 'Conversion Rate', value: '69.8%', change: '+3.4%', changeType: 'positive' as const },
+      { name: 'Cancellation Rate', value: '69.8%', change: '+3.4%', changeType: 'positive' as const, subtitle: '5 out of total 52 jobs' },
     ],
     upcomingAppointments: [
       {
@@ -400,7 +405,7 @@ const timeRangeData: Record<TimeRangeKey, Partial<FranchiseDataset>> = {
     salesMetrics: [
       { name: 'Average Ticket', value: '$498', change: '+6.4%', changeType: 'positive' as const },
       { name: 'Jobs Completed', value: '71', change: '+7', changeType: 'positive' as const },
-      { name: 'Conversion Rate', value: '68.1%', change: '+2.1%', changeType: 'positive' as const },
+      { name: 'Cancellation Rate', value: '68.1%', change: '+2.1%', changeType: 'positive' as const, subtitle: '5 out of total 52 jobs' },
     ],
     upcomingAppointments: [
       {
@@ -544,7 +549,7 @@ const adjustValueString = (value: string, delta: number) => {
 
 const teamPhotos = [
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=128&h=128&fit=crop&crop=face',
-  'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=128&h=128&fit=crop&crop=face',
+  'https://t4.ftcdn.net/jpg/03/83/25/83/360_F_383258331_D8imaEMl8Q3lf7EKU2Pi78Cn0R7KkW9o.jpg',
   'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=128&h=128&fit=crop&crop=face',
   'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=128&h=128&fit=crop&crop=face',
 ]
@@ -622,6 +627,17 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
   const [photoIcons, setPhotoIcons] = useState<(google.maps.Icon | null)[]>([])
   const [mapFilter, setMapFilter] = useState<'all' | 'job' | 'technician'>('all')
   const [showInvoicesModal, setShowInvoicesModal] = useState(false)
+  const [showTopSourcesModal, setShowTopSourcesModal] = useState(false)
+  const [topSourcesPage, setTopSourcesPage] = useState(1)
+  const [showTopTechniciansModal, setShowTopTechniciansModal] = useState(false)
+  const [topTechniciansPage, setTopTechniciansPage] = useState(1)
+  const [showServiceAreasModal, setShowServiceAreasModal] = useState(false)
+  const [serviceAreasPage, setServiceAreasPage] = useState(1)
+  const [showTopJobTypesModal, setShowTopJobTypesModal] = useState(false)
+  const [topJobTypesPage, setTopJobTypesPage] = useState(1)
+  const [showMapModal, setShowMapModal] = useState(false)
+  const [showUpcomingModal, setShowUpcomingModal] = useState(false)
+  const [upcomingPage, setUpcomingPage] = useState(1)
   const [invoicePage, setInvoicePage] = useState(1)
 
   const allInvoices = [
@@ -636,10 +652,18 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
     { id: '#INV-2309', customer: 'Northside Retail', amount: '$1,540', status: 'Overdue', due: 'Mar 10' },
   ]
   const serviceAreas = [
-    { name: 'Houston Metro', jobs: 126, revenue: '$58,200', sla: '92% on-time', trend: '+4.3%' },
-    { name: 'Dallas Urban', jobs: 98, revenue: '$43,110', sla: '89% on-time', trend: '+3.1%' },
-    { name: 'Suburban Ring', jobs: 74, revenue: '$31,480', sla: '94% on-time', trend: '+2.4%' },
-    { name: 'Emergency Zone', jobs: 28, revenue: '$14,920', sla: '88% on-time', trend: '+6.8%' },
+    { name: 'Houston', totalJobs: 12, completedJobs: 3, cancellationRate: 8.33, revenue: '$850.00' },
+    { name: 'San Francisco Bay Area', totalJobs: 1, completedJobs: 0, cancellationRate: 100, revenue: '$0.00' },
+    { name: 'Dallas Urban', totalJobs: 4, completedJobs: 1, cancellationRate: 0, revenue: '$400.00' },
+    { name: 'Austin Metro', totalJobs: 3, completedJobs: 1, cancellationRate: 15, revenue: '$265.00' },
+    { name: 'Phoenix', totalJobs: 2, completedJobs: 0, cancellationRate: 50, revenue: '$180.00' },
+  ]
+  const topJobTypesData = [
+    { name: 'Car Lockout', totalJobs: 15, completedJobs: 1, cancellationRate: 0, revenue: '$100.00' },
+    { name: 'House Lockout', totalJobs: 10, completedJobs: 2, cancellationRate: 10, revenue: '$750.00' },
+    { name: 'Car Key', totalJobs: 7, completedJobs: 0, cancellationRate: 0, revenue: '$0.00' },
+    { name: 'Garage Door Repair', totalJobs: 3, completedJobs: 0, cancellationRate: 0, revenue: '$0.00' },
+    { name: 'Service', totalJobs: 3, completedJobs: 0, cancellationRate: 0, revenue: '$0.00' },
   ]
   const estimateInvoiceStats = [
     {
@@ -756,7 +780,85 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
       name: 'Locksmith GDS',
       note: 'No Stripe record setup for this dispatcher.',
     },
+    {
+      name: 'Rapid Response',
+      note: 'No Stripe record setup for this dispatcher.',
+    },
+    {
+      name: 'Metro Field Ops',
+      note: 'No Stripe record setup for this dispatcher.',
+    },
+    {
+      name: 'Evergreen Services',
+      note: 'No Stripe record setup for this dispatcher.',
+    },
   ]
+  const payoutsRef = useRef<HTMLDivElement | null>(null)
+  const [isDraggingPayouts, setIsDraggingPayouts] = useState(false)
+  const payoutDragStartX = useRef(0)
+  const payoutDragStartScroll = useRef(0)
+  const payoutDragMoved = useRef(false)
+  const [payoutScrollState, setPayoutScrollState] = useState({ canScrollLeft: false, canScrollRight: false })
+  const getPayoutStats = (name: string) => {
+    // Simulate missing Stripe setup for specific dispatchers (e.g., VS DISPATCH)
+    if (name.toLowerCase() === 'vs dispatch') return null
+    let hash = 0
+    for (let i = 0; i < name.length; i += 1) {
+      hash = (hash * 31 + name.charCodeAt(i)) % 100000
+    }
+    const balance = 10000 + (hash % 8000) + (hash % 97)
+    const feeRate = 0.015
+    const fee = balance * feeRate
+    const available = balance - fee
+    const fmt = (n: number) => n.toFixed(2)
+    return { balance: fmt(balance), available: fmt(available), fee: fmt(fee) }
+  }
+
+  const startPayoutDrag = (event: React.MouseEvent<HTMLDivElement>) => {
+    const container = payoutsRef.current
+    if (!container) return
+    setIsDraggingPayouts(true)
+    payoutDragStartX.current = event.clientX
+    payoutDragStartScroll.current = container.scrollLeft
+    payoutDragMoved.current = false
+    container.classList.add('cursor-grabbing', 'select-none')
+  }
+
+  const handlePayoutDrag = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDraggingPayouts) return
+    const container = payoutsRef.current
+    if (!container) return
+    const deltaX = event.clientX - payoutDragStartX.current
+    if (Math.abs(deltaX) > 3) {
+      payoutDragMoved.current = true
+    }
+    container.scrollLeft = payoutDragStartScroll.current - deltaX
+  }
+
+  const endPayoutDrag = () => {
+    if (!isDraggingPayouts) return
+    setIsDraggingPayouts(false)
+    payoutsRef.current?.classList.remove('cursor-grabbing', 'select-none')
+  }
+
+  const updatePayoutScrollState = () => {
+    const el = payoutsRef.current
+    if (!el) return
+    const { scrollLeft, scrollWidth, clientWidth } = el
+    setPayoutScrollState({
+      canScrollLeft: scrollLeft > 2,
+      canScrollRight: scrollLeft + clientWidth < scrollWidth - 2,
+    })
+  }
+
+  useEffect(() => {
+    updatePayoutScrollState()
+    const el = payoutsRef.current
+    if (!el) return
+    const onScroll = () => updatePayoutScrollState()
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [payoutDispatchers.length])
   const invoicePageSize = 5
   const invoicePageCount = Math.ceil(allInvoices.length / invoicePageSize)
   const paginatedInvoices = allInvoices.slice(
@@ -959,22 +1061,20 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                     <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
                       Dispatcher Type:
                     </span>
-                    <Select
+                  <div className="w-40">
+                    <SelectInput
                       value={dispatcherType}
-                    onValueChange={value => {
-                      setDispatcherType(value)
-                    }}
-                    >
-                      <SelectTrigger className="w-40 h-9">
-                        <SelectValue placeholder="All" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All</SelectItem>
-                        <SelectItem value="vs-dispatch">VS Dispatch</SelectItem>
-                        <SelectItem value="locksmith-24-7">LockSmith 24/7</SelectItem>
-                        <SelectItem value="locksmith-gds">Locksmith GDS</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      options={[
+                        { label: 'All', value: 'all' },
+                        { label: 'VS Dispatch', value: 'vs-dispatch' },
+                        { label: 'LockSmith 24/7', value: 'locksmith-24-7' },
+                        { label: 'Locksmith GDS', value: 'locksmith-gds' },
+                      ]}
+                      placeholder="All"
+                      onSelect={val => setDispatcherType(Array.isArray(val) ? (val[0] as string) : (val as string))}
+                      onSearch={() => {}}
+                    />
+                  </div>
                   </div>
 
                   {/* Date Range */}
@@ -1080,33 +1180,53 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
             </Card>
 
             {/* Top Lead Sources */}
-            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg mr-3">
-                    <Target className="w-5 h-5 text-white" />
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg mr-3">
+                      <Target className="w-5 h-5 text-white" />
+                    </div>
+                    Top Lead Sources
                   </div>
-                  Top Lead Sources
+                  {selectedData.topSources.length > 3 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs h-8 px-3"
+                      onClick={() => setShowTopSourcesModal(true)}
+                    >
+                      View All
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-            {selectedData.topSources.map(source => (
+                {selectedData.topSources.slice(0, 4).map(source => (
                   <div key={source.name} className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-                        {source.name}
-                      </span>
-                      <div className="text-right">
-                        <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                          {source.value}%
+                      <div className="text-left">
+                        <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 block">
+                          {source.name}
                         </span>
                         <p className="text-xs text-neutral-500">
-                          {source.count} leads • {source.revenue}
+                          {source.count} total jobs ({source.completed ?? 0} completed)
                         </p>
+                        <p className="text-xs text-neutral-500">
+                          Cancellation Rate
+                        </p>
+                        <p className="text-xs font-semibold text-emerald-600">
+                          {source.cancellationRate ?? source.value}%
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-bold text-emerald-600 dark:text-emerald-300">
+                          {source.revenue}
+                        </span>
                       </div>
                     </div>
                     <Progress
-                      value={parseFloat(source.value.toString())}
+                      value={parseFloat((source.cancellationRate ?? source.value).toString())}
                       className="h-3"
                     />
                   </div>
@@ -1137,6 +1257,11 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                       <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
                         {metric.value}
                       </p>
+                      {metric.subtitle ? (
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                          {metric.subtitle}
+                        </p>
+                      ) : null}
                     </div>
                     <div className="flex items-center space-x-1">
                       <TrendingUp className="w-4 h-4 text-emerald-500" />
@@ -1164,7 +1289,7 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-1 flex items-center">
+                    <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full h-8 flex items-center">
                       {[
                         { key: 'all', label: 'All' },
                         { key: 'job', label: 'Job' },
@@ -1174,7 +1299,7 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                           key={option.key}
                           size="sm"
                           variant={mapFilter === option.key ? 'default' : 'ghost'}
-                          className={`h-8 px-3 text-xs rounded-full ${
+                          className={`h-6 px-3 text-xs rounded-full ${
                             mapFilter === option.key
                               ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                               : 'text-neutral-600 dark:text-neutral-300'
@@ -1190,7 +1315,8 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="shadow-sm hover:shadow-md transition-all duration-200"
+                      className="shadow-sm hover:shadow-md transition-all duration-200 text-xs h-8 px-3"
+                      onClick={() => setShowMapModal(true)}
                     >
                       <Maximize2 className="w-4 h-4 mr-2" />
                       Full Screen
@@ -1228,18 +1354,11 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                       title={`${member.name}${member.job ? ` - Job ${member.job}` : ''}`}
                       animation={dropAnimation}
                       icon={photoIcons[index % photoIcons.length] || undefined}
-                      label={
-                        !photoIcons[index % photoIcons.length]
-                          ? {
-                              text: member.name
-                                .split(' ')
-                                .map(n => n[0])
-                                .join(''),
-                              className:
-                                'bg-white text-neutral-800 px-2 py-1 rounded-full text-[10px] font-semibold shadow-md',
-                            }
-                          : undefined
-                      }
+                      label={{
+                        text: member.name,
+                        className: 'text-xs font-semibold text-neutral-800 bg-white px-2 py-1 rounded-full shadow-sm mt-[80px]',
+                        color: '#0f172a',
+                      }}
                     />
                   ))}
                 </GoogleMap>
@@ -1300,11 +1419,6 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                   </div>
                 </div>
               </div>
-
-              {/* Live activity indicator */}
-              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
-                🔴 LIVE GPS TRACKING
-              </div>
             </div>
 
               </CardContent>
@@ -1323,7 +1437,12 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                       {selectedData.upcomingAppointments.length}
                     </Badge>
                   </div>
-                  <Button variant="outline" size="sm" className="text-xs h-8 px-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-8 px-3"
+                    onClick={() => setShowUpcomingModal(true)}
+                  >
                     View All
                   </Button>
                 </CardTitle>
@@ -1438,118 +1557,121 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
             </Card>
 
             {/* Top Technicians */}
-            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <div className="p-2 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg mr-3">
-                    <Star className="w-5 h-5 text-white" />
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg mr-3">
+                      <Star className="w-5 h-5 text-white" />
+                    </div>
+                    Top Technicians
                   </div>
-                  Top Technicians
+                  {selectedData.topTechnicians.length > 4 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs h-8 px-3"
+                      onClick={() => setShowTopTechniciansModal(true)}
+                    >
+                      View All
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {selectedData.topTechnicians.map((tech, index) => (
+              <CardContent className="space-y-4">
+                {selectedData.topTechnicians.slice(0, 3).map((tech, index) => {
+                  const cancellation = Number(tech.cancellationRate ?? 0)
+                  const totalJobs = Number(tech.totalJobs ?? tech.jobs ?? 0)
+                  const completedJobs = Number(tech.completedJobs ?? 0)
+                  const badgeTone =
+                    tech.status === 'Available'
+                      ? 'bg-green-100 text-green-800'
+                      : tech.status === 'On Job'
+                        ? 'bg-blue-100 text-blue-800'
+                        : tech.status === 'WA Group'
+                          ? 'bg-indigo-100 text-indigo-800'
+                          : 'bg-neutral-200 text-neutral-700'
+                  return (
                     <div
                       key={tech.name}
-                      className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800"
+                      className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/60"
                     >
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-bold text-sm">
-                          #{index + 1}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-neutral-900 dark:text-neutral-100 text-sm">
-                            {tech.name}
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-bold text-sm">
+                            #{index + 1}
                           </div>
-                          <div className="flex items-center space-x-2 text-xs text-neutral-500">
-                            <Badge
-                              variant={
-                                tech.status === 'Available'
-                                  ? 'default'
-                                  : tech.status === 'On Job'
-                                    ? 'secondary'
-                                    : 'outline'
-                              }
-                              className="text-xs"
-                            >
-                              {tech.status}
-                            </Badge>
-                            <span className="flex items-center">
-                              <Star className="w-3 h-3 text-yellow-400 mr-1" />
-                              {tech.rating}
-                            </span>
+                          <div>
+                            <div className="font-semibold text-neutral-900 dark:text-neutral-100 text-sm">
+                              {tech.name}
+                            </div>
+                            <div className="text-xs text-neutral-500">
+                              {totalJobs} total jobs ({completedJobs} completed)
+                            </div>
                           </div>
                         </div>
+                        <Badge className={`text-xs ${badgeTone}`}>{tech.status}</Badge>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-neutral-900 dark:text-neutral-100 text-sm">
-                          {tech.revenue}
-                        </div>
-                        <div className="text-xs text-neutral-500">
-                          {tech.jobs} jobs
-                        </div>
+                      <div className="mt-2 text-sm font-bold text-emerald-600 dark:text-emerald-300">
+                        {tech.revenue}
+                      </div>
+                      <div className="mt-1 text-xs text-neutral-500">Cancellation Rate</div>
+                      <Progress value={cancellation} className="h-2" />
+                      <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-300 mt-1">
+                        {cancellation.toFixed(2)}%
                       </div>
                     </div>
-                  ))}
-                </div>
+                  )
+                })}
               </CardContent>
             </Card>
 
             {/* Top Job Types */}
-            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg mr-3">
-                    <Wrench className="w-5 h-5 text-white" />
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg mr-3">
+                      <Wrench className="w-5 h-5 text-white" />
+                    </div>
+                    Top Job Types
                   </div>
-                  Top Job Types
+                  {topJobTypesData.length > 3 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs h-8 px-3"
+                      onClick={() => setShowTopJobTypesModal(true)}
+                    >
+                      View All
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {[
-                  {
-                    name: 'Garage Door Repair',
-                    percentage: 76.45,
-                    count: 189,
-                    revenue: '$92,450',
-                  },
-                  {
-                    name: 'Appliances',
-                    percentage: 12.3,
-                    count: 30,
-                    revenue: '$18,940',
-                  },
-                  {
-                    name: 'Air Duct Cleaning',
-                    percentage: 7.8,
-                    count: 19,
-                    revenue: '$12,180',
-                  },
-                  {
-                    name: 'Gate Repair',
-                    percentage: 3.45,
-                    count: 9,
-                    revenue: '$5,420',
-                  },
-                ].map(type => (
-                  <div key={type.name} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                        {type.name}
-                      </span>
-                      <div className="text-right">
-                        <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                          {type.percentage}%
+                {topJobTypesData.slice(0, 3).map(type => {
+                  const cancellation = Number(type.cancellationRate ?? 0)
+                  return (
+                    <div key={type.name} className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/60">
+                      <div className="flex items-start justify-between">
+                        <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                          {type.name}
                         </span>
-                        <div className="text-xs text-neutral-500">
-                          {type.count} jobs • {type.revenue}
-                        </div>
+                        <span className="text-sm font-bold text-emerald-600 dark:text-emerald-300">
+                          {type.revenue}
+                        </span>
+                      </div>
+                      <p className="text-xs text-neutral-500">
+                        {type.totalJobs ?? 0} total jobs ({type.completedJobs ?? 0} completed)
+                      </p>
+                      <p className="text-xs text-neutral-500 mt-1">Cancellation Rate</p>
+                      <Progress value={cancellation} className="h-2" />
+                      <div className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 mt-1">
+                        {cancellation.toFixed(2)}%
                       </div>
                     </div>
-                    <Progress value={type.percentage} className="h-3" />
-                  </div>
-                ))}
+                  )
+                })}
               </CardContent>
             </Card>
 
@@ -1584,6 +1706,12 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                       percentage: 4.5,
                       color: 'bg-red-500',
                     },
+                  {
+                    name: 'Completed Jobs',
+                    value: 142,
+                    percentage: 57.8,
+                    color: 'bg-emerald-500',
+                  },
                     {
                       name: 'Custom A',
                       value: 14,
@@ -1667,13 +1795,23 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
             </Card>
 
             {/* Estimates & Invoices Panel */}
-            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-3">
-                  <div className="p-2 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg">
-                    <Receipt className="w-5 h-5 text-white" />
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg">
+                      <Receipt className="w-5 h-5 text-white" />
+                    </div>
+                    <span>Estimates & Invoices</span>
                   </div>
-                  <span>Estimates & Invoices</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-8 px-3"
+                    onClick={() => setShowInvoicesModal(true)}
+                  >
+                    View All
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -1703,56 +1841,57 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                   </div>
                 ))}
               </CardContent>
-              <div className="px-6 pb-4 pt-1">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowInvoicesModal(true)}
-                >
-                  View All
-                </Button>
-              </div>
             </Card>
 
             {/* Service Areas */}
-            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="lg:col-span-4 border-0 shadow-lg hover:shadow-xl transition-all duration-300 relative">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg mr-3">
-                    <Map className="w-5 h-5 text-white" />
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg mr-3">
+                      <Map className="w-5 h-5 text-white" />
+                    </div>
+                    Service Areas
                   </div>
-                  Service Areas
+                  {serviceAreas.length > 3 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs h-8 px-3"
+                      onClick={() => setShowServiceAreasModal(true)}
+                    >
+                      View All
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {serviceAreas.map(area => (
-                  <div
-                    key={area.name}
-                    className="flex items-center justify-between p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                        {area.name}
-                      </p>
+                {serviceAreas.slice(0, 3).map(area => {
+                  const cancellation = Number(area.cancellationRate ?? 0)
+                  return (
+                    <div
+                      key={area.name}
+                      className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/60"
+                    >
+                      <div className="flex items-start justify-between">
+                        <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                          {area.name}
+                        </p>
+                        <p className="text-sm font-bold text-emerald-600 dark:text-emerald-300">
+                          {area.revenue}
+                        </p>
+                      </div>
                       <p className="text-xs text-neutral-500">
-                        {area.jobs} jobs • {area.revenue}
+                        {area.totalJobs ?? 0} total jobs ({area.completedJobs ?? 0} completed)
                       </p>
-                      <div className="flex items-center space-x-2 text-xs text-neutral-500 mt-1">
-                        <Badge variant="outline">{area.sla}</Badge>
-                        <span className="flex items-center text-emerald-600 font-medium">
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                          {area.trend}
-                        </span>
+                      <p className="text-xs text-neutral-500 mt-1">Cancellation Rate</p>
+                      <Progress value={cancellation} className="h-2" />
+                      <div className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 mt-1">
+                        {cancellation.toFixed(2)}%
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                        Coverage
-                      </p>
-                      <p className="text-xs text-neutral-500">Route ready</p>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </CardContent>
             </Card>
 
@@ -1773,34 +1912,677 @@ const DashboardIndex: React.FC = (): React.JSX.Element => {
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {payoutDispatchers.map(dispatcher => (
+              <CardContent className="space-y-3">
+                <div className="relative">
+                  {payoutScrollState.canScrollLeft && (
+                    <button
+                      type="button"
+                      className="absolute flex left-0 top-0 items-center bottom-0 z-10 w-16 bg-gradient-to-l from-transparent via-white/80 to-white dark:from-slate-900 dark:via-slate-900/80"
+                      onMouseDown={e => e.stopPropagation()}
+                      onClick={() => {
+                        payoutsRef.current?.scrollBy({ left: -260, behavior: 'smooth' })
+                        setTimeout(updatePayoutScrollState, 200)
+                      }}
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
+                  )}
+                  {payoutScrollState.canScrollRight && (
+                    <button
+                      type="button"
+                      className="absolute flex right-0 top-0 justify-end items-center bottom-0 z-10 w-16 bg-gradient-to-l from-white via-white/80 to-transparent dark:from-slate-900 dark:via-slate-900/80"
+                      onMouseDown={e => e.stopPropagation()}
+                      onClick={() => {
+                        payoutsRef.current?.scrollBy({ left: 260, behavior: 'smooth' })
+                        setTimeout(updatePayoutScrollState, 200)
+                      }}
+                    >
+                      <ChevronRight className="w-6 h-6" />
+                    </button>
+                  )}
                   <div
-                    key={dispatcher.name}
-                    className="rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm overflow-hidden"
+                    className="overflow-x-auto pb-2 cursor-grab scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    ref={payoutsRef}
+                    onMouseDown={startPayoutDrag}
+                    onMouseMove={handlePayoutDrag}
+                    onMouseUp={endPayoutDrag}
+                    onMouseLeave={endPayoutDrag}
                   >
-                    <div className="px-4 py-3 flex items-center justify-between bg-neutral-50 dark:bg-neutral-900/80">
-                      <div className="text-sky-700 dark:text-sky-200 font-semibold text-sm uppercase tracking-wide">
-                        {dispatcher.name}
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className="text-xs border-sky-300 text-sky-700 dark:text-sky-200 dark:border-sky-500 bg-sky-50 dark:bg-sky-900/20"
-                      >
-                        Action Required
-                      </Badge>
-                    </div>
-                    <div className="px-4 py-3 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-200 flex items-start gap-2 text-sm leading-relaxed border-t border-amber-100 dark:border-amber-800/60">
-                      <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-500 dark:text-amber-300" />
-                      <span>{dispatcher.note}</span>
+                    <div className="flex gap-4 min-w-full">
+                      {payoutDispatchers.map(dispatcher => (
+                        <div key={dispatcher.name}>
+                          <div
+                            className="min-w-[400px] flex flex-col rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm overflow-hidden h-full"
+                          >
+                            <div className="px-4 py-3 flex items-center justify-between bg-neutral-50 dark:bg-neutral-900/80 border-b border-neutral-100 dark:border-neutral-800/60">
+                              <div>
+                                <div className="text-sky-700 dark:text-sky-200 font-semibold text-sm uppercase tracking-wide">
+                                  {dispatcher.name}
+                                </div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400">
+                                  Payouts & Balances
+                                </div>
+                              </div>
+                            </div>
+                            {(() => {
+                              const stats = getPayoutStats(dispatcher.name)
+                              if (!stats) return null
+                              return (
+                                <div className="px-4 pt-4 pb-3 bg-sky-50 dark:bg-slate-900/40 border-b border-sky-100 dark:border-slate-800">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                      <p className="text-xs font-semibold text-slate-500">Current Balance</p>
+                                      <p className="text-2xl font-bold text-sky-800 dark:text-sky-200">${stats.balance} USD</p>
+                                    </div>
+                                    <div className="p-2 rounded-full bg-white shadow border border-sky-100 dark:bg-slate-800 dark:border-slate-700">
+                                      <CreditCard className="w-4 h-4 text-sky-500" />
+                                    </div>
+                                  </div>
+                                </div>
+                              )
+                            })()}
+                            {(() => {
+                              const stats = getPayoutStats(dispatcher.name)
+                              if (!stats) {
+                                return (
+                                  <div className="items-center justify-center flex-1 px-4 py-3 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-200 flex items-start gap-2 text-sm leading-relaxed border-t border-amber-100 dark:border-amber-800/60">
+                                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-500 dark:text-amber-300" />
+                                    <span>{dispatcher.note}</span>
+                                  </div>
+                                )
+                              }
+                              return (
+                                <div className="px-4 py-4 bg-emerald-50 dark:bg-emerald-900/20 border-t border-emerald-100 dark:border-emerald-800/60">
+                                  <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-200 uppercase tracking-wide">
+                                    Instant Payout Available Now
+                                  </p>
+                                  <p className="text-3xl font-bold text-emerald-800 dark:text-emerald-100 mt-1">
+                                    ${stats.available}
+                                  </p>
+                                  <p className="text-xs text-emerald-700 dark:text-emerald-200">
+                                    After 1.5% fee (${stats.fee})
+                                  </p>
+                                  <Button className="mt-3 w-full bg-emerald-500 hover:bg-emerald-600 text-white">
+                                    Payout Now
+                                  </Button>
+                                </div>
+                              )
+                            })()}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
+                </div>
               </CardContent>
             </Card>
 
           </div>
         </TabsContent>
+
+        {/* Top Sources modal */}
+        <Dialog
+          open={showTopSourcesModal}
+          onOpenChange={open => {
+            setShowTopSourcesModal(open)
+            if (!open) setTopSourcesPage(1)
+          }}
+        >
+          <DialogContent className="max-w-xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">All Top Sources</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {(() => {
+                const pageSize = 5
+                const sources = selectedData.topSources || []
+                const pageCount = Math.max(1, Math.ceil(sources.length / pageSize))
+                const page = Math.min(topSourcesPage, pageCount)
+                const slice = sources.slice((page - 1) * pageSize, page * pageSize)
+                return (
+                  <>
+                    {slice.map(source => (
+                <div key={source.name} className="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">{source.name}</p>
+                      <p className="text-xs text-neutral-500">
+                        {source.count} total jobs ({source.completed ?? 0} completed)
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-emerald-600 dark:text-emerald-300">{source.revenue}</p>
+                      <p className="text-xs text-neutral-500">Cancellation Rate</p>
+                      <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">
+                        {source.cancellationRate ?? source.value}%
+                      </p>
+                    </div>
+                  </div>
+                  <Progress
+                    value={parseFloat((source.cancellationRate ?? source.value).toString())}
+                    className="h-2"
+                  />
+                </div>
+              ))}
+                    <DialogFooter className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="text-xs text-neutral-500">
+                        Page {page} of {pageCount}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page <= 1}
+                          onClick={() => setTopSourcesPage(p => Math.max(1, p - 1))}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page >= pageCount}
+                          onClick={() => setTopSourcesPage(p => Math.min(pageCount, p + 1))}
+                        >
+                          Next
+                        </Button>
+                        <Button variant="outline" onClick={() => setShowTopSourcesModal(false)}>
+                          Close
+                        </Button>
+                      </div>
+                    </DialogFooter>
+                  </>
+                )
+              })()}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Top Technicians modal */}
+        <Dialog
+          open={showTopTechniciansModal}
+          onOpenChange={open => {
+            setShowTopTechniciansModal(open)
+            if (!open) setTopTechniciansPage(1)
+          }}
+        >
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">All Top Technicians</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {(() => {
+                const pageSize = 3
+                const techs = selectedData.topTechnicians || []
+                const pageCount = Math.max(1, Math.ceil(techs.length / pageSize))
+                const page = Math.min(topTechniciansPage, pageCount)
+                const slice = techs.slice((page - 1) * pageSize, page * pageSize)
+                return (
+                  <>
+                    {slice.map((tech, idx) => {
+                      const cancellation = Number(tech.cancellationRate ?? 0)
+                      const totalJobs = Number(tech.totalJobs ?? tech.jobs ?? 0)
+                      const completedJobs = Number(tech.completedJobs ?? 0)
+                      const badgeTone =
+                        tech.status === 'Available'
+                          ? 'bg-green-100 text-green-800'
+                          : tech.status === 'On Job'
+                            ? 'bg-blue-100 text-blue-800'
+                            : tech.status === 'WA Group'
+                              ? 'bg-indigo-100 text-indigo-800'
+                              : 'bg-neutral-200 text-neutral-700'
+                      return (
+                        <div
+                          key={tech.name}
+                          className="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/40 space-y-1.5"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-bold text-sm">
+                                #{(page - 1) * pageSize + idx + 1}
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">
+                                  {tech.name}
+                                </p>
+                                <p className="text-xs text-neutral-500">
+                                  {totalJobs} total jobs ({completedJobs} completed)
+                                </p>
+                              </div>
+                            </div>
+                            <Badge className={`text-xs ${badgeTone}`}>{tech.status}</Badge>
+                          </div>
+                          <div className="text-sm font-bold text-emerald-600 dark:text-emerald-300">
+                            {tech.revenue}
+                          </div>
+                          <div className="text-xs text-neutral-500">Cancellation Rate</div>
+                          <Progress value={cancellation} className="h-2" />
+                          <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">
+                            {cancellation.toFixed(2)}%
+                          </div>
+                        </div>
+                      )
+                    })}
+                    <DialogFooter className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="text-xs text-neutral-500">
+                        Page {page} of {pageCount}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page <= 1}
+                          onClick={() => setTopTechniciansPage(p => Math.max(1, p - 1))}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page >= pageCount}
+                          onClick={() => setTopTechniciansPage(p => Math.min(pageCount, p + 1))}
+                        >
+                          Next
+                        </Button>
+                        <Button variant="outline" onClick={() => setShowTopTechniciansModal(false)}>
+                          Close
+                        </Button>
+                      </div>
+                    </DialogFooter>
+                  </>
+                )
+              })()}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Service Areas modal */}
+        <Dialog
+          open={showServiceAreasModal}
+          onOpenChange={open => {
+            setShowServiceAreasModal(open)
+            if (!open) setServiceAreasPage(1)
+          }}
+        >
+          <DialogContent className="max-w-xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">All Service Areas</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {(() => {
+                const pageSize = 4
+                const areas = serviceAreas || []
+                const pageCount = Math.max(1, Math.ceil(areas.length / pageSize))
+                const page = Math.min(serviceAreasPage, pageCount)
+                const slice = areas.slice((page - 1) * pageSize, page * pageSize)
+                return (
+                  <>
+                    {slice.map(area => {
+                      const cancellation = Number(area.cancellationRate ?? 0)
+                      return (
+                        <div
+                          key={area.name}
+                          className="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/40 space-y-1.5"
+                        >
+                          <div className="flex items-start justify-between">
+                            <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">
+                              {area.name}
+                            </p>
+                            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-300">
+                              {area.revenue}
+                            </p>
+                          </div>
+                          <p className="text-xs text-neutral-500">
+                            {area.totalJobs ?? 0} total jobs ({area.completedJobs ?? 0} completed)
+                          </p>
+                          <p className="text-xs text-neutral-500">Cancellation Rate</p>
+                          <Progress value={cancellation} className="h-2" />
+                          <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">
+                            {cancellation.toFixed(2)}%
+                          </div>
+                        </div>
+                      )
+                    })}
+                    <DialogFooter className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="text-xs text-neutral-500">
+                        Page {page} of {pageCount}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page <= 1}
+                          onClick={() => setServiceAreasPage(p => Math.max(1, p - 1))}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page >= pageCount}
+                          onClick={() => setServiceAreasPage(p => Math.min(pageCount, p + 1))}
+                        >
+                          Next
+                        </Button>
+                        <Button variant="outline" onClick={() => setShowServiceAreasModal(false)}>
+                          Close
+                        </Button>
+                      </div>
+                    </DialogFooter>
+                  </>
+                )
+              })()}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Top Job Types modal */}
+        <Dialog
+          open={showTopJobTypesModal}
+          onOpenChange={open => {
+            setShowTopJobTypesModal(open)
+            if (!open) setTopJobTypesPage(1)
+          }}
+        >
+          <DialogContent className="max-w-xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">All Top Job Types</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {(() => {
+                const pageSize = 4
+                const types = topJobTypesData || []
+                const pageCount = Math.max(1, Math.ceil(types.length / pageSize))
+                const page = Math.min(topJobTypesPage, pageCount)
+                const slice = types.slice((page - 1) * pageSize, page * pageSize)
+                return (
+                  <>
+                    {slice.map(type => {
+                      const cancellation = Number(type.cancellationRate ?? 0)
+                      return (
+                        <div key={type.name} className="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/40 space-y-1.5">
+                          <div className="flex items-start justify-between">
+                            <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">
+                              {type.name}
+                            </span>
+                            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-300">
+                              {type.revenue}
+                            </span>
+                          </div>
+                          <p className="text-xs text-neutral-500">
+                            {type.totalJobs ?? 0} total jobs ({type.completedJobs ?? 0} completed)
+                          </p>
+                          <p className="text-xs text-neutral-500">Cancellation Rate</p>
+                          <Progress value={cancellation} className="h-2" />
+                          <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-300">
+                            {cancellation.toFixed(2)}%
+                          </div>
+                        </div>
+                      )
+                    })}
+                    <DialogFooter className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="text-xs text-neutral-500">
+                        Page {page} of {pageCount}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page <= 1}
+                          onClick={() => setTopJobTypesPage(p => Math.max(1, p - 1))}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={page >= pageCount}
+                          onClick={() => setTopJobTypesPage(p => Math.min(pageCount, p + 1))}
+                        >
+                          Next
+                        </Button>
+                        <Button variant="outline" onClick={() => setShowTopJobTypesModal(false)}>
+                          Close
+                        </Button>
+                      </div>
+                    </DialogFooter>
+                  </>
+                )
+              })()}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Upcoming Jobs modal */}
+        <Dialog
+          open={showUpcomingModal}
+          onOpenChange={open => {
+            setShowUpcomingModal(open)
+            if (!open) setUpcomingPage(1)
+          }}
+        >
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">All Upcoming Jobs</DialogTitle>
+            </DialogHeader>
+            {(() => {
+              const pageSize = 6
+              const jobs = selectedData.upcomingAppointments || []
+              const pageCount = Math.max(1, Math.ceil(jobs.length / pageSize))
+              const page = Math.min(upcomingPage, pageCount)
+              const slice = jobs.slice((page - 1) * pageSize, page * pageSize)
+              return (
+                <>
+                  <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+                    {slice.map((appointment, index) => {
+                      const jobId = (appointment as any).jobId || appointment.customer
+                      const clientName =
+                        (appointment as any).clientName ||
+                        appointment.service ||
+                        appointment.customer
+                      const tag = (appointment as any).tag
+                      const tagTone = (appointment as any).tagTone || 'bg-blue-500'
+                      const statusTag =
+                        (appointment as any).statusTag || appointment.status
+                      const statusTone =
+                        (appointment as any).statusTone || 'bg-orange-500'
+                      const source =
+                        (appointment as any).source ||
+                        (appointment as any).technician ||
+                        ''
+                      const agent = (appointment as any).agent || ''
+                      const address = (appointment as any).address || 'No Address'
+                      const timeWindow =
+                        (appointment as any).timeWindow || appointment.time
+                      const relativeTime =
+                        (appointment as any).relativeTime ||
+                        (appointment as any).statusTime ||
+                        ''
+                      return (
+                        <div
+                          key={`${jobId}-${index}`}
+                          className="p-4 rounded-xl bg-gradient-to-r from-white to-neutral-50 dark:from-neutral-800 dark:to-neutral-900 shadow-sm border border-neutral-200 dark:border-neutral-700 space-y-2"
+                        >
+                          <div className="flex flex-row justify-between">
+                            <div className="flex flex-col space-y-0.5">
+                              <p className="text-sm uppercase font-semibold text-emerald-600 dark:text-neutral-100 mb-1">
+                                {jobId}
+                              </p>
+                              <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                {clientName}
+                              </p>
+                              
+                              <div className='flex flex-row gap-1'>
+                                <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+                                  Source:
+                                </span>
+                                <span className="text-xs text-neutral-700 dark:text-neutral-300">
+                                  {source || '—'}
+                                </span>
+                              </div>
+                              {agent ? (
+                                <div className='flex flex-row gap-1 items-center'>
+                                  <User className="w-3 h-3 text-neutral-700" />
+                                  <span className="text-xs text-neutral-700 dark:text-neutral-300">
+                                    {agent}
+                                  </span>
+                                </div>
+                              ) : null}
+                              <p className="text-xs text-neutral-500">{address}</p>
+                            </div>
+                            <div className="flex flex-row gap-2">
+                              <div>
+                                {tag ? (
+                                  <Badge
+                                    className={`text-xs ${tagTone} py-1`}
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ) : null}
+                              </div>
+                              <div>
+                                <Badge
+                                  className={`text-xs ${statusTone} py-1`}
+                                >
+                                  {statusTag}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-600 dark:text-neutral-300">
+                            <span className="inline-flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-full px-2 py-1">
+                              <Calendar className="w-3.5 h-3.5 text-neutral-500" />
+                              {timeWindow}
+                            </span>
+                            {relativeTime ? (
+                              <span className="inline-flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-full px-2 py-1">
+                                <Clock className="w-3.5 h-3.5 text-amber-500" />
+                                {relativeTime}
+                              </span>
+                            ) : null}
+                            {source ? (
+                              <span className="inline-flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-full px-2 py-1">
+                                <User className="w-3.5 h-3.5 text-neutral-500" />
+                                {source}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <DialogFooter className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="text-xs text-neutral-500">
+                      Page {Math.min(upcomingPage, Math.max(1, Math.ceil((selectedData.upcomingAppointments || []).length / 6)))} of {Math.max(1, Math.ceil((selectedData.upcomingAppointments || []).length / 6))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={upcomingPage <= 1}
+                        onClick={() => setUpcomingPage(p => Math.max(1, p - 1))}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={upcomingPage >= Math.max(1, Math.ceil((selectedData.upcomingAppointments || []).length / 6))}
+                        onClick={() => setUpcomingPage(p => Math.min(Math.max(1, Math.ceil((selectedData.upcomingAppointments || []).length / 6)), p + 1))}
+                      >
+                        Next
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowUpcomingModal(false)}>
+                        Close
+                      </Button>
+                    </div>
+                  </DialogFooter>
+                </>
+              )
+            })()}
+          </DialogContent>
+        </Dialog>
+
+        {/* Map Fullscreen modal */}
+        <Dialog open={showMapModal} onOpenChange={setShowMapModal} modal>
+          <DialogContent className="max-w-[100vw] w-[100vw] h-[100vh] [&>button]:hidden flex flex-col rounded-none sm:rounded-none">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold flex flex-row items-center justify-between gap-2">
+                <div className="flex flex-row items-center gap-2">
+                  <Map className="w-4 h-4" />
+                  Team Map - Full Screen
+                </div>
+                <div className="flex items-center justify-between px-1 gap-2">
+                  <div className="bg-neutral-100 dark:bg-neutral-800 rounded-full p-1 flex items-center">
+                    {[
+                      { key: 'all', label: 'All' },
+                      { key: 'job', label: 'Job' },
+                      { key: 'technician', label: 'Technician' },
+                    ].map(option => (
+                      <Button
+                        key={option.key}
+                        size="sm"
+                        variant={mapFilter === option.key ? 'default' : 'ghost'}
+                        className={`h-8 px-3 text-xs rounded-full ${
+                          mapFilter === option.key
+                            ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                            : 'text-neutral-600 dark:text-neutral-300'
+                        }`}
+                        onClick={() => setMapFilter(option.key as 'all' | 'job' | 'technician')}
+                      >
+                        {option.label}
+                      </Button>
+                    ))}
+                  </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shadow-sm hover:shadow-md rounded-full transition-all duration-200 text-xs h-10 w-10"
+                      onClick={() => setShowMapModal(false)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800">
+              {isLoaded ? (
+                <GoogleMap
+                  mapContainerStyle={{ width: '100%', height: '100%' }}
+                  center={mapCenter}
+                  zoom={12}
+                  options={{
+                    disableDefaultUI: false,
+                    zoomControl: true,
+                    streetViewControl: false,
+                    mapTypeControl: false,
+                    fullscreenControl: false,
+                  }}
+                >
+                  {teamMembers.map((member, idx) => {
+                    const icon = photoIcons[idx]
+                    return (
+                      <Marker
+                        key={member.name}
+                        position={{
+                          lat: mapCenter.lat + (member.offset?.lat ?? 0),
+                          lng: mapCenter.lng + (member.offset?.lng ?? 0),
+                        }}
+                        icon={icon ?? undefined}
+                        label={{
+                          text: member.name,
+                          className: 'text-xs font-semibold text-neutral-800 bg-white px-2 py-1 rounded-full shadow-sm mt-[80px]',
+                          color: '#0f172a',
+                        }}
+                      />
+                    )
+                  })}
+                </GoogleMap>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-neutral-500">Loading map...</div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <TabsContent value="assistant" className="space-y-6">
           {/* WePro AI Assistant */}

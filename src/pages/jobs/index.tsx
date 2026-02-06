@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { type DateValueType } from "react-tailwindcss-datepicker";
 import InputDatepicker from "@/src/components/input/datepicker";
 import { useRouter } from "next/router";
@@ -2134,7 +2134,7 @@ export default function Jobs() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [showJobDetails, setShowJobDetails] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(true);
   const [editFormData, setEditFormData] = useState({});
   const [activeTab, setActiveTab] = useState('details');
   const [boardStatusFilter, setBoardStatusFilter] = useState<string>('All');
@@ -2277,6 +2277,13 @@ export default function Jobs() {
     { label: 'Contract', value: 'contract' },
   ];
   const quickDispatchOptions = ['Dispatch 1', 'Dispatch 2', 'Dispatch 3'];
+  const technicianOptions = useMemo(() => {
+    const names = new Set<string>();
+    dummyJobs.forEach((job: Job) => {
+      if (job.assignedTechnician) names.add(job.assignedTechnician);
+    });
+    return Array.from(names);
+  }, []);
   useEffect(() => {
     if (selectedDateRange === 'custom-picker') return;
     const presetRange = getRangeDates(selectedDateRange);
@@ -2767,7 +2774,7 @@ export default function Jobs() {
   };
 
   // Helper function to get time until scheduled
-  const getTimeUntil = (scheduledTime: Date) => {
+  const getTimeUntil = (scheduledTime: Date) => {console.log(scheduledTime, 'lll')
     const now = new Date();
     const diffMs = scheduledTime.getTime() - now.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -2914,7 +2921,7 @@ export default function Jobs() {
   const handleSave = () => {
     // Here you would typically save to backend
     console.log('Saving job data:', editFormData);
-    setIsEditing(false);
+    setIsEditing(true);
     // Update the selectedJob with new data
     // setSelectedJob(editFormData);
   };
@@ -3051,9 +3058,9 @@ export default function Jobs() {
 
   const renderJobDetails = () => (
     <Dialog open={showJobDetails} onOpenChange={setShowJobDetails}>
-      <DialogContent className="w-full max-w-4xl mx-auto p-0 rounded-2xl shadow-2xl border bg-white overflow-y-auto max-h-[90vh]">
+      <DialogContent className="max-w-[100vw] w-[100vw] h-[100vh] [&>button]:hidden rounded-none sm:rounded-none mx-auto p-0 shadow-2xl border bg-white overflow-hidden flex flex-col">
         {selectedJob && (
-          <div className="flex flex-col min-h-0">
+          <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
             {/* Header with Job ID and Actions */}
             <div className="flex items-center justify-between px-6 py-4 border-b bg-white sticky top-0 z-10">
               <div className="flex items-center gap-3">
@@ -3072,40 +3079,30 @@ export default function Jobs() {
                 </Badge>
               </div>
               <div className="flex items-center gap-2">
-                {isEditing ? (
-                  <>
-                    <Button size="sm" onClick={handleSave} className="bg-green-600 hover:bg-green-700">
-                      Save
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>
-                      Cancel
-                    </Button>
-                  </>
-                ) : (
-                  <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
-                    <Edit className="w-4 h-4 mr-1" />
-                    Edit
-                  </Button>
-                )}
                 <Button variant="outline" size="sm">Invoice</Button>
                 <Button variant="outline" size="sm">Logs</Button>
-                <Button variant="ghost" size="icon" onClick={() => setShowJobDetails(false)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shadow-sm hover:shadow-md rounded-full transition-all duration-200 text-xs h-9 w-9"
+                  onClick={() => setShowJobDetails(false)}
+                >
                   <X className="w-4 h-4" />
                 </Button>
               </div>
             </div>
 
             {/* Tabs */}
-            <div className="border-b">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+            <div className="flex-1 flex flex-col min-h-0 border-b overflow-hidden">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 w-full">
+                <TabsList className="grid w-full grid-cols-3 shrink-0">
                   <TabsTrigger value="details">Details</TabsTrigger>
                   <TabsTrigger value="activity">Activity</TabsTrigger>
                   <TabsTrigger value="financials">Financials</TabsTrigger>
                 </TabsList>
 
                 {/* Details Tab */}
-                <TabsContent value="details" className="p-6 space-y-6">
+                <TabsContent value="details" className="flex-1 min-h-0 overflow-y-auto p-6 pb-4 space-y-6 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Client Information */}
                     <Card>
@@ -3192,7 +3189,7 @@ export default function Jobs() {
                             <div className="mt-1 text-sm">{selectedJob.location}</div>
                           )}
                         </div>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-4 gap-3">
                           <div>
                             <Label className="text-sm font-medium">City</Label>
                             {isEditing ? (
@@ -3227,6 +3224,18 @@ export default function Jobs() {
                               />
                             ) : (
                               <div className="mt-1 text-sm">{selectedJob.zipCode}</div>
+                            )}
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium">Country</Label>
+                            {isEditing ? (
+                              <Input 
+                                value={editFormData.country || ''} 
+                                onChange={(e) => handleEditChange('country', e.target.value)}
+                                className="mt-1"
+                              />
+                            ) : (
+                              <div className="mt-1 text-sm">{(selectedJob as { country?: string }).country ?? 'USA'}</div>
                             )}
                           </div>
                         </div>
@@ -3475,10 +3484,18 @@ export default function Jobs() {
                       </div>
                     </CardContent>
                   </Card>
+                  {/* Footer */}
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+                        Save
+                      </Button>
+                    </div>
+                  </div>
                 </TabsContent>
 
                 {/* Activity Tab */}
-                <TabsContent value="activity" className="p-6">
+                <TabsContent value="activity" className="flex-1 min-h-0 overflow-y-auto p-6 pb-4 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -3570,10 +3587,18 @@ export default function Jobs() {
                       </div>
                     </CardContent>
                   </Card>
+                  {/* Footer */}
+                  <div className="flex items-center justify-end gap-3 pt-4 mt-4 border-t">
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+                        Save
+                      </Button>
+                    </div>
+                  </div>
                 </TabsContent>
 
                 {/* Financials Tab */}
-                <TabsContent value="financials" className="p-6">
+                <TabsContent value="financials" className="flex-1 flex flex-col justify-between min-h-0 overflow-y-auto p-6 pb-4 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <Card>
                       <CardHeader>
@@ -3609,6 +3634,14 @@ export default function Jobs() {
                         <div className="text-sm text-gray-500">No payments recorded yet.</div>
                       </CardContent>
                     </Card>
+                  </div>
+                  {/* Footer */}
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+                        Save
+                      </Button>
+                    </div>
                   </div>
                 </TabsContent>
               </Tabs>
@@ -3889,7 +3922,7 @@ export default function Jobs() {
               <MapPin className="w-4 h-4" />
               <span className="truncate">{row.location}</span>
               <span className="text-xs text-slate-500">
-                {row.city}, {row.state} {row.zipCode}
+                {row.city}, {row.state} {row.zipCode}{(row as { country?: string }).country ? `, ${(row as { country?: string }).country}` : ', USA'}
               </span>
             </div>
 
@@ -3958,6 +3991,7 @@ export default function Jobs() {
         ),
       },
       {
+        // isFixed: true,
         columnName: "Job Details",
         sortKey: "jobType",
         cell: (row) => {
@@ -3968,7 +4002,7 @@ export default function Jobs() {
                 <div className="flex items-center space-x-2">
                   <button
                     type="button"
-                    onClick={() => window.open(`/jobs/${row.id}/view`, '_blank')}
+                    onClick={() => { setSelectedJob(row); setShowJobDetails(true); }}
                     className={`${density === 'ultra' ? 'h-7 px-3' : density === 'compact' ? 'h-8 px-3' : 'h-7 px-4'} bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
                   >
                     <span className={`whitespace-nowrap text-white font-semibold ${secondaryTextClass}`}>
@@ -3993,7 +4027,7 @@ export default function Jobs() {
                   <div className="flex flex-row gap-2 items-center">
                     <p
                       className={`${primaryTextClass} font-semibold text-slate-900 dark:text-slate-100 truncate cursor-pointer hover:underline`}
-                      onClick={() => window.open(`/jobs/${row.id}/view`, '_blank')}
+                      onClick={() => { setSelectedJob(row); setShowJobDetails(true); }}
                     >
                       {row.jobType}
                     </p>
@@ -4006,7 +4040,7 @@ export default function Jobs() {
                   </div>
                   <p
                     className={`${secondaryTextClass} text-slate-700 dark:text-slate-300 truncate cursor-pointer hover:underline`}
-                    onClick={() => window.open(`/jobs/${row.id}/view`, '_blank')}
+                    onClick={() => { setSelectedJob(row); setShowJobDetails(true); }}
                   >
                     {row.jobDescription}
                   </p>
@@ -4077,9 +4111,12 @@ export default function Jobs() {
                   </div>
                   {new Date(`${row.startDate} ${row.startTime}`) < new Date() && <div className="w-2 h-2 bg-red-500 rounded-full" />}
                 </div>
-                <div className={`whitespace-nowrap text-sm font-bold ${new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                <Badge
+                  variant="outline"
+                  className={`border-transparent whitespace-nowrap text-[10px] text-white ${new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'}`}
+                >
                   {new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'PAST DUE' : timeUntilScheduled}
-                </div>
+                </Badge>
               </div>
               <div className="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
                 Duration: {row.estimatedDuration}
@@ -4095,7 +4132,7 @@ export default function Jobs() {
           <div className={`${density === 'ultra' ? 'space-y-0.5' : 'space-y-1.5'}`}>
             <p className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} text-slate-700 dark:text-slate-300 truncate`}>{row.location}</p>
             <p className={`${density === 'ultra' ? 'text-[10px]' : 'text-sm'} text-slate-600 dark:text-slate-400 truncate`}>
-              {row.city}, {row.state} {row.zipCode}
+              {row.city}, {row.state} {row.zipCode}{(row as { country?: string }).country ? `, ${(row as { country?: string }).country}` : ', USA'}
             </p>
           </div>
         ),
@@ -4158,12 +4195,19 @@ export default function Jobs() {
         sortKey: "assignedTechnician",
         cell: (row) => (
           <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
-            <div className="flex items-center space-x-2">
-              <User className={`w-3.5 h-3.5 ${row.assignedTechnician ? 'text-green-500' : 'text-red-500'}`} />
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedRows(new Set([row.id]));
+                setShowAssignTech(true);
+              }}
+              className="flex items-center space-x-2 text-left hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded px-1 -mx-1"
+            >
+              <User className={`w-3.5 h-3.5 shrink-0 ${row.assignedTechnician ? 'text-green-500' : 'text-red-500'}`} />
               <span className={`${density === 'ultra' ? 'text-[11px]' : 'text-sm'} font-medium ${row.assignedTechnician ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'} truncate`}>
                 {row.assignedTechnician ? `Assigned: ${row.assignedTechnician}` : 'UNASSIGNED'}
               </span>
-            </div>
+            </button>
           </div>
         ),
       },
@@ -4393,7 +4437,6 @@ export default function Jobs() {
               <InputDatepicker
                 value={dateRangeValue}
                 onChange={handleDateRangeChange}
-                disabled={selectedDateRange !== 'custom-picker'}
                 label={"Date Range"}
               />
               <SelectInput
@@ -4446,6 +4489,19 @@ export default function Jobs() {
                 placeholder="All Sources"
                 value={quickSingleChoice}
                 onSelect={val => setQuickSingleChoice(Array.isArray(val) ? (val[0] ?? '') : val)}
+                onSearch={() => {}}
+              />
+              <SelectInput
+                label="Technician"
+                options={[
+                  { label: "All technicians", value: "all" },
+                  { label: "Assigned", value: "assigned" },
+                  { label: "Unassigned", value: "unassigned" },
+                  ...technicianOptions.map(name => ({ label: name, value: name })),
+                ]}
+                placeholder="All technicians"
+                value={assignedTechFilter}
+                onSelect={val => setAssignedTechFilter(Array.isArray(val) ? (val[0] ?? "all") : val)}
                 onSearch={() => {}}
               />
             </div>
@@ -4581,6 +4637,13 @@ export default function Jobs() {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAssignTech(true)}
+                  disabled={selectedRows.size === 0}
+                >
+                  Assign Technician ({selectedRows.size})
+                </Button>
                 <div className="flex items-center gap-2 bg-gray-200 rounded-md">
                   <Button
                     variant="outline"
@@ -4641,6 +4704,7 @@ export default function Jobs() {
         {/* Premium Table View with Status Grouping */}
         {/* Table (companies-style) */}
         <Table
+          key={router.pathname}
           rows={pagedJobs}
           mobileRows={mobileJobs}
           columns={tableColumns}
@@ -4661,6 +4725,7 @@ export default function Jobs() {
           onExport={handleExport}
           onColumnsChange={handleColumnOptionsChange}
           columnOptions={tableColumnOptions}
+          tableKey={router.pathname}
         />
       </div>
     );
@@ -4746,7 +4811,15 @@ export default function Jobs() {
     setShowAddNote(false);
   };
   const handleAssignTech = () => {
-    // Assign tech logic here
+    if (!selectedTech || selectedRows.size === 0) return;
+    setJobs(prev =>
+      prev.map(job =>
+        selectedRows.has(job.id)
+          ? { ...job, assignedTechnician: selectedTech }
+          : job,
+      ),
+    );
+    setSelectedRows(new Set());
     setShowAssignTech(false);
     setSelectedTech('');
   };
@@ -5558,6 +5631,37 @@ export default function Jobs() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+  {/* Assign Technician Modal */}
+  <Dialog open={showAssignTech} onOpenChange={setShowAssignTech}>
+    <DialogContent className="max-w-sm">
+      <DialogHeader>
+        <DialogTitle>Assign Technician</DialogTitle>
+        <DialogDescription>
+        Selected jobs: {selectedRows.size}
+        </DialogDescription>
+      </DialogHeader>
+      <div className="space-y-3">
+      <SelectInput
+        options={Array.from(new Set([...technicians.map(t => t.name), ...technicianOptions])).map(
+          name => ({ label: name, value: name }),
+        )}
+        placeholder="Choose technician"
+        value={selectedTech}
+        onSelect={val => setSelectedTech(Array.isArray(val) ? (val[0] ?? '') : val)}
+        onSearch={() => {}}
+      />
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={() => setShowAssignTech(false)}>
+          Cancel
+        </Button>
+        <Button onClick={handleAssignTech} disabled={!selectedTech}>
+          Assign
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 
       {/* Add Tag Note Modal */}
       <Dialog open={showAddTagNoteModal} onOpenChange={setShowAddTagNoteModal}>
