@@ -10,13 +10,14 @@ import {
     AlertCircle 
 } from "lucide-react"
 import { Button } from "../ui/button"
-import { CustomerT } from "@/src/types/customer"
+import { CustomerT } from "@/src/constants/interface/customer"
 import { OverviewCustomerTab } from "./OverviewCustomerTab"
 import { JobsCustomerTab } from "./JobsCustomerTab"
 import { CommunicationsCustomerTab } from "./CommunicationsCustomerTab"
 import { RecordingCustomerTab } from "./RecordingCustomerTab"
 import { NotesCustomerTab } from "./NotesCustomerTab"
 import { BillingCustomerTab } from "./BillingCustomerTab"
+import { Badge } from "../ui/badge"
 
 interface CustomerProfileViewProps {
   selectedCustomer: CustomerT
@@ -120,40 +121,40 @@ export const CustomerProfileView = ({
             <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200 px-6 py-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                    <Button
-                        variant="ghost"
-                        onClick={() => setShowProfile(false)}
-                        className="text-slate-600"
-                    >
-                        ← Back to Customers
-                    </Button>
-                    {/* <Avatar className="w-12 h-12">
-                        <AvatarImage src={selectedCustomer.avatar} />
-                        <AvatarFallback className="bg-gradient-to-br from-blue-400 to-cyan-400 text-white">
-                        {selectedCustomer.name
-                            .split(' ')
-                            .map(n => n[0])
-                            .join('')}
-                        </AvatarFallback>
-                    </Avatar> */}
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900">
-                            {selectedCustomer.clientName}
-                        </h1>
-                        {/* <p className="text-sm text-slate-600">
-                            Customer since{' '}
-                            {new Date(selectedCustomer.joinDate).toLocaleDateString()}
-                        </p> */}
-                    </div>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setShowProfile(false)}
+                            className="text-slate-600"
+                        >
+                            ← Back to Customers
+                        </Button>
+                        {/* <Avatar className="w-12 h-12">
+                            <AvatarImage src={selectedCustomer.avatar} />
+                            <AvatarFallback className="bg-gradient-to-br from-blue-400 to-cyan-400 text-white">
+                            {selectedCustomer.name
+                                .split(' ')
+                                .map(n => n[0])
+                                .join('')}
+                            </AvatarFallback>
+                        </Avatar> */}
+                        <div>
+                            <h1 className="text-2xl font-bold text-slate-900">
+                                {selectedCustomer.clientName}
+                            </h1>
+                            {/* <p className="text-sm text-slate-600">
+                                Customer since{' '}
+                                {new Date(selectedCustomer.joinDate).toLocaleDateString()}
+                            </p> */}
+                        </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                    {/* <Badge className={getStatusColor(selectedCustomer.status)}>
-                        {selectedCustomer.status}
-                    </Badge> */}
-                    <Button className="bg-gradient-to-r from-[#53a533] to-[#53a533] text-white">
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit Customer
-                    </Button>
+                        <Badge className={getStatusColor(selectedCustomer.status)}>
+                            {selectedCustomer.status}
+                        </Badge>
+                        <Button className="bg-gradient-to-r from-[#53a533] to-[#53a533] text-white">
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit Customer
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -166,7 +167,7 @@ export const CustomerProfileView = ({
                         <TabsTrigger
                             key={tab.value}
                             value={tab.value}
-                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#53a533]/50"
+                            className="rounded-none py-2 border-b-2 border-transparent data-[state=active]:border-[#53a533]/50"
                         >
                             {tab.label}
                         </TabsTrigger>

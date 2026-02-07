@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/src/components/ui/card"
 import { Badge } from "@/src/components/ui/badge"
 import { Button } from "@/src/components/ui/button"
 import { PlayCircle, Download } from "lucide-react"
-import { CustomerT } from "@/src/types/customer"
+import { CustomerT } from "@/src/constants/interface/customer"
 
 interface RecordingCustomerTabProps {
   selectedCustomer: CustomerT

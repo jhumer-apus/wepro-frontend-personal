@@ -14,7 +14,7 @@ import {
   Edit,
   Trash2,
 } from "lucide-react"
-import { CustomerT } from "@/src/types/customer"
+import { CustomerT } from "@/src/constants/interface/customer"
 import { Notes } from "@/src/constants/dummyData/customers"
 
 interface NotesCustomerTabProps {
