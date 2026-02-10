@@ -11,8 +11,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
   ({ className, maxHeightClassName, containerClassName, ...props }, ref) => (
     <div
       className={cn(
-        'relative overflow-auto',
-        maxHeightClassName ?? 'max-h-[calc(100vh-270px)]',
+        'relative overflow-auto w-full',
         containerClassName
       )}
     >
