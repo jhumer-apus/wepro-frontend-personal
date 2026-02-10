@@ -1,3 +1,4 @@
+import ScheduleCalendar from '@/src/components/schedule/ScheduleCalendar'
 import {
   Card,
   CardContent,
@@ -8,6 +9,9 @@ import { Calendar } from 'lucide-react'
 import React from 'react'
 
 const scheduleIndex: React.FC = (): React.JSX.Element => {
+  return (
+    <ScheduleCalendar />
+  )
   return (
     <div className="space-y-8">
       <div>
