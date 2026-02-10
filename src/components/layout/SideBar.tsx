@@ -134,16 +134,16 @@ export function Sidebar({
     //     Tenant: ['MOD010'],
     //   },
     // },
-    // {
-    //   name: 'Customers',
-    //   href: '/customers',
-    //   icon: Home,
-    // },
-    // {
-    //   name: 'Schedule',
-    //   href: '/schedule',
-    //   icon: Calendar,
-    // },
+    {
+      name: 'Customers',
+      href: '/customers',
+      icon: Home,
+    },
+    {
+      name: 'Schedule',
+      href: '/schedule',
+      icon: Calendar,
+    },
     // {
     //   name: 'WePro Phone',
     //   href: '/calls',
@@ -245,6 +245,9 @@ export function Sidebar({
       return true
     }
     if (item.name === 'Customers') {
+      return true
+    }
+    if (item.name === 'Schedule') {
       return true
     }
     if (item.name === 'Billing Answering Subscription') {
