@@ -11,17 +11,17 @@ interface Props {
 }
 export default function(props: Props){
     return (
-        <div className="hidden md:flex items-center rounded-full bg-slate-100 dark:bg-slate-800 p-1">
+        <div className="hidden md:flex items-center rounded-full bg-slate-100 dark:bg-slate-800 ">
             {props.toggleList.map((item,index) => (
                 <Button
                     key={index}
                     size="sm"
                     variant="ghost"
                     onClick={() => props.onSetToggle(item.value)}
-                    className={`rounded-full px-4 text-xs transition-all ${
+                    className={`flex-1 h-8 rounded-full px-4 text-xs ${
                         props.currentToggled === item.value
-                            ? "bg-brandGreen-600 text-white shadow"
-                            : "text-slate-600 dark:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-700"
+                            ? "bg-brandGreen-900 text-white hover:bg-brandGreen-600"
+                            : "text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700"
                         }`}
                 >
                     {item.label}

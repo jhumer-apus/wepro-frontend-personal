@@ -231,11 +231,11 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
   }
   
   return (
-    <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
+    <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col md:h-screen">
       {/* Header */}
       <DashboardFilter 
         title='Customer Dashboard'
-        description='Manage customer relationships and history'
+        // description='Manage customer relationships and history'
         toggleList={toggleList}
         searchQuery={searchTerm}
         onChangeSearchQuery={setSearchTerm}
@@ -279,6 +279,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
         totalCount={totalCount}
         onPageSizeChange={handlePageSizeChange}
         onPageChange={handlePageChange}
+        maxHeightClassName={"max-h-[calc(100vh-420px)]"}
       />
     </div>
   )

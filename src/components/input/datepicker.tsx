@@ -1,7 +1,8 @@
 'use client';
 
-import dynamic from "next/dynamic";
+// import dynamic from "next/dynamic";
 import type { DateValueType } from "react-tailwindcss-datepicker";
+import Datepicker from "react-tailwindcss-datepicker";
 
 type DatepickerProps = {
   value: DateValueType;
@@ -9,10 +10,6 @@ type DatepickerProps = {
   disabled?: boolean;
   label?: string;
 };
-
-const Datepicker = dynamic(() => import("react-tailwindcss-datepicker"), {
-  ssr: false,
-});
 
 const addDays = (date: Date, days: number) => {
   const result = new Date(date);

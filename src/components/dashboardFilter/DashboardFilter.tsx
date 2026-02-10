@@ -8,7 +8,7 @@ import SelectInput from "../input/select";
 
 interface Props {
     title: string;
-    description: string;
+    description?: string;
     toggleList: { label: string; value: string }[];
     toggleStatus: string;
     searchQuery: string;
@@ -19,17 +19,17 @@ interface Props {
 export default function DashboardFilter(props: Props){
     const [showFilters, setShowFilters] = useState(false);
     return (
-        <div className="mb-6 relative rounded-lg p-4 md:p-5 pb-5 md:pb-6 border border-slate-200/60 dark:border-slate-700/60 shadow-none md:shadow-xl bg-white dark:bg-slate-900 md:bg-gradient-to-br md:from-slate-50 md:via-blue-50 md:to-indigo-50 md:dark:from-slate-900 md:dark:via-blue-950/20 md:dark:to-indigo-950/20">
+        <div className="mb-6 relative rounded-lg p-4 md:p-5 pb-5 md:pb-0 border border-slate-200/60 dark:border-slate-700/60 shadow-none md:shadow-xl bg-white dark:bg-slate-900 md:bg-gradient-to-br md:from-slate-50 md:via-blue-50 md:to-indigo-50 md:dark:from-slate-900 md:dark:via-blue-950/20 md:dark:to-indigo-950/20">
 
             {/* ================= HEADER ================= */}
-            <div className="p-5 md:p-6 space-y-5">
+            <div className="flex flex-col gap-4 mb-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="space-y-2">
-                        <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                        <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-slate-900 to-blue-900 dark:from-slate-100 dark:to-blue-100 bg-clip-text text-transparent">
                             {props.title}
                         </h2>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                            {props.description}
+                            {props.description ?? ""}
                         </p>
                     </div>
                     <Toggle 
