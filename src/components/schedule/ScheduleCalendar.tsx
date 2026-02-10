@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, Fragment } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -56,6 +56,7 @@ import {
   DollarSign
 } from "lucide-react";
 import { Job } from "@/src/constants/interface/jobs";
+import DashboardFilter from "../dashboardFilter/DashboardFilter";
 
 export default function ScheduleCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 9, 13)); // October 13, 2025
@@ -1329,6 +1330,12 @@ export default function ScheduleCalendar() {
     );
   };
 
+  const toggleList = [
+    { label: "Month", value: "month" },
+    { label: "Week", value: "week" },
+    { label: "Day", value: "day" }
+  ]
+
   return (
     <DndContext
       sensors={sensors}
@@ -1336,502 +1343,405 @@ export default function ScheduleCalendar() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
+      <DashboardFilter 
+        title="Schedule Calendar"
+        description="Advanced job scheduling and calendar management"
+        toggleList={toggleList} 
+        toggleStatus={viewMode} 
+        searchQuery={searchTerm} 
+        onChangeSearchQuery={(query) => setSearchTerm(query)} 
+        onToggleChange={(mode: string) => setViewMode(mode)}     
+        moreFilters={(
+          <Fragment>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="scheduled">Scheduled</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Technician</Label>
+              <Select value={technicianFilter} onValueChange={setTechnicianFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Technicians</SelectItem>
+                  {technicians.map((tech) => (
+                    <SelectItem key={tech.id} value={tech.id}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: tech.color }}
+                        />
+                        {tech.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Job Type</Label>
+              <Select value={jobTypeFilter} onValueChange={setJobTypeFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="HVAC">HVAC</SelectItem>
+                  <SelectItem value="Plumbing">Plumbing</SelectItem>
+                  <SelectItem value="Electrical">Electrical</SelectItem>
+                  <SelectItem value="Installation">Installation</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Priority</Label>
+              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Priorities</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Tags/Notes</Label>
+              <Select value={tagsFilter} onValueChange={setTagsFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Tags</SelectItem>
+                  {availableTags.map((tag) => (
+                    <SelectItem key={tag} value={tag}>
+                      {tag}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Franchise</Label>
+              <Select value={franchiseFilter} onValueChange={setFranchiseFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Franchises</SelectItem>
+                  {franchises.map((franchise) => (
+                    <SelectItem key={franchise} value={franchise}>
+                      {franchise}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Metro Area</Label>
+              <Select value={metroAreaFilter} onValueChange={setMetroAreaFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Metro Areas</SelectItem>
+                  {metroAreas.map((area) => (
+                    <SelectItem key={area} value={area}>
+                      {area}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 pt-4 border-t border-neutral-200">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">Show Unassigned Jobs Only</Label>
+                <Switch 
+                  checked={showUnassignedOnly} 
+                  onCheckedChange={setShowUnassignedOnly}
+                />
+              </div>
+              <p className="text-xs text-neutral-500">
+                Toggle to show only jobs that need technician assignment
+              </p>
+            </div>
+          </Fragment>
+        )}   
+      />
+
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          <div>
-            <h1 className="text-4xl font-bold text-black">
-              Schedule Calendar
-            </h1>
-            <p className="text-neutral-600 dark:text-neutral-400 mt-2 text-lg">
-              Advanced job scheduling and calendar management
-            </p>
-          </div>
-          
-          <div className="flex flex-wrap gap-3">
-            <Button 
-              variant="outline" 
-              onClick={() => setShowFilters(!showFilters)}
-              className="shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Filters
-              {(statusFilter !== "all" || technicianFilter !== "all" || jobTypeFilter !== "all") && (
-                <Badge variant="destructive" className="ml-2 text-xs">
-                  {[statusFilter, technicianFilter, jobTypeFilter].filter(f => f !== "all").length}
-                </Badge>
-              )}
-            </Button>
-            
-            <div className="flex bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl p-1 shadow-lg">
-              <Button
-                variant={viewMode === "month" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("month")}
-                className={viewMode === "month" ? "bg-accent-600 text-white shadow-md" : ""}
-              >
-                <Grid3X3 className="w-4 h-4 mr-2" />
-                Month
-              </Button>
-              <Button
-                variant={viewMode === "week" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("week")}
-                className={viewMode === "week" ? "bg-accent-600 text-white shadow-md" : ""}
-              >
-                <List className="w-4 h-4 mr-2" />
-                Week
-              </Button>
-              <Button
-                variant={viewMode === "day" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("day")}
-                className={viewMode === "day" ? "bg-accent-600 text-white shadow-md" : ""}
-              >
-                <CalendarIcon className="w-4 h-4 mr-2" />
-                Day
-              </Button>
-            </div>
-            
-            <Button 
-              onClick={() => setShowNewJobDialog(true)}
-              className="bg-accent-600 shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Job
-            </Button>
-          </div>
+        <div className="flex justify-end">
+          <Button 
+            onClick={() => setShowNewJobDialog(true)}
+            className="bg-accent-600 shadow-lg hover:shadow-xl transition-all duration-200"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Job
+          </Button>
         </div>
+        <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* Filters Panel */}
-        {showFilters && (
-          <Card className="shadow-xl bg-white/80 backdrop-blur-sm">
+          {/* Calendar Navigation */}
+          <Card className="shadow-xl bg-white/80 backdrop-blur-sm mt-4">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-b">
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="w-5 h-5" />
-                Advanced Filters
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Search</Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                    <Input 
-                      placeholder="Search jobs, clients..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Status</Label>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="scheduled">Scheduled</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                      <SelectItem value="unassigned">Unassigned</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Technician</Label>
-                  <Select value={technicianFilter} onValueChange={setTechnicianFilter}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Technicians</SelectItem>
-                      {technicians.map((tech) => (
-                        <SelectItem key={tech.id} value={tech.id}>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: tech.color }}
-                            />
-                            {tech.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Job Type</Label>
-                  <Select value={jobTypeFilter} onValueChange={setJobTypeFilter}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="HVAC">HVAC</SelectItem>
-                      <SelectItem value="Plumbing">Plumbing</SelectItem>
-                      <SelectItem value="Electrical">Electrical</SelectItem>
-                      <SelectItem value="Installation">Installation</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Priority</Label>
-                  <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Priorities</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Tags/Notes</Label>
-                  <Select value={tagsFilter} onValueChange={setTagsFilter}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Tags</SelectItem>
-                      {availableTags.map((tag) => (
-                        <SelectItem key={tag} value={tag}>
-                          {tag}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Franchise</Label>
-                  <Select value={franchiseFilter} onValueChange={setFranchiseFilter}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Franchises</SelectItem>
-                      {franchises.map((franchise) => (
-                        <SelectItem key={franchise} value={franchise}>
-                          {franchise}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Metro Area</Label>
-                  <Select value={metroAreaFilter} onValueChange={setMetroAreaFilter}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Metro Areas</SelectItem>
-                      {metroAreas.map((area) => (
-                        <SelectItem key={area} value={area}>
-                          {area}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2 pt-4 border-t border-neutral-200">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Show Unassigned Jobs Only</Label>
-                    <Switch 
-                      checked={showUnassignedOnly} 
-                      onCheckedChange={setShowUnassignedOnly}
-                    />
-                  </div>
-                  <p className="text-xs text-neutral-500">
-                    Toggle to show only jobs that need technician assignment
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Calendar Navigation */}
-        <Card className="shadow-xl bg-white/80 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-b">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigateMonth(-1)}
-                    className="bg-white/50 backdrop-blur-sm"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <h2 className="text-2xl font-bold">
-                    {viewMode === "month" && `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
-                    {viewMode === "week" && `Week of ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
-                    {viewMode === "day" && currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                  </h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigateMonth(1)}
-                    className="bg-white/50 backdrop-blur-sm"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentDate(new Date())}
-                  className="bg-white/50 backdrop-blur-sm"
-                >
-                  Today
-                </Button>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium">{filteredJobs.length} jobs</span>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="p-0" key={refreshKey}>
-            {/* Month View */}
-            {viewMode === "month" && (
-              <>
-                <div className="grid grid-cols-7 border-b">
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                    <div key={day} className="p-4 text-center font-semibold text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="grid grid-cols-7">
-                  {calendarDays.map((day, index) => (
-                    <DroppableArea
-                      key={index}
-                      id={`day-${day.dateStr}`}
-                      className={`min-h-[120px] p-2 border-r border-b transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-950 cursor-pointer ${
-                        !day.isCurrentMonth 
-                          ? 'bg-neutral-50 dark:bg-neutral-900 text-neutral-400' 
-                          : day.isToday 
-                          ? 'bg-blue-100 dark:bg-blue-900 ring-2 ring-blue-500 ring-inset' 
-                          : 'bg-white dark:bg-neutral-950'
-                      }`}
-                      onClick={(e) => {
-                        // Only trigger if clicking on empty space (not on a job)
-                        if (e.target === e.currentTarget || e.target.closest('.day-header')) {
-                          handleEmptySpotClick(day.dateStr);
-                        }
-                      }}
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigateMonth(-1)}
+                      className="bg-white/50 backdrop-blur-sm"
                     >
-                      <div className="flex justify-between items-start mb-2 day-header">
-                        <span className={`text-sm font-medium ${
-                          day.isToday ? 'text-blue-600 font-bold' : 
-                          !day.isCurrentMonth ? 'text-neutral-400' : 
-                          'text-neutral-700 dark:text-neutral-300'
-                        }`}>
-                          {day.day}
-                        </span>
-                        {day.jobs.length > 0 && (
-                          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
-                            {day.jobs.length}
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <div className="space-y-1">
-                        {day.jobs.slice(0, 3).map((job) => (
-                          <DraggableJob key={job.id} job={job}>
-                            <div
-                              className={`p-2 rounded-lg text-xs hover:shadow-md transition-all duration-200 border-l-4 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedJob(job);
-                                setShowJobDetails(true);
-                              }}
-                            >
-                              <div className="flex items-center gap-1 mb-1">
-                                <div 
-                                  className={`w-2 h-2 rounded-full ${getPriorityColor(job.priority)}`}
-                                />
-                                <span className="font-medium truncate">{job.title}</span>
-                              </div>
-                              <div className="text-xs opacity-75">
-                                {job.scheduledTime} • {job.client}
-                              </div>
-                              <div className="flex items-center gap-1 text-xs opacity-75">
-                                <div 
-                                  className="w-2 h-2 rounded-full" 
-                                  style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
-                                />
-                                <span>{getTechnicianName(job.technicianId)}</span>
-                              </div>
-                            </div>
-                          </DraggableJob>
-                        ))}
-                        {day.jobs.length > 3 && (
-                          <div 
-                            className="text-xs text-center text-blue-600 dark:text-blue-400 font-medium cursor-pointer hover:underline hover:bg-blue-50 dark:hover:bg-blue-900 rounded px-1 py-0.5 transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleShowMoreJobs(day.dateStr);
-                            }}
-                          >
-                            +{day.jobs.length - 3} more
-                          </div>
-                        )}
-                      </div>
-                    </DroppableArea>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {/* Week View */}
-            {viewMode === "week" && (
-              <>
-                <div className="grid grid-cols-8 border-b">
-                  <div className="p-4 text-center font-semibold text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900">
-                    Time
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <h2 className="text-2xl font-bold">
+                      {viewMode === "month" && `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
+                      {viewMode === "week" && `Week of ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                      {viewMode === "day" && currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                    </h2>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigateMonth(1)}
+                      className="bg-white/50 backdrop-blur-sm"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
                   </div>
-                  {getWeekDays().map((day, index) => (
-                    <div key={index} className="p-4 text-center font-semibold text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900">
-                      <div className="text-sm">{day.dayName}</div>
-                      <div className={`text-lg font-bold ${day.isToday ? 'text-blue-600' : ''}`}>
-                        {day.day}
-                      </div>
-                    </div>
-                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentDate(new Date())}
+                    className="bg-white/50 backdrop-blur-sm"
+                  >
+                    Today
+                  </Button>
                 </div>
                 
-                <div className="grid grid-cols-8 min-h-[600px]">
-                  {/* Time slots */}
-                  <div className="border-r">
-                    {Array.from({ length: 12 }, (_, i) => i + 8).map((hour) => (
-                      <div key={hour} className="h-16 border-b p-2 text-xs text-neutral-500 bg-neutral-50 dark:bg-neutral-900">
-                        {hour}:00
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-medium">{filteredJobs.length} jobs</span>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="p-0" key={refreshKey}>
+              {/* Month View */}
+              {viewMode === "month" && (
+                <>
+                  <div className="grid grid-cols-7 border-b">
+                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                      <div key={day} className="p-4 text-center font-semibold text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900">
+                        {day}
                       </div>
                     ))}
                   </div>
                   
-                  {/* Week days */}
-                  {getWeekDays().map((day, dayIndex) => (
-                    <div key={dayIndex} className={`border-r relative ${day.isToday ? 'bg-blue-50 dark:bg-blue-950' : ''}`}>
+                  <div className="grid grid-cols-7">
+                    {calendarDays.map((day, index) => (
+                      <DroppableArea
+                        key={index}
+                        id={`day-${day.dateStr}`}
+                        className={`min-h-[120px] p-2 border-r border-b transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-950 cursor-pointer ${
+                          !day.isCurrentMonth 
+                            ? 'bg-neutral-50 dark:bg-neutral-900 text-neutral-400' 
+                            : day.isToday 
+                            ? 'bg-blue-100 dark:bg-blue-900 ring-2 ring-blue-500 ring-inset' 
+                            : 'bg-white dark:bg-neutral-950'
+                        }`}
+                        onClick={(e) => {
+                          // Only trigger if clicking on empty space (not on a job)
+                          if (e.target === e.currentTarget || e.target.closest('.day-header')) {
+                            handleEmptySpotClick(day.dateStr);
+                          }
+                        }}
+                      >
+                        <div className="flex justify-between items-start mb-2 day-header">
+                          <span className={`text-sm font-medium ${
+                            day.isToday ? 'text-blue-600 font-bold' : 
+                            !day.isCurrentMonth ? 'text-neutral-400' : 
+                            'text-neutral-700 dark:text-neutral-300'
+                          }`}>
+                            {day.day}
+                          </span>
+                          {day.jobs.length > 0 && (
+                            <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
+                              {day.jobs.length}
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-1">
+                          {day.jobs.slice(0, 3).map((job) => (
+                            <DraggableJob key={job.id} job={job}>
+                              <div
+                                className={`p-2 rounded-lg text-xs hover:shadow-md transition-all duration-200 border-l-4 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedJob(job);
+                                  setShowJobDetails(true);
+                                }}
+                              >
+                                <div className="flex items-center gap-1 mb-1">
+                                  <div 
+                                    className={`w-2 h-2 rounded-full ${getPriorityColor(job.priority)}`}
+                                  />
+                                  <span className="font-medium truncate">{job.title}</span>
+                                </div>
+                                <div className="text-xs opacity-75">
+                                  {job.scheduledTime} • {job.client}
+                                </div>
+                                <div className="flex items-center gap-1 text-xs opacity-75">
+                                  <div 
+                                    className="w-2 h-2 rounded-full" 
+                                    style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
+                                  />
+                                  <span>{getTechnicianName(job.technicianId)}</span>
+                                </div>
+                              </div>
+                            </DraggableJob>
+                          ))}
+                          {day.jobs.length > 3 && (
+                            <div 
+                              className="text-xs text-center text-blue-600 dark:text-blue-400 font-medium cursor-pointer hover:underline hover:bg-blue-50 dark:hover:bg-blue-900 rounded px-1 py-0.5 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleShowMoreJobs(day.dateStr);
+                              }}
+                            >
+                              +{day.jobs.length - 3} more
+                            </div>
+                          )}
+                        </div>
+                      </DroppableArea>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Week View */}
+              {viewMode === "week" && (
+                <>
+                  <div className="grid grid-cols-8 border-b">
+                    <div className="p-4 text-center font-semibold text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900">
+                      Time
+                    </div>
+                    {getWeekDays().map((day, index) => (
+                      <div key={index} className="p-4 text-center font-semibold text-neutral-600 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-900">
+                        <div className="text-sm">{day.dayName}</div>
+                        <div className={`text-lg font-bold ${day.isToday ? 'text-blue-600' : ''}`}>
+                          {day.day}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="grid grid-cols-8 min-h-[600px]">
+                    {/* Time slots */}
+                    <div className="border-r">
                       {Array.from({ length: 12 }, (_, i) => i + 8).map((hour) => (
-                        <DroppableArea
-                          key={hour}
-                          id={`timeslot-${day.dateStr}-${hour}`}
-                          className="h-16 border-b hover:bg-blue-50 dark:hover:bg-blue-950 cursor-pointer transition-colors relative overflow-hidden"
-                          onClick={(e) => {
-                            // Only trigger if clicking on empty space (not on a job)
-                            if (e.target === e.currentTarget || e.target.closest('.droppable-area')) {
-                              const timeStr = `${hour.toString().padStart(2, '0')}:00`;
-                              handleEmptySpotClick(day.dateStr, timeStr);
-                            }
-                          }}
-                        >
-                          {(() => {
-                            const timeSlotJobs = day.jobs.filter(job => {
-                              const jobHour = parseInt(job.scheduledTime.split(':')[0]);
-                              return jobHour === hour;
-                            });
-                            
-                            if (timeSlotJobs.length === 0) {
-                              return null;
-                            } else if (timeSlotJobs.length === 1) {
-                              // Single job - full width
-                              const job = timeSlotJobs[0];
-                              return (
-                                <ResizableJob key={job.id} job={job} viewMode="week" className="h-full p-0.5">
-                                  <div
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedJob(job);
-                                      setShowJobDetails(true);
-                                    }}
-                                    className={`text-xs p-1.5 rounded transition-all duration-200 hover:shadow-md border-l-2 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col justify-between`}
-                                  >
-                                    <div className="flex items-center gap-1 mb-1">
-                                      <div className={`w-1.5 h-1.5 rounded-full ${getPriorityColor(job.priority)}`} />
-                                      <span className="font-medium truncate">{job.title}</span>
-                                    </div>
-                                    <div className="text-xs opacity-75 truncate">{job.client}</div>
-                                    <div className="flex items-center gap-1 text-xs opacity-75 mt-1">
-                                      <div 
-                                        className="w-1.5 h-1.5 rounded-full" 
-                                        style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
-                                      />
-                                      <span className="truncate">{getTechnicianName(job.technicianId)}</span>
-                                    </div>
-                                  </div>
-                                </ResizableJob>
-                              );
-                            } else if (timeSlotJobs.length === 2) {
-                              // Two jobs - side by side
-                              return (
-                                <div className="flex gap-0.5 h-full p-0.5">
-                                  {timeSlotJobs.map((job) => (
-                                    <ResizableJob key={job.id} job={job} viewMode="week" className="flex-1">
-                                      <div
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSelectedJob(job);
-                                          setShowJobDetails(true);
-                                        }}
-                                        className={`text-xs p-1 rounded transition-all duration-200 hover:shadow-md border-l-2 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col justify-center`}
-                                      >
-                                        <div className="flex items-center gap-1 mb-0.5">
-                                          <div className={`w-1 h-1 rounded-full ${getPriorityColor(job.priority)}`} />
-                                          <span className="font-medium truncate text-xs">{job.title.substring(0, 8)}...</span>
-                                        </div>
-                                        <div className="text-xs opacity-75 truncate">{job.client.substring(0, 10)}...</div>
+                        <div key={hour} className="h-16 border-b p-2 text-xs text-neutral-500 bg-neutral-50 dark:bg-neutral-900">
+                          {hour}:00
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Week days */}
+                    {getWeekDays().map((day, dayIndex) => (
+                      <div key={dayIndex} className={`border-r relative ${day.isToday ? 'bg-blue-50 dark:bg-blue-950' : ''}`}>
+                        {Array.from({ length: 12 }, (_, i) => i + 8).map((hour) => (
+                          <DroppableArea
+                            key={hour}
+                            id={`timeslot-${day.dateStr}-${hour}`}
+                            className="h-16 border-b hover:bg-blue-50 dark:hover:bg-blue-950 cursor-pointer transition-colors relative overflow-hidden"
+                            onClick={(e) => {
+                              // Only trigger if clicking on empty space (not on a job)
+                              if (e.target === e.currentTarget || e.target.closest('.droppable-area')) {
+                                const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+                                handleEmptySpotClick(day.dateStr, timeStr);
+                              }
+                            }}
+                          >
+                            {(() => {
+                              const timeSlotJobs = day.jobs.filter(job => {
+                                const jobHour = parseInt(job.scheduledTime.split(':')[0]);
+                                return jobHour === hour;
+                              });
+                              
+                              if (timeSlotJobs.length === 0) {
+                                return null;
+                              } else if (timeSlotJobs.length === 1) {
+                                // Single job - full width
+                                const job = timeSlotJobs[0];
+                                return (
+                                  <ResizableJob key={job.id} job={job} viewMode="week" className="h-full p-0.5">
+                                    <div
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedJob(job);
+                                        setShowJobDetails(true);
+                                      }}
+                                      className={`text-xs p-1.5 rounded transition-all duration-200 hover:shadow-md border-l-2 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col justify-between`}
+                                    >
+                                      <div className="flex items-center gap-1 mb-1">
+                                        <div className={`w-1.5 h-1.5 rounded-full ${getPriorityColor(job.priority)}`} />
+                                        <span className="font-medium truncate">{job.title}</span>
+                                      </div>
+                                      <div className="text-xs opacity-75 truncate">{job.client}</div>
+                                      <div className="flex items-center gap-1 text-xs opacity-75 mt-1">
                                         <div 
-                                          className="w-1 h-1 rounded-full mt-0.5" 
+                                          className="w-1.5 h-1.5 rounded-full" 
                                           style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
                                         />
+                                        <span className="truncate">{getTechnicianName(job.technicianId)}</span>
                                       </div>
-                                    </ResizableJob>
-                                  ))}
-                                </div>
-                              );
-                            } else if (timeSlotJobs.length <= 4) {
-                              // 3-4 jobs - compact grid layout
-                              return (
-                                <div className="h-full p-0.5">
-                                  <div className="grid grid-cols-2 gap-0.5 h-full">
-                                    {timeSlotJobs.slice(0, 4).map((job) => (
-                                      <ResizableJob key={job.id} job={job} viewMode="week" className="h-full">
+                                    </div>
+                                  </ResizableJob>
+                                );
+                              } else if (timeSlotJobs.length === 2) {
+                                // Two jobs - side by side
+                                return (
+                                  <div className="flex gap-0.5 h-full p-0.5">
+                                    {timeSlotJobs.map((job) => (
+                                      <ResizableJob key={job.id} job={job} viewMode="week" className="flex-1">
                                         <div
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setSelectedJob(job);
                                             setShowJobDetails(true);
                                           }}
-                                          className={`text-xs p-0.5 rounded transition-all duration-200 hover:shadow-md border-l-2 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col items-center justify-center`}
+                                          className={`text-xs p-1 rounded transition-all duration-200 hover:shadow-md border-l-2 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col justify-center`}
                                         >
-                                          <div className={`w-1.5 h-1.5 rounded-full mb-0.5 ${getPriorityColor(job.priority)}`} />
-                                          <span className="font-medium text-xs truncate w-full text-center">{job.title.substring(0, 4)}</span>
+                                          <div className="flex items-center gap-1 mb-0.5">
+                                            <div className={`w-1 h-1 rounded-full ${getPriorityColor(job.priority)}`} />
+                                            <span className="font-medium truncate text-xs">{job.title.substring(0, 8)}...</span>
+                                          </div>
+                                          <div className="text-xs opacity-75 truncate">{job.client.substring(0, 10)}...</div>
                                           <div 
                                             className="w-1 h-1 rounded-full mt-0.5" 
                                             style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
@@ -1840,33 +1750,225 @@ export default function ScheduleCalendar() {
                                       </ResizableJob>
                                     ))}
                                   </div>
+                                );
+                              } else if (timeSlotJobs.length <= 4) {
+                                // 3-4 jobs - compact grid layout
+                                return (
+                                  <div className="h-full p-0.5">
+                                    <div className="grid grid-cols-2 gap-0.5 h-full">
+                                      {timeSlotJobs.slice(0, 4).map((job) => (
+                                        <ResizableJob key={job.id} job={job} viewMode="week" className="h-full">
+                                          <div
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedJob(job);
+                                              setShowJobDetails(true);
+                                            }}
+                                            className={`text-xs p-0.5 rounded transition-all duration-200 hover:shadow-md border-l-2 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col items-center justify-center`}
+                                          >
+                                            <div className={`w-1.5 h-1.5 rounded-full mb-0.5 ${getPriorityColor(job.priority)}`} />
+                                            <span className="font-medium text-xs truncate w-full text-center">{job.title.substring(0, 4)}</span>
+                                            <div 
+                                              className="w-1 h-1 rounded-full mt-0.5" 
+                                              style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
+                                            />
+                                          </div>
+                                        </ResizableJob>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              } else {
+                                // 5+ jobs - ultra compact with counter
+                                return (
+                                  <div className="h-full p-0.5 flex flex-col">
+                                    <div className="flex-1 grid grid-cols-2 gap-0.5">
+                                      {timeSlotJobs.slice(0, 3).map((job) => (
+                                        <ResizableJob key={job.id} job={job} viewMode="week" className="h-full">
+                                          <div
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedJob(job);
+                                              setShowJobDetails(true);
+                                            }}
+                                            className={`text-xs p-0.5 rounded transition-all duration-200 hover:shadow-md border-l-1 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex items-center justify-center`}
+                                          >
+                                            <div className={`w-1 h-1 rounded-full ${getPriorityColor(job.priority)}`} />
+                                          </div>
+                                        </ResizableJob>
+                                      ))}
+                                      <div className="flex items-center justify-center text-xs text-blue-700 font-bold bg-blue-100 rounded border border-blue-300">
+                                        +{timeSlotJobs.length - 3}
+                                      </div>
+                                    </div>
+                                    <div className="h-3 flex items-center justify-center text-xs text-blue-600 font-medium bg-blue-50 rounded mt-0.5">
+                                      {timeSlotJobs.length} jobs
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            })()}
+                          </DroppableArea>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* Day View */}
+              {viewMode === "day" && (
+                <>
+                  <div className="border-b p-4 bg-neutral-50 dark:bg-neutral-900">
+                    <div className="text-center">
+                      <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                        {currentDate.toLocaleDateString('en-US', { weekday: 'long' })}
+                      </div>
+                      <div className={`text-2xl font-bold ${
+                        currentDate.toDateString() === new Date().toDateString() ? 'text-blue-600' : ''
+                      }`}>
+                        {currentDate.getDate()}
+                      </div>
+                      <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                        {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 min-h-[600px]">
+                    {/* Time slots */}
+                    <div className="border-r">
+                      {Array.from({ length: 12 }, (_, i) => i + 8).map((hour) => (
+                        <div key={hour} className="h-16 border-b p-2 text-sm text-neutral-500 bg-neutral-50 dark:bg-neutral-900 flex items-center">
+                          {hour}:00
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Day schedule */}
+                    <div className="relative">
+                      {Array.from({ length: 12 }, (_, i) => i + 8).map((hour) => (
+                        <DroppableArea
+                          key={hour}
+                          id={`timeslot-${currentDate.toISOString().split('T')[0]}-${hour}`}
+                          className="h-16 border-b hover:bg-blue-50 dark:hover:bg-blue-950 cursor-pointer transition-colors relative overflow-hidden"
+                          onClick={(e) => {
+                            // Only trigger if clicking on empty space (not on a job)
+                            if (e.target === e.currentTarget) {
+                              const timeStr = `${hour.toString().padStart(2, '0')}:00`;
+                              handleEmptySpotClick(currentDate.toISOString().split('T')[0], timeStr);
+                            }
+                          }}
+                        >
+                          {(() => {
+                            const timeSlotJobs = getDayJobs().filter(job => {
+                              const jobHour = parseInt(job.scheduledTime.split(':')[0]);
+                              return jobHour === hour;
+                            });
+                            
+                            if (timeSlotJobs.length === 0) {
+                              return null;
+                            } else if (timeSlotJobs.length === 1) {
+                              // Single job - full height and width
+                              const job = timeSlotJobs[0];
+                              return (
+                                <ResizableJob key={job.id} job={job} viewMode="day" className="h-full p-1">
+                                  <div
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedJob(job);
+                                      setShowJobDetails(true);
+                                    }}
+                                    className={`p-2 rounded transition-all duration-200 hover:shadow-md border-l-3 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col justify-between`}
+                                  >
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <div className={`w-2.5 h-2.5 rounded-full ${getPriorityColor(job.priority)}`} />
+                                        <span className="font-semibold text-sm">{job.title}</span>
+                                      </div>
+                                      <div className="text-xs opacity-75 mb-1">{job.client}</div>
+                                    </div>
+                                    <div>
+                                      <div className="text-xs font-medium mb-1">{job.scheduledTime} - {job.endTime}</div>
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1">
+                                          <div 
+                                            className="w-2 h-2 rounded-full" 
+                                            style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
+                                          />
+                                          <span className="text-xs font-medium">{getTechnicianName(job.technicianId)}</span>
+                                        </div>
+                                        <div className="text-xs text-green-600 font-medium">${job.value.toFixed(2)}</div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </ResizableJob>
+                              );
+                            } else if (timeSlotJobs.length <= 3) {
+                              // 2-3 jobs - stacked layout with good spacing
+                              return (
+                                <div className="h-full p-1 flex flex-col gap-0.5">
+                                  {timeSlotJobs.map((job) => (
+                                    <ResizableJob 
+                                      key={job.id} 
+                                      job={job} 
+                                      viewMode="day" 
+                                      className="flex-1"
+                                    >
+                                      <div
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedJob(job);
+                                          setShowJobDetails(true);
+                                        }}
+                                        className={`p-1.5 rounded transition-all duration-200 hover:shadow-md border-l-2 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex items-center gap-2`}
+                                      >
+                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getPriorityColor(job.priority)}`} />
+                                        <div className="flex-1 min-w-0">
+                                          <div className="font-semibold text-xs truncate">{job.title}</div>
+                                          <div className="text-xs opacity-75 truncate">{job.client}</div>
+                                        </div>
+                                        <div className="flex items-center gap-1 flex-shrink-0">
+                                          <div 
+                                            className="w-1.5 h-1.5 rounded-full" 
+                                            style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
+                                          />
+                                          <span className="text-xs font-medium">{getTechnicianName(job.technicianId).split(' ')[0]}</span>
+                                        </div>
+                                      </div>
+                                    </ResizableJob>
+                                  ))}
                                 </div>
                               );
                             } else {
-                              // 5+ jobs - ultra compact with counter
+                              // 4+ jobs - ultra compact with smart display
                               return (
-                                <div className="h-full p-0.5 flex flex-col">
-                                  <div className="flex-1 grid grid-cols-2 gap-0.5">
+                                <div className="h-full p-0.5 flex flex-col gap-0.5">
+                                  {/* Show first 3 jobs in compact format */}
+                                  <div className="flex-1 grid grid-cols-3 gap-0.5">
                                     {timeSlotJobs.slice(0, 3).map((job) => (
-                                      <ResizableJob key={job.id} job={job} viewMode="week" className="h-full">
+                                      <ResizableJob key={job.id} job={job} viewMode="day" className="h-full">
                                         <div
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setSelectedJob(job);
                                             setShowJobDetails(true);
                                           }}
-                                          className={`text-xs p-0.5 rounded transition-all duration-200 hover:shadow-md border-l-1 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex items-center justify-center`}
+                                          className={`text-xs p-0.5 rounded transition-all duration-200 hover:shadow-md border-l-1 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col items-center justify-center`}
                                         >
-                                          <div className={`w-1 h-1 rounded-full ${getPriorityColor(job.priority)}`} />
+                                          <div className={`w-1.5 h-1.5 rounded-full mb-0.5 ${getPriorityColor(job.priority)}`} />
+                                          <span className="font-medium text-xs truncate w-full text-center">{job.title.substring(0, 3)}</span>
+                                          <div 
+                                            className="w-1 h-1 rounded-full mt-0.5" 
+                                            style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
+                                          />
                                         </div>
                                       </ResizableJob>
                                     ))}
-                                    <div className="flex items-center justify-center text-xs text-blue-700 font-bold bg-blue-100 rounded border border-blue-300">
-                                      +{timeSlotJobs.length - 3}
-                                    </div>
                                   </div>
-                                  <div className="h-3 flex items-center justify-center text-xs text-blue-600 font-medium bg-blue-50 rounded mt-0.5">
-                                    {timeSlotJobs.length} jobs
+                                  {/* Counter for remaining jobs */}
+                                  <div className="h-4 flex items-center justify-center text-xs text-blue-700 font-bold bg-gradient-to-r from-blue-100 to-cyan-100 rounded border border-blue-300">
+                                    {timeSlotJobs.length} jobs • +{timeSlotJobs.length - 3} more
                                   </div>
                                 </div>
                               );
@@ -1875,719 +1977,553 @@ export default function ScheduleCalendar() {
                         </DroppableArea>
                       ))}
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* Day View */}
-            {viewMode === "day" && (
-              <>
-                <div className="border-b p-4 bg-neutral-50 dark:bg-neutral-900">
-                  <div className="text-center">
-                    <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                      {currentDate.toLocaleDateString('en-US', { weekday: 'long' })}
-                    </div>
-                    <div className={`text-2xl font-bold ${
-                      currentDate.toDateString() === new Date().toDateString() ? 'text-blue-600' : ''
-                    }`}>
-                      {currentDate.getDate()}
-                    </div>
-                    <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                      {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 min-h-[600px]">
-                  {/* Time slots */}
-                  <div className="border-r">
-                    {Array.from({ length: 12 }, (_, i) => i + 8).map((hour) => (
-                      <div key={hour} className="h-16 border-b p-2 text-sm text-neutral-500 bg-neutral-50 dark:bg-neutral-900 flex items-center">
-                        {hour}:00
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Day schedule */}
-                  <div className="relative">
-                    {Array.from({ length: 12 }, (_, i) => i + 8).map((hour) => (
-                      <DroppableArea
-                        key={hour}
-                        id={`timeslot-${currentDate.toISOString().split('T')[0]}-${hour}`}
-                        className="h-16 border-b hover:bg-blue-50 dark:hover:bg-blue-950 cursor-pointer transition-colors relative overflow-hidden"
-                        onClick={(e) => {
-                          // Only trigger if clicking on empty space (not on a job)
-                          if (e.target === e.currentTarget) {
-                            const timeStr = `${hour.toString().padStart(2, '0')}:00`;
-                            handleEmptySpotClick(currentDate.toISOString().split('T')[0], timeStr);
-                          }
-                        }}
-                      >
-                        {(() => {
-                          const timeSlotJobs = getDayJobs().filter(job => {
-                            const jobHour = parseInt(job.scheduledTime.split(':')[0]);
-                            return jobHour === hour;
-                          });
-                          
-                          if (timeSlotJobs.length === 0) {
-                            return null;
-                          } else if (timeSlotJobs.length === 1) {
-                            // Single job - full height and width
-                            const job = timeSlotJobs[0];
-                            return (
-                              <ResizableJob key={job.id} job={job} viewMode="day" className="h-full p-1">
-                                <div
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedJob(job);
-                                    setShowJobDetails(true);
-                                  }}
-                                  className={`p-2 rounded transition-all duration-200 hover:shadow-md border-l-3 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col justify-between`}
-                                >
-                                  <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <div className={`w-2.5 h-2.5 rounded-full ${getPriorityColor(job.priority)}`} />
-                                      <span className="font-semibold text-sm">{job.title}</span>
-                                    </div>
-                                    <div className="text-xs opacity-75 mb-1">{job.client}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-xs font-medium mb-1">{job.scheduledTime} - {job.endTime}</div>
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-1">
-                                        <div 
-                                          className="w-2 h-2 rounded-full" 
-                                          style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
-                                        />
-                                        <span className="text-xs font-medium">{getTechnicianName(job.technicianId)}</span>
-                                      </div>
-                                      <div className="text-xs text-green-600 font-medium">${job.value.toFixed(2)}</div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </ResizableJob>
-                            );
-                          } else if (timeSlotJobs.length <= 3) {
-                            // 2-3 jobs - stacked layout with good spacing
-                            return (
-                              <div className="h-full p-1 flex flex-col gap-0.5">
-                                {timeSlotJobs.map((job) => (
-                                  <ResizableJob 
-                                    key={job.id} 
-                                    job={job} 
-                                    viewMode="day" 
-                                    className="flex-1"
-                                  >
-                                    <div
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedJob(job);
-                                        setShowJobDetails(true);
-                                      }}
-                                      className={`p-1.5 rounded transition-all duration-200 hover:shadow-md border-l-2 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex items-center gap-2`}
-                                    >
-                                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getPriorityColor(job.priority)}`} />
-                                      <div className="flex-1 min-w-0">
-                                        <div className="font-semibold text-xs truncate">{job.title}</div>
-                                        <div className="text-xs opacity-75 truncate">{job.client}</div>
-                                      </div>
-                                      <div className="flex items-center gap-1 flex-shrink-0">
-                                        <div 
-                                          className="w-1.5 h-1.5 rounded-full" 
-                                          style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
-                                        />
-                                        <span className="text-xs font-medium">{getTechnicianName(job.technicianId).split(' ')[0]}</span>
-                                      </div>
-                                    </div>
-                                  </ResizableJob>
-                                ))}
-                              </div>
-                            );
-                          } else {
-                            // 4+ jobs - ultra compact with smart display
-                            return (
-                              <div className="h-full p-0.5 flex flex-col gap-0.5">
-                                {/* Show first 3 jobs in compact format */}
-                                <div className="flex-1 grid grid-cols-3 gap-0.5">
-                                  {timeSlotJobs.slice(0, 3).map((job) => (
-                                    <ResizableJob key={job.id} job={job} viewMode="day" className="h-full">
-                                      <div
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSelectedJob(job);
-                                          setShowJobDetails(true);
-                                        }}
-                                        className={`text-xs p-0.5 rounded transition-all duration-200 hover:shadow-md border-l-1 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col items-center justify-center`}
-                                      >
-                                        <div className={`w-1.5 h-1.5 rounded-full mb-0.5 ${getPriorityColor(job.priority)}`} />
-                                        <span className="font-medium text-xs truncate w-full text-center">{job.title.substring(0, 3)}</span>
-                                        <div 
-                                          className="w-1 h-1 rounded-full mt-0.5" 
-                                          style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
-                                        />
-                                      </div>
-                                    </ResizableJob>
-                                  ))}
-                                </div>
-                                {/* Counter for remaining jobs */}
-                                <div className="h-4 flex items-center justify-center text-xs text-blue-700 font-bold bg-gradient-to-r from-blue-100 to-cyan-100 rounded border border-blue-300">
-                                  {timeSlotJobs.length} jobs • +{timeSlotJobs.length - 3} more
-                                </div>
-                              </div>
-                            );
-                          }
-                        })()}
-                      </DroppableArea>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Job Details Dialog */}
-        <Dialog open={showJobDetails} onOpenChange={setShowJobDetails}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Wrench className="w-5 h-5" />
-                Job Details
-              </DialogTitle>
-            </DialogHeader>
-            {selectedJob && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Job Information</Label>
-                      <div className="mt-2 space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm">Job ID:</span>
-                          <span className="text-sm font-medium">{selectedJob.id}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Service:</span>
-                          <span className="text-sm">{selectedJob.title}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Type:</span>
-                          <span className="text-sm">{selectedJob.jobType}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Priority:</span>
-                          <Badge className={`text-xs ${getPriorityColor(selectedJob.priority)} text-white`}>
-                            {selectedJob.priority}
-                          </Badge>
+          {/* Job Details Dialog */}
+          <Dialog open={showJobDetails} onOpenChange={setShowJobDetails}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Wrench className="w-5 h-5" />
+                  Job Details
+                </DialogTitle>
+              </DialogHeader>
+              {selectedJob && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Job Information</Label>
+                        <div className="mt-2 space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm">Job ID:</span>
+                            <span className="text-sm font-medium">{selectedJob.id}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Service:</span>
+                            <span className="text-sm">{selectedJob.title}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Type:</span>
+                            <span className="text-sm">{selectedJob.jobType}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Priority:</span>
+                            <Badge className={`text-xs ${getPriorityColor(selectedJob.priority)} text-white`}>
+                              {selectedJob.priority}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div>
-                      <Label className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Customer Information</Label>
-                      <div className="mt-2 space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm">Client:</span>
-                          <span className="text-sm font-medium">{selectedJob.client}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Phone:</span>
-                          <span className="text-sm">{selectedJob.clientPhone}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Address:</span>
-                          <span className="text-sm">{selectedJob.address}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Scheduling</Label>
-                      <div className="mt-2 space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm">Date:</span>
-                          <span className="text-sm font-medium">{selectedJob.scheduledDate}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Time:</span>
-                          <span className="text-sm">{selectedJob.scheduledTime} - {selectedJob.endTime}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Duration:</span>
-                          <span className="text-sm">{selectedJob.estimatedDuration} minutes</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Technician:</span>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: getTechnicianColor(selectedJob.technicianId) }}
-                            />
-                            <span className="text-sm font-medium">{getTechnicianName(selectedJob.technicianId)}</span>
+                      <div>
+                        <Label className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Customer Information</Label>
+                        <div className="mt-2 space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm">Client:</span>
+                            <span className="text-sm font-medium">{selectedJob.client}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Phone:</span>
+                            <span className="text-sm">{selectedJob.clientPhone}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Address:</span>
+                            <span className="text-sm">{selectedJob.address}</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div>
-                      <Label className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Job Details</Label>
-                      <div className="mt-2 space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm">Value:</span>
-                          <span className="text-sm font-medium">${selectedJob.value.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Source:</span>
-                          <span className="text-sm">{selectedJob.source}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Status:</span>
-                          <Badge className={getStatusColor(selectedJob.status)}>
-                            {selectedJob.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Description</Label>
-                  <p className="text-sm mt-1 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
-                    {selectedJob.description}
-                  </p>
-                </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500">
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    Edit Job
-                  </Button>
-                  <Button variant="outline">
-                    <Phone className="w-4 h-4 mr-2" />
-                    Call Client
-                  </Button>
-                  <Button variant="outline">
-                    <Navigation className="w-4 h-4 mr-2" />
-                    Directions
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* New Job Dialog */}
-        <Dialog open={showNewJobDialog} onOpenChange={setShowNewJobDialog}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Plus className="w-5 h-5 text-blue-500" />
-                Create New Job
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-6 py-4">
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Basic Information</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Job Title *</Label>
-                    <Input
-                      id="title"
-                      value={newJobData.title}
-                      onChange={(e) => setNewJobData({...newJobData, title: e.target.value})}
-                      placeholder="e.g., HVAC System Repair"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="jobType">Job Type</Label>
-                    <Select value={newJobData.jobType} onValueChange={(value) => setNewJobData({...newJobData, jobType: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="HVAC">HVAC</SelectItem>
-                        <SelectItem value="Plumbing">Plumbing</SelectItem>
-                        <SelectItem value="Electrical">Electrical</SelectItem>
-                        <SelectItem value="Installation">Installation</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <textarea
-                    id="description"
-                    className="w-full p-2 border border-neutral-300 rounded-md resize-none h-20"
-                    value={newJobData.description}
-                    onChange={(e) => setNewJobData({...newJobData, description: e.target.value})}
-                    placeholder="Describe the job details..."
-                  />
-                </div>
-              </div>
-
-              {/* Client Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Client Information</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="client">Client Name *</Label>
-                    <Input
-                      id="client"
-                      value={newJobData.client}
-                      onChange={(e) => setNewJobData({...newJobData, client: e.target.value})}
-                      placeholder="Client or company name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="clientPhone">Phone Number</Label>
-                    <Input
-                      id="clientPhone"
-                      value={newJobData.clientPhone}
-                      onChange={(e) => setNewJobData({...newJobData, clientPhone: e.target.value})}
-                      placeholder="(555) 123-4567"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address *</Label>
-                  <Input
-                    id="address"
-                    value={newJobData.address}
-                    onChange={(e) => setNewJobData({...newJobData, address: e.target.value})}
-                    placeholder="Full address including city and state"
-                  />
-                </div>
-              </div>
-
-              {/* Scheduling */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Scheduling</h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="scheduledDate">Date</Label>
-                    <Input
-                      id="scheduledDate"
-                      type="date"
-                      value={newJobData.scheduledDate}
-                      onChange={(e) => setNewJobData({...newJobData, scheduledDate: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="scheduledTime">Start Time</Label>
-                    <Input
-                      id="scheduledTime"
-                      type="time"
-                      value={newJobData.scheduledTime}
-                      onChange={(e) => {
-                        const newTime = e.target.value;
-                        const endTime = calculateEndTime(newTime, newJobData.estimatedDuration);
-                        setNewJobData({...newJobData, scheduledTime: newTime, endTime});
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="estimatedDuration">Duration (minutes)</Label>
-                    <Input
-                      id="estimatedDuration"
-                      type="number"
-                      value={newJobData.estimatedDuration}
-                      onChange={(e) => {
-                        const duration = parseInt(e.target.value) || 120;
-                        const endTime = calculateEndTime(newJobData.scheduledTime, duration);
-                        setNewJobData({...newJobData, estimatedDuration: duration, endTime});
-                      }}
-                      min="30"
-                      step="30"
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="technician">Technician</Label>
-                    <Select value={newJobData.technicianId} onValueChange={(value) => setNewJobData({...newJobData, technicianId: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                        {technicians.map((tech) => (
-                          <SelectItem key={tech.id} value={tech.id}>
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Scheduling</Label>
+                        <div className="mt-2 space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm">Date:</span>
+                            <span className="text-sm font-medium">{selectedJob.scheduledDate}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Time:</span>
+                            <span className="text-sm">{selectedJob.scheduledTime} - {selectedJob.endTime}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Duration:</span>
+                            <span className="text-sm">{selectedJob.estimatedDuration} minutes</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Technician:</span>
                             <div className="flex items-center gap-2">
                               <div 
                                 className="w-3 h-3 rounded-full" 
-                                style={{ backgroundColor: tech.color }}
+                                style={{ backgroundColor: getTechnicianColor(selectedJob.technicianId) }}
                               />
-                              {tech.name}
+                              <span className="text-sm font-medium">{getTechnicianName(selectedJob.technicianId)}</span>
                             </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="priority">Priority</Label>
-                    <Select value={newJobData.priority} onValueChange={(value) => setNewJobData({...newJobData, priority: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
+                          </div>
+                        </div>
+                      </div>
 
-              {/* Additional Details */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Additional Details</h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="value">Job Value ($)</Label>
-                    <Input
-                      id="value"
-                      type="number"
-                      value={newJobData.value}
-                      onChange={(e) => setNewJobData({...newJobData, value: parseFloat(e.target.value) || 0})}
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="franchise">Franchise</Label>
-                    <Select value={newJobData.franchise} onValueChange={(value) => setNewJobData({...newJobData, franchise: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {franchises.map((franchise) => (
-                          <SelectItem key={franchise} value={franchise}>
-                            {franchise}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="metroArea">Metro Area</Label>
-                    <Select value={newJobData.metroArea} onValueChange={(value) => setNewJobData({...newJobData, metroArea: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {metroAreas.map((area) => (
-                          <SelectItem key={area} value={area}>
-                            {area}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <textarea
-                    id="notes"
-                    className="w-full p-2 border border-neutral-300 rounded-md resize-none h-16"
-                    value={newJobData.notes}
-                    onChange={(e) => setNewJobData({...newJobData, notes: e.target.value})}
-                    placeholder="Additional notes or special instructions..."
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button variant="outline" onClick={() => setShowNewJobDialog(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleCreateJob}
-                  disabled={!newJobData.title || !newJobData.client || !newJobData.address}
-                  className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Job
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* More Jobs Dialog */}
-        <Dialog open={showMoreJobsDialog} onOpenChange={setShowMoreJobsDialog}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5 text-blue-500" />
-                All Jobs for {moreJobsDate ? new Date(moreJobsDate + 'T00:00:00').toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                }) : ''}
-                <Badge variant="secondary" className="ml-2">
-                  {moreJobsList.length} jobs
-                </Badge>
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="overflow-y-auto max-h-[60vh]">
-              <div className="space-y-3">
-                {moreJobsList
-                  .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime))
-                  .map((job) => (
-                    <div
-                      key={job.id}
-                      className={`p-4 rounded-lg border-l-4 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} hover:shadow-md transition-all duration-200 cursor-pointer`}
-                      onClick={() => {
-                        setSelectedJob(job);
-                        setShowJobDetails(true);
-                        setShowMoreJobsDialog(false);
-                      }}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className={`w-3 h-3 rounded-full ${getPriorityColor(job.priority)}`} />
-                            <h3 className="font-semibold text-lg">{job.title}</h3>
-                            <Badge className={getStatusColor(job.status)}>
-                              {job.status}
+                      <div>
+                        <Label className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Job Details</Label>
+                        <div className="mt-2 space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm">Value:</span>
+                            <span className="text-sm font-medium">${selectedJob.value.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Source:</span>
+                            <span className="text-sm">{selectedJob.source}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Status:</span>
+                            <Badge className={getStatusColor(selectedJob.status)}>
+                              {selectedJob.status}
                             </Badge>
                           </div>
-                          
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <User className="w-4 h-4 text-neutral-500" />
-                                <span className="font-medium">{job.client}</span>
-                              </div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <Phone className="w-4 h-4 text-neutral-500" />
-                                <span>{job.clientPhone}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <MapPin className="w-4 h-4 text-neutral-500" />
-                                <span className="text-neutral-600">{job.address}</span>
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <Clock className="w-4 h-4 text-neutral-500" />
-                                <span className="font-medium">{job.scheduledTime} - {job.endTime}</span>
-                                <span className="text-neutral-500">({job.estimatedDuration}m)</span>
-                              </div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <div 
-                                  className="w-3 h-3 rounded-full" 
-                                  style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
-                                />
-                                <span className="font-medium">{getTechnicianName(job.technicianId)}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <DollarSign className="w-4 h-4 text-green-500" />
-                                <span className="font-medium text-green-600">${job.value.toFixed(2)}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {job.description && (
-                            <div className="mt-3 p-3 bg-neutral-50 dark:bg-neutral-800 rounded">
-                              <p className="text-sm text-neutral-600 dark:text-neutral-400">{job.description}</p>
-                            </div>
-                          )}
-                          
-                          {job.tags && job.tags.length > 0 && (
-                            <div className="mt-2 flex gap-2">
-                              {job.tags.map((tag) => (
-                                <Badge key={tag} variant="outline" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex flex-col gap-2 ml-4">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedJob(job);
-                              setShowJobDetails(true);
-                              setShowMoreJobsDialog(false);
-                            }}
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            View Details
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Handle edit job (placeholder)
-                              console.log('Edit job:', job.id);
-                            }}
-                          >
-                            <Edit3 className="w-4 h-4 mr-2" />
-                            Edit
-                          </Button>
                         </div>
                       </div>
                     </div>
-                  ))}
-              </div>
-            </div>
-            
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button variant="outline" onClick={() => setShowMoreJobsDialog(false)}>
-                Close
-              </Button>
-              <Button 
-                onClick={() => {
-                  setShowMoreJobsDialog(false);
-                  handleEmptySpotClick(moreJobsDate);
-                }}
-                className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add New Job
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+                  </div>
 
-        {/* Drag Overlay */}
-        <DragOverlay>
-          {activeJob ? (
-            <div className={`p-2 rounded-lg text-xs border-l-4 ${getStatusColor(activeJob.status)} ${getStatusBorderColor(activeJob.status)} shadow-lg opacity-90`}>
-              <div className="flex items-center gap-1 mb-1">
-                <div className={`w-2 h-2 rounded-full ${getPriorityColor(activeJob.priority)}`} />
-                <span className="font-medium">{activeJob.title}</span>
+                  <div>
+                    <Label className="text-sm font-medium text-neutral-500 dark:text-neutral-400">Description</Label>
+                    <p className="text-sm mt-1 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+                      {selectedJob.description}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2 pt-4">
+                    <Button className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500">
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Edit Job
+                    </Button>
+                    <Button variant="outline">
+                      <Phone className="w-4 h-4 mr-2" />
+                      Call Client
+                    </Button>
+                    <Button variant="outline">
+                      <Navigation className="w-4 h-4 mr-2" />
+                      Directions
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* New Job Dialog */}
+          <Dialog open={showNewJobDialog} onOpenChange={setShowNewJobDialog}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-blue-500" />
+                  Create New Job
+                </DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-6 py-4">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Basic Information</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Job Title *</Label>
+                      <Input
+                        id="title"
+                        value={newJobData.title}
+                        onChange={(e) => setNewJobData({...newJobData, title: e.target.value})}
+                        placeholder="e.g., HVAC System Repair"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="jobType">Job Type</Label>
+                      <Select value={newJobData.jobType} onValueChange={(value) => setNewJobData({...newJobData, jobType: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="HVAC">HVAC</SelectItem>
+                          <SelectItem value="Plumbing">Plumbing</SelectItem>
+                          <SelectItem value="Electrical">Electrical</SelectItem>
+                          <SelectItem value="Installation">Installation</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <textarea
+                      id="description"
+                      className="w-full p-2 border border-neutral-300 rounded-md resize-none h-20"
+                      value={newJobData.description}
+                      onChange={(e) => setNewJobData({...newJobData, description: e.target.value})}
+                      placeholder="Describe the job details..."
+                    />
+                  </div>
+                </div>
+
+                {/* Client Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Client Information</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="client">Client Name *</Label>
+                      <Input
+                        id="client"
+                        value={newJobData.client}
+                        onChange={(e) => setNewJobData({...newJobData, client: e.target.value})}
+                        placeholder="Client or company name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="clientPhone">Phone Number</Label>
+                      <Input
+                        id="clientPhone"
+                        value={newJobData.clientPhone}
+                        onChange={(e) => setNewJobData({...newJobData, clientPhone: e.target.value})}
+                        placeholder="(555) 123-4567"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address *</Label>
+                    <Input
+                      id="address"
+                      value={newJobData.address}
+                      onChange={(e) => setNewJobData({...newJobData, address: e.target.value})}
+                      placeholder="Full address including city and state"
+                    />
+                  </div>
+                </div>
+
+                {/* Scheduling */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Scheduling</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="scheduledDate">Date</Label>
+                      <Input
+                        id="scheduledDate"
+                        type="date"
+                        value={newJobData.scheduledDate}
+                        onChange={(e) => setNewJobData({...newJobData, scheduledDate: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="scheduledTime">Start Time</Label>
+                      <Input
+                        id="scheduledTime"
+                        type="time"
+                        value={newJobData.scheduledTime}
+                        onChange={(e) => {
+                          const newTime = e.target.value;
+                          const endTime = calculateEndTime(newTime, newJobData.estimatedDuration);
+                          setNewJobData({...newJobData, scheduledTime: newTime, endTime});
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="estimatedDuration">Duration (minutes)</Label>
+                      <Input
+                        id="estimatedDuration"
+                        type="number"
+                        value={newJobData.estimatedDuration}
+                        onChange={(e) => {
+                          const duration = parseInt(e.target.value) || 120;
+                          const endTime = calculateEndTime(newJobData.scheduledTime, duration);
+                          setNewJobData({...newJobData, estimatedDuration: duration, endTime});
+                        }}
+                        min="30"
+                        step="30"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="technician">Technician</Label>
+                      <Select value={newJobData.technicianId} onValueChange={(value) => setNewJobData({...newJobData, technicianId: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                          {technicians.map((tech) => (
+                            <SelectItem key={tech.id} value={tech.id}>
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-3 h-3 rounded-full" 
+                                  style={{ backgroundColor: tech.color }}
+                                />
+                                {tech.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="priority">Priority</Label>
+                      <Select value={newJobData.priority} onValueChange={(value) => setNewJobData({...newJobData, priority: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Details */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Additional Details</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="value">Job Value ($)</Label>
+                      <Input
+                        id="value"
+                        type="number"
+                        value={newJobData.value}
+                        onChange={(e) => setNewJobData({...newJobData, value: parseFloat(e.target.value) || 0})}
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="franchise">Franchise</Label>
+                      <Select value={newJobData.franchise} onValueChange={(value) => setNewJobData({...newJobData, franchise: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {franchises.map((franchise) => (
+                            <SelectItem key={franchise} value={franchise}>
+                              {franchise}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="metroArea">Metro Area</Label>
+                      <Select value={newJobData.metroArea} onValueChange={(value) => setNewJobData({...newJobData, metroArea: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {metroAreas.map((area) => (
+                            <SelectItem key={area} value={area}>
+                              {area}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <textarea
+                      id="notes"
+                      className="w-full p-2 border border-neutral-300 rounded-md resize-none h-16"
+                      value={newJobData.notes}
+                      onChange={(e) => setNewJobData({...newJobData, notes: e.target.value})}
+                      placeholder="Additional notes or special instructions..."
+                    />
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setShowNewJobDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleCreateJob}
+                    disabled={!newJobData.title || !newJobData.client || !newJobData.address}
+                    className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Job
+                  </Button>
+                </div>
               </div>
-              <div className="text-xs opacity-75">{activeJob.scheduledTime} • {activeJob.client}</div>
-            </div>
-          ) : null}
-        </DragOverlay>
+            </DialogContent>
+          </Dialog>
+
+          {/* More Jobs Dialog */}
+          <Dialog open={showMoreJobsDialog} onOpenChange={setShowMoreJobsDialog}>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <CalendarIcon className="w-5 h-5 text-blue-500" />
+                  All Jobs for {moreJobsDate ? new Date(moreJobsDate + 'T00:00:00').toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  }) : ''}
+                  <Badge variant="secondary" className="ml-2">
+                    {moreJobsList.length} jobs
+                  </Badge>
+                </DialogTitle>
+              </DialogHeader>
+              
+              <div className="overflow-y-auto max-h-[60vh]">
+                <div className="space-y-3">
+                  {moreJobsList
+                    .sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime))
+                    .map((job) => (
+                      <div
+                        key={job.id}
+                        className={`p-4 rounded-lg border-l-4 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} hover:shadow-md transition-all duration-200 cursor-pointer`}
+                        onClick={() => {
+                          setSelectedJob(job);
+                          setShowJobDetails(true);
+                          setShowMoreJobsDialog(false);
+                        }}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className={`w-3 h-3 rounded-full ${getPriorityColor(job.priority)}`} />
+                              <h3 className="font-semibold text-lg">{job.title}</h3>
+                              <Badge className={getStatusColor(job.status)}>
+                                {job.status}
+                              </Badge>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <User className="w-4 h-4 text-neutral-500" />
+                                  <span className="font-medium">{job.client}</span>
+                                </div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Phone className="w-4 h-4 text-neutral-500" />
+                                  <span>{job.clientPhone}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <MapPin className="w-4 h-4 text-neutral-500" />
+                                  <span className="text-neutral-600">{job.address}</span>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Clock className="w-4 h-4 text-neutral-500" />
+                                  <span className="font-medium">{job.scheduledTime} - {job.endTime}</span>
+                                  <span className="text-neutral-500">({job.estimatedDuration}m)</span>
+                                </div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <div 
+                                    className="w-3 h-3 rounded-full" 
+                                    style={{ backgroundColor: getTechnicianColor(job.technicianId) }}
+                                  />
+                                  <span className="font-medium">{getTechnicianName(job.technicianId)}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <DollarSign className="w-4 h-4 text-green-500" />
+                                  <span className="font-medium text-green-600">${job.value.toFixed(2)}</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {job.description && (
+                              <div className="mt-3 p-3 bg-neutral-50 dark:bg-neutral-800 rounded">
+                                <p className="text-sm text-neutral-600 dark:text-neutral-400">{job.description}</p>
+                              </div>
+                            )}
+                            
+                            {job.tags && job.tags.length > 0 && (
+                              <div className="mt-2 flex gap-2">
+                                {job.tags.map((tag) => (
+                                  <Badge key={tag} variant="outline" className="text-xs">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex flex-col gap-2 ml-4">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedJob(job);
+                                setShowJobDetails(true);
+                                setShowMoreJobsDialog(false);
+                              }}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              View Details
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Handle edit job (placeholder)
+                                console.log('Edit job:', job.id);
+                              }}
+                            >
+                              <Edit3 className="w-4 h-4 mr-2" />
+                              Edit
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button variant="outline" onClick={() => setShowMoreJobsDialog(false)}>
+                  Close
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowMoreJobsDialog(false);
+                    handleEmptySpotClick(moreJobsDate);
+                  }}
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add New Job
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Drag Overlay */}
+          <DragOverlay>
+            {activeJob ? (
+              <div className={`p-2 rounded-lg text-xs border-l-4 ${getStatusColor(activeJob.status)} ${getStatusBorderColor(activeJob.status)} shadow-lg opacity-90`}>
+                <div className="flex items-center gap-1 mb-1">
+                  <div className={`w-2 h-2 rounded-full ${getPriorityColor(activeJob.priority)}`} />
+                  <span className="font-medium">{activeJob.title}</span>
+                </div>
+                <div className="text-xs opacity-75">{activeJob.scheduledTime} • {activeJob.client}</div>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </div>
       </div>
-    </div>
     </DndContext>
   );
 }
