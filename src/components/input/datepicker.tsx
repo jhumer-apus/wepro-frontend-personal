@@ -8,6 +8,8 @@ type DatepickerProps = {
   onChange: (value: DateValueType) => void;
   disabled?: boolean;
   label?: string;
+  range?: boolean;
+  withTime?: boolean;
 };
 
 const Datepicker = dynamic(() => import("react-tailwindcss-datepicker"), {
@@ -39,6 +41,8 @@ const InputDatepicker = ({
   onChange,
   disabled = false,
   label,
+  range = true,
+  withTime = false,
 }: DatepickerProps) => {
   const today = new Date();
 
@@ -119,8 +123,8 @@ const InputDatepicker = ({
           value={value}
           onChange={onChange}
           primaryColor="blue"
-          useRange={false}
-          showShortcuts={true}
+          useRange={range && !withTime}
+          showShortcuts={range && !withTime}
           containerClassName="w-full z-[80] focus:outline-none focus:ring-0 focus:ring-transparent focus:ring-offset-0 focus:ring-offset-transparent focus-within:outline-none focus-within:ring-0 focus-within:ring-transparent focus-within:ring-offset-0 focus-within:ring-offset-transparent focus-within:shadow-none focus-within:border-slate-300 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent"
           inputClassName="border-input pr-9 w-full h-10 bg-white dark:bg-slate-800 rounded-md border px-3 text-sm shadow-none focus:outline-none focus:ring-0 focus:ring-transparent focus:ring-offset-0 focus:ring-offset-transparent focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:shadow-none focus:border-slate-300 dark:focus:border-slate-700 !ring-0 !outline-none !shadow-none !ring-offset-0 !ring-offset-transparent"
           configs={{ shortcuts }}

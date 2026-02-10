@@ -20,6 +20,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/src/components/ui/sheet";
 import { Checkbox } from "@/src/components/ui/checkbox";
 import { Columns3, Download } from "lucide-react";
+import { cn } from "@/src/lib/utils";
 
 type ColumnConfig = {
   columnName: string;
@@ -57,6 +58,10 @@ type JobsTableProps = {
   headerRightComponent?: React.ReactNode;
   /** When set, column visibility is persisted to localStorage under this key (e.g. router.pathname) */
   tableKey?: string;
+  /** Optional additional class names for the table container wrapper */
+  className?: string;
+  /** Optional additional class names for the table content wrapper (the div that wraps the table) */
+  tableClassName?: string;
 };
 
 const JobsTable: React.FC<JobsTableProps> = ({
@@ -80,6 +85,8 @@ const JobsTable: React.FC<JobsTableProps> = ({
   columnOptions,
   headerRightComponent,
   tableKey,
+  className,
+  tableClassName,
 }) => {
   const startEntry = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endEntry = Math.min(currentPage * pageSize, totalCount);
@@ -154,7 +161,7 @@ const JobsTable: React.FC<JobsTableProps> = ({
   };
 
   return (
-    <div className="bg-transparent border-0 shadow-none md:bg-white md:dark:bg-slate-900 rounded-lg md:border md:border-slate-200 md:dark:border-slate-800 md:shadow-xl overflow-hidden">
+    <div className={cn("bg-transparent border-0 shadow-none md:bg-white md:dark:bg-slate-900 rounded-lg md:border md:border-slate-200 md:dark:border-slate-800 md:shadow-xl overflow-hidden", className)}>
       {/* Table Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 md:px-4 px-0 py-3">
         <div className="flex items-center gap-2">
@@ -229,10 +236,10 @@ const JobsTable: React.FC<JobsTableProps> = ({
         {headerRightComponent && headerRightComponent}
       </div>
 
-      <div className="px-0">
+      <div className={cn("px-0", tableClassName)}>
         {/* Desktop table */}
-        <div className="hidden md:block">
-          <Table className="min-w-[900px] border-collapse" maxHeightClassName={maxHeightClassName}>
+        <div className="hidden md:flex h-full w-full">
+          <Table className="min-w-[900px] border-collapse">
             <TableHeader className="sticky top-0 z-10">
               <TableRow className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
                 {visibleColumns.map((col, idx) => {
