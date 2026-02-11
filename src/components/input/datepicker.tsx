@@ -1,14 +1,25 @@
 'use client';
 
 // import dynamic from "next/dynamic";
+import { useState } from "react";
 import type { DateValueType } from "react-tailwindcss-datepicker";
 import Datepicker from "react-tailwindcss-datepicker";
 
 type DatepickerProps = {
-  value: DateValueType;
-  onChange: (value: DateValueType) => void;
+  value?: DateValueType;
+  onChange?: (value: DateValueType) => void;
   disabled?: boolean;
   label?: string;
+  range?: boolean;
+  withTime?: boolean;
+  /** Time in HH:mm format. When withTime is true, use with onTimeChange for controlled mode. */
+  timeValue?: string;
+  /** Called when time input changes. Time string is HH:mm. */
+  onTimeChange?: (time: string) => void;
+  /** When withTime is true, use a single datetime string (YYYY-MM-DDTHH:mm or ''). Simpler than value/onChange for single datetime. */
+  datetimeValue?: string;
+  /** Called when date or time changes. Receives combined datetime string (YYYY-MM-DDTHH:mm) or ''. */
+  onDateTimeChange?: (datetime: string) => void;
 };
 
 const addDays = (date: Date, days: number) => {
@@ -36,8 +47,53 @@ const InputDatepicker = ({
   onChange,
   disabled = false,
   label,
+  range = true,
+  withTime = false,
+  timeValue,
+  onTimeChange,
+  datetimeValue,
+  onDateTimeChange,
 }: DatepickerProps) => {
+  const [internalTime, setInternalTime] = useState("00:00");
   const today = new Date();
+
+  // When withTime and datetimeValue/onDateTimeChange are used: single datetime string (YYYY-MM-DDTHH:mm or '')
+  const useDateTime = withTime && datetimeValue !== undefined && onDateTimeChange;
+  const [datePart, timePart] = useDateTime && datetimeValue ? datetimeValue.split("T") : [null, null];
+  const singleDateFromDatetime = datePart || null;
+  const displayTimeFromDatetime = timePart ? String(timePart).slice(0, 5) : "00:00";
+
+  const displayTime = useDateTime ? displayTimeFromDatetime : (timeValue ?? internalTime);
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const t = e.target.value;
+    setInternalTime(t);
+    if (useDateTime) {
+      const d = datePart || new Date().toISOString().slice(0, 10);
+      onDateTimeChange(`${d}T${t}`);
+    } else {
+      onTimeChange?.(t);
+    }
+  };
+
+  // When withTime: single datetime — use datetimeValue or normalize value to one date for both start/end
+  const singleDate = useDateTime
+    ? singleDateFromDatetime
+    : (value?.startDate ?? value?.endDate ?? null);
+  const singleDateTimeValue: DateValueType =
+    singleDate != null
+      ? ({ startDate: singleDate, endDate: singleDate } as DateValueType)
+      : { startDate: null, endDate: null };
+  const handleSingleDateTimeChange = (val: DateValueType) => {
+    const d = val?.startDate ?? val?.endDate ?? null;
+    if (useDateTime) {
+      const dateStr = d != null ? (typeof d === "string" ? d : (d as Date).toISOString().slice(0, 10)) : "";
+      onDateTimeChange(dateStr ? `${dateStr}T${displayTime}` : "");
+    } else if (d != null && onChange) {
+      onChange({ startDate: d, endDate: d });
+    } else if (onChange) {
+      onChange(val);
+    }
+  };
 
   const shortcuts = {
     today: {
@@ -111,19 +167,49 @@ const InputDatepicker = ({
           </p>
         </div>
       ) : null}
-      <div className={`relative ${disabled ? "opacity-60 pointer-events-none" : ""}`}>
-        <Datepicker
-          value={value}
-          onChange={onChange}
-          primaryColor="blue"
-          useRange={false}
-          showShortcuts={true}
-          containerClassName="w-full z-[80] focus:outline-none focus:ring-0 focus:ring-transparent focus:ring-offset-0 focus:ring-offset-transparent focus-within:outline-none focus-within:ring-0 focus-within:ring-transparent focus-within:ring-offset-0 focus-within:ring-offset-transparent focus-within:shadow-none focus-within:border-slate-300 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent"
-          inputClassName="border-input pr-9 w-full h-10 bg-white dark:bg-slate-800 rounded-md border px-3 text-sm shadow-none focus:outline-none focus:ring-0 focus:ring-transparent focus:ring-offset-0 focus:ring-offset-transparent focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:shadow-none focus:border-slate-300 dark:focus:border-slate-700 !ring-0 !outline-none !shadow-none !ring-offset-0 !ring-offset-transparent"
-          configs={{ shortcuts }}
-          disabled={disabled}
-        />
-      </div>
+      {withTime ? (
+        <div className={`relative ${disabled ? "opacity-60 pointer-events-none" : ""}`}>
+          <div className="h-10 w-full z-[80] pr-9 bg-white dark:bg-slate-800 rounded-md border text-sm shadow-none flex flex-row items-center overflow-hidden">
+            <Datepicker
+              value={singleDateTimeValue}
+              onChange={handleSingleDateTimeChange}
+              primaryColor="blue"
+              useRange={false}
+              asSingle={true}
+              showShortcuts={false}
+              containerClassName="w-[110px] z-[80] focus:outline-none focus:ring-0 focus:ring-transparent focus:ring-offset-0 focus:ring-offset-transparent focus-within:outline-none focus-within:ring-0 focus-within:ring-transparent focus-within:ring-offset-0 focus-within:ring-offset-transparent focus-within:shadow-none focus-within:border-slate-300 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent"
+              inputClassName="border-input w-full h-10 rounded-md pl-3 text-sm shadow-none focus:outline-none focus:ring-0 focus:ring-transparent focus:ring-offset-0 focus:ring-offset-transparent focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:shadow-none focus:border-slate-300 dark:focus:border-slate-700 !ring-0 !outline-none !shadow-none !ring-offset-0 !ring-offset-transparent"
+              configs={{ shortcuts }}
+              disabled={disabled}
+            />
+            <input
+              type="time"
+              id="time"
+              className="grow text-heading text-sm rounded-base focus:outline-none focus:ring-0 focus:ring-transparent focus:ring-offset-0 focus:ring-offset-transparent focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:shadow-none focus:border-slate-300 dark:focus:border-slate-700 !ring-0 !outline-none !shadow-none !ring-offset-0 !ring-offset-transparent shadow-xs placeholder:text-body"
+              value={displayTime}
+              onChange={handleTimeChange}
+              min="00:00"
+              max="23:59"
+              disabled={disabled}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className={`relative ${disabled ? "opacity-60 pointer-events-none" : ""}`}>
+          <Datepicker
+            value={value ?? { startDate: null, endDate: null }}
+            onChange={onChange ?? (() => {})}
+            primaryColor="blue"
+            useRange={range}
+            asSingle={!range}
+            showShortcuts={range}
+            containerClassName="w-full z-[80] focus:outline-none focus:ring-0 focus:ring-transparent focus:ring-offset-0 focus:ring-offset-transparent focus-within:outline-none focus-within:ring-0 focus-within:ring-transparent focus-within:ring-offset-0 focus-within:ring-offset-transparent focus-within:shadow-none focus-within:border-slate-300 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent"
+            inputClassName="border-input pr-9 w-full h-10 bg-white dark:bg-slate-800 rounded-md border px-3 text-sm shadow-none focus:outline-none focus:ring-0 focus:ring-transparent focus:ring-offset-0 focus:ring-offset-transparent focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:shadow-none focus:border-slate-300 dark:focus:border-slate-700 !ring-0 !outline-none !shadow-none !ring-offset-0 !ring-offset-transparent"
+            configs={{ shortcuts }}
+            disabled={disabled}
+          />
+        </div>
+      )}
     </div>
   );
 };
