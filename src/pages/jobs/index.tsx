@@ -180,6 +180,8 @@ const jobStatuses: JobStatus[] = [
   { id: 11, name: "Follow Up", color: "#FBBF24", parent: null, showApp: true, showLeads: true, showDispatch: true, isActive: true },
 ];
 
+let jobsDensityRef: 'comfortable' | 'compact' | 'ultra' = 'comfortable';
+
 export default function Jobs() {
   const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
   const [dateRangeFilter, setDateRangeFilter] = useState<string>("all");
@@ -216,6 +218,7 @@ export default function Jobs() {
   const [density, setDensity] = useState<'comfortable'|'compact'|'ultra'>(()=>{
     try { return (localStorage.getItem('jobs.density') as any) || 'comfortable'; } catch { return 'comfortable'; }
   });
+  jobsDensityRef = density;
   useEffect(()=>{ try { localStorage.setItem('jobs.density', density); } catch {} }, [density]);
   const [jobLeadFilter, setJobLeadFilter] = useState<'all' | 'job' | 'lead'>('all');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
@@ -2146,6 +2149,7 @@ export default function Jobs() {
   const [showJobDetails, setShowJobDetails] = useState(false);
   const [isEditing, setIsEditing] = useState(true);
   const [editFormData, setEditFormData] = useState({});
+  const [showSecondPhone, setShowSecondPhone] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
   const [boardStatusFilter, setBoardStatusFilter] = useState<string>('All');
   const [jobDetailsTab, setJobDetailsTab] = useState('details');
@@ -2424,6 +2428,87 @@ export default function Jobs() {
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [mobilePage, setMobilePage] = useState(1);
+  const [nearestJobsPage, setNearestJobsPage] = useState(1);
+  const [nearestJobsEntriesPerPage, setNearestJobsEntriesPerPage] = useState(10);
+  const [nearestJobsSearchQuery, setNearestJobsSearchQuery] = useState('');
+  const nearestJobsDummyData = useMemo(() => {
+    const base = (overrides: Record<string, unknown>) => ({
+      jobType: 'Service',
+      jobDescription: '',
+      location: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      country: 'USA',
+      startDate: new Date().toISOString().slice(0, 10),
+      startTime: '09:00',
+      estimatedDuration: '1 hour',
+      source: 'website' as const,
+      assignedTechnician: '',
+      priority: 'High' as const,
+      phoneNumber2: '',
+      ...overrides,
+    });
+    return [
+      base({
+        id: 'job-2053',
+        clientName: 'test',
+        companyName: '',
+        phoneNumber: '3335555555555',
+        email: 'test',
+        jobTags: ['Job'],
+        noteTags: [],
+        status: 'Confirmed',
+        lastUpdated: '2026-01-29T17:30:01',
+        createdAt: '2026-01-29T17:30:01',
+        revenue: 0,
+        location: '123 Main St',
+        city: 'Houston',
+        state: 'TX',
+        zipCode: '77001',
+        jobDescription: 'Test job description',
+        assignedTechnician: 'Tech One',
+      }),
+      base({
+        id: 'job-2054',
+        clientName: 'test',
+        companyName: '',
+        phoneNumber: '3335555555555',
+        email: 'test',
+        jobTags: ['Job'],
+        noteTags: [],
+        status: 'Confirmed',
+        lastUpdated: '2026-02-01T22:07:36',
+        createdAt: '2026-01-29T17:43:19',
+        revenue: 0,
+        location: '456 Oak Ave',
+        city: 'Houston',
+        state: 'TX',
+        zipCode: '77002',
+        jobDescription: 'Follow-up job',
+        assignedTechnician: 'Tech Two',
+      }),
+      base({
+        id: 'job-2055',
+        clientName: 'tessss',
+        companyName: '',
+        phoneNumber: '3335555555555',
+        email: 'tesss',
+        jobTags: ['Job', 'Test Tags'],
+        noteTags: [],
+        status: 'Done',
+        lastUpdated: '2026-02-03T19:17:53',
+        createdAt: '2026-02-03T03:06:36',
+        revenue: 0,
+        location: '789 Business Blvd',
+        city: 'Houston',
+        state: 'TX',
+        zipCode: '77003',
+        jobDescription: 'Completed test job',
+        assignedTechnician: 'Tech Three',
+      }),
+    ];
+  }, []);
   const statusPillsRef = useRef<HTMLDivElement | null>(null);
   const [isDraggingStatusPills, setIsDraggingStatusPills] = useState(false);
   const statusDragStartX = useRef(0);
@@ -2906,10 +2991,11 @@ export default function Jobs() {
   useEffect(() => {
     if (selectedJob) {
       setEditFormData(selectedJob);
+      setShowSecondPhone(!!(selectedJob as { phoneNumber2?: string }).phoneNumber2);
     }
   }, [selectedJob]);
 
-  const handleEditChange = (field: string, value: string) => {
+  const handleEditChange = (field: string, value: string | string[]) => {
     setEditFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -3063,12 +3149,36 @@ export default function Jobs() {
                   <span className="text-sm font-medium text-gray-600">Job ID:</span>
                   <span className="text-lg font-bold text-blue-700">{selectedJob.id}</span>
                 </div>
-                <Badge 
-                  style={{ backgroundColor: getStatusObj(selectedJob.status || 'Pending').color, color: 'white' }} 
-                  className="px-3 py-1"
-                >
-                  {selectedJob.status || 'Pending'}
-                </Badge>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="cursor-pointer focus:outline-none rounded-md"
+                    >
+                      <Badge
+                        style={{ backgroundColor: getStatusObj(selectedJob.status || 'Pending').color, color: 'white' }}
+                        className="px-3 py-1"
+                      >
+                        {selectedJob.status || 'Pending'}
+                      </Badge>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-44">
+                    {jobStatuses.map(statusOption => (
+                      <DropdownMenuItem
+                        key={statusOption.id}
+                        className="flex items-center gap-2"
+                        onClick={() => {
+                          setSelectedJob((prev: any) => prev ? { ...prev, status: statusOption.name } : null);
+                          setJobs((prev) => prev.map((j: any) => j.id === selectedJob.id ? { ...j, status: statusOption.name } : j));
+                        }}
+                      >
+                        <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: statusOption.color }} />
+                        <span>{statusOption.name}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Badge variant="outline" className="px-3 py-1">
                   ${selectedJob.revenue}
                 </Badge>
@@ -3090,10 +3200,11 @@ export default function Jobs() {
             {/* Tabs */}
             <div className="flex-1 flex flex-col min-h-0 border-b overflow-hidden">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 w-full">
-                <TabsList className="grid w-full grid-cols-3 shrink-0">
+                <TabsList className="grid w-full grid-cols-4 shrink-0">
                   <TabsTrigger value="details">Details</TabsTrigger>
                   <TabsTrigger value="activity">Activity</TabsTrigger>
                   <TabsTrigger value="financials">Financials</TabsTrigger>
+                  <TabsTrigger value="nearest-jobs">Nearest Jobs</TabsTrigger>
                 </TabsList>
 
                 {/* Details Tab */}
@@ -3134,7 +3245,7 @@ export default function Jobs() {
                             )}
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className={`grid grid-cols-${showSecondPhone ? `3` : `2`} gap-3`}>
                           <div>
                             <Label className="text-sm font-medium">Email</Label>
                             {isEditing ? (
@@ -3147,18 +3258,56 @@ export default function Jobs() {
                               <div className="mt-1 text-sm">{selectedJob.email}</div>
                             )}
                           </div>
-                          <div>
-                            <Label className="text-sm font-medium">Phone</Label>
+                          <div className="mt-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <Label className="text-sm font-medium">Phone</Label>
+                              {isEditing && !showSecondPhone && (
+                                <button
+                                  type="button"
+                                  onClick={() => setShowSecondPhone(true)}
+                                  className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+                                >
+                                  + Add more
+                                </button>
+                              )}
+                            </div>
                             {isEditing ? (
-                              <Input 
-                                value={editFormData.phoneNumber || ''} 
-                                onChange={(e) => handleEditChange('phoneNumber', e.target.value)}
-                                className="mt-1"
-                              />
+                              <div className="space-y-1 mt-1">
+                                <Input
+                                  value={editFormData.phoneNumber || ''}
+                                  onChange={(e) => handleEditChange('phoneNumber', e.target.value)}
+                                />
+                              </div>
                             ) : (
-                              <div className="mt-1 text-sm">{selectedJob.phoneNumber}</div>
+                              <div className="mt-1 space-y-0.5">
+                                <div className="text-sm">{selectedJob.phoneNumber}</div>
+                                {(selectedJob as { phoneNumber2?: string }).phoneNumber2 && (
+                                  <div className="text-sm text-slate-600 dark:text-slate-400">{(selectedJob as { phoneNumber2?: string }).phoneNumber2}</div>
+                                )}
+                              </div>
                             )}
                           </div>
+                          {showSecondPhone && (
+                            <div className="mt-1">
+                              <div className="flex items-center justify-between gap-2 mt-1">
+                                <Label className="text-sm font-medium">&nbsp;</Label>
+                                {showSecondPhone && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowSecondPhone(false)}
+                                    className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+                              <Input
+                                value={(editFormData as { phoneNumber2?: string }).phoneNumber2 || ''}
+                                onChange={(e) => handleEditChange('phoneNumber2', e.target.value)}
+                                placeholder="Additional phone"
+                              />
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -3168,28 +3317,42 @@ export default function Jobs() {
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
                           <MapPin className="w-5 h-5" />
-                          Location
+                          Service Location
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <div>
-                          <Label className="text-sm font-medium">Address</Label>
-                          {isEditing ? (
-                            <Input 
-                              value={editFormData.location || ''} 
-                              onChange={(e) => handleEditChange('location', e.target.value)}
-                              className="mt-1"
-                            />
-                          ) : (
-                            <div className="mt-1 text-sm">{selectedJob.location}</div>
-                          )}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-sm font-medium">Location</Label>
+                            {isEditing ? (
+                              <Input
+                                value={editFormData.location || ''}
+                                onChange={(e) => handleEditChange('location', e.target.value)}
+                                className="mt-1"
+                              />
+                            ) : (
+                              <div className="mt-1 text-sm">{selectedJob.location}</div>
+                            )}
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium">Apartment #</Label>
+                            {isEditing ? (
+                              <Input
+                                value={(editFormData as { apartmentNumber?: string }).apartmentNumber || ''}
+                                onChange={(e) => handleEditChange('apartmentNumber', e.target.value)}
+                                className="mt-1"
+                              />
+                            ) : (
+                              <div className="mt-1 text-sm">{(selectedJob as { apartmentNumber?: string }).apartmentNumber ?? '—'}</div>
+                            )}
+                          </div>
                         </div>
-                        <div className="grid grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 gap-3">
                           <div>
                             <Label className="text-sm font-medium">City</Label>
                             {isEditing ? (
-                              <Input 
-                                value={editFormData.city || ''} 
+                              <Input
+                                value={editFormData.city || ''}
                                 onChange={(e) => handleEditChange('city', e.target.value)}
                                 className="mt-1"
                               />
@@ -3198,10 +3361,24 @@ export default function Jobs() {
                             )}
                           </div>
                           <div>
+                            <Label className="text-sm font-medium">Zip</Label>
+                            {isEditing ? (
+                              <Input
+                                value={editFormData.zipCode || ''}
+                                onChange={(e) => handleEditChange('zipCode', e.target.value)}
+                                className="mt-1"
+                              />
+                            ) : (
+                              <div className="mt-1 text-sm">{selectedJob.zipCode}</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
                             <Label className="text-sm font-medium">State</Label>
                             {isEditing ? (
-                              <Input 
-                                value={editFormData.state || ''} 
+                              <Input
+                                value={editFormData.state || ''}
                                 onChange={(e) => handleEditChange('state', e.target.value)}
                                 className="mt-1"
                               />
@@ -3210,27 +3387,15 @@ export default function Jobs() {
                             )}
                           </div>
                           <div>
-                            <Label className="text-sm font-medium">ZIP</Label>
-                            {isEditing ? (
-                              <Input 
-                                value={editFormData.zipCode || ''} 
-                                onChange={(e) => handleEditChange('zipCode', e.target.value)}
-                                className="mt-1"
-                              />
-                            ) : (
-                              <div className="mt-1 text-sm">{selectedJob.zipCode}</div>
-                            )}
-                          </div>
-                          <div>
                             <Label className="text-sm font-medium">Country</Label>
                             {isEditing ? (
-                              <Input 
-                                value={editFormData.country || ''} 
+                              <Input
+                                value={editFormData.country || ''}
                                 onChange={(e) => handleEditChange('country', e.target.value)}
                                 className="mt-1"
                               />
                             ) : (
-                              <div className="mt-1 text-sm">{(selectedJob as { country?: string }).country ?? 'USA'}</div>
+                              <div className="mt-1 text-sm">{(selectedJob as { country?: string }).country ?? 'United States'}</div>
                             )}
                           </div>
                         </div>
@@ -3242,13 +3407,13 @@ export default function Jobs() {
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
                           <Wrench className="w-5 h-5" />
-                          Service Details
+                          Job Details
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <Label className="text-sm font-medium">Category</Label>
+                            <Label className="text-sm font-medium">Job Category</Label>
                             {isEditing ? (
                               <Select value={editFormData.jobCategory || ''} onValueChange={(value) => handleEditChange('jobCategory', value)}>
                                 <SelectTrigger className="mt-1">
@@ -3266,7 +3431,7 @@ export default function Jobs() {
                             )}
                           </div>
                           <div>
-                            <Label className="text-sm font-medium">Type</Label>
+                            <Label className="text-sm font-medium">Job Type</Label>
                             {isEditing ? (
                               <Select value={editFormData.jobType || ''} onValueChange={(value) => handleEditChange('jobType', value)}>
                                 <SelectTrigger className="mt-1">
@@ -3285,30 +3450,36 @@ export default function Jobs() {
                           </div>
                         </div>
                         <div>
-                          <Label className="text-sm font-medium">Priority</Label>
                           {isEditing ? (
-                            <Select value={editFormData.priority || ''} onValueChange={(value) => handleEditChange('priority', value)}>
-                              <SelectTrigger className="mt-1">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Low">Low</SelectItem>
-                                <SelectItem value="Medium">Medium</SelectItem>
-                                <SelectItem value="High">High</SelectItem>
-                                <SelectItem value="Emergency">Emergency</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <div className="mt-1 text-sm">
-                              {[
+                            <SelectInput
+                              label="Source"
+                              options={[
                                 { label: 'Yelp', value: 'yelp' },
                                 { label: 'Google Ads', value: 'google-ads' },
                                 { label: 'Facebook', value: 'facebook' },
                                 { label: 'Referral', value: 'referral' },
                                 { label: 'Website', value: 'website' },
                                 { label: 'Direct Call', value: 'phone' },
-                              ].find(o => o.value === (selectedJob as { source?: string }).source)?.label ?? (selectedJob as { source?: string }).source ?? '—'}
-                            </div>
+                              ]}
+                              placeholder="Select source"
+                              value={editFormData.source ?? ''}
+                              onSelect={val => handleEditChange('source', Array.isArray(val) ? (val[0] ?? '') : val)}
+                              onSearch={() => {}}
+                            />
+                          ) : (
+                            <>
+                              <Label className="text-sm font-medium">Source</Label>
+                              <div className="mt-1 text-sm">
+                                {[
+                                  { label: 'Yelp', value: 'yelp' },
+                                  { label: 'Google Ads', value: 'google-ads' },
+                                  { label: 'Facebook', value: 'facebook' },
+                                  { label: 'Referral', value: 'referral' },
+                                  { label: 'Website', value: 'website' },
+                                  { label: 'Direct Call', value: 'phone' },
+                                ].find(o => o.value === (selectedJob as { source?: string }).source)?.label ?? (selectedJob as { source?: string }).source ?? '—'}
+                              </div>
+                            </>
                           )}
                         </div>
                       </CardContent>
@@ -3319,50 +3490,109 @@ export default function Jobs() {
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
                           <Calendar className="w-5 h-5" />
-                          Scheduling
+                          Scheduled
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
+                        {isEditing ? (
+                          <SelectInput
+                            options={[
+                              { label: 'All', value: 'all' },
+                              { label: 'Closest Distance', value: 'closest-distance' },
+                              { label: 'Matching Skills', value: 'matching-skills' },
+                              { label: 'Matching Metro', value: 'matching-metro' },
+                              { label: 'Closest Distance + Matching Skill + Matching Metro', value: 'closest-distance-matching-skill-matching-metro' },
+                            ]}
+                            placeholder="Closest Distance"
+                            value={(editFormData as { closestDistance?: string }).closestDistance ?? (selectedJob as { closestDistance?: string }).closestDistance ?? ''}
+                            onSelect={val => handleEditChange('closestDistance', Array.isArray(val) ? (val[0] ?? '') : val)}
+                            onSearch={() => {}}
+                          />
+                        ) : (
                           <div>
-                            <Label className="text-sm font-medium">Date</Label>
+                            <Label className="text-sm font-medium">Closest Distance</Label>
+                            <div className="mt-1 text-sm">{([{ label: 'All', value: 'all' }, { label: 'Closest Distance', value: 'closest-distance' }, { label: 'Matching Skills', value: 'matching-skills' }, { label: 'Matching Metro', value: 'matching-metro' }, { label: 'Closest Distance + Matching Skill + Matching Metro', value: 'closest-distance-matching-skill-matching-metro' }].find(o => o.value === ((selectedJob as { closestDistance?: string }).closestDistance))?.label) ?? (selectedJob as { closestDistance?: string }).closestDistance ?? '—'}</div>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <Label className="text-sm font-medium">Start DateTime</Label>
                             {isEditing ? (
-                              <Input 
-                                type="date"
-                                value={editFormData.startDate || ''} 
-                                onChange={(e) => handleEditChange('startDate', e.target.value)}
-                                className="mt-1"
-                              />
+                              <div className="mt-1">
+                                <InputDatepicker
+                                  range={false}
+                                  withTime={true}
+                                  datetimeValue={editFormData.startDate && editFormData.startTime ? `${editFormData.startDate}T${String(editFormData.startTime).slice(0, 5)}` : ''}
+                                  onDateTimeChange={(v) => {
+                                    if (v) {
+                                      const [d, t] = v.split('T');
+                                      handleEditChange('startDate', d || '');
+                                      handleEditChange('startTime', t ? `${t}:00` : '00:00:00');
+                                    }
+                                  }}
+                                />
+                              </div>
                             ) : (
-                              <div className="mt-1 text-sm">{selectedJob.startDate}</div>
+                              <div className="mt-1 text-sm">
+                                {selectedJob.startDate && selectedJob.startTime
+                                  ? new Date(`${selectedJob.startDate}T${selectedJob.startTime}`).toLocaleString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
+                                  : '—'}
+                              </div>
                             )}
                           </div>
                           <div>
-                            <Label className="text-sm font-medium">Time</Label>
+                            <Label className="text-sm font-medium">End DateTime</Label>
                             {isEditing ? (
-                              <Input 
-                                type="time"
-                                value={editFormData.startTime || ''} 
-                                onChange={(e) => handleEditChange('startTime', e.target.value)}
-                                className="mt-1"
-                              />
+                              <div className="mt-1">
+                                <InputDatepicker
+                                  range={false}
+                                  withTime={true}
+                                  datetimeValue={(() => {
+                                    const endD = (editFormData as { endDate?: string }).endDate || editFormData.startDate;
+                                    const endT = (editFormData as { estimatedEndTime?: string }).estimatedEndTime || editFormData.startTime || '17:00';
+                                    return endD && endT ? `${endD}T${String(endT).slice(0, 5)}` : '';
+                                  })()}
+                                  onDateTimeChange={(v) => {
+                                    if (v) {
+                                      const [d, t] = v.split('T');
+                                      handleEditChange('endDate', d || '');
+                                      handleEditChange('estimatedEndTime', t ? `${t.slice(0, 5)}` : '17:00');
+                                    }
+                                  }}
+                                />
+                              </div>
                             ) : (
-                              <div className="mt-1 text-sm">{selectedJob.startTime}</div>
+                              <div className="mt-1 text-sm">
+                                {(() => {
+                                  const endD = (selectedJob as { endDate?: string }).endDate || selectedJob.startDate;
+                                  const endT = (selectedJob as { estimatedEndTime?: string }).estimatedEndTime || selectedJob.startTime;
+                                  return endD && endT ? new Date(`${endD}T${endT}`).toLocaleString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '—';
+                                })()}
+                              </div>
                             )}
                           </div>
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium">Duration</Label>
-                          {isEditing ? (
-                            <Input 
-                              value={editFormData.estimatedDuration || ''} 
-                              onChange={(e) => handleEditChange('estimatedDuration', e.target.value)}
-                              className="mt-1"
-                              placeholder="e.g., 2 hours"
-                            />
-                          ) : (
-                            <div className="mt-1 text-sm">{selectedJob.estimatedDuration}</div>
-                          )}
+                          <div>
+                            <Label className="text-sm font-medium">Closed At</Label>
+                            {isEditing ? (
+                              <div className="mt-1">
+                                <InputDatepicker
+                                  range={false}
+                                  withTime={true}
+                                  datetimeValue={(() => {
+                                    const s = (editFormData as { closedAt?: string }).closedAt;
+                                    return s && s.length >= 16 ? s.slice(0, 16) : s || '';
+                                  })()}
+                                  onDateTimeChange={(v) => handleEditChange('closedAt', v)}
+                                />
+                              </div>
+                            ) : (
+                              <div className="mt-1 text-sm">
+                                {(selectedJob as { closedAt?: string }).closedAt
+                                  ? new Date((selectedJob as { closedAt?: string }).closedAt!).toLocaleString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
+                                  : '—'}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -3376,118 +3606,113 @@ export default function Jobs() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <div>
-                          <Label className="text-sm font-medium">Technician</Label>
+                        {isEditing ? (
+                          <SelectInput
+                            label="Assign Technician"
+                            options={technicianOptions.map(name => ({ label: name, value: name }))}
+                            placeholder="Select Technician"
+                            value={editFormData.assignedTechnician ?? selectedJob?.assignedTechnician ?? ''}
+                            onSelect={val => handleEditChange('assignedTechnician', Array.isArray(val) ? (val[0] ?? '') : val)}
+                            onSearch={() => {}}
+                          />
+                        ) : (
+                          <div><Label className="text-sm font-medium">Assign Technician</Label><div className="mt-1 text-sm">{selectedJob?.assignedTechnician ?? '—'}</div></div>
+                        )}
+                        <div className="grid grid-cols-2 gap-3">
                           {isEditing ? (
-                            <Select value={editFormData.assignedTechnician || ''} onValueChange={(value) => handleEditChange('assignedTechnician', value)}>
-                              <SelectTrigger className="mt-1">
-                                <SelectValue placeholder="Select technician" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="John Smith">John Smith</SelectItem>
-                                <SelectItem value="Mike Johnson">Mike Johnson</SelectItem>
-                                <SelectItem value="Sarah Wilson">Sarah Wilson</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <SelectInput
+                              label="Job Status"
+                              options={jobStatuses.map(s => ({ label: s.name, value: s.name }))}
+                              placeholder="Select status"
+                              value={editFormData.status ?? selectedJob?.status ?? ''}
+                              onSelect={val => handleEditChange('status', Array.isArray(val) ? (val[0] ?? '') : val)}
+                              onSearch={() => {}}
+                            />
                           ) : (
-                            <div className="mt-1 text-sm">{selectedJob.assignedTechnician || 'Unassigned'}</div>
+                            <div><Label className="text-sm font-medium">Job Status</Label><div className="mt-1 text-sm">{selectedJob?.status ?? '—'}</div></div>
                           )}
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium">Status</Label>
                           {isEditing ? (
-                            <Select value={editFormData.status || ''} onValueChange={(value) => handleEditChange('status', value)}>
-                              <SelectTrigger className="mt-1">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Pending">Pending</SelectItem>
-                                <SelectItem value="Confirmed">Confirmed</SelectItem>
-                                <SelectItem value="In Progress">In Progress</SelectItem>
-                                <SelectItem value="Completed">Completed</SelectItem>
-                                <SelectItem value="Cancelled">Cancelled</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <SelectInput
+                              label="Sub Status"
+                              options={[
+                                { label: 'Nothing selected', value: '' },
+                                { label: 'Follow up', value: 'follow-up' },
+                                { label: 'Rescheduled', value: 'rescheduled' },
+                                { label: 'No answer', value: 'no-answer' },
+                                { label: 'Customer cancelled', value: 'customer-cancelled' },
+                                { label: 'Pending confirmation', value: 'pending-confirmation' },
+                              ]}
+                              placeholder="Nothing selected"
+                              value={(editFormData as { subStatus?: string }).subStatus ?? (selectedJob as { subStatus?: string }).subStatus ?? ''}
+                              onSelect={val => handleEditChange('subStatus', Array.isArray(val) ? (val[0] ?? '') : val)}
+                              onSearch={() => {}}
+                            />
                           ) : (
-                            <div className="mt-1 text-sm">{selectedJob.status}</div>
+                            <div><Label className="text-sm font-medium">Sub Status</Label><div className="mt-1 text-sm">{([{ label: 'Follow up', value: 'follow-up' }, { label: 'Rescheduled', value: 'rescheduled' }, { label: 'No answer', value: 'no-answer' }, { label: 'Customer cancelled', value: 'customer-cancelled' }, { label: 'Pending confirmation', value: 'pending-confirmation' }].find(o => o.value === (selectedJob as { subStatus?: string }).subStatus)?.label) ?? (selectedJob as { subStatus?: string }).subStatus ?? '—'}</div></div>
+                          )}
+                          {isEditing ? (
+                            <SelectInput
+                              label="Jobs Tag"
+                              options={[
+                                { label: 'Urgent', value: 'urgent' },
+                                { label: 'Warranty', value: 'warranty' },
+                                { label: 'Follow-up', value: 'follow-up' },
+                                { label: 'Commercial', value: 'commercial' },
+                                { label: 'Test1', value: 'test1' },
+                                { label: 'Job', value: 'job' },
+                              ]}
+                              placeholder="Select tags"
+                              multiselect
+                              value={Array.isArray((editFormData as { jobTags?: string[] }).jobTags) ? (editFormData as { jobTags?: string[] }).jobTags! : (Array.isArray(selectedJob?.jobTags) ? selectedJob.jobTags : [])}
+                              onSelect={val => handleEditChange('jobTags', Array.isArray(val) ? val : [])}
+                              onSearch={() => {}}
+                            />
+                          ) : (
+                            <div><Label className="text-sm font-medium">Jobs Tag</Label><div className="mt-1 text-sm">{Array.isArray(selectedJob?.jobTags) ? selectedJob.jobTags.join(', ') : '—'}</div></div>
+                          )}
+                          {isEditing ? (
+                            <SelectInput
+                              label="Jobs Tag Note"
+                              options={initialQuickTagNoteOptions.map(t => ({ label: t.replace(/-/g, ' '), value: t }))}
+                              placeholder="Select Tag Note"
+                              multiselect
+                              value={Array.isArray((editFormData as { noteTags?: string[] }).noteTags) ? (editFormData as { noteTags?: string[] }).noteTags! : (Array.isArray(selectedJob?.noteTags) ? selectedJob.noteTags : [])}
+                              onSelect={val => handleEditChange('noteTags', Array.isArray(val) ? val : [])}
+                              onSearch={() => {}}
+                            />
+                          ) : (
+                            <div><Label className="text-sm font-medium">Jobs Tag Note</Label><div className="mt-1 text-sm">{Array.isArray(selectedJob?.noteTags) ? selectedJob.noteTags.join(', ') : '—'}</div></div>
                           )}
                         </div>
                       </CardContent>
                     </Card>
 
-                    {/* Financials */}
-                    <Card>
+                    {/* Description & Notes */}
+                    <Card className="flex flex-col">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
-                          <DollarSign className="w-5 h-5" />
-                          Financials
+                          <FileText className="w-5 h-5" />
+                          Description & Notes
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div>
-                          <Label className="text-sm font-medium">Revenue</Label>
+                      <CardContent className="flex space-y-3 flex-1">
+                        <div className="flex-1 flex">
                           {isEditing ? (
-                            <Input 
-                              value={editFormData.revenue || ''} 
-                              onChange={(e) => handleEditChange('revenue', e.target.value)}
-                              className="mt-1"
-                              type="number"
+                            <Textarea 
+                              value={editFormData.jobDescription || ''} 
+                              onChange={(e) => handleEditChange('jobDescription', e.target.value)}
+                              className="mt-1 flex-1"
+                              rows={3}
                             />
                           ) : (
-                            <div className="mt-1 text-sm">${selectedJob.revenue}</div>
+                            <div className="mt-1 text-sm">{selectedJob.jobDescription}</div>
                           )}
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-sm font-medium">Distance</Label>
-                            <div className="mt-1 text-sm">{selectedJob.distance} mi</div>
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Rating</Label>
-                            <div className="mt-1 text-sm">{selectedJob.customerRating} ⭐</div>
-                          </div>
                         </div>
                       </CardContent>
                     </Card>
                   </div>
 
-                  {/* Description & Notes */}
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <FileText className="w-5 h-5" />
-                        Description & Notes
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div>
-                        <Label className="text-sm font-medium">Job Description</Label>
-                        {isEditing ? (
-                          <Textarea 
-                            value={editFormData.jobDescription || ''} 
-                            onChange={(e) => handleEditChange('jobDescription', e.target.value)}
-                            className="mt-1"
-                            rows={3}
-                          />
-                        ) : (
-                          <div className="mt-1 text-sm">{selectedJob.jobDescription}</div>
-                        )}
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium">Special Instructions</Label>
-                        {isEditing ? (
-                          <Textarea 
-                            value={editFormData.specialInstructions || ''} 
-                            onChange={(e) => handleEditChange('specialInstructions', e.target.value)}
-                            className="mt-1"
-                            rows={2}
-                          />
-                        ) : (
-                          <div className="mt-1 text-sm">{selectedJob.specialInstructions}</div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  
                   {/* Footer */}
                   <div className="flex items-center justify-end gap-3 pt-4 border-t">
                     <div className="flex items-center gap-2">
@@ -3499,105 +3724,108 @@ export default function Jobs() {
                 </TabsContent>
 
                 {/* Activity Tab */}
-                <TabsContent value="activity" className="flex-1 min-h-0 overflow-y-auto p-6 pb-4 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Activity className="w-5 h-5" />
-                        Activity Feed
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {/* Add Note Section */}
-                      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-2 mb-3">
-                          <MessageSquare className="w-4 h-4" />
-                          <h3 className="font-medium">Add Note</h3>
+                <TabsContent value="activity" className="flex flex-col min-h-0 overflow-y-auto p-6 pb-4 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+                    <Card className="h-full overflow-hidden flex flex-col">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          Logs
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-1 overflow-y-scroll">
+                        {/* Logs goes here */}
+                      </CardContent>
+                    </Card>
+                    <Card className="h-full overflow-hidden flex flex-col">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          Jobs Activity
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-1 overflow-y-scroll">
+                        {/* Add Note Section */}
+                        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-2 mb-3">
+                            <MessageSquare className="w-4 h-4" />
+                            <h3 className="font-medium">Add Note</h3>
+                          </div>
+                          <div className="flex gap-2">
+                            <Textarea 
+                              placeholder="Type your note here..."
+                              value={newNote}
+                              onChange={(e) => setNewNote(e.target.value)}
+                              className="flex-1"
+                              rows={2}
+                            />
+                            <Button onClick={handleAddNote} disabled={!newNote.trim()}>
+                              <Send className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Textarea 
-                            placeholder="Type your note here..."
-                            value={newNote}
-                            onChange={(e) => setNewNote(e.target.value)}
-                            className="flex-1"
-                            rows={2}
+
+                        {/* Activity Filter */}
+                        <div className="mb-4 w-48">
+                          <SelectInput
+                            options={[
+                              { label: 'All Activity', value: 'all' },
+                              { label: 'Notes', value: 'note' },
+                              { label: 'Job Activity', value: 'activity' },
+                              { label: 'Assignments', value: 'assign' },
+                              { label: 'Payments', value: 'payment' },
+                              { label: 'Calls', value: 'call' },
+                              { label: 'Messages', value: 'messages' },
+                            ]}
+                            placeholder="Filter Activity"
+                            value={activityFilter}
+                            onSelect={val => setActivityFilter(Array.isArray(val) ? (val[0] ?? 'all') : val)}
                           />
-                          <Button onClick={handleAddNote} disabled={!newNote.trim()}>
-                            <Send className="w-4 h-4" />
-                          </Button>
                         </div>
-                      </div>
 
-                      {/* Activity Filter */}
-                      <div className="mb-4">
-                        <Select value={activityFilter} onValueChange={setActivityFilter}>
-                          <SelectTrigger className="w-48">
-                            <SelectValue placeholder="Filter Activity" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Activity</SelectItem>
-                            <SelectItem value="note">Notes</SelectItem>
-                            <SelectItem value="activity">Job Activity</SelectItem>
-                            <SelectItem value="assign">Assignments</SelectItem>
-                            <SelectItem value="payment">Payments</SelectItem>
-                            <SelectItem value="call">Calls</SelectItem>
-                            <SelectItem value="messages">Messages</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Activity List */}
-                      <div className="space-y-4">
-                        {filteredActivity.map((item, index) => (
-                          <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                            <div className="w-2 h-2 rounded-full mt-2" style={{ backgroundColor: item.color }}></div>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between">
-                                <h4 className="font-medium text-sm">{item.title}</h4>
-                                <span className="text-xs text-gray-500">{item.timestamp}</span>
-                              </div>
-                              <p className="text-sm text-gray-600 mt-1">{item.summary}</p>
-                              <p className="text-xs text-gray-500 mt-1">by {item.user}</p>
-                              
-                              {/* Reply button for notes */}
-                              {item.type === 'note' && (
-                                <div className="mt-2">
-                                  {showReplyNote === index ? (
-                                    <div className="flex gap-2">
-                                      <Textarea 
-                                        placeholder="Type your reply..."
-                                        value={replyNote}
-                                        onChange={(e) => setReplyNote(e.target.value)}
-                                        className="flex-1"
-                                        rows={1}
-                                      />
-                                      <Button size="sm" onClick={() => handleReplyNote(index)} disabled={!replyNote.trim()}>
+                        {/* Activity List */}
+                        <div className="space-y-4">
+                          {filteredActivity.map((item, index) => (
+                            <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                              <div className="w-2 h-2 rounded-full mt-2" style={{ backgroundColor: item.color }}></div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="font-medium text-sm">{item.title}</h4>
+                                  <span className="text-xs text-gray-500">{item.timestamp}</span>
+                                </div>
+                                <p className="text-sm text-gray-600 mt-1">{item.summary}</p>
+                                <p className="text-xs text-gray-500 mt-1">by {item.user}</p>
+                                
+                                {/* Reply button for notes */}
+                                {item.type === 'note' && (
+                                  <div className="mt-2">
+                                    {showReplyNote === index ? (
+                                      <div className="flex gap-2">
+                                        <Textarea 
+                                          placeholder="Type your reply..."
+                                          value={replyNote}
+                                          onChange={(e) => setReplyNote(e.target.value)}
+                                          className="flex-1"
+                                          rows={1}
+                                        />
+                                        <Button size="sm" onClick={() => handleReplyNote(index)} disabled={!replyNote.trim()}>
+                                          Reply
+                                        </Button>
+                                        <Button size="sm" variant="outline" onClick={() => setShowReplyNote(null)}>
+                                          Cancel
+                                        </Button>
+                                      </div>
+                                    ) : (
+                                      <Button size="sm" variant="outline" onClick={() => setShowReplyNote(index)}>
                                         Reply
                                       </Button>
-                                      <Button size="sm" variant="outline" onClick={() => setShowReplyNote(null)}>
-                                        Cancel
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <Button size="sm" variant="outline" onClick={() => setShowReplyNote(index)}>
-                                      Reply
-                                    </Button>
-                                  )}
-                                </div>
-                              )}
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  {/* Footer */}
-                  <div className="flex items-center justify-end gap-3 pt-4 mt-4 border-t">
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" onClick={handleSave} className="bg-green-600 hover:bg-green-700">
-                        Save
-                      </Button>
-                    </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </TabsContent>
 
@@ -3646,6 +3874,61 @@ export default function Jobs() {
                         Save
                       </Button>
                     </div>
+                  </div>
+                </TabsContent>
+
+                {/* Nearest Jobs Tab */}
+                <TabsContent value="nearest-jobs" className="flex-1 min-h-0 overflow-hidden flex flex-col p-4 data-[state=inactive]:hidden data-[state=active]:flex">
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    {(() => {
+                      const q = nearestJobsSearchQuery.trim().toLowerCase();
+                      const nearestFiltered = q
+                        ? nearestJobsDummyData.filter((row: any) =>
+                            (row.id || '').toLowerCase().includes(q) ||
+                            (row.clientName || '').toLowerCase().includes(q) ||
+                            ((row as any).companyName || '').toLowerCase().includes(q) ||
+                            (row.phoneNumber || '').toLowerCase().includes(q) ||
+                            (row.email || '').toLowerCase().includes(q) ||
+                            (row.status || '').toLowerCase().includes(q) ||
+                            (Array.isArray(row.jobTags) ? row.jobTags.join(' ').toLowerCase() : '').includes(q) ||
+                            (Array.isArray((row as any).noteTags) ? (row as any).noteTags.join(' ').toLowerCase() : '').includes(q)
+                          )
+                        : nearestJobsDummyData;
+                      const nearestTotal = nearestFiltered.length;
+                      const nearestTotalPages = Math.max(1, Math.ceil(nearestTotal / nearestJobsEntriesPerPage));
+                      const nearestPaged = nearestFiltered.slice(
+                        (nearestJobsPage - 1) * nearestJobsEntriesPerPage,
+                        nearestJobsPage * nearestJobsEntriesPerPage
+                      );
+                      return (
+                        <>
+                          <div className="relative mb-3">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <Input
+                              placeholder="Search jobs, clients, phone, email..."
+                              value={nearestJobsSearchQuery}
+                              onChange={(e) => { setNearestJobsSearchQuery(e.target.value); setNearestJobsPage(1); }}
+                              className="pl-9 w-full max-w-xs"
+                            />
+                          </div>
+                          <Table
+                            key="nearest-jobs"
+                            rows={nearestPaged}
+                            mobileRows={nearestFiltered.slice(0, nearestJobsPage * nearestJobsEntriesPerPage)}
+                            columns={tableColumns.filter((v, i) => {return i > 0;})}
+                            pageSize={nearestJobsEntriesPerPage}
+                            currentPage={nearestJobsPage}
+                            totalPages={nearestTotalPages}
+                            totalCount={nearestTotal}
+                            onPageSizeChange={(v) => { setNearestJobsEntriesPerPage(Number(v)); setNearestJobsPage(1); }}
+                            onPageChange={setNearestJobsPage}
+                            maxHeightClassName="max-h-[calc(100vh-320px)]"
+                            className="flex-1 flex flex-col"
+                            tableClassName="flex-1"
+                          />
+                        </>
+                      );
+                    })()}
                   </div>
                 </TabsContent>
               </Tabs>
@@ -3801,17 +4084,6 @@ export default function Jobs() {
       status: visibleClientFields.status || visibleClientFields.jobMasked,
       actions: true,
     };
-
-    const handleRowToggle = (jobId: string, checked: boolean) => {
-      setSelectedRows(prev => {
-        const next = new Set(prev);
-        if (checked) next.add(jobId);
-        else next.delete(jobId);
-        return next;
-      });
-    };
-
-    const onChangeStatus: ((rowId: string, statusName: string) => void) | undefined = undefined;
 
     const mobileCard = (row) => {
       const status = getStatusObj(getJobStatus(row));
@@ -3973,350 +4245,6 @@ export default function Jobs() {
       );
     };
 
-    const primaryTextClass = density === "ultra" ? "text-[12px]" : "text-xs";
-    const secondaryTextClass = density === "ultra" ? "text-[11px]" : "text-xs";
-    const metaTextClass = density === "ultra" ? "text-[10px]" : "text-xs";
-
-    const tableColumns = [
-      {
-        columnName: "",
-        sortKey: "",
-        cell: (row) => (
-          
-          <div className="flex items-center">
-            <div className={`${density === 'ultra' ? 'h-7' : density === 'compact' ? 'h-8' : 'h-7'} flex items-center justify-center`}>
-              <Checkbox
-                aria-label={`Select job ${row.id}`}
-                checked={selectedRows.has(row.id)}
-                onCheckedChange={checked => handleRowToggle(row.id, Boolean(checked))}
-              />
-            </div>
-          </div>
-        ),
-      },
-      {
-        isFixed: true,
-        columnName: "Job Details",
-        sortKey: "jobType",
-        cell: (row) => {
-          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
-          return (
-            <div className={`max-w-[200px] ${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
-              <div className="flex flex-col space-y-2">
-                <div className="flex items-center space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedJob(row); setShowJobDetails(true); }}
-                    className={`${density === 'ultra' ? 'h-7 px-3' : density === 'compact' ? 'h-8 px-3' : 'h-7 px-4'} bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                  >
-                    <span className={`whitespace-nowrap text-white font-semibold ${secondaryTextClass}`}>
-                      {row.id}
-                    </span>
-                  </button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className={`h-7 w-7 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 shadow-sm`}
-                    onClick={() => openJobPanel(row)}
-                    title="View job"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                  
-                </div>
-                <div className="min-w-0 space-y-2">
-                  <div className="flex flex-row gap-2 items-center">
-                    <p
-                      className={`${primaryTextClass} font-semibold text-slate-900 dark:text-slate-100 truncate cursor-pointer hover:underline`}
-                      onClick={() => { setSelectedJob(row); setShowJobDetails(true); }}
-                    >
-                      {row.jobType}
-                    </p>
-                    <div className="w-1.5 h-1.5 bg-slate-400 rounded-full" />
-                    <div className={`flex items-center space-x-3 ${metaTextClass} text-slate-500 dark:text-slate-400`}>
-                      <span className="flex items-center gap-1 whitespace-nowrap">
-                        <span>${row.revenue}</span>
-                      </span>
-                    </div>
-                  </div>
-                  <TooltipProvider delayDuration={300}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <p
-                          className={`${secondaryTextClass} text-slate-700 dark:text-slate-300 truncate cursor-pointer hover:underline`}
-                          onClick={() => { setSelectedJob(row); setShowJobDetails(true); }}
-                        >
-                          {row.jobDescription}
-                        </p>
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-sm text-xs">
-                        {row.jobDescription}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  
-                </div>
-              </div>
-            </div>
-          );
-        },
-      },
-      {
-        columnName: "Client Info",
-        sortKey: "clientName",
-        cell: (row) => (
-          <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
-            {visibleClientFields.clientName && (
-              <div className="min-w-0 flex flex-row gap-2 items-center">
-                <p className={`${primaryTextClass} font-semibold text-slate-900 dark:text-slate-100 truncate`}>{row.clientName}</p>
-                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full" />
-                {visibleClientFields.companyName && (
-                  <p className={`${secondaryTextClass} text-slate-700 dark:text-slate-300 truncate`}>{row.companyName}</p>
-                )}
-              </div>
-            )}
-            {visibleClientFields.phoneNumber && (
-              <div className={`flex items-center space-x-2 ${secondaryTextClass} text-slate-600 dark:text-slate-400`}>
-                <Phone className="w-3 h-3" />
-                <span>{row.phoneNumber}</span>
-              </div>
-            )}
-            {visibleClientFields.phoneNumber2 && (row as any).phoneNumber2 && (
-              <div className={`flex items-center space-x-2 ${secondaryTextClass} text-slate-600 dark:text-slate-400`}>
-                <Phone className="w-3 h-3" />
-                <span>{(row as any).phoneNumber2}</span>
-              </div>
-            )}
-            {visibleClientFields.email && (
-              <div className={`flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 truncate`}>
-                <Mail className="w-3 h-3" />
-                <span className="truncate">{row.email}</span>
-              </div>
-            )}
-          </div>
-        ),
-      },
-      {
-        columnName: "Schedule",
-        sortKey: "startDate",
-        cell: (row) => {
-          const scheduledTime = new Date(`${row.startDate} ${row.startTime}`);
-          const timeUntilScheduled = getTimeUntil(scheduledTime);
-          const startDate = new Date(row.startDate);
-          const hasEnd = !!(row as { estimatedEndTime?: string }).estimatedEndTime || (row as { endDate?: string }).endDate;
-          const fromLabel = `${startDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}  ${row.startTime}`;
-          return (
-            <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-1.5'}`}>
-              {(() => {
-                
-                if (!hasEnd) {
-                  return (
-                    <div className="text-xs inline-flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
-                      <span className={`font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
-                        {fromLabel}
-                      </span>
-                    </div>
-                  );
-                }
-                const endTime = (row as { estimatedEndTime?: string }).estimatedEndTime ?? row.startTime;
-                let endDate = new Date((row as { endDate?: string }).endDate ?? row.startDate);
-                if (endDate.getTime() <= startDate.getTime()) {
-                  endDate = new Date(startDate);
-                  endDate.setDate(endDate.getDate() + 1);
-                }
-                const toLabel = `${endDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}  ${endTime}`;
-                return (
-                  <div className="text-xs inline-flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
-                    <span className={`font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap flex flex-row items-center gap-1`}>
-                      {fromLabel}
-                    </span>
-                    <span className="text-slate-400 dark:text-slate-500 font-light select-none" aria-hidden>–</span>
-                    <span className={`font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
-                      {toLabel}
-                    </span>
-                  </div>
-                );
-              })()}
-              <div className="flex flex-row items-center gap-2">
-                <div className="flex flex-row gap-2">
-                  <Badge
-                    variant="outline"
-                    className={`uppercase border-transparent whitespace-nowrap text-white ${new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'}`}
-                  >
-                    {new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'PAST DUE' : timeUntilScheduled}
-                  </Badge>
-                </div>
-                {hasEnd &&
-                  <div className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                    Duration: {row.estimatedDuration}
-                  </div>
-                }
-              </div>
-            </div>
-          );
-        },
-      },
-      {
-        columnName: "Location",
-        sortKey: "location",
-        cell: (row) => (
-          <div className={`${density === 'ultra' ? 'space-y-0.5' : 'space-y-1.5'}`}>
-            <p className={`text-xs text-slate-700 dark:text-slate-300 truncate`}>{row.location}</p>
-            <p className={`text-xs text-slate-600 dark:text-slate-400 truncate`}>
-              {row.city}, {row.state} {row.zipCode}{(row as { country?: string }).country ? `, ${(row as { country?: string }).country}` : ', USA'}
-            </p>
-          </div>
-        ),
-      },
-      {
-        columnName: "Source",
-        sortKey: "source",
-        cell: (row) => (
-          <div className={`space-y-0.5`}>
-            <div className="flex items-center space-x-2">
-              <Globe className="w-3.5 h-3.5 text-slate-500" />
-              <span className={`text-xs font-medium text-slate-900 dark:text-slate-100 capitalize truncate`}>
-                {row.source === 'yelp'
-                  ? 'Yelp'
-                  : row.source === 'google-ads'
-                    ? 'Google Ads'
-                    : row.source === 'facebook'
-                      ? 'Facebook'
-                      : row.source === 'referral'
-                        ? 'Referral'
-                        : row.source === 'website'
-                          ? 'Website'
-                          : row.source === 'phone'
-                            ? 'Phone Call'
-                            : row.source === 'contract'
-                              ? 'Contract'
-                              : row.source || 'Direct'}
-              </span>
-            </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400">Lead Source</div>
-          </div>
-        ),
-      },
-      {
-        columnName: "Created",
-        sortKey: "createdAt",
-        cell: (row) => {
-          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
-          return (
-            <div className={`space-y-0.5`}>
-              <div className="flex items-center space-x-2">
-                <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                <span className={`text-xs font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
-                  {new Date(row.createdAt || row.lastUpdated).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: '2-digit',
-                    year: '2-digit',
-                  })}
-                </span>
-              </div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                <TooltipProvider delayDuration={300}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className={`flex items-center gap-1 whitespace-nowrap text-[10px] text-slate-500 dark:text-slate-400 cursor-default`}>
-                        <Clock className="w-3 h-3" />
-                        <span>{timeAgo}</span>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {new Date(row.createdAt || row.lastUpdated).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </div>
-          );
-        },
-      },
-      {
-        columnName: "Technician",
-        sortKey: "assignedTechnician",
-        cell: (row) => (
-          <div className={`${density === 'ultra' ? 'space-y-0.5' : density === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedRows(new Set([row.id]));
-                setShowAssignTech(true);
-              }}
-              className="flex flex-row items-center space-x-2 text-left hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded px-1 -mx-1"
-            >
-              <User className={`w-3.5 h-3.5 shrink-0 ${row.assignedTechnician ? 'text-green-700' : 'text-red-500'}`} />
-              <span className={`text-xs font-medium ${row.assignedTechnician ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'} truncate`}>
-                {row.assignedTechnician ? `Assigned: ${row.assignedTechnician}` : 'UNASSIGNED'}
-              </span>
-            </button>
-          </div>
-        ),
-      },
-      {
-        columnName: "Status",
-        sortKey: "status",
-        cell: (row) => {
-          const status = getStatusObj(getJobStatus(row));
-          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
-          return (
-            <div className={`space-y-0.5`}>
-              <div className="flex flex-row gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="uppercase whitespace-nowrap cursor-pointer text-[10px] font-semibold px-2.5 py-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-300 dark:focus:ring-slate-600"
-                      style={{ backgroundColor: `${status.color}20`, color: status.color }}
-                    >
-                      {status.name}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
-                    {jobStatuses.map(statusOption => (
-                      <DropdownMenuItem
-                        key={statusOption.id}
-                        className="flex items-center gap-2"
-                        onClick={() => onChangeStatus?.(row.id, statusOption.name)}
-                      >
-                        <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: statusOption.color }} />
-                        <span>{statusOption.name}</span>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Badge
-                  variant="secondary"
-                  className={`text-[10px] px-2 py-0.5 whitespace-nowrap ${
-                    row.priority === 'High'
-                      ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                      : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                  }`}
-                >
-                  {row.priority === 'High' ? 'NEED TO COLLECT PAYMENT' : 'OPPORTUNITY'}
-                </Badge>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Clock className="w-3 h-3 text-slate-500" />
-                <span className="text-[10px] text-slate-600 dark:text-slate-400">{timeAgo} in status</span>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Phone className={`w-3 h-3 ${row.noteTags?.includes('called') ? 'text-green-500' : 'text-slate-400'}`} />
-                <span className="text-[10px] text-slate-600 dark:text-slate-400">
-                  {row.noteTags?.includes('called') ? 'Client Called' : 'No Call Yet'}
-                </span>
-              </div>
-            </div>
-          );
-        },
-      },
-    ];
-
     const columnOptions: [keyof VisibleClientFields, string][] = [
       ["srNo", "Sr No."],
       ["jobId", "Job Id"],
@@ -4354,7 +4282,7 @@ export default function Jobs() {
     }));
 
     return (
-      <div>
+      <div className="md:h-[calc(100vh-110px)] flex flex-col">
         {/* Premium Header with Enhanced Stats */}
         <div className="mb-6 flex sm:hidden items-end w-full justify-end gap-2 md:hidden">
           <div className="flex flex-row items-center w-full gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
@@ -4771,11 +4699,12 @@ export default function Jobs() {
             handlePageChange(page);
             setMobilePage(page);
           }}
-          maxHeightClassName={"max-h-[calc(100vh-420px)]"}
           onExport={handleExport}
           onColumnsChange={handleColumnOptionsChange}
           columnOptions={tableColumnOptions}
           tableKey={router.pathname}
+          className="flex-1 flex flex-col"
+          tableClassName="flex-1 flex flex-col overflow-y-hidden"
         />
       </div>
     );
@@ -4838,6 +4767,360 @@ export default function Jobs() {
     setDeleteDialogOpen(false);
     setJobToDelete(null);
   };
+
+  const handleRowToggle = (jobId: string, checked: boolean) => {
+    setSelectedRows(prev => {
+      const next = new Set(prev);
+      if (checked) next.add(jobId);
+      else next.delete(jobId);
+      return next;
+    });
+  };
+
+  const onChangeStatus: ((rowId: string, statusName: string) => void) | undefined = undefined;
+
+  const tableColumns = useMemo(() => {
+    const d = jobsDensityRef;
+    const primaryTextClass = d === "ultra" ? "text-[12px]" : "text-xs";
+    const secondaryTextClass = d === "ultra" ? "text-[11px]" : "text-xs";
+    const metaTextClass = d === "ultra" ? "text-[10px]" : "text-xs";
+    return [
+      {
+        columnName: "",
+        sortKey: "",
+        cell: (row) => (
+          <div className="flex items-center">
+            <div className={`${d === 'ultra' ? 'h-7' : d === 'compact' ? 'h-8' : 'h-7'} flex items-center justify-center`}>
+              <Checkbox
+                aria-label={`Select job ${row.id}`}
+                checked={selectedRows.has(row.id)}
+                onCheckedChange={checked => handleRowToggle(row.id, Boolean(checked))}
+              />
+            </div>
+          </div>
+        ),
+      },
+      {
+        isFixed: true,
+        columnName: "Job Details",
+        sortKey: "jobType",
+        cell: (row) => {
+          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
+          return (
+            <div className={`max-w-[200px] ${d === 'ultra' ? 'space-y-0.5' : d === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedJob(row); setShowJobDetails(true); }}
+                    className={`${d === 'ultra' ? 'h-7 px-3' : d === 'compact' ? 'h-8 px-3' : 'h-7 px-4'} bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                  >
+                    <span className={`whitespace-nowrap text-white font-semibold ${secondaryTextClass}`}>
+                      {row.id}
+                    </span>
+                  </button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className={`h-7 w-7 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 shadow-sm`}
+                    onClick={() => openJobPanel(row)}
+                    title="View job"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="min-w-0 space-y-2">
+                  <div className="flex flex-row gap-2 items-center">
+                    <p
+                      className={`${primaryTextClass} font-semibold text-slate-900 dark:text-slate-100 truncate cursor-pointer hover:underline`}
+                      onClick={() => { setSelectedJob(row); setShowJobDetails(true); }}
+                    >
+                      {row.jobType}
+                    </p>
+                    <div className="w-1.5 h-1.5 bg-slate-400 rounded-full" />
+                    <div className={`flex items-center space-x-3 ${metaTextClass} text-slate-500 dark:text-slate-400`}>
+                      <span className="flex items-center gap-1 whitespace-nowrap">
+                        <span>${row.revenue}</span>
+                      </span>
+                    </div>
+                  </div>
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p
+                          className={`${secondaryTextClass} text-slate-700 dark:text-slate-300 truncate cursor-pointer hover:underline`}
+                          onClick={() => { setSelectedJob(row); setShowJobDetails(true); }}
+                        >
+                          {row.jobDescription}
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-sm text-xs">
+                        {row.jobDescription}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        columnName: "Client Info",
+        sortKey: "clientName",
+        cell: (row) => (
+          <div className={`${d === 'ultra' ? 'space-y-0.5' : d === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+            {visibleClientFields.clientName && (
+              <div className="min-w-0 flex flex-row gap-2 items-center">
+                <p className={`${primaryTextClass} font-semibold text-slate-900 dark:text-slate-100 truncate`}>{row.clientName}</p>
+                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full" />
+                {visibleClientFields.companyName && (
+                  <p className={`${secondaryTextClass} text-slate-700 dark:text-slate-300 truncate`}>{row.companyName}</p>
+                )}
+              </div>
+            )}
+            {visibleClientFields.phoneNumber && (
+              <div className={`flex items-center space-x-2 ${secondaryTextClass} text-slate-600 dark:text-slate-400`}>
+                <Phone className="w-3 h-3" />
+                <span>{row.phoneNumber}</span>
+              </div>
+            )}
+            {visibleClientFields.phoneNumber2 && (row as any).phoneNumber2 && (
+              <div className={`flex items-center space-x-2 ${secondaryTextClass} text-slate-600 dark:text-slate-400`}>
+                <Phone className="w-3 h-3" />
+                <span>{(row as any).phoneNumber2}</span>
+              </div>
+            )}
+            {visibleClientFields.email && (
+              <div className={`flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 truncate`}>
+                <Mail className="w-3 h-3" />
+                <span className="truncate">{row.email}</span>
+              </div>
+            )}
+          </div>
+        ),
+      },
+      {
+        columnName: "Schedule",
+        sortKey: "startDate",
+        cell: (row) => {
+          const scheduledTime = new Date(`${row.startDate} ${row.startTime}`);
+          const timeUntilScheduled = getTimeUntil(scheduledTime);
+          const startDate = new Date(row.startDate);
+          const hasEnd = !!(row as { estimatedEndTime?: string }).estimatedEndTime || (row as { endDate?: string }).endDate;
+          const fromLabel = `${startDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}  ${row.startTime}`;
+          return (
+            <div className={`${d === 'ultra' ? 'space-y-0.5' : d === 'compact' ? 'space-y-1' : 'space-y-1.5'}`}>
+              {(() => {
+                if (!hasEnd) {
+                  return (
+                    <div className="text-xs inline-flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
+                      <span className={`font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
+                        {fromLabel}
+                      </span>
+                    </div>
+                  );
+                }
+                const endTime = (row as { estimatedEndTime?: string }).estimatedEndTime ?? row.startTime;
+                let endDate = new Date((row as { endDate?: string }).endDate ?? row.startDate);
+                if (endDate.getTime() <= startDate.getTime()) {
+                  endDate = new Date(startDate);
+                  endDate.setDate(endDate.getDate() + 1);
+                }
+                const toLabel = `${endDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}  ${endTime}`;
+                return (
+                  <div className="text-xs inline-flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
+                    <span className={`font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap flex flex-row items-center gap-1`}>
+                      {fromLabel}
+                    </span>
+                    <span className="text-slate-400 dark:text-slate-500 font-light select-none" aria-hidden>–</span>
+                    <span className={`font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
+                      {toLabel}
+                    </span>
+                  </div>
+                );
+              })()}
+              <div className="flex flex-row items-center gap-2">
+                <div className="flex flex-row gap-2">
+                  <Badge
+                    variant="outline"
+                    className={`uppercase border-transparent whitespace-nowrap text-white ${new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'}`}
+                  >
+                    {new Date(`${row.startDate} ${row.startTime}`) < new Date() ? 'PAST DUE' : timeUntilScheduled}
+                  </Badge>
+                </div>
+                {hasEnd &&
+                  <div className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                    Duration: {row.estimatedDuration}
+                  </div>
+                }
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        columnName: "Location",
+        sortKey: "location",
+        cell: (row) => (
+          <div className={`${d === 'ultra' ? 'space-y-0.5' : 'space-y-1.5'}`}>
+            <p className={`text-xs text-slate-700 dark:text-slate-300 truncate`}>{row.location}</p>
+            <p className={`text-xs text-slate-600 dark:text-slate-400 truncate`}>
+              {row.city}, {row.state} {row.zipCode}{(row as { country?: string }).country ? `, ${(row as { country?: string }).country}` : ', USA'}
+            </p>
+          </div>
+        ),
+      },
+      {
+        columnName: "Source",
+        sortKey: "source",
+        cell: (row) => (
+          <div className={`space-y-0.5`}>
+            <div className="flex items-center space-x-2">
+              <Globe className="w-3.5 h-3.5 text-slate-500" />
+              <span className={`text-xs font-medium text-slate-900 dark:text-slate-100 capitalize truncate`}>
+                {row.source === 'yelp'
+                  ? 'Yelp'
+                  : row.source === 'google-ads'
+                    ? 'Google Ads'
+                    : row.source === 'facebook'
+                      ? 'Facebook'
+                      : row.source === 'referral'
+                        ? 'Referral'
+                        : row.source === 'website'
+                          ? 'Website'
+                          : row.source === 'phone'
+                            ? 'Phone Call'
+                            : row.source === 'contract'
+                              ? 'Contract'
+                              : row.source || 'Direct'}
+              </span>
+            </div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">Lead Source</div>
+          </div>
+        ),
+      },
+      {
+        columnName: "Created",
+        sortKey: "createdAt",
+        cell: (row) => {
+          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
+          return (
+            <div className={`space-y-0.5`}>
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                <span className={`text-xs font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
+                  {new Date(row.createdAt || row.lastUpdated).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: '2-digit',
+                    year: '2-digit',
+                  })}
+                </span>
+              </div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className={`flex items-center gap-1 whitespace-nowrap text-[10px] text-slate-500 dark:text-slate-400 cursor-default`}>
+                        <Clock className="w-3 h-3" />
+                        <span>{timeAgo}</span>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {new Date(row.createdAt || row.lastUpdated).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        columnName: "Technician",
+        sortKey: "assignedTechnician",
+        cell: (row) => (
+          <div className={`${d === 'ultra' ? 'space-y-0.5' : d === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedRows(new Set([row.id]));
+                setShowAssignTech(true);
+              }}
+              className="flex flex-row items-center space-x-2 text-left hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded px-1 -mx-1"
+            >
+              <User className={`w-3.5 h-3.5 shrink-0 ${row.assignedTechnician ? 'text-green-700' : 'text-red-500'}`} />
+              <span className={`text-xs font-medium ${row.assignedTechnician ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'} truncate`}>
+                {row.assignedTechnician ? `Assigned: ${row.assignedTechnician}` : 'UNASSIGNED'}
+              </span>
+            </button>
+          </div>
+        ),
+      },
+      {
+        columnName: "Status",
+        sortKey: "status",
+        cell: (row) => {
+          const status = getStatusObj(getJobStatus(row));
+          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
+          return (
+            <div className={`space-y-0.5`}>
+              <div className="flex flex-row gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="uppercase whitespace-nowrap cursor-pointer text-[10px] font-semibold px-2.5 py-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-300 dark:focus:ring-slate-600"
+                      style={{ backgroundColor: `${status.color}20`, color: status.color }}
+                    >
+                      {status.name}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    {jobStatuses.map(statusOption => (
+                      <DropdownMenuItem
+                        key={statusOption.id}
+                        className="flex items-center gap-2"
+                        onClick={() => onChangeStatus?.(row.id, statusOption.name)}
+                      >
+                        <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: statusOption.color }} />
+                        <span>{statusOption.name}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Badge
+                  variant="secondary"
+                  className={`text-[10px] px-2 py-0.5 whitespace-nowrap ${
+                    row.priority === 'High'
+                      ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                      : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                  }`}
+                >
+                  {row.priority === 'High' ? 'NEED TO COLLECT PAYMENT' : 'OPPORTUNITY'}
+                </Badge>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Clock className="w-3 h-3 text-slate-500" />
+                <span className="text-[10px] text-slate-600 dark:text-slate-400">{timeAgo} in status</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Phone className={`w-3 h-3 ${row.noteTags?.includes('called') ? 'text-green-500' : 'text-slate-400'}`} />
+                <span className="text-[10px] text-slate-600 dark:text-slate-400">
+                  {row.noteTags?.includes('called') ? 'Client Called' : 'No Call Yet'}
+                </span>
+              </div>
+            </div>
+          );
+        },
+      },
+    ];
+  }, [jobsDensityRef, selectedRows, handleRowToggle, setSelectedJob, setShowJobDetails, openJobPanel, getTimeAgo, getTimeUntil, getStatusObj, getJobStatus, visibleClientFields, jobStatuses, onChangeStatus, setSelectedRows, setShowAssignTech]);
+
 
   // Dummy activity data
   const activity = [
@@ -5809,3 +6092,4 @@ export default function Jobs() {
     </div>
   );
 }
+
