@@ -839,9 +839,8 @@ export default function ScheduleCalendar() {
           </div>
         )}
         onChangeSearchQuery={(query) => setSearchTerm(query)} 
-        moreFilters={(
-          <Fragment>
-            {moreFiltersOption.map((filter,index) => (
+        moreFilters={
+            moreFiltersOption.map((filter,index) => (
               <SelectInput
                 key={index}
                 label={filter.label}
@@ -850,25 +849,7 @@ export default function ScheduleCalendar() {
                 value={filters[filter.key]}
                 onSelect={val => handleFilterChange(filter.key, val)}
               />
-              // <Select 
-              //   key={index}
-              //   value={filter.value}
-              //   onValueChange={(value) => handleFilterChange(filter.key, value)}
-              // >
-              //   <SelectTrigger className="w-40">
-              //     <SelectValue placeholder={filter.label} />
-              //   </SelectTrigger>
-              //   <SelectContent>
-              //     {filter.options.map(option => (
-              //       <SelectItem key={option.value} value={option.value}>
-              //         {option.label}
-              //       </SelectItem>
-              //     ))}
-              //   </SelectContent>
-              // </Select>
             ))}
-          </Fragment>
-        )}   
       />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 p-6">

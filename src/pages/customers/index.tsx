@@ -55,7 +55,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
   )
 
   const sourcesFormatted = [
-    { label: "All", value: "all" },
+    { label: "All Source", value: "all" },
     ...sources.map(source => ({
       label: source,
       value: source,
@@ -242,20 +242,22 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
         onToggleChange={setToggleStatus} 
         toggleStatus={toggleStatus} 
         moreFilters={
-          (
-            /* Source Filter */
-            <SelectInput
-              label="Source"
-              options={sourcesFormatted}
-              placeholder="All Source"
-              value={moreFiltersData.source}
-              onSelect={val => setMoreFiltersData(prev => ({
-                ...prev,
-                source: typeof val === "string" ? val : prev.source,
-              }))}
-              onSearch={() => {}}
-            />
-          )
+          [
+            (
+              /* Source Filter */
+              <SelectInput
+                label="Source"
+                options={sourcesFormatted}
+                placeholder="All Source"
+                value={moreFiltersData.source}
+                onSelect={val => setMoreFiltersData(prev => ({
+                  ...prev,
+                  source: typeof val === "string" ? val : prev.source,
+                }))}
+                onSearch={() => {}}
+              />
+            )
+          ]
         }     
       />
 
