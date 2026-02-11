@@ -9,12 +9,14 @@ import SelectInput from "../input/select";
 interface Props {
     title: string;
     description?: string;
-    toggleList: { label: string; value: string }[];
-    toggleStatus: string;
+    toggleList?: { label: string; value: string }[];
+    toggleStatus?: string;
+    /** renderToggleOptions allows you to pass in custom toggle options UI. If this prop is provided, the default Toggle component will be hidden. */
+    renderToggleOptions?: React.ReactNode;
     searchQuery: string;
     onChangeSearchQuery: (query: string) => void;
-    onToggleChange: (value: string) => void;
-    moreFilters?: React.ReactNode;
+    onToggleChange?: (value: string) => void;
+    moreFilters?: React.ReactNode[];
 }
 export default function DashboardFilter(props: Props){
     const [showFilters, setShowFilters] = useState(false);
@@ -32,16 +34,22 @@ export default function DashboardFilter(props: Props){
                             {props.description ?? ""}
                         </p>
                     </div>
-                    <Toggle 
-                        toggleList={props.toggleList} 
-                        currentToggled={props.toggleStatus} 
-                        onSetToggle={props.onToggleChange} 
-                    />
+                    {props.renderToggleOptions ? 
+                        (
+                            <div className="flex items-center gap-4">
+                                {props.renderToggleOptions}
+                            </div>
+                        ) :  <Toggle 
+                                toggleList={props.toggleList ?? []} 
+                                currentToggled={props.toggleStatus ?? "all"} 
+                                onSetToggle={props.onToggleChange ?? (() => {})} 
+                            />
+                    }
                 </div>
 
                 {/* ================= TOOLBAR ================= */}
                 <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-end gap-2">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <Input
@@ -51,20 +59,33 @@ export default function DashboardFilter(props: Props){
                                 onChange={(e) => props.onChangeSearchQuery(e.target.value)}
                             />
                         </div>
-
-                        <Button
-                            variant="outline"
-                            className="h-10 rounded-xl"
-                            onClick={() => setShowFilters(prev => !prev)}
-                        >
-                            {showFilters ? "Hide filters" : "Show filters"}
-                        </Button>
+                       
+                        { /* If moreFilters is provided and has more than 2 filters, show a toggle button to show/hide filters. Otherwise, show the filters directly in the toolbar. */ }
+                        {props.moreFilters && 
+                            (
+                                props.moreFilters.length > 2 ? (
+                                    <Button 
+                                        variant={"outline"} 
+                                        onClick={() => setShowFilters(prev => !prev)}
+                                    >
+                                        {showFilters ? "Hide Filters" : "Show Filters"}
+                                    </Button>
+                                ) : (
+                                    props.moreFilters.map((filter, index) => (
+                                        <div key={index}>{filter}</div>
+                                    ))
+                                )
+                            )
+                        
+                        }
                     </div>
 
                     {/* ================= MORE FILTERS ================= */}
                     {showFilters && (
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
-                            {props.moreFilters}
+                            {props.moreFilters?.map((filter, index) => (
+                                <div key={index}>{filter}</div>
+                            ))}
                         </div>
                     ) }
 
