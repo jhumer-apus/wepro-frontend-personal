@@ -57,6 +57,9 @@ import {
 } from "lucide-react";
 import { Job } from "@/src/constants/interface/jobs";
 import DashboardFilter from "../dashboardFilter/DashboardFilter";
+import { useScheduleOptions } from "@/src/hooks/use-schedule-options";
+import { jobsSchedules } from "@/src/constants/dummyData/schedules";
+import SelectInput from "../input/select";
 
 export default function ScheduleCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 9, 13)); // October 13, 2025
@@ -67,19 +70,12 @@ export default function ScheduleCalendar() {
   const [showMoreJobsDialog, setShowMoreJobsDialog] = useState(false);
   const [moreJobsDate, setMoreJobsDate] = useState('');
   const [moreJobsList, setMoreJobsList] = useState([]);
+  const [showUnassignedOnly, setShowUnassignedOnly] = useState(false);
+
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [technicianFilter, setTechnicianFilter] = useState("all");
-  const [jobTypeFilter, setJobTypeFilter] = useState("all");
-  const [priorityFilter, setPriorityFilter] = useState("all");
-  const [dateRangeFilter, setDateRangeFilter] = useState("current");
-  const [tagsFilter, setTagsFilter] = useState("all");
-  const [franchiseFilter, setFranchiseFilter] = useState("all");
-  const [metroAreaFilter, setMetroAreaFilter] = useState("all");
-  const [showUnassignedOnly, setShowUnassignedOnly] = useState(false);
-  
+
   // Drag and drop states
   const [activeJob, setActiveJob] = useState(null);
   const [draggedJob, setDraggedJob] = useState(null);
@@ -102,565 +98,29 @@ export default function ScheduleCalendar() {
     address: "",
     description: "",
     jobType: "HVAC",
-    priority: "medium",
     estimatedDuration: 120,
     scheduledDate: "",
     scheduledTime: "09:00",
     endTime: "11:00",
     value: 0,
     technicianId: "unassigned",
-    franchise: "Houston Central",
     metroArea: "Houston Metro",
     tags: [],
     notes: ""
   });
 
   // Sample job data with scheduling information - using state for proper updates
-  const [jobs, setJobs] = useState([
-    {
-      id: "J001",
-      title: "HVAC System Repair",
-      client: "Johnson Residence",
-      clientPhone: "(555) 123-4567",
-      address: "123 Main St, Houston, TX 77001",
-      technician: "Mike Rodriguez",
-      technicianId: "T001",
-      status: "scheduled",
-      priority: "high",
-      jobType: "HVAC",
-      estimatedDuration: 120, // minutes
-      scheduledDate: "2025-10-15",
-      scheduledTime: "09:00",
-      endTime: "11:00",
-      value: 450.00,
-      description: "AC unit not cooling properly, needs diagnostic and repair",
-      tags: ["Emergency", "Residential"],
-      source: "Google Ads",
-      complexity: "medium",
-      franchise: "Houston Central",
-      metroArea: "Houston Metro",
-      notes: "Customer prefers morning appointments"
-    },
-    {
-      id: "J002", 
-      title: "Plumbing Leak Repair",
-      client: "Smith Commercial",
-      clientPhone: "(555) 987-6543",
-      address: "456 Oak Ave, Houston, TX 77002",
-      technician: "Sarah Wilson",
-      technicianId: "T002",
-      status: "in-progress",
-      priority: "urgent",
-      jobType: "Plumbing",
-      estimatedDuration: 90,
-      scheduledDate: "2025-10-15",
-      scheduledTime: "10:30",
-      endTime: "12:00",
-      value: 320.00,
-      description: "Water leak in main office bathroom",
-      tags: ["Commercial", "Urgent"],
-      source: "Direct Call",
-      complexity: "simple",
-      franchise: "Houston West",
-      metroArea: "Houston Metro",
-      notes: "Building manager on-site"
-    },
-    {
-      id: "J003",
-      title: "Electrical Panel Upgrade",
-      client: "Brown Family",
-      clientPhone: "(555) 456-7890",
-      address: "789 Pine St, Houston, TX 77003",
-      technician: "David Chen",
-      technicianId: "T003",
-      status: "completed",
-      priority: "medium",
-      jobType: "Electrical",
-      estimatedDuration: 180,
-      scheduledDate: "2025-10-15",
-      scheduledTime: "13:00",
-      endTime: "16:00",
-      value: 850.00,
-      description: "Upgrade electrical panel to 200 amp service",
-      tags: ["Residential", "Upgrade"],
-      source: "Referral",
-      complexity: "complex",
-      franchise: "Houston North",
-      metroArea: "Houston Metro",
-      notes: "Permit required - already obtained"
-    },
-    {
-      id: "J004",
-      title: "Garage Door Installation",
-      client: "Wilson Corp",
-      clientPhone: "(555) 321-9876",
-      address: "321 Elm Dr, Houston, TX 77004",
-      technician: "Lisa Garcia",
-      technicianId: "T004",
-      status: "scheduled",
-      priority: "low",
-      jobType: "Installation",
-      estimatedDuration: 150,
-      scheduledDate: "2025-10-16",
-      scheduledTime: "08:00",
-      endTime: "10:30",
-      value: 680.00,
-      description: "Install new automatic garage door with opener",
-      tags: ["Commercial", "Installation"],
-      source: "Website",
-      complexity: "medium",
-      franchise: "Houston South",
-      metroArea: "Houston Metro",
-      notes: "Corporate client - priority service"
-    },
-    {
-      id: "J005",
-      title: "Kitchen Sink Repair",
-      client: "Davis Residence",
-      clientPhone: "(555) 654-3210",
-      address: "654 Maple Ln, Houston, TX 77005",
-      technician: "Unassigned",
-      technicianId: null,
-      status: "unassigned",
-      priority: "medium",
-      jobType: "Plumbing",
-      estimatedDuration: 60,
-      scheduledDate: "2025-10-16",
-      scheduledTime: "14:00",
-      endTime: "15:00",
-      value: 180.00,
-      description: "Kitchen sink faucet leaking, needs replacement",
-      tags: ["Residential"],
-      source: "Yelp",
-      complexity: "simple",
-      franchise: "Houston East",
-      metroArea: "Houston Metro",
-      notes: "Senior citizen discount applied"
-    },
-    {
-      id: "J006",
-      title: "AC Maintenance",
-      client: "Martinez Office",
-      clientPhone: "(555) 111-2222",
-      address: "111 Business Blvd, Houston, TX 77006",
-      technician: "Mike Rodriguez",
-      technicianId: "T001",
-      status: "scheduled",
-      priority: "medium",
-      jobType: "HVAC",
-      estimatedDuration: 90,
-      scheduledDate: "2025-10-14",
-      scheduledTime: "09:00",
-      endTime: "10:30",
-      value: 280.00,
-      description: "Routine HVAC maintenance and filter replacement",
-      tags: ["Commercial", "Maintenance"],
-      source: "Contract",
-      complexity: "simple",
-      franchise: "Houston Central",
-      metroArea: "Houston Metro",
-      notes: "Monthly service contract"
-    },
-    {
-      id: "J007",
-      title: "Emergency Electrical",
-      client: "Thompson Home",
-      clientPhone: "(555) 333-4444",
-      address: "333 Cedar St, Houston, TX 77007",
-      technician: "David Chen",
-      technicianId: "T003",
-      status: "urgent",
-      priority: "urgent",
-      jobType: "Electrical",
-      estimatedDuration: 60,
-      scheduledDate: "2025-10-13",
-      scheduledTime: "15:00",
-      endTime: "16:00",
-      value: 380.00,
-      description: "Power outage in main electrical panel",
-      tags: ["Emergency", "Residential"],
-      source: "Emergency Call",
-      complexity: "medium",
-      franchise: "Katy",
-      metroArea: "Greater Houston",
-      notes: "After-hours emergency call"
-    },
-    {
-      id: "J008",
-      title: "Sink Installation",
-      client: "Green Restaurant",
-      clientPhone: "(555) 555-6666",
-      address: "555 Food St, Houston, TX 77008",
-      technician: "Sarah Wilson",
-      technicianId: "T002",
-      status: "scheduled",
-      priority: "low",
-      jobType: "Plumbing",
-      estimatedDuration: 120,
-      scheduledDate: "2025-10-17",
-      scheduledTime: "11:00",
-      endTime: "13:00",
-      value: 420.00,
-      description: "Install new commercial kitchen sink",
-      tags: ["Commercial", "Installation"],
-      source: "Website",
-      complexity: "medium",
-      franchise: "Sugar Land",
-      metroArea: "Greater Houston",
-      notes: "Restaurant renovation project"
-    },
-    {
-      id: "J009",
-      title: "Water Heater Replacement",
-      client: "Davis Family",
-      clientPhone: "(555) 777-8888",
-      address: "777 Maple Ave, Houston, TX 77009",
-      technician: "Mike Rodriguez",
-      technicianId: "T001",
-      status: "scheduled",
-      priority: "high",
-      jobType: "Plumbing",
-      estimatedDuration: 240,
-      scheduledDate: "2025-10-20",
-      scheduledTime: "08:00",
-      endTime: "12:00",
-      value: 1200.00,
-      description: "Replace old water heater with new energy-efficient model",
-      tags: ["Residential", "Replacement"],
-      source: "Referral",
-      complexity: "complex",
-      franchise: "The Woodlands",
-      metroArea: "Greater Houston",
-      notes: "Energy efficiency upgrade"
-    },
-    {
-      id: "J010",
-      title: "Office HVAC Service",
-      client: "Tech Startup Inc",
-      clientPhone: "(555) 999-0000",
-      address: "999 Innovation Dr, Houston, TX 77010",
-      technician: "Sarah Wilson",
-      technicianId: "T002",
-      status: "completed",
-      priority: "medium",
-      jobType: "HVAC",
-      estimatedDuration: 180,
-      scheduledDate: "2025-10-18",
-      scheduledTime: "10:00",
-      endTime: "13:00",
-      value: 650.00,
-      description: "Quarterly HVAC maintenance for office building",
-      tags: ["Commercial", "Maintenance"],
-      source: "Contract",
-      complexity: "medium",
-      franchise: "Houston Central",
-      metroArea: "Houston Metro",
-      notes: "Tech startup - flexible scheduling"
-    },
-    {
-      id: "J011",
-      title: "Ceiling Fan Installation",
-      client: "Rodriguez Home",
-      clientPhone: "(555) 111-3333",
-      address: "111 Sunset Blvd, Houston, TX 77011",
-      technician: "David Chen",
-      technicianId: "T003",
-      status: "scheduled",
-      priority: "low",
-      jobType: "Electrical",
-      estimatedDuration: 90,
-      scheduledDate: "2025-10-22",
-      scheduledTime: "14:00",
-      endTime: "15:30",
-      value: 280.00,
-      description: "Install ceiling fan in master bedroom",
-      tags: ["Residential", "Installation"],
-      source: "Website",
-      complexity: "simple",
-      franchise: "Pearland",
-      metroArea: "Greater Houston",
-      notes: "New construction home"
-    },
-    {
-      id: "J012",
-      title: "Emergency Pipe Burst",
-      client: "City Mall",
-      clientPhone: "(555) 222-4444",
-      address: "222 Shopping Center, Houston, TX 77012",
-      technician: "Lisa Garcia",
-      technicianId: "T004",
-      status: "in-progress",
-      priority: "urgent",
-      jobType: "Plumbing",
-      estimatedDuration: 120,
-      scheduledDate: "2025-10-21",
-      scheduledTime: "16:00",
-      endTime: "18:00",
-      value: 580.00,
-      description: "Emergency pipe burst repair in food court",
-      tags: ["Emergency", "Commercial"],
-      source: "Emergency Call",
-      complexity: "medium",
-      franchise: "Houston West",
-      metroArea: "Houston Metro",
-      notes: "Mall emergency - high priority"
-    },
-    {
-      id: "J013",
-      title: "Boiler Inspection",
-      client: "Metro Office Complex",
-      clientPhone: "(555) 444-5555",
-      address: "444 Business Park, Houston, TX 77013",
-      technician: "Unassigned",
-      technicianId: "unassigned",
-      status: "unassigned",
-      priority: "medium",
-      jobType: "HVAC",
-      estimatedDuration: 120,
-      scheduledDate: "2025-10-23",
-      scheduledTime: "10:00",
-      endTime: "12:00",
-      value: 350.00,
-      description: "Annual boiler inspection and maintenance",
-      tags: ["Commercial", "Maintenance"],
-      source: "Contract",
-      complexity: "medium",
-      franchise: "Houston Central",
-      metroArea: "Houston Metro",
-      notes: "Needs technician assignment"
-    },
-    {
-      id: "J014",
-      title: "Smart Home Setup",
-      client: "Johnson Family",
-      clientPhone: "(555) 111-2222",
-      address: "111 Tech Lane, Houston, TX 77016",
-      technician: "Unassigned",
-      technicianId: "unassigned",
-      status: "unassigned",
-      priority: "low",
-      jobType: "Electrical",
-      estimatedDuration: 240,
-      scheduledDate: "2025-10-24",
-      scheduledTime: "09:00",
-      endTime: "13:00",
-      value: 800.00,
-      description: "Install smart home automation system",
-      tags: ["Residential", "Installation"],
-      source: "Website",
-      complexity: "complex",
-      franchise: "Katy",
-      metroArea: "Greater Houston",
-      notes: "Waiting for technician assignment"
-    },
-    {
-      id: "J015",
-      title: "Pool Heater Repair",
-      client: "Luxury Resort",
-      clientPhone: "(555) 333-4444",
-      address: "333 Resort Blvd, Houston, TX 77017",
-      technician: "Unassigned",
-      technicianId: "unassigned",
-      status: "unassigned",
-      priority: "high",
-      jobType: "HVAC",
-      estimatedDuration: 150,
-      scheduledDate: "2025-10-19",
-      scheduledTime: "14:00",
-      endTime: "16:30",
-      value: 650.00,
-      description: "Pool heater not working, needs diagnostic and repair",
-      tags: ["Commercial", "Repair"],
-      source: "Emergency Call",
-      complexity: "medium",
-      franchise: "Houston West",
-      metroArea: "Houston Metro",
-      notes: "Urgent - needs immediate technician assignment"
-    },
-    {
-      id: "J016",
-      title: "HVAC Inspection",
-      client: "Office Building A",
-      clientPhone: "(555) 777-1111",
-      address: "777 Business St, Houston, TX 77018",
-      technician: "David Chen",
-      technicianId: "T003",
-      status: "scheduled",
-      priority: "medium",
-      jobType: "HVAC",
-      estimatedDuration: 90,
-      scheduledDate: "2025-10-15",
-      scheduledTime: "09:00",
-      endTime: "10:30",
-      value: 300.00,
-      description: "Routine HVAC inspection for office building",
-      tags: ["Commercial", "Inspection"],
-      source: "Contract",
-      complexity: "simple",
-      franchise: "Houston Central",
-      metroArea: "Houston Metro",
-      notes: "Same time as J001 - different technician"
-    },
-    {
-      id: "J017",
-      title: "Emergency Plumbing",
-      client: "Restaurant Chain",
-      clientPhone: "(555) 888-2222",
-      address: "888 Food Court, Houston, TX 77019",
-      technician: "Lisa Garcia",
-      technicianId: "T004",
-      status: "urgent",
-      priority: "urgent",
-      jobType: "Plumbing",
-      estimatedDuration: 120,
-      scheduledDate: "2025-10-15",
-      scheduledTime: "10:30",
-      endTime: "12:30",
-      value: 450.00,
-      description: "Emergency plumbing repair in restaurant",
-      tags: ["Emergency", "Commercial"],
-      source: "Emergency Call",
-      complexity: "medium",
-      franchise: "Houston South",
-      metroArea: "Houston Metro",
-      notes: "Overlaps with other jobs - different location"
-    },
-    {
-      id: "J018",
-      title: "Electrical Safety Check",
-      client: "Safety Compliance Co",
-      clientPhone: "(555) 999-3333",
-      address: "999 Safety Blvd, Houston, TX 77020",
-      technician: "Sarah Wilson",
-      technicianId: "T002",
-      status: "scheduled",
-      priority: "high",
-      jobType: "Electrical",
-      estimatedDuration: 60,
-      scheduledDate: "2025-10-15",
-      scheduledTime: "09:00",
-      endTime: "10:00",
-      value: 200.00,
-      description: "Electrical safety inspection and compliance check",
-      tags: ["Commercial", "Safety"],
-      source: "Contract",
-      complexity: "simple",
-      franchise: "Houston East",
-      metroArea: "Houston Metro",
-      notes: "Third job at 9:00 AM - testing multiple jobs"
-    },
-    {
-      id: "J019",
-      title: "Security System Install",
-      client: "Secure Corp",
-      clientPhone: "(555) 111-4444",
-      address: "111 Security Ave, Houston, TX 77021",
-      technician: "Mike Rodriguez",
-      technicianId: "T001",
-      status: "scheduled",
-      priority: "low",
-      jobType: "Electrical",
-      estimatedDuration: 180,
-      scheduledDate: "2025-10-15",
-      scheduledTime: "09:00",
-      endTime: "12:00",
-      value: 750.00,
-      description: "Install comprehensive security system",
-      tags: ["Commercial", "Installation"],
-      source: "Website",
-      complexity: "complex",
-      franchise: "Houston West",
-      metroArea: "Houston Metro",
-      notes: "Fourth job at 9:00 AM - testing 4+ jobs"
-    },
-    {
-      id: "J020",
-      title: "Fire Alarm Test",
-      client: "Safety First Inc",
-      clientPhone: "(555) 222-5555",
-      address: "222 Fire Safety Rd, Houston, TX 77022",
-      technician: "David Chen",
-      technicianId: "T003",
-      status: "scheduled",
-      priority: "medium",
-      jobType: "Electrical",
-      estimatedDuration: 45,
-      scheduledDate: "2025-10-15",
-      scheduledTime: "09:00",
-      endTime: "09:45",
-      value: 150.00,
-      description: "Fire alarm system testing and certification",
-      tags: ["Commercial", "Safety"],
-      source: "Contract",
-      complexity: "simple",
-      franchise: "Houston North",
-      metroArea: "Houston Metro",
-      notes: "Fifth job at 9:00 AM - testing 5 jobs"
-    },
-    {
-      id: "J021",
-      title: "Network Setup",
-      client: "Tech Solutions",
-      clientPhone: "(555) 333-6666",
-      address: "333 Network Dr, Houston, TX 77023",
-      technician: "Lisa Garcia",
-      technicianId: "T004",
-      status: "scheduled",
-      priority: "medium",
-      jobType: "Installation",
-      estimatedDuration: 90,
-      scheduledDate: "2025-10-15",
-      scheduledTime: "09:00",
-      endTime: "10:30",
-      value: 400.00,
-      description: "Network infrastructure setup and configuration",
-      tags: ["Commercial", "Installation"],
-      source: "Referral",
-      complexity: "medium",
-      franchise: "Sugar Land",
-      metroArea: "Greater Houston",
-      notes: "Sixth job at 9:00 AM - testing 6 jobs maximum"
-    }
-  ]);
+  const [jobs, setJobs] = useState(jobsSchedules);
 
-  // Technicians data
-  const technicians = [
-    { id: "T001", name: "Mike Rodriguez", skills: ["HVAC", "Electrical"], status: "available", color: "#3B82F6" },
-    { id: "T002", name: "Sarah Wilson", skills: ["Plumbing", "General"], status: "busy", color: "#10B981" },
-    { id: "T003", name: "David Chen", skills: ["Electrical", "Smart Home"], status: "available", color: "#8B5CF6" },
-    { id: "T004", name: "Lisa Garcia", skills: ["Installation", "Garage Door"], status: "on-route", color: "#F59E0B" }
-  ];
+  // HOOKS
+  const { 
+    filters, 
+    handleFilterChange, 
+    moreFiltersOption,  
+    technicians,
+    metroAreas,
+  } = useScheduleOptions();
 
-  // Franchise data
-  const franchises = [
-    "Houston Central",
-    "Houston North", 
-    "Houston South",
-    "Houston East",
-    "Houston West",
-    "Katy",
-    "Sugar Land",
-    "The Woodlands",
-    "Pearland"
-  ];
-
-  // Metro Area data
-  const metroAreas = [
-    "Houston Metro",
-    "Greater Houston"
-  ];
-
-  // Tags data (extracted from jobs)
-  const availableTags = [
-    "Emergency",
-    "Residential", 
-    "Commercial",
-    "Urgent",
-    "Upgrade",
-    "Installation",
-    "Maintenance",
-    "Replacement"
-  ];
 
   // Filter jobs based on current filters
   const filteredJobs = useMemo(() => {
@@ -671,22 +131,29 @@ export default function ScheduleCalendar() {
         job.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
         job.notes?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesStatus = statusFilter === "all" || job.status === statusFilter;
-      const matchesTechnician = technicianFilter === "all" || job.technicianId === technicianFilter;
-      const matchesJobType = jobTypeFilter === "all" || job.jobType === jobTypeFilter;
-      const matchesPriority = priorityFilter === "all" || job.priority === priorityFilter;
-      const matchesTags = tagsFilter === "all" || job.tags.includes(tagsFilter);
-      const matchesFranchise = franchiseFilter === "all" || job.franchise === franchiseFilter;
-      const matchesMetroArea = metroAreaFilter === "all" || job.metroArea === metroAreaFilter;
+      const matchesStatus = filters.statusFilter === "all" || job.status === filters.statusFilter;
+      const matchesTechnician = filters.technicianFilter === "all" || job.technicianId === filters.technicianFilter;
+      // const matchesJobType = filters.jobTypeFilter === "all" || job.jobType === filters.jobTypeFilter;
+      const matchesTags = filters.tagsFilter === "all" || job.tags.includes(filters.tagsFilter);
+      const matchesMetroArea = filters.metroAreaFilter === "all" || job.metroArea === filters.metroAreaFilter;
+      const matchesSource = filters.sourceFilter === "all" || job.source === filters.sourceFilter;
+      const matchesCompany = filters.companyFilter === "all" || job.client === filters.companyFilter;
       
       // Unassigned filter logic
       const matchesUnassigned = !showUnassignedOnly || 
         (job.technicianId === "unassigned" || job.status === "unassigned" || job.technician === "Unassigned");
       
-      return matchesSearch && matchesStatus && matchesTechnician && matchesJobType && matchesPriority && matchesTags && matchesFranchise && matchesMetroArea && matchesUnassigned;
+      return matchesSearch && 
+        matchesStatus && 
+        matchesTechnician && 
+        // matchesJobType && 
+        matchesTags && 
+        matchesSource && 
+        matchesCompany && 
+        matchesMetroArea && 
+        matchesUnassigned;
     });
-  }, [jobs, searchTerm, statusFilter, technicianFilter, jobTypeFilter, priorityFilter, tagsFilter, franchiseFilter, metroAreaFilter, showUnassignedOnly]);
-
+  }, [jobs, searchTerm, filters]);
   // Get jobs for current view
   const getJobsForDate = (date: string) => {
     return filteredJobs.filter(job => job.scheduledDate === date);
@@ -840,7 +307,6 @@ export default function ScheduleCalendar() {
       technician: getTechnicianName(newJobData.technicianId),
       technicianId: newJobData.technicianId,
       status: newJobData.technicianId === "unassigned" ? "unassigned" : "scheduled",
-      priority: newJobData.priority,
       jobType: newJobData.jobType,
       estimatedDuration: newJobData.estimatedDuration,
       scheduledDate: newJobData.scheduledDate,
@@ -851,7 +317,6 @@ export default function ScheduleCalendar() {
       tags: newJobData.tags,
       source: "Manual Entry",
       complexity: "medium",
-      franchise: newJobData.franchise,
       metroArea: newJobData.metroArea,
       notes: newJobData.notes
     };
@@ -867,14 +332,12 @@ export default function ScheduleCalendar() {
       address: "",
       description: "",
       jobType: "HVAC",
-      priority: "medium",
       estimatedDuration: 120,
       scheduledDate: "",
       scheduledTime: "09:00",
       endTime: "11:00",
       value: 0,
       technicianId: "unassigned",
-      franchise: "Houston Central",
       metroArea: "Houston Metro",
       tags: [],
       notes: ""
@@ -1156,16 +619,6 @@ export default function ScheduleCalendar() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "urgent": return "bg-red-500";
-      case "high": return "bg-orange-500";
-      case "medium": return "bg-yellow-500";
-      case "low": return "bg-green-500";
-      default: return "bg-gray-500";
-    }
-  };
-
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
@@ -1330,12 +783,32 @@ export default function ScheduleCalendar() {
     );
   };
 
-  const toggleList = [
-    { label: "Month", value: "month" },
-    { label: "Week", value: "week" },
-    { label: "Day", value: "day" }
-  ]
+  // const toggleList = [
+  //   { label: "Month", value: "month" },
+  //   { label: "Week", value: "week" },
+  //   { label: "Day", value: "day" }
+  // ]
 
+  const viewModeOptions = [
+    { 
+      label: "Month", 
+      value: "month",
+      viewMode: viewMode === "month" ? "default" : "ghost",
+      icon: <Grid3X3 className="w-4 h-4 mr-2" />
+    },
+    { 
+      label: "Week", 
+      value: "week",
+      viewMode: viewMode === "week" ? "default" : "ghost",
+      icon: <List className="w-4 h-4 mr-2" />
+    },
+    { 
+      label: "Day", 
+      value: "day",
+      viewMode: viewMode === "day" ? "default" : "ghost",
+      icon: <CalendarIcon className="w-4 h-4 mr-2" />
+    }
+  ];
   return (
     <DndContext
       sensors={sensors}
@@ -1346,148 +819,54 @@ export default function ScheduleCalendar() {
       <DashboardFilter 
         title="Schedule Calendar"
         description="Advanced job scheduling and calendar management"
-        toggleList={toggleList} 
-        toggleStatus={viewMode} 
         searchQuery={searchTerm} 
+        renderToggleOptions={(
+          <div className="">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">Show Unassigned Jobs Only</Label>
+              <Switch 
+                checked={showUnassignedOnly} 
+                onCheckedChange={(value) => setShowUnassignedOnly(value)}
+                className="
+                  data-[state=checked]:bg-accent-500
+                  data-[state=unchecked]:bg-neutral-300
+                "
+              />
+            </div>
+            <p className="text-xs text-neutral-500">
+              Toggle to show only jobs that need technician assignment
+            </p>
+          </div>
+        )}
         onChangeSearchQuery={(query) => setSearchTerm(query)} 
-        onToggleChange={(mode: string) => setViewMode(mode)}     
         moreFilters={(
           <Fragment>
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="scheduled">Scheduled</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Technician</Label>
-              <Select value={technicianFilter} onValueChange={setTechnicianFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Technicians</SelectItem>
-                  {technicians.map((tech) => (
-                    <SelectItem key={tech.id} value={tech.id}>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: tech.color }}
-                        />
-                        {tech.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Job Type</Label>
-              <Select value={jobTypeFilter} onValueChange={setJobTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="HVAC">HVAC</SelectItem>
-                  <SelectItem value="Plumbing">Plumbing</SelectItem>
-                  <SelectItem value="Electrical">Electrical</SelectItem>
-                  <SelectItem value="Installation">Installation</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Priority</Label>
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Priorities</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Tags/Notes</Label>
-              <Select value={tagsFilter} onValueChange={setTagsFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Tags</SelectItem>
-                  {availableTags.map((tag) => (
-                    <SelectItem key={tag} value={tag}>
-                      {tag}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Franchise</Label>
-              <Select value={franchiseFilter} onValueChange={setFranchiseFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Franchises</SelectItem>
-                  {franchises.map((franchise) => (
-                    <SelectItem key={franchise} value={franchise}>
-                      {franchise}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Metro Area</Label>
-              <Select value={metroAreaFilter} onValueChange={setMetroAreaFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Metro Areas</SelectItem>
-                  {metroAreas.map((area) => (
-                    <SelectItem key={area} value={area}>
-                      {area}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2 pt-4 border-t border-neutral-200">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-semibold">Show Unassigned Jobs Only</Label>
-                <Switch 
-                  checked={showUnassignedOnly} 
-                  onCheckedChange={setShowUnassignedOnly}
-                />
-              </div>
-              <p className="text-xs text-neutral-500">
-                Toggle to show only jobs that need technician assignment
-              </p>
-            </div>
+            {moreFiltersOption.map((filter,index) => (
+              <SelectInput
+                key={index}
+                label={filter.label}
+                options={filter.options}
+                placeholder={`All ${filter.label}`}
+                value={filters[filter.key]}
+                onSelect={val => handleFilterChange(filter.key, val)}
+              />
+              // <Select 
+              //   key={index}
+              //   value={filter.value}
+              //   onValueChange={(value) => handleFilterChange(filter.key, value)}
+              // >
+              //   <SelectTrigger className="w-40">
+              //     <SelectValue placeholder={filter.label} />
+              //   </SelectTrigger>
+              //   <SelectContent>
+              //     {filter.options.map(option => (
+              //       <SelectItem key={option.value} value={option.value}>
+              //         {option.label}
+              //       </SelectItem>
+              //     ))}
+              //   </SelectContent>
+              // </Select>
+            ))}
           </Fragment>
         )}   
       />
@@ -1507,6 +886,20 @@ export default function ScheduleCalendar() {
           {/* Calendar Navigation */}
           <Card className="shadow-xl bg-white/80 backdrop-blur-sm mt-4">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-b">
+              <div className="flex mb-8 bg-white/80 w-fit backdrop-blur-sm border border-slate-200 rounded-xl p-1 shadow-sm"> 
+                {viewModeOptions.map((option,index) => (
+                  <Button
+                    key={index}
+                    variant={viewMode === option.value ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode(option.value)}
+                    className={viewMode === option.value ? "bg-accent-600 text-white shadow-md" : ""}
+                  >
+                    {option.icon}
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
@@ -1608,9 +1001,6 @@ export default function ScheduleCalendar() {
                                 }}
                               >
                                 <div className="flex items-center gap-1 mb-1">
-                                  <div 
-                                    className={`w-2 h-2 rounded-full ${getPriorityColor(job.priority)}`}
-                                  />
                                   <span className="font-medium truncate">{job.title}</span>
                                 </div>
                                 <div className="text-xs opacity-75">
@@ -1709,7 +1099,6 @@ export default function ScheduleCalendar() {
                                       className={`text-xs p-1.5 rounded transition-all duration-200 hover:shadow-md border-l-2 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col justify-between`}
                                     >
                                       <div className="flex items-center gap-1 mb-1">
-                                        <div className={`w-1.5 h-1.5 rounded-full ${getPriorityColor(job.priority)}`} />
                                         <span className="font-medium truncate">{job.title}</span>
                                       </div>
                                       <div className="text-xs opacity-75 truncate">{job.client}</div>
@@ -1738,7 +1127,6 @@ export default function ScheduleCalendar() {
                                           className={`text-xs p-1 rounded transition-all duration-200 hover:shadow-md border-l-2 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col justify-center`}
                                         >
                                           <div className="flex items-center gap-1 mb-0.5">
-                                            <div className={`w-1 h-1 rounded-full ${getPriorityColor(job.priority)}`} />
                                             <span className="font-medium truncate text-xs">{job.title.substring(0, 8)}...</span>
                                           </div>
                                           <div className="text-xs opacity-75 truncate">{job.client.substring(0, 10)}...</div>
@@ -1766,7 +1154,6 @@ export default function ScheduleCalendar() {
                                             }}
                                             className={`text-xs p-0.5 rounded transition-all duration-200 hover:shadow-md border-l-2 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col items-center justify-center`}
                                           >
-                                            <div className={`w-1.5 h-1.5 rounded-full mb-0.5 ${getPriorityColor(job.priority)}`} />
                                             <span className="font-medium text-xs truncate w-full text-center">{job.title.substring(0, 4)}</span>
                                             <div 
                                               className="w-1 h-1 rounded-full mt-0.5" 
@@ -1793,7 +1180,6 @@ export default function ScheduleCalendar() {
                                             }}
                                             className={`text-xs p-0.5 rounded transition-all duration-200 hover:shadow-md border-l-1 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex items-center justify-center`}
                                           >
-                                            <div className={`w-1 h-1 rounded-full ${getPriorityColor(job.priority)}`} />
                                           </div>
                                         </ResizableJob>
                                       ))}
@@ -1883,7 +1269,6 @@ export default function ScheduleCalendar() {
                                   >
                                     <div>
                                       <div className="flex items-center gap-2 mb-1">
-                                        <div className={`w-2.5 h-2.5 rounded-full ${getPriorityColor(job.priority)}`} />
                                         <span className="font-semibold text-sm">{job.title}</span>
                                       </div>
                                       <div className="text-xs opacity-75 mb-1">{job.client}</div>
@@ -1923,7 +1308,6 @@ export default function ScheduleCalendar() {
                                         }}
                                         className={`p-1.5 rounded transition-all duration-200 hover:shadow-md border-l-2 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex items-center gap-2`}
                                       >
-                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getPriorityColor(job.priority)}`} />
                                         <div className="flex-1 min-w-0">
                                           <div className="font-semibold text-xs truncate">{job.title}</div>
                                           <div className="text-xs opacity-75 truncate">{job.client}</div>
@@ -1956,7 +1340,6 @@ export default function ScheduleCalendar() {
                                           }}
                                           className={`text-xs p-0.5 rounded transition-all duration-200 hover:shadow-md border-l-1 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} h-full flex flex-col items-center justify-center`}
                                         >
-                                          <div className={`w-1.5 h-1.5 rounded-full mb-0.5 ${getPriorityColor(job.priority)}`} />
                                           <span className="font-medium text-xs truncate w-full text-center">{job.title.substring(0, 3)}</span>
                                           <div 
                                             className="w-1 h-1 rounded-full mt-0.5" 
@@ -2010,12 +1393,6 @@ export default function ScheduleCalendar() {
                           <div className="flex justify-between">
                             <span className="text-sm">Type:</span>
                             <span className="text-sm">{selectedJob.jobType}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Priority:</span>
-                            <Badge className={`text-xs ${getPriorityColor(selectedJob.priority)} text-white`}>
-                              {selectedJob.priority}
-                            </Badge>
                           </div>
                         </div>
                       </div>
@@ -2098,7 +1475,7 @@ export default function ScheduleCalendar() {
                   </div>
 
                   <div className="flex gap-2 pt-4">
-                    <Button className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500">
+                    <Button className="flex-1 bg-accent-500 text-white hover:bg-accent-600">
                       <Edit3 className="w-4 h-4 mr-2" />
                       Edit Job
                     </Button>
@@ -2269,20 +1646,6 @@ export default function ScheduleCalendar() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="priority">Priority</Label>
-                      <Select value={newJobData.priority} onValueChange={(value) => setNewJobData({...newJobData, priority: value})}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </div>
                 </div>
 
@@ -2301,21 +1664,6 @@ export default function ScheduleCalendar() {
                         step="0.01"
                         placeholder="0.00"
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="franchise">Franchise</Label>
-                      <Select value={newJobData.franchise} onValueChange={(value) => setNewJobData({...newJobData, franchise: value})}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {franchises.map((franchise) => (
-                            <SelectItem key={franchise} value={franchise}>
-                              {franchise}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="metroArea">Metro Area</Label>
@@ -2354,7 +1702,7 @@ export default function ScheduleCalendar() {
                   <Button 
                     onClick={handleCreateJob}
                     disabled={!newJobData.title || !newJobData.client || !newJobData.address}
-                    className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
+                    className="bg-accent-500 text-white hover:bg-accent-600"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Create Job
@@ -2399,7 +1747,6 @@ export default function ScheduleCalendar() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <div className={`w-3 h-3 rounded-full ${getPriorityColor(job.priority)}`} />
                               <h3 className="font-semibold text-lg">{job.title}</h3>
                               <Badge className={getStatusColor(job.status)}>
                                 {job.status}
@@ -2515,7 +1862,6 @@ export default function ScheduleCalendar() {
             {activeJob ? (
               <div className={`p-2 rounded-lg text-xs border-l-4 ${getStatusColor(activeJob.status)} ${getStatusBorderColor(activeJob.status)} shadow-lg opacity-90`}>
                 <div className="flex items-center gap-1 mb-1">
-                  <div className={`w-2 h-2 rounded-full ${getPriorityColor(activeJob.priority)}`} />
                   <span className="font-medium">{activeJob.title}</span>
                 </div>
                 <div className="text-xs opacity-75">{activeJob.scheduledTime} • {activeJob.client}</div>

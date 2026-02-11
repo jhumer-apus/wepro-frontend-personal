@@ -9,11 +9,13 @@ import SelectInput from "../input/select";
 interface Props {
     title: string;
     description?: string;
-    toggleList: { label: string; value: string }[];
-    toggleStatus: string;
+    toggleList?: { label: string; value: string }[];
+    toggleStatus?: string;
+    /** renderToggleOptions allows you to pass in custom toggle options UI. If this prop is provided, the default Toggle component will be hidden. */
+    renderToggleOptions?: React.ReactNode;
     searchQuery: string;
     onChangeSearchQuery: (query: string) => void;
-    onToggleChange: (value: string) => void;
+    onToggleChange?: (value: string) => void;
     moreFilters?: React.ReactNode;
 }
 export default function DashboardFilter(props: Props){
@@ -32,11 +34,17 @@ export default function DashboardFilter(props: Props){
                             {props.description ?? ""}
                         </p>
                     </div>
-                    <Toggle 
-                        toggleList={props.toggleList} 
-                        currentToggled={props.toggleStatus} 
-                        onSetToggle={props.onToggleChange} 
-                    />
+                    {props.renderToggleOptions ? 
+                        (
+                            <div className="flex items-center gap-4">
+                                {props.renderToggleOptions}
+                            </div>
+                        ) :  <Toggle 
+                                toggleList={props.toggleList} 
+                                currentToggled={props.toggleStatus} 
+                                onSetToggle={props.onToggleChange} 
+                            />
+                    }
                 </div>
 
                 {/* ================= TOOLBAR ================= */}
