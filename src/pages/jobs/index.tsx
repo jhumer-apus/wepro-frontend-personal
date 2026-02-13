@@ -11,6 +11,12 @@ import { Label } from "@/src/components/ui/label";
 import { Progress } from "@/src/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
 import {
+  GoogleMap,
+  Marker,
+  StandaloneSearchBox,
+  Polygon,
+} from '@react-google-maps/api'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -105,6 +111,10 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
@@ -135,6 +145,7 @@ import SelectInput from "@/src/components/input/select";
 import { dummyJobs } from "@/src/constants/dummyData/jobs";
 import { type Job } from "@/src/constants/interface/jobs";
 import SidePanel from "@/src/components/sidePanel";
+import { Slider } from "@/src/components/ui/slider";
 
 // Technician interface with proper typing
 interface Technician {
@@ -181,6 +192,237 @@ const jobStatuses: JobStatus[] = [
 ];
 
 let jobsDensityRef: 'comfortable' | 'compact' | 'ultra' = 'comfortable';
+
+// Conversation log message for Activity > Logs
+type LogMessageDirection = 'incoming' | 'outgoing';
+type LogMessageKind = 'text' | 'audio';
+interface LogMessage {
+  id: string;
+  direction: LogMessageDirection;
+  kind: LogMessageKind;
+  body?: string;
+  audioUrl?: string;
+  senderName: string;
+  timestamp: string; // MM/DD/YYYY HH:MM:SS
+}
+
+const TEST_MP3_URL = 'http://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3';
+
+function InlineAudioPlayer({ audioUrl, className }: { audioUrl: string; className?: string }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const formatTime = (t: number) => {
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const togglePlayPause = async () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      try {
+        await audioRef.current.play();
+      } catch (e) {
+        console.error('Play failed:', e);
+      }
+    }
+  };
+
+  const handleSeek = (value: number[]) => {
+    const t = value[0];
+    if (audioRef.current) {
+      audioRef.current.currentTime = t;
+      setCurrentTime(t);
+    }
+  };
+
+  const toggleMute = () => {
+    if (audioRef.current) {
+      if (isMuted) {
+        audioRef.current.volume = volume;
+        setIsMuted(false);
+      } else {
+        audioRef.current.volume = 0;
+        setIsMuted(true);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onLoadedMetadata = () => setDuration(audio.duration);
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const onEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+    };
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    audio.addEventListener('loadedmetadata', onLoadedMetadata);
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('play', onPlay);
+    audio.addEventListener('pause', onPause);
+    return () => {
+      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+      audio.removeEventListener('timeupdate', onTimeUpdate);
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('play', onPlay);
+      audio.removeEventListener('pause', onPause);
+    };
+  }, []);
+
+  return (
+    <div className={cn('flex items-center gap-2 min-w-0', className)}>
+      <audio ref={audioRef} src={audioUrl} preload="metadata" className="hidden" />
+      <button type="button" onClick={togglePlayPause} className="shrink-0 p-0.5 rounded hover:opacity-80" aria-label={isPlaying ? 'Pause' : 'Play'}>
+        {isPlaying ? <Pause className="w-4 h-4 text-black" /> : <Play className="w-4 h-4 text-black fill-black" />}
+      </button>
+      <span className="text-sm tabular-nums shrink-0">{formatTime(currentTime)}</span>
+      <span className="text-sm text-black/70 shrink-0">{formatTime(duration)}</span>
+      <div className="flex-1 min-w-0">
+        <Slider
+          value={[currentTime]}
+          onValueChange={handleSeek}
+          max={duration || 1}
+          step={0.1}
+          className="w-full"
+          disabled={duration <= 0}
+        />
+      </div>
+      <button type="button" onClick={toggleMute} className="shrink-0 p-0.5 rounded hover:opacity-80" aria-label={isMuted ? 'Unmute' : 'Mute'}>
+        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+      </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button type="button" className="shrink-0 p-0.5 rounded hover:opacity-80" aria-label="More options">
+            <MoreVertical className="w-4 h-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem>Download</DropdownMenuItem>
+          <DropdownMenuItem>Share</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+// Sample conversation for Logs (Activity tab)
+const SAMPLE_LOG_MESSAGES: LogMessage[] = [
+  {
+    id: '1',
+    direction: 'incoming',
+    kind: 'text',
+    body: 'Ok thanks',
+    senderName: 'Liel Levy',
+    timestamp: '02/09/2026 09:25:18',
+  },
+  {
+    id: '2',
+    direction: 'outgoing',
+    kind: 'text',
+    body: "Hi Albert, I'm Jane from Evergreen Turf Installation. I just emailed you the estimate. Please confirm you received it. Let me know if you have any questions. Thank you.",
+    senderName: 'hayahadjadj e',
+    timestamp: '02/09/2026 09:24:24',
+  },
+  {
+    id: '3',
+    direction: 'outgoing',
+    kind: 'audio',
+    audioUrl: TEST_MP3_URL,
+    senderName: 'April Puzon',
+    timestamp: '02/08/2026 12:18:43',
+  },
+  {
+    id: '4',
+    direction: 'outgoing',
+    kind: 'audio',
+    audioUrl: TEST_MP3_URL,
+    senderName: 'Precious Bandigan',
+    timestamp: '02/07/2026 09:23:32',
+  },
+  {
+    id: '5',
+    direction: 'incoming',
+    kind: 'text',
+    body: 'Can you send the quote again? I didn’t get the attachment.',
+    senderName: 'Liel Levy',
+    timestamp: '02/07/2026 14:22:10',
+  },
+  {
+    id: '6',
+    direction: 'outgoing',
+    kind: 'text',
+    body: 'Sure, sending it now. Check your inbox in a minute.',
+    senderName: 'hayahadjadj e',
+    timestamp: '02/07/2026 14:25:00',
+  },
+  {
+    id: '7',
+    direction: 'incoming',
+    kind: 'audio',
+    audioUrl: TEST_MP3_URL,
+    senderName: 'Albert Chen',
+    timestamp: '02/06/2026 16:45:12',
+  },
+  {
+    id: '8',
+    direction: 'outgoing',
+    kind: 'text',
+    body: "We'll have the team there by 9am. Please make sure the gate is unlocked.",
+    senderName: 'April Puzon',
+    timestamp: '02/06/2026 11:30:00',
+  },
+  {
+    id: '9',
+    direction: 'incoming',
+    kind: 'text',
+    body: 'Perfect, see you then.',
+    senderName: 'Liel Levy',
+    timestamp: '02/06/2026 11:35:22',
+  },
+  {
+    id: '10',
+    direction: 'incoming',
+    kind: 'text',
+    body: 'What’s the status on the backyard job?',
+    senderName: 'Albert Chen',
+    timestamp: '02/05/2026 10:15:00',
+  },
+  {
+    id: '11',
+    direction: 'outgoing',
+    kind: 'text',
+    body: 'Scheduled for next Tuesday. I’ll send a reminder the day before.',
+    senderName: 'Precious Bandigan',
+    timestamp: '02/05/2026 10:42:18',
+  },
+  {
+    id: '12',
+    direction: 'incoming',
+    kind: 'audio',
+    audioUrl: TEST_MP3_URL,
+    senderName: 'Maria Santos',
+    timestamp: '02/04/2026 09:00:05',
+  },
+  {
+    id: '13',
+    direction: 'outgoing',
+    kind: 'text',
+    body: 'Thanks for calling. We’ve noted your availability.',
+    senderName: 'hayahadjadj e',
+    timestamp: '02/04/2026 09:18:33',
+  },
+];
 
 export default function Jobs() {
   const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
@@ -229,6 +471,8 @@ export default function Jobs() {
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
   const [selectedFranchise, setSelectedFranchise] = useState<string>("all");
   
+  const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null)
+
   // Advanced filter toggle state
   const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
   
@@ -252,6 +496,23 @@ export default function Jobs() {
     setDateRangeValue(value || { startDate: null, endDate: null });
     setSelectedDateRange('custom-picker');
   };
+
+  const onSearchBoxLoad = (ref: google.maps.places.SearchBox) => {
+    searchBoxRef.current = ref
+    console.log('Search box loaded successfully')
+  }
+
+  const onPlacesChanged = () => {console.log('1111')
+    if (!searchBoxRef.current) return
+    console.log('aaaaa')
+    const places = searchBoxRef.current.getPlaces()
+    console.log('bbbb', places)
+    if (!places || places.length === 0) return
+    const place = places[0]
+    if (!place.geometry) return
+
+    console.log(places, 'places')
+  }
 
   const renderDateRangeLabel = () => {
     const start = dateRangeValue?.startDate;
@@ -3185,7 +3446,6 @@ export default function Jobs() {
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm">Invoice</Button>
-                <Button variant="outline" size="sm">Logs</Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -3208,7 +3468,7 @@ export default function Jobs() {
                 </TabsList>
 
                 {/* Details Tab */}
-                <TabsContent value="details" className="flex-1 min-h-0 overflow-y-auto p-6 pb-4 space-y-6 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
+                <TabsContent value="details" className="flex-1 min-h-0 overflow-y-auto p-6 pb-20 space-y-6 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Client Information */}
                     <Card>
@@ -3334,6 +3594,16 @@ export default function Jobs() {
                               <div className="mt-1 text-sm">{selectedJob.location}</div>
                             )}
                           </div>
+                          {/* <StandaloneSearchBox
+                            onLoad={onSearchBoxLoad}
+                            onPlacesChanged={onPlacesChanged}
+                          >
+                            <input
+                              type="text"
+                              placeholder="Search for a location..."
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+                            />
+                          </StandaloneSearchBox> */}
                           <div>
                             <Label className="text-sm font-medium">Apartment #</Label>
                             {isEditing ? (
@@ -3482,142 +3752,6 @@ export default function Jobs() {
                             </>
                           )}
                         </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Scheduling */}
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Calendar className="w-5 h-5" />
-                          Scheduled
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {isEditing ? (
-                          <SelectInput
-                            options={[
-                              { label: 'All', value: 'all' },
-                              { label: 'Closest Distance', value: 'closest-distance' },
-                              { label: 'Matching Skills', value: 'matching-skills' },
-                              { label: 'Matching Metro', value: 'matching-metro' },
-                              { label: 'Closest Distance + Matching Skill + Matching Metro', value: 'closest-distance-matching-skill-matching-metro' },
-                            ]}
-                            placeholder="Closest Distance"
-                            value={(editFormData as { closestDistance?: string }).closestDistance ?? (selectedJob as { closestDistance?: string }).closestDistance ?? ''}
-                            onSelect={val => handleEditChange('closestDistance', Array.isArray(val) ? (val[0] ?? '') : val)}
-                            onSearch={() => {}}
-                          />
-                        ) : (
-                          <div>
-                            <Label className="text-sm font-medium">Closest Distance</Label>
-                            <div className="mt-1 text-sm">{([{ label: 'All', value: 'all' }, { label: 'Closest Distance', value: 'closest-distance' }, { label: 'Matching Skills', value: 'matching-skills' }, { label: 'Matching Metro', value: 'matching-metro' }, { label: 'Closest Distance + Matching Skill + Matching Metro', value: 'closest-distance-matching-skill-matching-metro' }].find(o => o.value === ((selectedJob as { closestDistance?: string }).closestDistance))?.label) ?? (selectedJob as { closestDistance?: string }).closestDistance ?? '—'}</div>
-                          </div>
-                        )}
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <Label className="text-sm font-medium">Start DateTime</Label>
-                            {isEditing ? (
-                              <div className="mt-1">
-                                <InputDatepicker
-                                  range={false}
-                                  withTime={true}
-                                  datetimeValue={editFormData.startDate && editFormData.startTime ? `${editFormData.startDate}T${String(editFormData.startTime).slice(0, 5)}` : ''}
-                                  onDateTimeChange={(v) => {
-                                    if (v) {
-                                      const [d, t] = v.split('T');
-                                      handleEditChange('startDate', d || '');
-                                      handleEditChange('startTime', t ? `${t}:00` : '00:00:00');
-                                    }
-                                  }}
-                                />
-                              </div>
-                            ) : (
-                              <div className="mt-1 text-sm">
-                                {selectedJob.startDate && selectedJob.startTime
-                                  ? new Date(`${selectedJob.startDate}T${selectedJob.startTime}`).toLocaleString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
-                                  : '—'}
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">End DateTime</Label>
-                            {isEditing ? (
-                              <div className="mt-1">
-                                <InputDatepicker
-                                  range={false}
-                                  withTime={true}
-                                  datetimeValue={(() => {
-                                    const endD = (editFormData as { endDate?: string }).endDate || editFormData.startDate;
-                                    const endT = (editFormData as { estimatedEndTime?: string }).estimatedEndTime || editFormData.startTime || '17:00';
-                                    return endD && endT ? `${endD}T${String(endT).slice(0, 5)}` : '';
-                                  })()}
-                                  onDateTimeChange={(v) => {
-                                    if (v) {
-                                      const [d, t] = v.split('T');
-                                      handleEditChange('endDate', d || '');
-                                      handleEditChange('estimatedEndTime', t ? `${t.slice(0, 5)}` : '17:00');
-                                    }
-                                  }}
-                                />
-                              </div>
-                            ) : (
-                              <div className="mt-1 text-sm">
-                                {(() => {
-                                  const endD = (selectedJob as { endDate?: string }).endDate || selectedJob.startDate;
-                                  const endT = (selectedJob as { estimatedEndTime?: string }).estimatedEndTime || selectedJob.startTime;
-                                  return endD && endT ? new Date(`${endD}T${endT}`).toLocaleString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '—';
-                                })()}
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Closed At</Label>
-                            {isEditing ? (
-                              <div className="mt-1">
-                                <InputDatepicker
-                                  range={false}
-                                  withTime={true}
-                                  datetimeValue={(() => {
-                                    const s = (editFormData as { closedAt?: string }).closedAt;
-                                    return s && s.length >= 16 ? s.slice(0, 16) : s || '';
-                                  })()}
-                                  onDateTimeChange={(v) => handleEditChange('closedAt', v)}
-                                />
-                              </div>
-                            ) : (
-                              <div className="mt-1 text-sm">
-                                {(selectedJob as { closedAt?: string }).closedAt
-                                  ? new Date((selectedJob as { closedAt?: string }).closedAt!).toLocaleString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
-                                  : '—'}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Assignment */}
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Users className="w-5 h-5" />
-                          Assignment
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {isEditing ? (
-                          <SelectInput
-                            label="Assign Technician"
-                            options={technicianOptions.map(name => ({ label: name, value: name }))}
-                            placeholder="Select Technician"
-                            value={editFormData.assignedTechnician ?? selectedJob?.assignedTechnician ?? ''}
-                            onSelect={val => handleEditChange('assignedTechnician', Array.isArray(val) ? (val[0] ?? '') : val)}
-                            onSearch={() => {}}
-                          />
-                        ) : (
-                          <div><Label className="text-sm font-medium">Assign Technician</Label><div className="mt-1 text-sm">{selectedJob?.assignedTechnician ?? '—'}</div></div>
-                        )}
                         <div className="grid grid-cols-2 gap-3">
                           {isEditing ? (
                             <SelectInput
@@ -3687,6 +3821,120 @@ export default function Jobs() {
                       </CardContent>
                     </Card>
 
+                    {/* Scheduling */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Calendar className="w-5 h-5" />
+                          Scheduled
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-sm font-medium">Start DateTime</Label>
+                            {isEditing ? (
+                              <div className="mt-1">
+                                <InputDatepicker
+                                  range={false}
+                                  withTime={true}
+                                  datetimeValue={editFormData.startDate && editFormData.startTime ? `${editFormData.startDate}T${String(editFormData.startTime).slice(0, 5)}` : ''}
+                                  onDateTimeChange={(v) => {
+                                    if (v) {
+                                      const [d, t] = v.split('T');
+                                      handleEditChange('startDate', d || '');
+                                      handleEditChange('startTime', t ? `${t}:00` : '00:00:00');
+                                    }
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <div className="mt-1 text-sm">
+                                {selectedJob.startDate && selectedJob.startTime
+                                  ? new Date(`${selectedJob.startDate}T${selectedJob.startTime}`).toLocaleString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
+                                  : '—'}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium">End DateTime</Label>
+                            {isEditing ? (
+                              <div className="mt-1">
+                                <InputDatepicker
+                                  range={false}
+                                  withTime={true}
+                                  datetimeValue={(() => {
+                                    const endD = (editFormData as { endDate?: string }).endDate || editFormData.startDate;
+                                    const endT = (editFormData as { estimatedEndTime?: string }).estimatedEndTime || editFormData.startTime || '17:00';
+                                    return endD && endT ? `${endD}T${String(endT).slice(0, 5)}` : '';
+                                  })()}
+                                  onDateTimeChange={(v) => {
+                                    if (v) {
+                                      const [d, t] = v.split('T');
+                                      handleEditChange('endDate', d || '');
+                                      handleEditChange('estimatedEndTime', t ? `${t.slice(0, 5)}` : '17:00');
+                                    }
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <div className="mt-1 text-sm">
+                                {(() => {
+                                  const endD = (selectedJob as { endDate?: string }).endDate || selectedJob.startDate;
+                                  const endT = (selectedJob as { estimatedEndTime?: string }).estimatedEndTime || selectedJob.startTime;
+                                  return endD && endT ? new Date(`${endD}T${endT}`).toLocaleString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '—';
+                                })()}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Assignment */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Users className="w-5 h-5" />
+                          Assignment
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {isEditing ? (
+                          <SelectInput
+                            options={[
+                              { label: 'All', value: 'all' },
+                              { label: 'Closest Distance', value: 'closest-distance' },
+                              { label: 'Matching Skills', value: 'matching-skills' },
+                              { label: 'Matching Metro', value: 'matching-metro' },
+                              { label: 'Closest Distance + Matching Skill + Matching Metro', value: 'closest-distance-matching-skill-matching-metro' },
+                            ]}
+                            placeholder="Closest Distance"
+                            value={(editFormData as { closestDistance?: string }).closestDistance ?? (selectedJob as { closestDistance?: string }).closestDistance ?? ''}
+                            onSelect={val => handleEditChange('closestDistance', Array.isArray(val) ? (val[0] ?? '') : val)}
+                            onSearch={() => {}}
+                          />
+                        ) : (
+                          <div>
+                            <Label className="text-sm font-medium">Closest Distance</Label>
+                            <div className="mt-1 text-sm">{([{ label: 'All', value: 'all' }, { label: 'Closest Distance', value: 'closest-distance' }, { label: 'Matching Skills', value: 'matching-skills' }, { label: 'Matching Metro', value: 'matching-metro' }, { label: 'Closest Distance + Matching Skill + Matching Metro', value: 'closest-distance-matching-skill-matching-metro' }].find(o => o.value === ((selectedJob as { closestDistance?: string }).closestDistance))?.label) ?? (selectedJob as { closestDistance?: string }).closestDistance ?? '—'}</div>
+                          </div>
+                        )}
+                        {isEditing ? (
+                          <SelectInput
+                            label="Assign Technician"
+                            options={technicianOptions.map(name => ({ label: name, value: name }))}
+                            placeholder="Select Technician"
+                            value={editFormData.assignedTechnician ?? selectedJob?.assignedTechnician ?? ''}
+                            onSelect={val => handleEditChange('assignedTechnician', Array.isArray(val) ? (val[0] ?? '') : val)}
+                            onSearch={() => {}}
+                          />
+                        ) : (
+                          <div><Label className="text-sm font-medium">Assign Technician</Label><div className="mt-1 text-sm">{selectedJob?.assignedTechnician ?? '—'}</div></div>
+                        )}
+                      </CardContent>
+                    </Card>
+
                     {/* Description & Notes */}
                     <Card className="flex flex-col">
                       <CardHeader className="pb-3">
@@ -3714,11 +3962,13 @@ export default function Jobs() {
 
                   
                   {/* Footer */}
-                  <div className="flex items-center justify-end gap-3 pt-4 border-t">
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" onClick={handleSave} className="bg-green-600 hover:bg-green-700">
-                        Save
-                      </Button>
+                  <div className="fixed bottom-0 left-0 right-0 bg-white">
+                    <div className="flex items-center justify-end gap-3 py-3 border-t">
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+                          Save
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </TabsContent>
@@ -3732,8 +3982,44 @@ export default function Jobs() {
                           Logs
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="flex-1 overflow-y-scroll">
-                        {/* Logs goes here */}
+                      <CardContent className="flex-1 overflow-y-scroll bg-gray-100/50">
+                        <div className="space-y-4 py-2">
+                          {SAMPLE_LOG_MESSAGES.map((msg) => (
+                            <div
+                              key={msg.id}
+                              className={cn(
+                                'flex flex-col max-w-[85%]',
+                                msg.direction === 'incoming' ? 'items-start' : 'items-end'
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  'rounded-lg px-3 py-2',
+                                  msg.direction === 'incoming'
+                                    ? 'bg-gray-200 text-gray-900'
+                                    : 'bg-brandGreen-900 text-white'
+                                )}
+                              >
+                                {msg.kind === 'text' && msg.body && (
+                                  <p className="text-sm whitespace-pre-wrap break-words">{msg.body}</p>
+                                )}
+                                {msg.kind === 'audio' && msg.audioUrl && (
+                                  <div className="py-1">
+                                    <InlineAudioPlayer audioUrl={msg.audioUrl} />
+                                  </div>
+                                )}
+                              </div>
+                              <span
+                                className={cn(
+                                  'text-xs text-gray-500 mt-1',
+                                  msg.direction === 'incoming' ? 'self-start' : 'self-end'
+                                )}
+                              >
+                                {msg.senderName} {msg.timestamp}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </CardContent>
                     </Card>
                     <Card className="h-full overflow-hidden flex flex-col">
@@ -3925,6 +4211,7 @@ export default function Jobs() {
                             maxHeightClassName="max-h-[calc(100vh-320px)]"
                             className="flex-1 flex flex-col"
                             tableClassName="flex-1"
+                            lockedColumns={1}
                           />
                         </>
                       );
@@ -4705,6 +4992,7 @@ export default function Jobs() {
           tableKey={router.pathname}
           className="flex-1 flex flex-col"
           tableClassName="flex-1 flex flex-col overflow-y-hidden"
+          lockedColumns={2}
         />
       </div>
     );
