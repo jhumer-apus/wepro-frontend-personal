@@ -231,7 +231,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
   }
   
   return (
-    <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col md:h-screen">
+    <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col md:h-[calc(100vh-8rem)]">
       {/* Header */}
       <DashboardFilter 
         title='Customer Dashboard'
@@ -262,28 +262,28 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
       />
 
       {/* Table */}
-      <JobsTable
-        rows={paginatedCustomers}
-        columns={customerColumns}
-        mobileRows={paginatedCustomers}
-        mobileCard={(row) => (
-          <CustomerCard
-            customer={row}
-            openCustomerProfile={handleViewCustomer}
-          />
-        )}
-        onSort={handleSort}
-        activeSortKey={sortKey ?? undefined}
-        sortDirection={sortDirection}
-        pageSize={pageSize}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalCount={totalCount}
-        onPageSizeChange={handlePageSizeChange}
-        onPageChange={handlePageChange}
-        maxHeightClassName={"max-h-[calc(100vh-420px)]"}
-      />
-    </div>
+        <JobsTable
+          rows={paginatedCustomers}
+          columns={customerColumns}
+          mobileRows={paginatedCustomers}
+          mobileCard={(row) => (
+            <CustomerCard
+              customer={row}
+              openCustomerProfile={handleViewCustomer}
+            />
+          )}
+          onSort={handleSort}
+          activeSortKey={sortKey ?? undefined}
+          sortDirection={sortDirection}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          onPageSizeChange={handlePageSizeChange}
+          onPageChange={handlePageChange}
+          className="h-full overflow-auto"
+        />
+      </div>
   )
 }
 

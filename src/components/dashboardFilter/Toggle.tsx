@@ -11,7 +11,7 @@ interface Props {
 }
 export default function(props: Props){
     return (
-        <div className="hidden md:flex items-center rounded-full bg-slate-100 dark:bg-slate-800 ">
+        <div className="flex items-center gap-1 rounded-full bg-slate-50 border border-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
             {props.toggleList.map((item,index) => (
                 <Button
                     key={index}
