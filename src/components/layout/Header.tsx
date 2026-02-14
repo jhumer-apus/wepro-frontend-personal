@@ -9,6 +9,7 @@ import {
   LogOut,
   Clock,
   X,
+  Plus,
 } from 'lucide-react'
 import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
@@ -229,6 +230,13 @@ export function Header({ onMenuClick }: HeaderProps): React.JSX.Element {
 
       {/* Actions */}
       <div className="flex items-center space-x-3">
+        <Button
+          onClick={() => {}}
+          className="wepro-gradient text-white rounded-xl"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Create New Job
+        </Button>
         {/* Clock In/Out Button - Only show if user has permission */}
         {/* Hide on mobile when search is active */}
         {showClockButton && (
