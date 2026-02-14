@@ -1,31 +1,49 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import { Button } from "../../ui/button";
 import ViewModeOptions from "./header/ViewModeOptions";
 
 interface Props {
-    navigateMonth: (direction: number) => void;
     setCurrentDate: (date: Date) => void;
     currentDate: Date;
-    viewMode: string;
-    setViewMode: (mode: string) => void;
+    viewMode: "month" | "week" | "day";
+    setViewMode: (mode: "month" | "week" | "day") => void;
     filteredJobs: any[];
-    monthNames: string[];
+    setOpenFullScreen: React.Dispatch<React.SetStateAction<boolean>>;
+    isOpenFullScreen: boolean;
 }
 
 export default function ScheduleHeader(props:Props) {
 
     const { 
-        navigateMonth, 
         setCurrentDate, 
         currentDate, 
         viewMode, 
         setViewMode, 
         filteredJobs,
-        monthNames
+        setOpenFullScreen,
+        isOpenFullScreen
     } = props;
 
+    const navigateMonth = (direction: number) => {
+        const newDate = new Date(currentDate);
+        if (viewMode === "month") {
+            newDate.setMonth(currentDate.getMonth() + direction);
+        } else if (viewMode === "week") {
+            newDate.setDate(currentDate.getDate() + (direction * 7));
+        } else if (viewMode === "day") {
+            newDate.setDate(currentDate.getDate() + direction);
+        }
+        setCurrentDate(newDate);
+    };
+
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+
     return (
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-6">
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                     <Button
@@ -71,6 +89,16 @@ export default function ScheduleHeader(props:Props) {
                     viewMode={viewMode} 
                     setViewMode={setViewMode} 
                 />
+                {/*================== Full Screen Button ================ */}
+                {!isOpenFullScreen && (
+                    <button
+                        onClick={() => setOpenFullScreen(true)}
+                        className="p-2 rounded-md hover:bg-white/60 dark:hover:bg-slate-800 transition"
+                    >
+                        <Maximize2 className="w-4 h-4" />
+                    </button>
+                )}
+
             </div>
         </div>
     );

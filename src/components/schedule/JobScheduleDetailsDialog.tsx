@@ -3,35 +3,18 @@ import { Label } from "@/src/components/ui/label";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Wrench, Edit3, Phone, Navigation } from "lucide-react";
-
-export interface JobDetails {
-  id: string;
-  title: string;
-  jobType: string;
-  client: string;
-  clientPhone: string;
-  address: string;
-  scheduledDate: string;
-  scheduledTime: string;
-  endTime: string;
-  estimatedDuration: number;
-  technicianId: string;
-  value: number;
-  source: string;
-  status: string;
-  description: string;
-}
+import { JobSchedule } from "@/src/constants/interface/jobSchedule";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  job: JobDetails | null;
+  job: JobSchedule | null;
   getTechnicianColor: (technicianId: string) => string;
   getTechnicianName: (technicianId: string) => string;
   getStatusColor: (status: string) => string;
-  onEdit?: (job: JobDetails) => void;
-  onCall?: (job: JobDetails) => void;
-  onDirections?: (job: JobDetails) => void;
+  onEdit?: (job: JobSchedule) => void;
+  onCall?: (job: JobSchedule) => void;
+  onDirections?: (job: JobSchedule) => void;
 }
 
 const JobScheduleDetailsDialog: React.FC<Props> = ({
@@ -110,11 +93,11 @@ const JobScheduleDetailsDialog: React.FC<Props> = ({
                       <div
                         className="w-3 h-3 rounded-full"
                         style={{
-                          backgroundColor: getTechnicianColor(job.technicianId),
+                          backgroundColor: getTechnicianColor(job.technicianId ?? "")
                         }}
                       />
                       <span className="text-sm font-medium">
-                        {getTechnicianName(job.technicianId)}
+                        {getTechnicianName(job.technicianId ?? "")}
                       </span>
                     </div>
                   </div>

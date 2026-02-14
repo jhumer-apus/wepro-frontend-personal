@@ -1,4 +1,6 @@
-export const jobsSchedules = [
+import { JobSchedule } from "../interface/jobSchedule";
+
+export const jobsSchedules:JobSchedule[] = [
     {
       id: "J001",
       title: "HVAC System Repair",

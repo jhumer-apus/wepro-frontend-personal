@@ -13,6 +13,7 @@ import { CustomerT } from '@/src/constants/interface/customer'
 import { CustomerProfileView } from '@/src/components/customer/CustomerProfileView'
 import DashboardFilter from '@/src/components/dashboardFilter/DashboardFilter'
 import SelectInput from '@/src/components/input/select'
+import { exportToCSV } from '@/src/utils/exportToCSV'
 
 
 
@@ -99,9 +100,9 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
         columnName: "Serial No.",
         sortKey: "serialNumber",
         cell: (row: CustomerT) => (
-          <span className="whitespace-nowrap">
+          <div className="whitespace-nowrap w-20">
             {row.serialNumber ?? "—"}
-          </span>
+          </div>
         ),
       },
       {
@@ -212,6 +213,20 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
     setCurrentPage(page)
   }
 
+  const handleExport = () => {
+    exportToCSV(sortedCustomers, [
+      { header: "Serial No.", accessor: c => c.serialNumber },
+      { header: "Client", accessor: c => c.clientName },
+      { header: "Company", accessor: c => c.companyName },
+      { header: "Email", accessor: c => c.email },
+      { header: "Phone", accessor: c => c.phoneNumber },
+      { header: "Source", accessor: c => c.sourceTitle },
+      { header: "Unit", accessor: c => c.addressUnit },
+      { header: "Location", accessor: c => c.location },
+    ], "customers_export.csv");
+  };
+
+
 
   const toggleList = [
     { label: "All", value: "" },
@@ -281,7 +296,9 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
           totalCount={totalCount}
           onPageSizeChange={handlePageSizeChange}
           onPageChange={handlePageChange}
-          className="h-full overflow-auto"
+          onExport={handleExport}
+          className="flex-1 flex flex-col"
+          tableClassName="flex-1 flex flex-col overflow-y-hidden"
         />
       </div>
   )

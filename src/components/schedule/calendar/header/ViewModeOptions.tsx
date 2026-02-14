@@ -2,15 +2,22 @@ import { Button } from "@/src/components/ui/button";
 import { CalendarIcon, Grid3X3, List } from "lucide-react";
 
 interface Props {
-    viewMode: string;
-    setViewMode: (mode: string) => void;
+    viewMode: "month" | "week" | "day";
+    setViewMode: (mode: "month" | "week" | "day") => void;
+}
+
+interface ViewModeOption {
+    label: string;
+    value: "month" | "week" | "day";
+    viewMode: "default" | "ghost";
+    icon: React.ReactNode;
 }
 
 export default function ViewModeOptions(props: Props) {
 
     const { viewMode, setViewMode } = props;
 
-    const viewModeOptions = [
+    const viewModeOptions: ViewModeOption[] = [
         { 
             label: "Month", 
             value: "month",
