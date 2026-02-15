@@ -14,6 +14,7 @@ import { CustomerProfileView } from '@/src/components/customer/CustomerProfileVi
 import DashboardFilter from '@/src/components/dashboardFilter/DashboardFilter'
 import SelectInput from '@/src/components/input/select'
 import { exportToCSV } from '@/src/utils/exportToCSV'
+import { Checkbox } from '@/src/components/ui/checkbox'
 
 
 
@@ -21,6 +22,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
 
   const [pageSize, setPageSize] = useState<number>(10)
   const [currentPage, setCurrentPage] = useState<number>(1)
+  const [customers, setCustomers] = useState<CustomerT[]>(customersMockData)
 
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerT | null>(
     null
@@ -37,9 +39,27 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
   // Sortings
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
+
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+
+
+  const handleRowToggle = (id: string, isChecked: boolean) => {
+    setSelectedRows(prev => {
+      const newSet = new Set(prev);
+
+      if (isChecked) {
+        newSet.add(id);
+      } else {
+        newSet.delete(id);
+      }
+
+      return newSet;
+    });
+  };
+
   
 
-  const filteredCustomers = customersMockData.filter(customer => {
+  const filteredCustomers = customers.filter(customer => {
     const matchesSearch =
       customer.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -100,8 +120,32 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
         columnName: "Serial No.",
         sortKey: "serialNumber",
         cell: (row: CustomerT) => (
-          <div className="whitespace-nowrap w-20">
-            {row.serialNumber ?? "—"}
+          <div className="grid grid-cols-3 gap-1 place-items-center min-w-[120px]">
+            
+            {/* Col 1: Checkbox */}
+            <Checkbox
+              aria-label={`Select customer ${row.id}`}
+              checked={selectedRows.has(row.id)}
+              onCheckedChange={checked =>
+                handleRowToggle(row.id, Boolean(checked))
+              }
+            />
+
+            {/* Col 2: Serial Number */}
+            <div className="font-medium ">
+              {row.serialNumber ?? "—"}
+            </div>
+
+            {/* Col 3: View */}
+            <Button
+              size="icon"
+              variant="ghost"
+              className={`h-7 w-7 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 shadow-sm`}
+              onClick={() => handleViewCustomer(row)}
+              title="View job"
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
           </div>
         ),
       },
@@ -160,38 +204,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
         cell: (row: CustomerT) => row.location ?? "—",
         sortKey: "location",
       },
-    {
-      columnName: "Actions",
-      cell: (row: CustomerT) => (
-        <div className="flex items-center">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => handleViewCustomer(row)}
-          >
-            <Eye className="w-4 h-4" />
-          </Button>
-
-          <Button
-            size="sm"
-            variant="ghost"
-            // onClick={() => handleEditCustomer(row.id)}
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
-
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-red-600 hover:text-red-700"
-            // onClick={() => handleDeleteCustomer(row.id)}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ]
+    ]
 
 
   const totalCount = filteredCustomers.length
@@ -251,7 +264,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
       <DashboardFilter 
         title='Customer Dashboard'
         // description='Manage customer relationships and history'
-        toggleList={toggleList}
+        toggleList={toggleList} 
         searchQuery={searchTerm}
         onChangeSearchQuery={setSearchTerm}
         onToggleChange={setToggleStatus} 
@@ -275,6 +288,66 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
           ]
         }     
       />
+
+      
+      {selectedRows.size > 0 && (
+        <div className="flex items-center gap-3 my-2">
+
+          {/* Bulk Delete */}
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              const confirmed = window.confirm(
+                `Delete ${selectedRows.size} selected customer(s)?`
+              );
+              if (!confirmed) return;
+
+              // If using real state:
+              setCustomers(prev =>
+                prev.filter(c => !selectedRows.has(c.id))
+              );
+              console.log("Deleting:", Array.from(selectedRows));
+
+              setSelectedRows(new Set());
+            }}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Delete
+          </Button>
+
+          {/* Edit Section */}
+          <div className="flex items-center gap-2 bg-gray-200 rounded-md">
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const selectedId = Array.from(selectedRows)[0];
+                const customerToEdit = customers.find(
+                  c => c.id === selectedId
+                );
+
+                if (customerToEdit) {
+                  console.log("Edit customer:", customerToEdit.id);
+                }
+              }}
+              disabled={selectedRows.size !== 1}
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+
+            {selectedRows.size !== 1 && (
+              <p className="text-xs text-gray-500 pr-2">
+                Select exactly one customer to edit
+              </p>
+            )}
+          </div>
+
+        </div>
+      )}
+
 
       {/* Table */}
         <JobsTable
