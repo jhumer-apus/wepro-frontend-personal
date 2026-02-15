@@ -79,12 +79,6 @@ export default function ScheduleHeader(props:Props) {
                 </Button>
             </div>
             <div className="flex items-center gap-4">
-                {/*================== Number of Jobs Shown ================ */}
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 text-sm">
-                        <span className="font-medium">{filteredJobs.length} jobs</span>
-                    </div>
-                </div>
                 <ViewModeOptions 
                     viewMode={viewMode} 
                     setViewMode={setViewMode} 
