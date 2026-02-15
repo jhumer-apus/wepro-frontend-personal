@@ -15,6 +15,7 @@ import DashboardFilter from '@/src/components/dashboardFilter/DashboardFilter'
 import SelectInput from '@/src/components/input/select'
 import { exportToCSV } from '@/src/utils/exportToCSV'
 import { Checkbox } from '@/src/components/ui/checkbox'
+import CustomerDashboardFilter from '@/src/components/customer/CustomerDashboardFilter'
 
 
 
@@ -261,32 +262,14 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
   return (
     <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col md:h-[calc(100vh-8rem)]">
       {/* Header */}
-      <DashboardFilter 
-        title='Customer Dashboard'
-        // description='Manage customer relationships and history'
+      <CustomerDashboardFilter 
         toggleList={toggleList} 
         searchQuery={searchTerm}
         onChangeSearchQuery={setSearchTerm}
         onToggleChange={setToggleStatus} 
         toggleStatus={toggleStatus} 
-        moreFilters={
-          [
-            (
-              /* Source Filter */
-              <SelectInput
-                label="Source"
-                options={sourcesFormatted}
-                placeholder="All Source"
-                value={moreFiltersData.source}
-                onSelect={val => setMoreFiltersData(prev => ({
-                  ...prev,
-                  source: typeof val === "string" ? val : prev.source,
-                }))}
-                onSearch={() => {}}
-              />
-            )
-          ]
-        }     
+        moreFiltersData={moreFiltersData}
+        setMoreFiltersData={setMoreFiltersData}
       />
 
       
