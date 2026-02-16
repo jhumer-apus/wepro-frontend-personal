@@ -8,24 +8,20 @@ import { customersMockData } from "@/src/constants/dummyData/customers";
 
 
 interface Props {
-
-    toggleList?: { label: string; value: string }[];
-    toggleStatus?: string;
     /** renderToggleOptions allows you to pass in custom toggle options UI. If this prop is provided, the default Toggle component will be hidden. */
     searchQuery: string;
     onChangeSearchQuery: (query: string) => void;
-    onToggleChange?: (value: string) => void;
     moreFiltersData: any;
     setMoreFiltersData: React.Dispatch<React.SetStateAction<any>>;
+    handleOpenCreateCustomer: () => void
 }
 export default function CustomerDashboardFilter(props: Props){
     const {
-        toggleList, toggleStatus, 
-        onToggleChange, 
         searchQuery, 
         onChangeSearchQuery, 
         moreFiltersData,        
-        setMoreFiltersData
+        setMoreFiltersData,
+        handleOpenCreateCustomer
     } = props;
 
     const sources= Array.from(
@@ -54,18 +50,13 @@ export default function CustomerDashboardFilter(props: Props){
                     </div>
                     <div className="flex items-center gap-2">
                         <Button
-                            onClick={() => {}}
+                            onClick={() => handleOpenCreateCustomer()}
                             className="wepro-gradient text-white rounded-xl"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Add Customer
                         </Button>
         
-                        <Toggle 
-                            toggleList={toggleList ?? []} 
-                            currentToggled={toggleStatus ?? "all"} 
-                            onSetToggle={onToggleChange ?? (() => {})} 
-                        />
                     </div>
 
                     

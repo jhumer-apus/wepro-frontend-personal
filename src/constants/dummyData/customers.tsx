@@ -208,9 +208,6 @@ export const notesMockData = [
   },
 ]
 
-
-
-// Mock customer data
 export const customersMockData: CustomerT[] = [
   {
     id: "cst-001",
@@ -220,12 +217,19 @@ export const customersMockData: CustomerT[] = [
     sourceTitle: "Website Inquiry",
     email: "juan.delacruz@abcsolutions.com",
     phoneNumber: "+63 912 345 6789",
-    addressUnit: "Unit 502, ABC Tower",
-    location: "Makati City, Philippines",
-    status: "active",
+
+    apartmentUnit: "Unit 502, ABC Tower",
+    city: "Makati City",
+    state: "Metro Manila",
+    country: "Philippines",
+    zipCode: "1226",
+
+    location: "Metro Manila - Makati Service Area",
+
     totalSpent: 1250.75,
-    billingAddress: "Unit 502, ABC Tower, Makati City, Philippines",
+    billingAddress: "",
     paymentMethod: "Visa ending in 1234",
+
     jobHistory: jobHistoryMockData,
     jobActivities: jobActivitiesMockData,
     communications: communicationsMockData,
@@ -240,12 +244,19 @@ export const customersMockData: CustomerT[] = [
     sourceTitle: "Facebook Ads",
     email: "maria.santos@brighttech.ph",
     phoneNumber: "+63 917 888 1234",
-    addressUnit: "3rd Floor, BrightTech Building",
-    location: "Quezon City, Philippines",
-    status: "inactive",
-    totalSpent: 980.50,
-    billingAddress: "3rd Floor, BrightTech Building, Quezon City, Philippines",
+
+    apartmentUnit: "3rd Floor, BrightTech Building",
+    city: "Quezon City",
+    state: "Metro Manila",
+    country: "Philippines",
+    zipCode: "1105",
+
+    location: "Metro Manila - QC Zone",
+
+    totalSpent: 980.5,
+    billingAddress: "",
     paymentMethod: "Mastercard ending in 5678",
+
     jobHistory: jobHistoryMockData,
     jobActivities: jobActivitiesMockData,
     communications: communicationsMockData,
@@ -260,12 +271,19 @@ export const customersMockData: CustomerT[] = [
     sourceTitle: "Referral",
     email: "james.lee@leetrading.com",
     phoneNumber: "+63 905 456 7890",
-    addressUnit: "Warehouse 2, Industrial Park",
-    location: "Cebu City, Philippines",
-    status: "active",
-    totalSpent: 1500.00,
-    billingAddress: "Warehouse 2, Industrial Park, Cebu City, Philippines",
+
+    apartmentUnit: "Warehouse 2, Industrial Park",
+    city: "Cebu City",
+    state: "Cebu",
+    country: "Philippines",
+    zipCode: "6000",
+
+    location: "Cebu Main Service Area",
+
+    totalSpent: 1500.0,
+    billingAddress: "",
     paymentMethod: "PayPal (ending in 1234)",
+
     jobHistory: jobHistoryMockData,
     jobActivities: jobActivitiesMockData,
     communications: communicationsMockData,
@@ -280,12 +298,19 @@ export const customersMockData: CustomerT[] = [
     sourceTitle: "Email Campaign",
     email: "angela.cruz@nextgen.ph",
     phoneNumber: "+63 926 234 5678",
-    addressUnit: "Suite 1201, Skyline Tower",
-    location: "BGC, Taguig City",
-    status: "active",
+
+    apartmentUnit: "Suite 1201, Skyline Tower",
+    city: "Taguig City",
+    state: "Metro Manila",
+    country: "Philippines",
+    zipCode: "1634",
+
+    location: "BGC Business District",
+
     totalSpent: 750.25,
-    billingAddress: "Suite 1201, Skyline Tower, BGC, Taguig City",
+    billingAddress: "",
     paymentMethod: "Visa ending in 4321",
+
     jobHistory: jobHistoryMockData,
     jobActivities: jobActivitiesMockData,
     communications: communicationsMockData,
@@ -299,12 +324,19 @@ export const customersMockData: CustomerT[] = [
     sourceTitle: "Walk-in Client",
     email: "robert.tan@tanholdings.com",
     phoneNumber: "+63 998 765 4321",
-    addressUnit: "Office 7B, Tan Plaza",
-    location: "Davao City, Philippines",
-    status: "inactive",
-    totalSpent: 500.00,
-    billingAddress: "Office 7B, Tan Plaza, Davao City, Philippines",
+
+    apartmentUnit: "Office 7B, Tan Plaza",
+    city: "Davao City",
+    state: "Davao del Sur",
+    country: "Philippines",
+    zipCode: "8000",
+
+    location: "Davao South Service Area",
+
+    totalSpent: 500.0,
+    billingAddress: "",
     paymentMethod: "Mastercard ending in 8765",
+
     jobHistory: jobHistoryMockData,
     jobActivities: jobActivitiesMockData,
     communications: communicationsMockData,
@@ -312,3 +344,4 @@ export const customersMockData: CustomerT[] = [
     notes: notesMockData,
   },
 ]
+

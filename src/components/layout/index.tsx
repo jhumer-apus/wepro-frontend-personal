@@ -11,6 +11,7 @@ import { useSidePanel } from '@/src/components/sidePanel'
 import { useRef } from 'react'
 import { JobForm } from '@/src/components/job'
 
+
 export default function DashboardLayout({
   children,
 }: {

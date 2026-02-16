@@ -11,25 +11,27 @@ import JobsTable from '@/src/components/table'
 import { CustomerCard } from '@/src/components/customer/CustomerCard'
 import { CustomerT } from '@/src/constants/interface/customer'
 import { CustomerProfileView } from '@/src/components/customer/CustomerProfileView'
-import DashboardFilter from '@/src/components/dashboardFilter/DashboardFilter'
-import SelectInput from '@/src/components/input/select'
 import { exportToCSV } from '@/src/utils/exportToCSV'
 import { Checkbox } from '@/src/components/ui/checkbox'
 import CustomerDashboardFilter from '@/src/components/customer/CustomerDashboardFilter'
+import CreateCustomerDialog from '@/src/components/customer/form/CreateCustomerDialog'
+import EditCustomerDialog from '@/src/components/customer/form/EditCustomerDialog'
 
 
 
 const CustomersIndex: React.FC = (): React.JSX.Element => {
 
+  const [openCreateCustomerDialog, setOpenCreateCustomerDialog] = useState<boolean>(false)
+  const [openEditCustomerDialog, setOpenEditCustomerDialog] = useState<boolean>(false)
   const [pageSize, setPageSize] = useState<number>(10)
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [customers, setCustomers] = useState<CustomerT[]>(customersMockData)
+  const [customerToEdit, setCustomerToEdit] = useState<CustomerT | null>(null)
 
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerT | null>(
     null
   )
   const [searchTerm, setSearchTerm] = useState<string>('')
-  const [toggleStatus, setToggleStatus] = useState<string>('')
   const [showProfile, setShowProfile] = useState<boolean>(false)
 
   /* Filters */
@@ -68,21 +70,12 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
 
     const matchesSource = moreFiltersData.source === 'all' || customer.sourceTitle === moreFiltersData.source
 
-    const matchesStatus = toggleStatus === "" || customer.status === toggleStatus
-    return matchesSearch && matchesSource && matchesStatus
+    return matchesSearch && matchesSource
   })
 
   const sources= Array.from(
     new Set(customersMockData.map(c => c.sourceTitle).filter(Boolean))
   )
-
-  const sourcesFormatted = [
-    { label: "All Source", value: "all" },
-    ...sources.map(source => ({
-      label: source,
-      value: source,
-    })),
-  ]
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -196,9 +189,14 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
         ),
       },
       {
-        columnName: "Unit",
-        cell: (row: CustomerT) => `${row.addressUnit ?? "-"}`,
-        sortKey: "addressUnit",
+        columnName: "Address",
+        cell: (row: CustomerT) => (
+          <span className="whitespace-nowrap">
+            {[row.city, row.state, row.country]
+              .filter(Boolean)
+              .join(", ") || "-"}
+          </span>
+        ),
       },
       {
         columnName: "Location",
@@ -228,25 +226,35 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
   }
 
   const handleExport = () => {
-    exportToCSV(sortedCustomers, [
-      { header: "Serial No.", accessor: c => c.serialNumber },
-      { header: "Client", accessor: c => c.clientName },
-      { header: "Company", accessor: c => c.companyName },
-      { header: "Email", accessor: c => c.email },
-      { header: "Phone", accessor: c => c.phoneNumber },
-      { header: "Source", accessor: c => c.sourceTitle },
-      { header: "Unit", accessor: c => c.addressUnit },
-      { header: "Location", accessor: c => c.location },
-    ], "customers_export.csv");
+    exportToCSV(
+      sortedCustomers,
+      [
+        { header: "Serial No.", accessor: c => c.serialNumber ?? "" },
+        { header: "Client", accessor: c => c.clientName ?? "" },
+        { header: "Company", accessor: c => c.companyName ?? "" },
+        { header: "Email", accessor: c => c.email ?? "" },
+        { header: "Phone", accessor: c => c.phoneNumber ?? "" },
+        { header: "Source", accessor: c => c.sourceTitle ?? "" },
+        { header: "Unit", accessor: c => c.apartmentUnit ?? "" },
+        { header: "Location", accessor: c => c.location ?? "" },
+        {
+          header: "Full Address",
+          accessor: c =>
+            [c.apartmentUnit, c.city, c.state, c.country, c.zipCode]
+              .filter(Boolean)
+              .join(", "),
+        },
+      ],
+      "customers_export.csv"
+    );
   };
 
 
+  const nextSerialNumber =
+    customers.length > 0
+      ? Math.max(...customers.map(c => c.serialNumber)) + 1
+      : 1;
 
-  const toggleList = [
-    { label: "All", value: "" },
-    { label: "Active", value: "active" },
-    { label: "Inactive", value: "inactive" },
-  ]
 
   /* To Be Set Soon After Finishing Table */
 
@@ -263,13 +271,11 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
     <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col md:h-[calc(100vh-8rem)]">
       {/* Header */}
       <CustomerDashboardFilter 
-        toggleList={toggleList} 
         searchQuery={searchTerm}
         onChangeSearchQuery={setSearchTerm}
-        onToggleChange={setToggleStatus} 
-        toggleStatus={toggleStatus} 
         moreFiltersData={moreFiltersData}
-        setMoreFiltersData={setMoreFiltersData}
+        setMoreFiltersData={setMoreFiltersData} 
+        handleOpenCreateCustomer={() => setOpenCreateCustomerDialog(() => true)}
       />
 
       
@@ -307,12 +313,12 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
               size="sm"
               onClick={() => {
                 const selectedId = Array.from(selectedRows)[0];
-                const customerToEdit = customers.find(
-                  c => c.id === selectedId
-                );
 
-                if (customerToEdit) {
-                  console.log("Edit customer:", customerToEdit.id);
+                const findCustomer = customers.find(c => c.id === selectedId) ?? null
+                setCustomerToEdit(() => findCustomer)
+
+                if (findCustomer) {
+                  setOpenEditCustomerDialog(() => true)
                 }
               }}
               disabled={selectedRows.size !== 1}
@@ -333,30 +339,54 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
 
 
       {/* Table */}
-        <JobsTable
-          rows={paginatedCustomers}
-          columns={customerColumns}
-          mobileRows={paginatedCustomers}
-          mobileCard={(row) => (
-            <CustomerCard
-              customer={row}
-              openCustomerProfile={handleViewCustomer}
-            />
-          )}
-          onSort={handleSort}
-          activeSortKey={sortKey ?? undefined}
-          sortDirection={sortDirection}
-          pageSize={pageSize}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          onPageSizeChange={handlePageSizeChange}
-          onPageChange={handlePageChange}
-          onExport={handleExport}
-          className="flex-1 flex flex-col"
-          tableClassName="flex-1 flex flex-col overflow-y-hidden"
-        />
-      </div>
+      <JobsTable
+        rows={paginatedCustomers}
+        columns={customerColumns}
+        mobileRows={paginatedCustomers}
+        mobileCard={(row) => (
+          <CustomerCard
+            customer={row}
+            openCustomerProfile={handleViewCustomer}
+          />
+        )}
+        onSort={handleSort}
+        activeSortKey={sortKey ?? undefined}
+        sortDirection={sortDirection}
+        pageSize={pageSize}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        onPageSizeChange={handlePageSizeChange}
+        onPageChange={handlePageChange}
+        onExport={handleExport}
+        className="flex-1 flex flex-col"
+        tableClassName="flex-1 flex flex-col overflow-y-hidden"
+      />
+
+
+      {/* Create Customer Dialog */}
+      <CreateCustomerDialog
+        nextSerialNumber={nextSerialNumber}
+        open={openCreateCustomerDialog}
+        setOpen={setOpenCreateCustomerDialog}
+        onCreate={(newCustomer) => {
+          setCustomers(prev => [...prev, newCustomer]);
+        }}
+      />
+
+      {/* Edit Customer Dialog */}
+      <EditCustomerDialog 
+        customer={customerToEdit} 
+        onUpdate={(updated: CustomerT) => {
+          setCustomers(prev =>
+            prev.map(c => (c.id === updated.id ? updated : c))
+          )
+        }} 
+        open={openEditCustomerDialog} 
+        setOpen={setOpenEditCustomerDialog} 
+      />
+
+    </div>
   )
 }
 
