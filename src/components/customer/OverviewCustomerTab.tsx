@@ -16,17 +16,30 @@ export const OverviewCustomerTab: React.FC<OverviewCustomerTabProps> = ({
   selectedCustomer,
   getJobStatusIcon,
 }) => {
-  const { 
-    clientName, 
-    companyName, 
-    serialNumber, 
-    email, 
-    phoneNumber, 
-    addressUnit, 
-    location, 
-    sourceTitle, 
-    status 
+  const {
+    clientName,
+    companyName,
+    serialNumber,
+    email,
+    phoneNumber,
+    apartmentUnit,
+    city,
+    state,
+    country,
+    zipCode,
+    location,
+    sourceTitle,
   } = selectedCustomer
+
+  const fullAddress = [
+    apartmentUnit,
+    city,
+    state,
+    country,
+    zipCode,
+  ]
+    .filter(Boolean)
+    .join(", ")
 
   const customerFields: Field_T[] = [
     { label: "Customer Name", value: clientName },
@@ -34,23 +47,9 @@ export const OverviewCustomerTab: React.FC<OverviewCustomerTabProps> = ({
     { label: "Serial Number", value: serialNumber },
     { label: "Email", value: email },
     { label: "Phone", value: phoneNumber },
-    { label: "Address", value: addressUnit },
+    { label: "Address", value: fullAddress },
     { label: "Location", value: location },
     { label: "Source", value: sourceTitle },
-    {
-      label: "Status",
-      value: (
-        <span
-          className={`font-medium ${
-            status === "active"
-              ? "text-green-600"
-              : "text-red-600"
-          }`}
-        >
-          {status}
-        </span>
-      ),
-    },
   ]
 
   return (
@@ -63,6 +62,7 @@ export const OverviewCustomerTab: React.FC<OverviewCustomerTabProps> = ({
               <span>Customer Information</span>
             </CardTitle>
           </CardHeader>
+
           <CardContent className="space-y-4">
             {customerFields.map(({ label, value }) => (
               <div key={label}>
@@ -70,12 +70,11 @@ export const OverviewCustomerTab: React.FC<OverviewCustomerTabProps> = ({
                   {label}
                 </label>
                 <p className="text-sm text-slate-900 break-all">
-                  {value ?? "—"}
+                  {value || "—"}
                 </p>
               </div>
             ))}
           </CardContent>
-
         </Card>
       </div>
 
@@ -84,6 +83,7 @@ export const OverviewCustomerTab: React.FC<OverviewCustomerTabProps> = ({
           <CardHeader>
             <CardTitle>Job Activities</CardTitle>
           </CardHeader>
+
           <CardContent className="space-y-4">
             {selectedCustomer.jobActivities?.length ? (
               selectedCustomer.jobActivities.map(activity => (
@@ -120,7 +120,9 @@ export const OverviewCustomerTab: React.FC<OverviewCustomerTabProps> = ({
                     <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
                       <span>{activity.addedBy}</span>
                       <span>•</span>
-                      <span>{new Date(activity.createdAt).toLocaleString()}</span>
+                      <span>
+                        {new Date(activity.createdAt).toLocaleString()}
+                      </span>
                       <span
                         className={`ml-2 font-medium ${
                           activity.paymentStatus === "Paid"

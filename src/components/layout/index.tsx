@@ -10,6 +10,7 @@ import SidePanel from '@/src/components/sidePanel'
 import { useSidePanel } from '@/src/components/sidePanel'
 import { useRef } from 'react'
 
+
 export default function DashboardLayout({
   children,
 }: {
