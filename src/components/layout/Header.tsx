@@ -40,6 +40,8 @@ import { Textarea } from '@/src/components/ui/textarea'
 
 interface HeaderProps {
   onMenuClick: () => void
+  /** Optional: called when "Create New Job" is clicked to open the job form in create mode */
+  onCreateJobClick?: () => void
 }
 
 interface TimesheetStatus {
@@ -54,7 +56,7 @@ interface TimesheetResponse {
   data: TimesheetStatus
 }
 
-export function Header({ onMenuClick }: HeaderProps): React.JSX.Element {
+export function Header({ onMenuClick, onCreateJobClick }: HeaderProps): React.JSX.Element {
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const dispatch = useAppDispatch()
@@ -231,7 +233,7 @@ export function Header({ onMenuClick }: HeaderProps): React.JSX.Element {
       {/* Actions */}
       <div className="flex items-center space-x-3">
         <Button
-          onClick={() => {}}
+          onClick={() => onCreateJobClick?.()}
           className="wepro-gradient text-white rounded-xl"
         >
           <Plus className="h-4 w-4 mr-2" />

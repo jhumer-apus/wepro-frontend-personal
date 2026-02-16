@@ -9,6 +9,7 @@ import { useTheme } from 'next-themes'
 import SidePanel from '@/src/components/sidePanel'
 import { useSidePanel } from '@/src/components/sidePanel'
 import { useRef } from 'react'
+import { JobForm } from '@/src/components/job'
 
 export default function DashboardLayout({
   children,
@@ -22,6 +23,7 @@ export default function DashboardLayout({
   const autoCollapseInProgress = useRef(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false)
+  const [showCreateJobModal, setShowCreateJobModal] = useState<boolean>(false)
   const { isAuthenticated, loading } = useAppSelector(
     (state: RootState) => state.auth
   )
@@ -129,7 +131,10 @@ export default function DashboardLayout({
 
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden lg:ml-0">
-        <Header onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <Header
+          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          onCreateJobClick={() => setShowCreateJobModal(true)}
+        />
 
         <SidePanel.Viewport
           minHeight="min-h-0"
@@ -144,6 +149,13 @@ export default function DashboardLayout({
           </main>
         </SidePanel.Viewport>
       </div>
+      <JobForm
+        open={showCreateJobModal}
+        onOpenChange={setShowCreateJobModal}
+        jobId={null}
+        formData={undefined}
+        onJobUpdated={() => setShowCreateJobModal(false)}
+      />
       <Toaster />
     </div>
   )
