@@ -10,13 +10,7 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Label } from "@/src/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/src/components/ui/select";
+import SelectInput from "@/src/components/input/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/src/components/ui/sheet";
 import { Checkbox } from "@/src/components/ui/checkbox";
 import { Columns3, Download } from "lucide-react";
@@ -64,6 +58,10 @@ type JobsTableProps = {
   tableClassName?: string;
   /** Number of columns to lock (sticky) from the first column, e.g. 3 = columns 1, 2, 3 */
   lockedColumns?: number;
+  /** When false, hides the "Columns" button that toggles column visibility. Default true. */
+  showColumnConfig?: boolean;
+  /** When true, removes border and shadow from the table container. Default false. */
+  hideBorder?: boolean;
 };
 
 const JobsTable: React.FC<JobsTableProps> = ({
@@ -90,6 +88,8 @@ const JobsTable: React.FC<JobsTableProps> = ({
   className,
   tableClassName,
   lockedColumns,
+  showColumnConfig = true,
+  hideBorder = false,
 }) => {
   const startEntry = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endEntry = Math.min(currentPage * pageSize, totalCount);
@@ -202,7 +202,7 @@ const JobsTable: React.FC<JobsTableProps> = ({
   }, [numLocked, visibleColumns.length]);
 
   return (
-    <div className={cn("bg-transparent border-0 shadow-none md:bg-white md:dark:bg-slate-900 rounded-lg md:border md:border-slate-200 md:dark:border-slate-800 md:shadow-xl overflow-hidden", className)}>
+    <div className={cn("bg-transparent border-0 shadow-none md:bg-white md:dark:bg-slate-900 rounded-lg overflow-hidden", !hideBorder && "md:border md:border-slate-200 md:dark:border-slate-800 md:shadow-xl", className)}>
       {/* Table Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 md:px-4 px-0 py-3">
         <div className="flex items-center gap-2">
@@ -212,18 +212,16 @@ const JobsTable: React.FC<JobsTableProps> = ({
           >
             Show
           </Label>
-          <Select value={pageSize.toString()} onValueChange={onPageSizeChange}>
-            <SelectTrigger className="w-20 h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[10, 20, 30, 40, 50, 100].map(num => (
-                <SelectItem key={num} value={num.toString()}>
-                  {num}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SelectInput
+            options={[10, 20, 30, 40, 50, 100].map(num => ({
+              label: num.toString(),
+              value: num.toString(),
+            }))}
+            placeholder="10"
+            value={pageSize.toString()}
+            onSelect={val => onPageSizeChange(Array.isArray(val) ? (val[0] ?? "") : val)}
+            onSearch={() => {}}
+          />
           <Label className="text-sm text-neutral-600 dark:text-neutral-400">
             entries
           </Label>
@@ -241,7 +239,7 @@ const JobsTable: React.FC<JobsTableProps> = ({
                 Export
               </Button>
             )}
-            {hasColumnOptions ? (
+            {hasColumnOptions && showColumnConfig ? (
               <Sheet>
                 <SheetTrigger asChild>
                   <Button

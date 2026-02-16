@@ -99,7 +99,7 @@ const SelectInput = ({
           <Button
             variant="outline"
             role="combobox"
-            className="h-10 w-full justify-between"
+            className="h-10 w-full justify-between mt-1"
           >
             {displayValue}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

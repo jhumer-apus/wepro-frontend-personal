@@ -8,14 +8,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Input } from "@/src/components/ui/input";
 import { Textarea } from "@/src/components/ui/textarea";
 import { Label } from "@/src/components/ui/label";
-import { Progress } from "@/src/components/ui/progress";
-import { Avatar, AvatarFallback, AvatarImage } from "@/src/components/ui/avatar";
-import {
-  GoogleMap,
-  Marker,
-  StandaloneSearchBox,
-  Polygon,
-} from '@react-google-maps/api'
+import { Avatar, AvatarFallback } from "@/src/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -28,20 +21,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogDescription,
   DialogFooter,
 } from "@/src/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/src/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,7 +40,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/src/components/ui/tooltip";
-import { ButtonLoading } from "@/src/components/ui/loading";
 import {
   MapPin,
   Phone,
@@ -67,20 +48,15 @@ import {
   User,
   Wrench,
   Search,
-  Filter,
   Plus,
   Star,
   CheckCircle,
   AlertCircle,
   ArrowRight,
-  ArrowLeft,
   X,
-  Home,
   Building,
   MoreVertical,
   Trash2,
-  Truck,
-  Settings,
   Zap,
   Target,
   Globe,
@@ -89,63 +65,26 @@ import {
   MessageSquare,
   DollarSign,
   AlertTriangle,
-  Grid,
-  List,
   Edit,
-  UserPlus,
   Mail,
-  Circle,
-  Users,
-  Activity,
-  FileText,
   Calculator,
   CreditCard,
-  Download,
-  Send,
-  Briefcase,
-  ArrowUpDown,
   RefreshCw,
-  Columns3,
-  Tag,
-  ChevronsUpDown,
-  Check,
   ChevronLeft,
   ChevronRight,
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
 } from "lucide-react";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
-import { cn } from "@/src/lib/utils";
 
 TimeAgo.addDefaultLocale(en);
 const timeAgo = new TimeAgo("en-US");
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/src/components/ui/tabs';
 import { Checkbox } from "@/src/components/ui/checkbox";
-import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/src/components/ui/sheet";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/src/components/ui/command";
 import Table, { type ColumnOption as TableColumnOption } from "@/src/components/table";
 import SelectInput from "@/src/components/input/select";
 import { dummyJobs } from "@/src/constants/dummyData/jobs";
 import { type Job } from "@/src/constants/interface/jobs";
 import SidePanel from "@/src/components/sidePanel";
-import { Slider } from "@/src/components/ui/slider";
+import { JobForm } from "@/src/components/job";
 
 // Technician interface with proper typing
 interface Technician {
@@ -193,239 +132,7 @@ const jobStatuses: JobStatus[] = [
 
 let jobsDensityRef: 'comfortable' | 'compact' | 'ultra' = 'comfortable';
 
-// Conversation log message for Activity > Logs
-type LogMessageDirection = 'incoming' | 'outgoing';
-type LogMessageKind = 'text' | 'audio';
-interface LogMessage {
-  id: string;
-  direction: LogMessageDirection;
-  kind: LogMessageKind;
-  body?: string;
-  audioUrl?: string;
-  senderName: string;
-  timestamp: string; // MM/DD/YYYY HH:MM:SS
-}
-
-const TEST_MP3_URL = 'http://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3';
-
-function InlineAudioPlayer({ audioUrl, className }: { audioUrl: string; className?: string }) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
-
-  const formatTime = (t: number) => {
-    const m = Math.floor(t / 60);
-    const s = Math.floor(t % 60);
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  };
-
-  const togglePlayPause = async () => {
-    if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      try {
-        await audioRef.current.play();
-      } catch (e) {
-        console.error('Play failed:', e);
-      }
-    }
-  };
-
-  const handleSeek = (value: number[]) => {
-    const t = value[0];
-    if (audioRef.current) {
-      audioRef.current.currentTime = t;
-      setCurrentTime(t);
-    }
-  };
-
-  const toggleMute = () => {
-    if (audioRef.current) {
-      if (isMuted) {
-        audioRef.current.volume = volume;
-        setIsMuted(false);
-      } else {
-        audioRef.current.volume = 0;
-        setIsMuted(true);
-      }
-    }
-  };
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const onLoadedMetadata = () => setDuration(audio.duration);
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const onEnded = () => {
-      setIsPlaying(false);
-      setCurrentTime(0);
-    };
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    audio.addEventListener('loadedmetadata', onLoadedMetadata);
-    audio.addEventListener('timeupdate', onTimeUpdate);
-    audio.addEventListener('ended', onEnded);
-    audio.addEventListener('play', onPlay);
-    audio.addEventListener('pause', onPause);
-    return () => {
-      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
-      audio.removeEventListener('timeupdate', onTimeUpdate);
-      audio.removeEventListener('ended', onEnded);
-      audio.removeEventListener('play', onPlay);
-      audio.removeEventListener('pause', onPause);
-    };
-  }, []);
-
-  return (
-    <div className={cn('flex items-center gap-2 min-w-0', className)}>
-      <audio ref={audioRef} src={audioUrl} preload="metadata" className="hidden" />
-      <button type="button" onClick={togglePlayPause} className="shrink-0 p-0.5 rounded hover:opacity-80" aria-label={isPlaying ? 'Pause' : 'Play'}>
-        {isPlaying ? <Pause className="w-4 h-4 text-black" /> : <Play className="w-4 h-4 text-black fill-black" />}
-      </button>
-      <span className="text-sm tabular-nums shrink-0">{formatTime(currentTime)}</span>
-      <span className="text-sm text-black/70 shrink-0">{formatTime(duration)}</span>
-      <div className="flex-1 min-w-0">
-        <Slider
-          value={[currentTime]}
-          onValueChange={handleSeek}
-          max={duration || 1}
-          step={0.1}
-          className="w-full"
-          disabled={duration <= 0}
-        />
-      </div>
-      <button type="button" onClick={toggleMute} className="shrink-0 p-0.5 rounded hover:opacity-80" aria-label={isMuted ? 'Unmute' : 'Mute'}>
-        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-      </button>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button type="button" className="shrink-0 p-0.5 rounded hover:opacity-80" aria-label="More options">
-            <MoreVertical className="w-4 h-4" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem>Download</DropdownMenuItem>
-          <DropdownMenuItem>Share</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
-}
-
-// Sample conversation for Logs (Activity tab)
-const SAMPLE_LOG_MESSAGES: LogMessage[] = [
-  {
-    id: '1',
-    direction: 'incoming',
-    kind: 'text',
-    body: 'Ok thanks',
-    senderName: 'Liel Levy',
-    timestamp: '02/09/2026 09:25:18',
-  },
-  {
-    id: '2',
-    direction: 'outgoing',
-    kind: 'text',
-    body: "Hi Albert, I'm Jane from Evergreen Turf Installation. I just emailed you the estimate. Please confirm you received it. Let me know if you have any questions. Thank you.",
-    senderName: 'hayahadjadj e',
-    timestamp: '02/09/2026 09:24:24',
-  },
-  {
-    id: '3',
-    direction: 'outgoing',
-    kind: 'audio',
-    audioUrl: TEST_MP3_URL,
-    senderName: 'April Puzon',
-    timestamp: '02/08/2026 12:18:43',
-  },
-  {
-    id: '4',
-    direction: 'outgoing',
-    kind: 'audio',
-    audioUrl: TEST_MP3_URL,
-    senderName: 'Precious Bandigan',
-    timestamp: '02/07/2026 09:23:32',
-  },
-  {
-    id: '5',
-    direction: 'incoming',
-    kind: 'text',
-    body: 'Can you send the quote again? I didn’t get the attachment.',
-    senderName: 'Liel Levy',
-    timestamp: '02/07/2026 14:22:10',
-  },
-  {
-    id: '6',
-    direction: 'outgoing',
-    kind: 'text',
-    body: 'Sure, sending it now. Check your inbox in a minute.',
-    senderName: 'hayahadjadj e',
-    timestamp: '02/07/2026 14:25:00',
-  },
-  {
-    id: '7',
-    direction: 'incoming',
-    kind: 'audio',
-    audioUrl: TEST_MP3_URL,
-    senderName: 'Albert Chen',
-    timestamp: '02/06/2026 16:45:12',
-  },
-  {
-    id: '8',
-    direction: 'outgoing',
-    kind: 'text',
-    body: "We'll have the team there by 9am. Please make sure the gate is unlocked.",
-    senderName: 'April Puzon',
-    timestamp: '02/06/2026 11:30:00',
-  },
-  {
-    id: '9',
-    direction: 'incoming',
-    kind: 'text',
-    body: 'Perfect, see you then.',
-    senderName: 'Liel Levy',
-    timestamp: '02/06/2026 11:35:22',
-  },
-  {
-    id: '10',
-    direction: 'incoming',
-    kind: 'text',
-    body: 'What’s the status on the backyard job?',
-    senderName: 'Albert Chen',
-    timestamp: '02/05/2026 10:15:00',
-  },
-  {
-    id: '11',
-    direction: 'outgoing',
-    kind: 'text',
-    body: 'Scheduled for next Tuesday. I’ll send a reminder the day before.',
-    senderName: 'Precious Bandigan',
-    timestamp: '02/05/2026 10:42:18',
-  },
-  {
-    id: '12',
-    direction: 'incoming',
-    kind: 'audio',
-    audioUrl: TEST_MP3_URL,
-    senderName: 'Maria Santos',
-    timestamp: '02/04/2026 09:00:05',
-  },
-  {
-    id: '13',
-    direction: 'outgoing',
-    kind: 'text',
-    body: 'Thanks for calling. We’ve noted your availability.',
-    senderName: 'hayahadjadj e',
-    timestamp: '02/04/2026 09:18:33',
-  },
-];
-
 export default function Jobs() {
-  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
   const [dateRangeFilter, setDateRangeFilter] = useState<string>("all");
   const [customStartDate, setCustomStartDate] = useState<string>("");
   const [customEndDate, setCustomEndDate] = useState<string>("");
@@ -439,9 +146,6 @@ export default function Jobs() {
   const [jobSourceFilter, setJobSourceFilter] = useState<string>("all");
   
   // New multi-select filter states
-  const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
-  const [selectedTechnicians, setSelectedTechnicians] = useState<string[]>([]);
-  const [selectedSources, setSelectedSources] = useState<string[]>([]);
   // Drag-and-drop ordering for statuses (persists per user)
   const [statusOrder, setStatusOrder] = useState<string[]>(() => {
     try {
@@ -451,7 +155,6 @@ export default function Jobs() {
       return [];
     }
   });
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
   useEffect(() => {
     try { localStorage.setItem('jobs.statusOrder', JSON.stringify(statusOrder)); } catch {}
   }, [statusOrder]);
@@ -466,16 +169,9 @@ export default function Jobs() {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   
   // Additional missing filters
-  const [selectedTagsNotes, setSelectedTagsNotes] = useState<string[]>([]);
-  const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
-  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
-  const [selectedFranchise, setSelectedFranchise] = useState<string>("all");
-  
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null)
 
   // Advanced filter toggle state
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
-  
   // Helper: get status object by name with safety checks
   const getStatusObj = (name) => {
     if (!jobStatuses || !Array.isArray(jobStatuses)) {
@@ -543,7 +239,6 @@ export default function Jobs() {
     return () => window.removeEventListener("jobs:openNewJob", handler);
   }, []);
   const [currentStep, setCurrentStep] = useState(1);
-  const [viewMode, setViewMode] = useState<"wizard" | "single">("wizard");
   const [selectedServiceDate, setSelectedServiceDate] = useState("");
   const [selectedDuration, setSelectedDuration] = useState("");
   const [technicianFilter, setTechnicianFilter] =
@@ -2414,7 +2109,6 @@ export default function Jobs() {
   const [activeTab, setActiveTab] = useState('details');
   const [boardStatusFilter, setBoardStatusFilter] = useState<string>('All');
   const [jobDetailsTab, setJobDetailsTab] = useState('details');
-  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showEstimateModal, setShowEstimateModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [dataColumn, setDataColumn] = useState('revenue');
@@ -3398,834 +3092,6 @@ export default function Jobs() {
     });
   };
 
-  const renderJobDetails = () => (
-    <Dialog open={showJobDetails} onOpenChange={setShowJobDetails}>
-      <DialogContent className="max-w-[100vw] w-[100vw] h-[100vh] [&>button]:hidden rounded-none sm:rounded-none mx-auto p-0 shadow-2xl border bg-white overflow-hidden flex flex-col">
-        {selectedJob && (
-          <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
-            {/* Header with Job ID and Actions */}
-            <div className="flex items-center justify-between px-6 py-4 border-b bg-white sticky top-0 z-10">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-600">Job ID:</span>
-                  <span className="text-lg font-bold text-blue-700">{selectedJob.id}</span>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="cursor-pointer focus:outline-none rounded-md"
-                    >
-                      <Badge
-                        style={{ backgroundColor: getStatusObj(selectedJob.status || 'Pending').color, color: 'white' }}
-                        className="px-3 py-1"
-                      >
-                        {selectedJob.status || 'Pending'}
-                      </Badge>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-44">
-                    {jobStatuses.map(statusOption => (
-                      <DropdownMenuItem
-                        key={statusOption.id}
-                        className="flex items-center gap-2"
-                        onClick={() => {
-                          setSelectedJob((prev: any) => prev ? { ...prev, status: statusOption.name } : null);
-                          setJobs((prev) => prev.map((j: any) => j.id === selectedJob.id ? { ...j, status: statusOption.name } : j));
-                        }}
-                      >
-                        <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: statusOption.color }} />
-                        <span>{statusOption.name}</span>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Badge variant="outline" className="px-3 py-1">
-                  ${selectedJob.revenue}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">Invoice</Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shadow-sm hover:shadow-md rounded-full transition-all duration-200 text-xs h-9 w-9"
-                  onClick={() => setShowJobDetails(false)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex-1 flex flex-col min-h-0 border-b overflow-hidden">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 w-full">
-                <TabsList className="grid w-full grid-cols-4 shrink-0">
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="activity">Activity</TabsTrigger>
-                  <TabsTrigger value="financials">Financials</TabsTrigger>
-                  <TabsTrigger value="nearest-jobs">Nearest Jobs</TabsTrigger>
-                </TabsList>
-
-                {/* Details Tab */}
-                <TabsContent value="details" className="flex-1 min-h-0 overflow-y-auto p-6 pb-20 space-y-6 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Client Information */}
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <User className="w-5 h-5" />
-                          Client Information
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-sm font-medium">Client Name</Label>
-                            {isEditing ? (
-                              <Input 
-                                value={editFormData.clientName || ''} 
-                                onChange={(e) => handleEditChange('clientName', e.target.value)}
-                                className="mt-1"
-                              />
-                            ) : (
-                              <div className="mt-1 text-sm">{selectedJob.clientName}</div>
-                            )}
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Company</Label>
-                            {isEditing ? (
-                              <Input 
-                                value={editFormData.companyName || ''} 
-                                onChange={(e) => handleEditChange('companyName', e.target.value)}
-                                className="mt-1"
-                              />
-                            ) : (
-                              <div className="mt-1 text-sm">{selectedJob.companyName}</div>
-                            )}
-                          </div>
-                        </div>
-                        <div className={`grid grid-cols-${showSecondPhone ? `3` : `2`} gap-3`}>
-                          <div>
-                            <Label className="text-sm font-medium">Email</Label>
-                            {isEditing ? (
-                              <Input 
-                                value={editFormData.email || ''} 
-                                onChange={(e) => handleEditChange('email', e.target.value)}
-                                className="mt-1"
-                              />
-                            ) : (
-                              <div className="mt-1 text-sm">{selectedJob.email}</div>
-                            )}
-                          </div>
-                          <div className="mt-1">
-                            <div className="flex items-center justify-between gap-2">
-                              <Label className="text-sm font-medium">Phone</Label>
-                              {isEditing && !showSecondPhone && (
-                                <button
-                                  type="button"
-                                  onClick={() => setShowSecondPhone(true)}
-                                  className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
-                                >
-                                  + Add more
-                                </button>
-                              )}
-                            </div>
-                            {isEditing ? (
-                              <div className="space-y-1 mt-1">
-                                <Input
-                                  value={editFormData.phoneNumber || ''}
-                                  onChange={(e) => handleEditChange('phoneNumber', e.target.value)}
-                                />
-                              </div>
-                            ) : (
-                              <div className="mt-1 space-y-0.5">
-                                <div className="text-sm">{selectedJob.phoneNumber}</div>
-                                {(selectedJob as { phoneNumber2?: string }).phoneNumber2 && (
-                                  <div className="text-sm text-slate-600 dark:text-slate-400">{(selectedJob as { phoneNumber2?: string }).phoneNumber2}</div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          {showSecondPhone && (
-                            <div className="mt-1">
-                              <div className="flex items-center justify-between gap-2 mt-1">
-                                <Label className="text-sm font-medium">&nbsp;</Label>
-                                {showSecondPhone && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowSecondPhone(false)}
-                                    className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
-                                  >
-                                    Remove
-                                  </button>
-                                )}
-                              </div>
-                              <Input
-                                value={(editFormData as { phoneNumber2?: string }).phoneNumber2 || ''}
-                                onChange={(e) => handleEditChange('phoneNumber2', e.target.value)}
-                                placeholder="Additional phone"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Location Information */}
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <MapPin className="w-5 h-5" />
-                          Service Location
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-sm font-medium">Location</Label>
-                            {isEditing ? (
-                              <Input
-                                value={editFormData.location || ''}
-                                onChange={(e) => handleEditChange('location', e.target.value)}
-                                className="mt-1"
-                              />
-                            ) : (
-                              <div className="mt-1 text-sm">{selectedJob.location}</div>
-                            )}
-                          </div>
-                          {/* <StandaloneSearchBox
-                            onLoad={onSearchBoxLoad}
-                            onPlacesChanged={onPlacesChanged}
-                          >
-                            <input
-                              type="text"
-                              placeholder="Search for a location..."
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
-                            />
-                          </StandaloneSearchBox> */}
-                          <div>
-                            <Label className="text-sm font-medium">Apartment #</Label>
-                            {isEditing ? (
-                              <Input
-                                value={(editFormData as { apartmentNumber?: string }).apartmentNumber || ''}
-                                onChange={(e) => handleEditChange('apartmentNumber', e.target.value)}
-                                className="mt-1"
-                              />
-                            ) : (
-                              <div className="mt-1 text-sm">{(selectedJob as { apartmentNumber?: string }).apartmentNumber ?? '—'}</div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-sm font-medium">City</Label>
-                            {isEditing ? (
-                              <Input
-                                value={editFormData.city || ''}
-                                onChange={(e) => handleEditChange('city', e.target.value)}
-                                className="mt-1"
-                              />
-                            ) : (
-                              <div className="mt-1 text-sm">{selectedJob.city}</div>
-                            )}
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Zip</Label>
-                            {isEditing ? (
-                              <Input
-                                value={editFormData.zipCode || ''}
-                                onChange={(e) => handleEditChange('zipCode', e.target.value)}
-                                className="mt-1"
-                              />
-                            ) : (
-                              <div className="mt-1 text-sm">{selectedJob.zipCode}</div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-sm font-medium">State</Label>
-                            {isEditing ? (
-                              <Input
-                                value={editFormData.state || ''}
-                                onChange={(e) => handleEditChange('state', e.target.value)}
-                                className="mt-1"
-                              />
-                            ) : (
-                              <div className="mt-1 text-sm">{selectedJob.state}</div>
-                            )}
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Country</Label>
-                            {isEditing ? (
-                              <Input
-                                value={editFormData.country || ''}
-                                onChange={(e) => handleEditChange('country', e.target.value)}
-                                className="mt-1"
-                              />
-                            ) : (
-                              <div className="mt-1 text-sm">{(selectedJob as { country?: string }).country ?? 'United States'}</div>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Service Details */}
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Wrench className="w-5 h-5" />
-                          Job Details
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-sm font-medium">Job Category</Label>
-                            {isEditing ? (
-                              <Select value={editFormData.jobCategory || ''} onValueChange={(value) => handleEditChange('jobCategory', value)}>
-                                <SelectTrigger className="mt-1">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Plumbing">Plumbing</SelectItem>
-                                  <SelectItem value="Electrical">Electrical</SelectItem>
-                                  <SelectItem value="HVAC">HVAC</SelectItem>
-                                  <SelectItem value="General">General</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <div className="mt-1 text-sm">{selectedJob.jobCategory}</div>
-                            )}
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">Job Type</Label>
-                            {isEditing ? (
-                              <Select value={editFormData.jobType || ''} onValueChange={(value) => handleEditChange('jobType', value)}>
-                                <SelectTrigger className="mt-1">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Repair">Repair</SelectItem>
-                                  <SelectItem value="Installation">Installation</SelectItem>
-                                  <SelectItem value="Maintenance">Maintenance</SelectItem>
-                                  <SelectItem value="Emergency">Emergency</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <div className="mt-1 text-sm">{selectedJob.jobType}</div>
-                            )}
-                          </div>
-                        </div>
-                        <div>
-                          {isEditing ? (
-                            <SelectInput
-                              label="Source"
-                              options={[
-                                { label: 'Yelp', value: 'yelp' },
-                                { label: 'Google Ads', value: 'google-ads' },
-                                { label: 'Facebook', value: 'facebook' },
-                                { label: 'Referral', value: 'referral' },
-                                { label: 'Website', value: 'website' },
-                                { label: 'Direct Call', value: 'phone' },
-                              ]}
-                              placeholder="Select source"
-                              value={editFormData.source ?? ''}
-                              onSelect={val => handleEditChange('source', Array.isArray(val) ? (val[0] ?? '') : val)}
-                              onSearch={() => {}}
-                            />
-                          ) : (
-                            <>
-                              <Label className="text-sm font-medium">Source</Label>
-                              <div className="mt-1 text-sm">
-                                {[
-                                  { label: 'Yelp', value: 'yelp' },
-                                  { label: 'Google Ads', value: 'google-ads' },
-                                  { label: 'Facebook', value: 'facebook' },
-                                  { label: 'Referral', value: 'referral' },
-                                  { label: 'Website', value: 'website' },
-                                  { label: 'Direct Call', value: 'phone' },
-                                ].find(o => o.value === (selectedJob as { source?: string }).source)?.label ?? (selectedJob as { source?: string }).source ?? '—'}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          {isEditing ? (
-                            <SelectInput
-                              label="Job Status"
-                              options={jobStatuses.map(s => ({ label: s.name, value: s.name }))}
-                              placeholder="Select status"
-                              value={editFormData.status ?? selectedJob?.status ?? ''}
-                              onSelect={val => handleEditChange('status', Array.isArray(val) ? (val[0] ?? '') : val)}
-                              onSearch={() => {}}
-                            />
-                          ) : (
-                            <div><Label className="text-sm font-medium">Job Status</Label><div className="mt-1 text-sm">{selectedJob?.status ?? '—'}</div></div>
-                          )}
-                          {isEditing ? (
-                            <SelectInput
-                              label="Sub Status"
-                              options={[
-                                { label: 'Nothing selected', value: '' },
-                                { label: 'Follow up', value: 'follow-up' },
-                                { label: 'Rescheduled', value: 'rescheduled' },
-                                { label: 'No answer', value: 'no-answer' },
-                                { label: 'Customer cancelled', value: 'customer-cancelled' },
-                                { label: 'Pending confirmation', value: 'pending-confirmation' },
-                              ]}
-                              placeholder="Nothing selected"
-                              value={(editFormData as { subStatus?: string }).subStatus ?? (selectedJob as { subStatus?: string }).subStatus ?? ''}
-                              onSelect={val => handleEditChange('subStatus', Array.isArray(val) ? (val[0] ?? '') : val)}
-                              onSearch={() => {}}
-                            />
-                          ) : (
-                            <div><Label className="text-sm font-medium">Sub Status</Label><div className="mt-1 text-sm">{([{ label: 'Follow up', value: 'follow-up' }, { label: 'Rescheduled', value: 'rescheduled' }, { label: 'No answer', value: 'no-answer' }, { label: 'Customer cancelled', value: 'customer-cancelled' }, { label: 'Pending confirmation', value: 'pending-confirmation' }].find(o => o.value === (selectedJob as { subStatus?: string }).subStatus)?.label) ?? (selectedJob as { subStatus?: string }).subStatus ?? '—'}</div></div>
-                          )}
-                          {isEditing ? (
-                            <SelectInput
-                              label="Jobs Tag"
-                              options={[
-                                { label: 'Urgent', value: 'urgent' },
-                                { label: 'Warranty', value: 'warranty' },
-                                { label: 'Follow-up', value: 'follow-up' },
-                                { label: 'Commercial', value: 'commercial' },
-                                { label: 'Test1', value: 'test1' },
-                                { label: 'Job', value: 'job' },
-                              ]}
-                              placeholder="Select tags"
-                              multiselect
-                              value={Array.isArray((editFormData as { jobTags?: string[] }).jobTags) ? (editFormData as { jobTags?: string[] }).jobTags! : (Array.isArray(selectedJob?.jobTags) ? selectedJob.jobTags : [])}
-                              onSelect={val => handleEditChange('jobTags', Array.isArray(val) ? val : [])}
-                              onSearch={() => {}}
-                            />
-                          ) : (
-                            <div><Label className="text-sm font-medium">Jobs Tag</Label><div className="mt-1 text-sm">{Array.isArray(selectedJob?.jobTags) ? selectedJob.jobTags.join(', ') : '—'}</div></div>
-                          )}
-                          {isEditing ? (
-                            <SelectInput
-                              label="Jobs Tag Note"
-                              options={initialQuickTagNoteOptions.map(t => ({ label: t.replace(/-/g, ' '), value: t }))}
-                              placeholder="Select Tag Note"
-                              multiselect
-                              value={Array.isArray((editFormData as { noteTags?: string[] }).noteTags) ? (editFormData as { noteTags?: string[] }).noteTags! : (Array.isArray(selectedJob?.noteTags) ? selectedJob.noteTags : [])}
-                              onSelect={val => handleEditChange('noteTags', Array.isArray(val) ? val : [])}
-                              onSearch={() => {}}
-                            />
-                          ) : (
-                            <div><Label className="text-sm font-medium">Jobs Tag Note</Label><div className="mt-1 text-sm">{Array.isArray(selectedJob?.noteTags) ? selectedJob.noteTags.join(', ') : '—'}</div></div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Scheduling */}
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Calendar className="w-5 h-5" />
-                          Scheduled
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-sm font-medium">Start DateTime</Label>
-                            {isEditing ? (
-                              <div className="mt-1">
-                                <InputDatepicker
-                                  range={false}
-                                  withTime={true}
-                                  datetimeValue={editFormData.startDate && editFormData.startTime ? `${editFormData.startDate}T${String(editFormData.startTime).slice(0, 5)}` : ''}
-                                  onDateTimeChange={(v) => {
-                                    if (v) {
-                                      const [d, t] = v.split('T');
-                                      handleEditChange('startDate', d || '');
-                                      handleEditChange('startTime', t ? `${t}:00` : '00:00:00');
-                                    }
-                                  }}
-                                />
-                              </div>
-                            ) : (
-                              <div className="mt-1 text-sm">
-                                {selectedJob.startDate && selectedJob.startTime
-                                  ? new Date(`${selectedJob.startDate}T${selectedJob.startTime}`).toLocaleString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
-                                  : '—'}
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <Label className="text-sm font-medium">End DateTime</Label>
-                            {isEditing ? (
-                              <div className="mt-1">
-                                <InputDatepicker
-                                  range={false}
-                                  withTime={true}
-                                  datetimeValue={(() => {
-                                    const endD = (editFormData as { endDate?: string }).endDate || editFormData.startDate;
-                                    const endT = (editFormData as { estimatedEndTime?: string }).estimatedEndTime || editFormData.startTime || '17:00';
-                                    return endD && endT ? `${endD}T${String(endT).slice(0, 5)}` : '';
-                                  })()}
-                                  onDateTimeChange={(v) => {
-                                    if (v) {
-                                      const [d, t] = v.split('T');
-                                      handleEditChange('endDate', d || '');
-                                      handleEditChange('estimatedEndTime', t ? `${t.slice(0, 5)}` : '17:00');
-                                    }
-                                  }}
-                                />
-                              </div>
-                            ) : (
-                              <div className="mt-1 text-sm">
-                                {(() => {
-                                  const endD = (selectedJob as { endDate?: string }).endDate || selectedJob.startDate;
-                                  const endT = (selectedJob as { estimatedEndTime?: string }).estimatedEndTime || selectedJob.startTime;
-                                  return endD && endT ? new Date(`${endD}T${endT}`).toLocaleString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '—';
-                                })()}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Assignment */}
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Users className="w-5 h-5" />
-                          Assignment
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {isEditing ? (
-                          <SelectInput
-                            options={[
-                              { label: 'All', value: 'all' },
-                              { label: 'Closest Distance', value: 'closest-distance' },
-                              { label: 'Matching Skills', value: 'matching-skills' },
-                              { label: 'Matching Metro', value: 'matching-metro' },
-                              { label: 'Closest Distance + Matching Skill + Matching Metro', value: 'closest-distance-matching-skill-matching-metro' },
-                            ]}
-                            placeholder="Closest Distance"
-                            value={(editFormData as { closestDistance?: string }).closestDistance ?? (selectedJob as { closestDistance?: string }).closestDistance ?? ''}
-                            onSelect={val => handleEditChange('closestDistance', Array.isArray(val) ? (val[0] ?? '') : val)}
-                            onSearch={() => {}}
-                          />
-                        ) : (
-                          <div>
-                            <Label className="text-sm font-medium">Closest Distance</Label>
-                            <div className="mt-1 text-sm">{([{ label: 'All', value: 'all' }, { label: 'Closest Distance', value: 'closest-distance' }, { label: 'Matching Skills', value: 'matching-skills' }, { label: 'Matching Metro', value: 'matching-metro' }, { label: 'Closest Distance + Matching Skill + Matching Metro', value: 'closest-distance-matching-skill-matching-metro' }].find(o => o.value === ((selectedJob as { closestDistance?: string }).closestDistance))?.label) ?? (selectedJob as { closestDistance?: string }).closestDistance ?? '—'}</div>
-                          </div>
-                        )}
-                        {isEditing ? (
-                          <SelectInput
-                            label="Assign Technician"
-                            options={technicianOptions.map(name => ({ label: name, value: name }))}
-                            placeholder="Select Technician"
-                            value={editFormData.assignedTechnician ?? selectedJob?.assignedTechnician ?? ''}
-                            onSelect={val => handleEditChange('assignedTechnician', Array.isArray(val) ? (val[0] ?? '') : val)}
-                            onSearch={() => {}}
-                          />
-                        ) : (
-                          <div><Label className="text-sm font-medium">Assign Technician</Label><div className="mt-1 text-sm">{selectedJob?.assignedTechnician ?? '—'}</div></div>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    {/* Description & Notes */}
-                    <Card className="flex flex-col">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <FileText className="w-5 h-5" />
-                          Description & Notes
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="flex space-y-3 flex-1">
-                        <div className="flex-1 flex">
-                          {isEditing ? (
-                            <Textarea 
-                              value={editFormData.jobDescription || ''} 
-                              onChange={(e) => handleEditChange('jobDescription', e.target.value)}
-                              className="mt-1 flex-1"
-                              rows={3}
-                            />
-                          ) : (
-                            <div className="mt-1 text-sm">{selectedJob.jobDescription}</div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  
-                  {/* Footer */}
-                  <div className="fixed bottom-0 left-0 right-0 bg-white">
-                    <div className="flex items-center justify-end gap-3 py-3 border-t">
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" onClick={handleSave} className="bg-green-600 hover:bg-green-700">
-                          Save
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                {/* Activity Tab */}
-                <TabsContent value="activity" className="flex flex-col min-h-0 overflow-y-auto p-6 pb-4 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-                    <Card className="h-full overflow-hidden flex flex-col">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          Logs
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="flex-1 overflow-y-scroll bg-gray-100/50">
-                        <div className="space-y-4 py-2">
-                          {SAMPLE_LOG_MESSAGES.map((msg) => (
-                            <div
-                              key={msg.id}
-                              className={cn(
-                                'flex flex-col max-w-[85%]',
-                                msg.direction === 'incoming' ? 'items-start' : 'items-end'
-                              )}
-                            >
-                              <div
-                                className={cn(
-                                  'rounded-lg px-3 py-2',
-                                  msg.direction === 'incoming'
-                                    ? 'bg-gray-200 text-gray-900'
-                                    : 'bg-brandGreen-900 text-white'
-                                )}
-                              >
-                                {msg.kind === 'text' && msg.body && (
-                                  <p className="text-sm whitespace-pre-wrap break-words">{msg.body}</p>
-                                )}
-                                {msg.kind === 'audio' && msg.audioUrl && (
-                                  <div className="py-1">
-                                    <InlineAudioPlayer audioUrl={msg.audioUrl} />
-                                  </div>
-                                )}
-                              </div>
-                              <span
-                                className={cn(
-                                  'text-xs text-gray-500 mt-1',
-                                  msg.direction === 'incoming' ? 'self-start' : 'self-end'
-                                )}
-                              >
-                                {msg.senderName} {msg.timestamp}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="h-full overflow-hidden flex flex-col">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          Jobs Activity
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="flex-1 overflow-y-scroll">
-                        {/* Add Note Section */}
-                        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2 mb-3">
-                            <MessageSquare className="w-4 h-4" />
-                            <h3 className="font-medium">Add Note</h3>
-                          </div>
-                          <div className="flex gap-2">
-                            <Textarea 
-                              placeholder="Type your note here..."
-                              value={newNote}
-                              onChange={(e) => setNewNote(e.target.value)}
-                              className="flex-1"
-                              rows={2}
-                            />
-                            <Button onClick={handleAddNote} disabled={!newNote.trim()}>
-                              <Send className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Activity Filter */}
-                        <div className="mb-4 w-48">
-                          <SelectInput
-                            options={[
-                              { label: 'All Activity', value: 'all' },
-                              { label: 'Notes', value: 'note' },
-                              { label: 'Job Activity', value: 'activity' },
-                              { label: 'Assignments', value: 'assign' },
-                              { label: 'Payments', value: 'payment' },
-                              { label: 'Calls', value: 'call' },
-                              { label: 'Messages', value: 'messages' },
-                            ]}
-                            placeholder="Filter Activity"
-                            value={activityFilter}
-                            onSelect={val => setActivityFilter(Array.isArray(val) ? (val[0] ?? 'all') : val)}
-                          />
-                        </div>
-
-                        {/* Activity List */}
-                        <div className="space-y-4">
-                          {filteredActivity.map((item, index) => (
-                            <div key={index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                              <div className="w-2 h-2 rounded-full mt-2" style={{ backgroundColor: item.color }}></div>
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between">
-                                  <h4 className="font-medium text-sm">{item.title}</h4>
-                                  <span className="text-xs text-gray-500">{item.timestamp}</span>
-                                </div>
-                                <p className="text-sm text-gray-600 mt-1">{item.summary}</p>
-                                <p className="text-xs text-gray-500 mt-1">by {item.user}</p>
-                                
-                                {/* Reply button for notes */}
-                                {item.type === 'note' && (
-                                  <div className="mt-2">
-                                    {showReplyNote === index ? (
-                                      <div className="flex gap-2">
-                                        <Textarea 
-                                          placeholder="Type your reply..."
-                                          value={replyNote}
-                                          onChange={(e) => setReplyNote(e.target.value)}
-                                          className="flex-1"
-                                          rows={1}
-                                        />
-                                        <Button size="sm" onClick={() => handleReplyNote(index)} disabled={!replyNote.trim()}>
-                                          Reply
-                                        </Button>
-                                        <Button size="sm" variant="outline" onClick={() => setShowReplyNote(null)}>
-                                          Cancel
-                                        </Button>
-                                      </div>
-                                    ) : (
-                                      <Button size="sm" variant="outline" onClick={() => setShowReplyNote(index)}>
-                                        Reply
-                                      </Button>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </TabsContent>
-
-                {/* Financials Tab */}
-                <TabsContent value="financials" className="flex-1 flex flex-col justify-between min-h-0 overflow-y-auto p-6 pb-4 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Calculator className="w-5 h-5" />
-                          Invoice Details
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-sm">Subtotal:</span>
-                          <span className="text-sm font-medium">${selectedJob.revenue}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Tax:</span>
-                          <span className="text-sm font-medium">$0.00</span>
-                        </div>
-                        <div className="flex justify-between border-t pt-2">
-                          <span className="font-medium">Total:</span>
-                          <span className="font-bold">${selectedJob.revenue}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <CreditCard className="w-5 h-5" />
-                          Payment History
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-sm text-gray-500">No payments recorded yet.</div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                  {/* Footer */}
-                  <div className="flex items-center justify-end gap-3 pt-4 border-t">
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" onClick={handleSave} className="bg-green-600 hover:bg-green-700">
-                        Save
-                      </Button>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                {/* Nearest Jobs Tab */}
-                <TabsContent value="nearest-jobs" className="flex-1 min-h-0 overflow-hidden flex flex-col p-4 data-[state=inactive]:hidden data-[state=active]:flex">
-                  <div className="flex-1 min-h-0 flex flex-col">
-                    {(() => {
-                      const q = nearestJobsSearchQuery.trim().toLowerCase();
-                      const nearestFiltered = q
-                        ? nearestJobsDummyData.filter((row: any) =>
-                            (row.id || '').toLowerCase().includes(q) ||
-                            (row.clientName || '').toLowerCase().includes(q) ||
-                            ((row as any).companyName || '').toLowerCase().includes(q) ||
-                            (row.phoneNumber || '').toLowerCase().includes(q) ||
-                            (row.email || '').toLowerCase().includes(q) ||
-                            (row.status || '').toLowerCase().includes(q) ||
-                            (Array.isArray(row.jobTags) ? row.jobTags.join(' ').toLowerCase() : '').includes(q) ||
-                            (Array.isArray((row as any).noteTags) ? (row as any).noteTags.join(' ').toLowerCase() : '').includes(q)
-                          )
-                        : nearestJobsDummyData;
-                      const nearestTotal = nearestFiltered.length;
-                      const nearestTotalPages = Math.max(1, Math.ceil(nearestTotal / nearestJobsEntriesPerPage));
-                      const nearestPaged = nearestFiltered.slice(
-                        (nearestJobsPage - 1) * nearestJobsEntriesPerPage,
-                        nearestJobsPage * nearestJobsEntriesPerPage
-                      );
-                      return (
-                        <>
-                          <div className="relative mb-3">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            <Input
-                              placeholder="Search jobs, clients, phone, email..."
-                              value={nearestJobsSearchQuery}
-                              onChange={(e) => { setNearestJobsSearchQuery(e.target.value); setNearestJobsPage(1); }}
-                              className="pl-9 w-full max-w-xs"
-                            />
-                          </div>
-                          <Table
-                            key="nearest-jobs"
-                            rows={nearestPaged}
-                            mobileRows={nearestFiltered.slice(0, nearestJobsPage * nearestJobsEntriesPerPage)}
-                            columns={tableColumns.filter((v, i) => {return i > 0;})}
-                            pageSize={nearestJobsEntriesPerPage}
-                            currentPage={nearestJobsPage}
-                            totalPages={nearestTotalPages}
-                            totalCount={nearestTotal}
-                            onPageSizeChange={(v) => { setNearestJobsEntriesPerPage(Number(v)); setNearestJobsPage(1); }}
-                            onPageChange={setNearestJobsPage}
-                            maxHeightClassName="max-h-[calc(100vh-320px)]"
-                            className="flex-1 flex flex-col"
-                            tableClassName="flex-1"
-                            lockedColumns={1}
-                          />
-                        </>
-                      );
-                    })()}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-
   // Job status groups for list view
   const JOB_STATUS_GROUPS = [
     { key: "Rejected", color: "red", icon: <AlertCircle className="w-4 h-4 text-red-500 mr-1" /> },
@@ -4680,7 +3546,6 @@ export default function Jobs() {
                 value={quickJobTypes}
                 multiselect
                 onSelect={val => setQuickJobTypes(Array.isArray(val) ? val : [])}
-                onSearch={() => {}}
               />
               <SelectInput
                 label="Agents"
@@ -4692,7 +3557,6 @@ export default function Jobs() {
                 value={quickAgents}
                 multiselect
                 onSelect={val => setQuickAgents(Array.isArray(val) ? val : [])}
-                onSearch={() => {}}
               />
               <InputDatepicker
                 value={dateRangeValue}
@@ -4709,7 +3573,6 @@ export default function Jobs() {
                 value={quickDispatches}
                 multiselect
                 onSelect={val => setQuickDispatches(Array.isArray(val) ? val : [])}
-                onSearch={() => {}}
               />
             </div>
             )}
@@ -4725,7 +3588,6 @@ export default function Jobs() {
                 value={quickTagNotes}
                 multiselect
                 onSelect={val => setQuickTagNotes(Array.isArray(val) ? val : [])}
-                onSearch={() => {}}
                 actionLabel="Add Tag Notes"
                 onAction={() => setShowAddTagNoteModal(true)}
               />
@@ -4739,7 +3601,6 @@ export default function Jobs() {
                 value={quickTags}
                 multiselect
                 onSelect={val => setQuickTags(Array.isArray(val) ? val : [])}
-                onSearch={() => {}}
                 actionLabel="Add Tag"
                 onAction={() => setShowAddTagModal(true)}
               />
@@ -4749,7 +3610,6 @@ export default function Jobs() {
                 placeholder="All Sources"
                 value={quickSingleChoice}
                 onSelect={val => setQuickSingleChoice(Array.isArray(val) ? (val[0] ?? '') : val)}
-                onSearch={() => {}}
               />
               <SelectInput
                 label="Technician"
@@ -4762,7 +3622,6 @@ export default function Jobs() {
                 placeholder="All technicians"
                 value={assignedTechFilter}
                 onSelect={val => setAssignedTechFilter(Array.isArray(val) ? (val[0] ?? "all") : val)}
-                onSearch={() => {}}
               />
             </div>
             )}
@@ -5557,7 +4416,6 @@ export default function Jobs() {
     };
     
     setInvoices([...invoices, newInvoice]);
-    setShowInvoiceModal(false);
     setInvoiceForm({
       invoiceNumber: '',
       issueDate: new Date().toISOString().split('T')[0],
@@ -5746,217 +4604,16 @@ export default function Jobs() {
       {/* Jobs List View */}
       <div>
         {renderListView()}
-        {renderJobDetails()}
+        <JobForm
+          open={showJobDetails}
+          onOpenChange={setShowJobDetails}
+          jobId={selectedJob?.id ?? null}
+          formData={selectedJob ?? undefined}
+          onJobUpdated={() => {
+            // Optional: refetch jobs list when job is saved
+          }}
+        />
       </div>
-
-      {/* Invoice Creation Modal */}
-      <Dialog open={showInvoiceModal} onOpenChange={setShowInvoiceModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Create Invoice
-            </DialogTitle>
-            <DialogDescription>
-              Create a professional invoice for this job
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            {/* Invoice Header */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="invoiceNumber">Invoice Number</Label>
-                <Input
-                  id="invoiceNumber"
-                  value={invoiceForm.invoiceNumber}
-                  onChange={(e) => setInvoiceForm({...invoiceForm, invoiceNumber: e.target.value})}
-                  placeholder="INV-001"
-                />
-            </div>
-              <div>
-                <Label htmlFor="issueDate">Issue Date</Label>
-                <Input
-                  id="issueDate"
-                  type="date"
-                  value={invoiceForm.issueDate}
-                  onChange={(e) => setInvoiceForm({...invoiceForm, issueDate: e.target.value})}
-                />
-          </div>
-              <div>
-                <Label htmlFor="dueDate">Due Date</Label>
-                <Input
-                  id="dueDate"
-                  type="date"
-                  value={invoiceForm.dueDate}
-                  onChange={(e) => setInvoiceForm({...invoiceForm, dueDate: e.target.value})}
-                />
-              </div>
-            </div>
-
-            {/* Line Items */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <Label className="text-base font-semibold">Line Items</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addInvoiceLineItem}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Item
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                {invoiceForm.lineItems.map((item, index) => (
-                  <div key={index} className="grid grid-cols-12 gap-2 items-end">
-                    <div className="col-span-6">
-                      <Label htmlFor={`description-${index}`}>Description</Label>
-                      <Input
-                        id={`description-${index}`}
-                        value={item.description}
-                        onChange={(e) => handleInvoiceLineItemChange(index, 'description', e.target.value)}
-                        placeholder="Service description"
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <Label htmlFor={`quantity-${index}`}>Qty</Label>
-                      <Input
-                        id={`quantity-${index}`}
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={(e) => handleInvoiceLineItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <Label htmlFor={`rate-${index}`}>Rate</Label>
-                      <Input
-                        id={`rate-${index}`}
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.rate}
-                        onChange={(e) => handleInvoiceLineItemChange(index, 'rate', parseFloat(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="col-span-1">
-                      <Label>Amount</Label>
-                      <div className="text-sm font-medium text-gray-700 p-2 bg-gray-50 rounded border">
-                        ${item.amount.toFixed(2)}
-                      </div>
-                    </div>
-                    <div className="col-span-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeInvoiceLineItem(index)}
-                        className="text-red-500 hover:text-red-700"
-                        disabled={invoiceForm.lineItems.length === 1}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Totals */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="taxRate">Tax Rate (%)</Label>
-                    <Input
-                      id="taxRate"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={invoiceForm.taxRate}
-                      onChange={(e) => {
-                        const taxRate = parseFloat(e.target.value) || 0;
-                        const taxAmount = (invoiceForm.subtotal * taxRate) / 100;
-                        const total = invoiceForm.subtotal + taxAmount - invoiceForm.discount;
-                        setInvoiceForm({
-                          ...invoiceForm,
-                          taxRate,
-                          taxAmount,
-                          total
-                        });
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="discount">Discount ($)</Label>
-                    <Input
-                      id="discount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={invoiceForm.discount}
-                      onChange={(e) => {
-                        const discount = parseFloat(e.target.value) || 0;
-                        const total = invoiceForm.subtotal + invoiceForm.taxAmount - discount;
-                        setInvoiceForm({
-                          ...invoiceForm,
-                          discount,
-                          total
-                        });
-                      }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    value={invoiceForm.notes}
-                    onChange={(e) => setInvoiceForm({...invoiceForm, notes: e.target.value})}
-                    placeholder="Additional notes for the invoice"
-                    rows={3}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold mb-3">Invoice Summary</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>${invoiceForm.subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Tax ({invoiceForm.taxRate}%):</span>
-                    <span>${invoiceForm.taxAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Discount:</span>
-                    <span>-${invoiceForm.discount.toFixed(2)}</span>
-                  </div>
-                  <div className="border-t pt-2 flex justify-between font-semibold text-lg">
-                    <span>Total:</span>
-                    <span>${invoiceForm.total.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowInvoiceModal(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateInvoice} className="bg-blue-600 hover:bg-blue-700">
-              Create Invoice
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Estimate Creation Modal */}
       <Dialog open={showEstimateModal} onOpenChange={setShowEstimateModal}>
@@ -6270,7 +4927,6 @@ export default function Jobs() {
         placeholder="Choose technician"
         value={selectedTech}
         onSelect={val => setSelectedTech(Array.isArray(val) ? (val[0] ?? '') : val)}
-        onSearch={() => {}}
       />
       </div>
       <DialogFooter>
