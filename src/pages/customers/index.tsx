@@ -110,100 +110,97 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
   }
 
   const customerColumns = [
-      {
-        columnName: "Serial No.",
-        sortKey: "serialNumber",
-        cell: (row: CustomerT) => (
-          <div className="grid grid-cols-3 gap-1 place-items-center min-w-[120px]">
-            
-            {/* Col 1: Checkbox */}
-            <Checkbox
-              aria-label={`Select customer ${row.id}`}
-              checked={selectedRows.has(row.id)}
-              onCheckedChange={checked =>
-                handleRowToggle(row.id, Boolean(checked))
-              }
-            />
+    {
+      columnName: "",
+      cell: (row: CustomerT) => (
+        <div className="flex items-center justify-center mt-1.5">
+          <Checkbox
+            aria-label={`Select customer ${row.id}`}
+            checked={selectedRows.has(row.id)}
+            onCheckedChange={(checked) =>
+              handleRowToggle(row.id, Boolean(checked))
+            }
+          />
+        </div>
+      ),
+    },
+    {
+      columnName: "Client",
+      sortKey: "clientName",
+      cell: (row: CustomerT) => (
+        <div className="flex items-center gap-2 whitespace-nowrap">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 shadow-sm"
+            onClick={() => handleViewCustomer(row)}
+            title="View customer"
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
 
-            {/* Col 2: Serial Number */}
-            <div className="font-medium ">
-              {row.serialNumber ?? "—"}
-            </div>
-
-            {/* Col 3: View */}
-            <Button
-              size="icon"
-              variant="ghost"
-              className={`h-7 w-7 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 shadow-sm`}
-              onClick={() => handleViewCustomer(row)}
-              title="View job"
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
-          </div>
-        ),
-      },
-      {
-        columnName: "Client",
-        sortKey: "clientName",
-        cell: (row: CustomerT) => (
-          <span className="whitespace-nowrap">
+          <span className="font-medium">
             {row.clientName ?? "—"}
           </span>
-        ),
-      },
-      {
-        columnName: "Company",
-        sortKey: "companyName",
-        cell: (row: CustomerT) => (
-          <span className="whitespace-nowrap">
-            {row.companyName ?? "—"}
-          </span>
-        ),
-      },
-      {
-        columnName: "Email",
-        sortKey: "email",
-        cell: (row: CustomerT) => (
-          <span className="whitespace-nowrap">
-            {row.email ?? "—"}
-          </span>
-        ),
-      },
-      {
-        columnName: "Phone",
-        sortKey: "phoneNumber",
-        cell: (row: CustomerT) => (
-          <span className="whitespace-nowrap">
-            {row.phoneNumber ?? "—"}
-          </span>
-        ),
-      },
-      {
-        columnName: "Source",
-        sortKey: "sourceTitle",
-        cell: (row: CustomerT) => (
-          <span className="whitespace-nowrap">
-            {row.sourceTitle}
-          </span>
-        ),
-      },
-      {
-        columnName: "Address",
-        cell: (row: CustomerT) => (
-          <span className="whitespace-nowrap">
-            {[row.city, row.state, row.country]
-              .filter(Boolean)
-              .join(", ") || "-"}
-          </span>
-        ),
-      },
-      {
-        columnName: "Location",
-        cell: (row: CustomerT) => row.location ?? "—",
-        sortKey: "location",
-      },
-    ]
+        </div>
+      ),
+    },
+    {
+      columnName: "Company",
+      sortKey: "companyName",
+      cell: (row: CustomerT) => (
+        <span className="whitespace-nowrap">
+          {row.companyName ?? "—"}
+        </span>
+      ),
+    },
+    {
+      columnName: "Email",
+      sortKey: "email",
+      cell: (row: CustomerT) => (
+        <span className="whitespace-nowrap">
+          {row.email ?? "—"}
+        </span>
+      ),
+    },
+    {
+      columnName: "Phone",
+      sortKey: "phoneNumber",
+      cell: (row: CustomerT) => (
+        <span className="whitespace-nowrap">
+          {row.phoneNumber ?? "—"}
+        </span>
+      ),
+    },
+    {
+      columnName: "Source",
+      sortKey: "sourceTitle",
+      cell: (row: CustomerT) => (
+        <span className="whitespace-nowrap">
+          {row.sourceTitle ?? "—"}
+        </span>
+      ),
+    },
+    {
+      columnName: "Address",
+      cell: (row: CustomerT) => (
+        <span className="whitespace-nowrap">
+          {[row.city, row.state, row.country]
+            .filter(Boolean)
+            .join(", ") || "—"}
+        </span>
+      ),
+    },
+    {
+      columnName: "Location",
+      sortKey: "location",
+      cell: (row: CustomerT) => (
+        <span className="whitespace-nowrap">
+          {row.location ?? "—"}
+        </span>
+      ),
+    },
+  ];
 
 
   const totalCount = filteredCustomers.length
@@ -361,6 +358,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
         onExport={handleExport}
         className="flex-1 flex flex-col"
         tableClassName="flex-1 flex flex-col overflow-y-hidden"
+        lockedColumns={2}
       />
 
 
