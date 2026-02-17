@@ -16,6 +16,9 @@ import { Checkbox } from '@/src/components/ui/checkbox'
 import CustomerDashboardFilter from '@/src/components/customer/CustomerDashboardFilter'
 import CreateCustomerDialog from '@/src/components/customer/form/CreateCustomerDialog'
 import EditCustomerDialog from '@/src/components/customer/form/EditCustomerDialog'
+import SidePanel from '@/src/components/sidePanel'
+import { Badge } from '@/src/components/ui/badge'
+import CustomerQuickView from '@/src/components/customer/CustomerQuickView'
 
 
 
@@ -104,10 +107,20 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
       : String(bVal).localeCompare(String(aVal))
   })
 
-  const handleViewCustomer = (customer: CustomerT) => {
-    setSelectedCustomer(customer)
-    setShowProfile(true)
-  }
+    const openCustomerQuickView = (customer: CustomerT) => {
+      SidePanel.open({
+        title: customer.clientName ?? "Customer",
+        content: () => (
+          <CustomerQuickView
+            customer={customer}
+            onViewFullProfile={(c) => {
+              setSelectedCustomer(c);
+              setShowProfile(true);
+            }}
+          />
+        ),
+      });
+    };
 
   const customerColumns = [
     {
@@ -133,7 +146,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
             size="icon"
             variant="ghost"
             className="h-7 w-7 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 shadow-sm"
-            onClick={() => handleViewCustomer(row)}
+            onClick={() => openCustomerQuickView(row)}
             title="View customer"
           >
             <Eye className="w-4 h-4" />
@@ -343,7 +356,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
         mobileCard={(row) => (
           <CustomerCard
             customer={row}
-            openCustomerProfile={handleViewCustomer}
+            openCustomerProfile={openCustomerQuickView}
           />
         )}
         onSort={handleSort}
