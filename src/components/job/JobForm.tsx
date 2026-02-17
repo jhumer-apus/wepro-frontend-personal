@@ -33,6 +33,8 @@ import { Slider } from "@/src/components/ui/slider";
 import Table from "@/src/components/table";
 import SelectInput from "@/src/components/input/select";
 import InputDatepicker from "@/src/components/input/datepicker";
+import AddressInput from "@/src/components/input/address";
+import { toast } from "sonner";
 import {
   X,
   User,
@@ -342,8 +344,9 @@ export function JobForm(props: JobFormProps) {
 
   const handleSave = () => {
     // TODO: API call to save job
+    const isUpdateAction = Boolean(jobId);
+    toast.success(`Job ${isUpdateAction ? "updated" : "saved"} successfully`);
     onJobUpdated?.();
-    setIsEditing(false);
   };
 
   const handleAddNote = () => {
@@ -619,14 +622,20 @@ export function JobForm(props: JobFormProps) {
                         </CardHeader>
                         <CardContent className="space-y-3">
                           <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <Label className="text-sm font-medium">Location</Label>
-                              {isEditing ? (
-                                <Input value={formData.location || ""} onChange={(e) => handleEditChange("location", e.target.value)} className="mt-1" />
-                              ) : (
-                                <div className="mt-1 text-sm">{selectedJob.location}</div>
-                              )}
-                            </div>
+                            <AddressInput
+                              isEditing={isEditing}
+                              value={formData.location || ""}
+                              displayValue={selectedJob.location}
+                              onChange={(value) => handleEditChange("location", value)}
+                              onAddressChange={({ address, address2, city, zip, state, country }) => {
+                                handleEditChange("location", address);
+                                handleEditChange("apartmentNumber", address2);
+                                handleEditChange("city", city);
+                                handleEditChange("zipCode", zip);
+                                handleEditChange("state", state);
+                                handleEditChange("country", country);
+                              }}
+                            />
                             <div>
                               <Label className="text-sm font-medium">Apartment #</Label>
                               {isEditing ? (
@@ -689,39 +698,45 @@ export function JobForm(props: JobFormProps) {
                         <CardContent className="space-y-3">
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <Label className="text-sm font-medium">Job Category</Label>
                               {isEditing ? (
-                                <Select value={formData.jobCategory || ""} onValueChange={(value) => handleEditChange("jobCategory", value)}>
-                                  <SelectTrigger className="mt-1">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Plumbing">Plumbing</SelectItem>
-                                    <SelectItem value="Electrical">Electrical</SelectItem>
-                                    <SelectItem value="HVAC">HVAC</SelectItem>
-                                    <SelectItem value="General">General</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <SelectInput
+                                  label="Job Category"
+                                  options={[
+                                    { label: "Plumbing", value: "Plumbing" },
+                                    { label: "Electrical", value: "Electrical" },
+                                    { label: "HVAC", value: "HVAC" },
+                                    { label: "General", value: "General" },
+                                  ]}
+                                  placeholder="Select category"
+                                  value={formData.jobCategory || ""}
+                                  onSelect={(val) => handleEditChange("jobCategory", Array.isArray(val) ? (val[0] ?? "") : val)}
+                                />
                               ) : (
-                                <div className="mt-1 text-sm">{selectedJob.jobCategory}</div>
+                                <>
+                                  <Label className="text-sm font-medium">Job Category</Label>
+                                  <div className="mt-1 text-sm">{selectedJob.jobCategory}</div>
+                                </>
                               )}
                             </div>
                             <div>
-                              <Label className="text-sm font-medium">Job Type</Label>
                               {isEditing ? (
-                                <Select value={formData.jobType || ""} onValueChange={(value) => handleEditChange("jobType", value)}>
-                                  <SelectTrigger className="mt-1">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Repair">Repair</SelectItem>
-                                    <SelectItem value="Installation">Installation</SelectItem>
-                                    <SelectItem value="Maintenance">Maintenance</SelectItem>
-                                    <SelectItem value="Emergency">Emergency</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <SelectInput
+                                  label="Job Type"
+                                  options={[
+                                    { label: "Repair", value: "Repair" },
+                                    { label: "Installation", value: "Installation" },
+                                    { label: "Maintenance", value: "Maintenance" },
+                                    { label: "Emergency", value: "Emergency" },
+                                  ]}
+                                  placeholder="Select type"
+                                  value={formData.jobType || ""}
+                                  onSelect={(val) => handleEditChange("jobType", Array.isArray(val) ? (val[0] ?? "") : val)}
+                                />
                               ) : (
-                                <div className="mt-1 text-sm">{selectedJob.jobType}</div>
+                                <>
+                                  <Label className="text-sm font-medium">Job Type</Label>
+                                  <div className="mt-1 text-sm">{selectedJob.jobType}</div>
+                                </>
                               )}
                             </div>
                           </div>
@@ -864,22 +879,23 @@ export function JobForm(props: JobFormProps) {
                         <CardContent className="space-y-3">
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <Label className="text-sm font-medium">Start DateTime</Label>
                               {isEditing ? (
-                                <div className="mt-1">
-                                  <InputDatepicker
-                                    range={false}
-                                    withTime={true}
-                                    datetimeValue={formData.startDate && formData.startTime ? `${formData.startDate}T${String(formData.startTime).slice(0, 5)}` : ""}
-                                    onDateTimeChange={(v) => {
-                                      if (v) {
-                                        const [d, t] = v.split("T");
-                                        handleEditChange("startDate", d || "");
-                                        handleEditChange("startTime", t ? `${t}:00` : "00:00:00");
-                                      }
-                                    }}
-                                  />
-                                </div>
+                                <InputDatepicker
+                                  label="Start DateTime"
+                                  range={false}
+                                  withTime={true}
+                                  datetimeValue={formData.startDate && formData.startTime ? `${formData.startDate}T${String(formData.startTime)}` : ""}
+                                  onDateTimeChange={(v) => {
+                                    if (v) {
+                                      const [d, t] = v.split("T");
+                                      handleEditChange("startDate", d || "");
+                                      handleEditChange("startTime", t || "");
+                                    } else {
+                                      handleEditChange("startDate", "");
+                                      handleEditChange("startTime", "");
+                                    }
+                                  }}
+                                />
                               ) : (
                                 <div className="mt-1 text-sm">
                                   {selectedJob.startDate && selectedJob.startTime
@@ -896,26 +912,27 @@ export function JobForm(props: JobFormProps) {
                               )}
                             </div>
                             <div>
-                              <Label className="text-sm font-medium">End DateTime</Label>
                               {isEditing ? (
-                                <div className="mt-1">
-                                  <InputDatepicker
-                                    range={false}
-                                    withTime={true}
-                                    datetimeValue={(() => {
-                                      const endD = (formData as { endDate?: string }).endDate || formData.startDate;
-                                      const endT = (formData as { estimatedEndTime?: string }).estimatedEndTime || formData.startTime || "17:00";
-                                      return endD && endT ? `${endD}T${String(endT).slice(0, 5)}` : "";
-                                    })()}
-                                    onDateTimeChange={(v) => {
-                                      if (v) {
-                                        const [d, t] = v.split("T");
-                                        handleEditChange("endDate", d || "");
-                                        handleEditChange("estimatedEndTime", t ? `${t.slice(0, 5)}` : "17:00");
-                                      }
-                                    }}
-                                  />
-                                </div>
+                                <InputDatepicker
+                                  label="End DateTime"
+                                  range={false}
+                                  withTime={true}
+                                  datetimeValue={(() => {
+                                    const endD = (formData as { endDate?: string }).endDate;
+                                    const endT = (formData as { estimatedEndTime?: string }).estimatedEndTime;
+                                    return endD && endT ? `${endD}T${String(endT)}` : "";
+                                  })()}
+                                  onDateTimeChange={(v) => {
+                                    if (v) {
+                                      const [d, t] = v.split("T");
+                                      handleEditChange("endDate", d || "");
+                                      handleEditChange("estimatedEndTime", t || "");
+                                    } else {
+                                      handleEditChange("endDate", "");
+                                      handleEditChange("estimatedEndTime", "");
+                                    }
+                                  }}
+                                />
                               ) : (
                                 <div className="mt-1 text-sm">
                                   {(() => {

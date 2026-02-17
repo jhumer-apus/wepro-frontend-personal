@@ -154,7 +154,6 @@ export default function DashboardLayout({
         onOpenChange={setShowCreateJobModal}
         jobId={null}
         formData={undefined}
-        onJobUpdated={() => setShowCreateJobModal(false)}
       />
       <Toaster />
     </div>

@@ -9,6 +9,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/src/components/ui/command";
+import { Label } from "@/src/components/ui/label";
 import { ChevronsUpDown, Check } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
@@ -92,7 +93,7 @@ const SelectInput = ({
   return (
     <div className="space-y-1">
       {label ? (
-        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{label}</p>
+        <Label className="text-sm font-medium">{label}</Label>
       ) : null}
       <Popover>
         <PopoverTrigger asChild>
