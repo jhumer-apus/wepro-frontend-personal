@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/src/components/ui/dialog";
@@ -39,7 +40,7 @@ const NewJobScheduleDialog: React.FC<Props> = ({
 }) => {
   return (
     <Dialog open={showNewJobDialog} onOpenChange={setShowNewJobDialog}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto pb-0">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="w-5 h-5 text-blue-500" />
@@ -317,29 +318,29 @@ const NewJobScheduleDialog: React.FC<Props> = ({
               />
             </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setShowNewJobDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateJob}
-              disabled={
-                !newJobData.title ||
-                !newJobData.client ||
-                !newJobData.address
-              }
-              className="bg-accent-500 text-white hover:bg-accent-600"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Job
-            </Button>
-          </div>
         </div>
+
+        {/* Footer */}
+        <DialogFooter className="sticky bottom-0 p-6 pt-4 border-t bg-white">
+          <Button
+            variant="outline"
+            onClick={() => setShowNewJobDialog(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreateJob}
+            disabled={
+              !newJobData.title ||
+              !newJobData.client ||
+              !newJobData.address
+            }
+            className="bg-accent-500 text-white hover:bg-accent-600"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Job
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
