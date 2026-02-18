@@ -163,7 +163,7 @@ export default function MoreJobsDialog(props:Props) {
                     setShowMoreJobsDialog(false);
                     handleEmptySpotClick(moreJobsDate);
                   }}
-                  className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
+                  className="bg-accent-600 text-white"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add New Job
