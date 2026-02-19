@@ -23,6 +23,7 @@ import JobScheduleDetailsDialog from "@/src/components/schedule/JobScheduleDetai
 import NewJobScheduleDialog from "@/src/components/schedule/NewJobScheduleDialog";
 import MoreJobsDialog from "@/src/components/schedule/MoreJobsDialog";
 import ScheduleCalendar from "@/src/components/schedule/calendar/ScheduleCalendar";
+import CreateJobForm from "@/src/components/job/CreateJobForm";
 
 export default function ScheduleIndex() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 9, 13)); // October 13, 2025
@@ -511,7 +512,7 @@ export default function ScheduleIndex() {
           />
 
           {/* New Job Dialog */}
-          <NewJobScheduleDialog
+          <CreateJobForm 
             showNewJobDialog={showNewJobDialog}
             setShowNewJobDialog={setShowNewJobDialog}
             newJobData={newJobData}
@@ -521,6 +522,16 @@ export default function ScheduleIndex() {
             metroAreas={metroAreas}
             handleCreateJob={handleCreateJob}
           />
+          {/* <NewJobScheduleDialog
+            showNewJobDialog={showNewJobDialog}
+            setShowNewJobDialog={setShowNewJobDialog}
+            newJobData={newJobData}
+            setNewJobData={setNewJobData}
+            calculateEndTime={calculateEndTime}
+            technicians={technicians}
+            metroAreas={metroAreas}
+            handleCreateJob={handleCreateJob}
+          /> */}
 
 
           {/* More Jobs Dialog */}
