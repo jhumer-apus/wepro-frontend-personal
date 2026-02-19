@@ -41,14 +41,14 @@ export const jobSchema = z.object({
     startDate: z.string().min(1, "Start date is required"),
     startTime: z.string().min(1, "Start time is required"),
 
-    endDate: z.string().optional(),
-    estimatedEndTime: z.string().optional(),
+    endDate: z.string().min(1, "End date is required"),
+    estimatedEndTime: z.string().min(1, "End time is required"),
 
     // =========================
     // Assignment
     // =========================
-    closestDistance: z.string().optional(),
-    assignedTechnician: z.string().optional(),
+    closestDistance: z.string(),
+    assignedTechnician: z.string(),
 
     // =========================
     // Notes

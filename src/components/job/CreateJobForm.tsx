@@ -19,6 +19,8 @@ import JobDetailsSection from "../forms/job/JobDetailsSection";
 import ClientInformationSection from "../forms/job/ClientInformationSection";
 import ServiceLocationSection from "../forms/job/ServiceLocation";
 import ScheduleSection from "../forms/job/ScheduleSection";
+import AssignmentSection from "../forms/job/AssignmentSection";
+import NotesSection from "../forms/job/NotesSection";
 
 type JobFormValues = z.input<typeof jobSchema>;
 
@@ -65,8 +67,8 @@ export default function CreateJobForm({
       endDate: "",
       estimatedEndTime: "",
 
-      closestDistance: "",
-      assignedTechnician: "",
+      closestDistance: "all",
+      assignedTechnician: "unassigned",
 
       jobDescription: "",
     },
@@ -91,15 +93,17 @@ export default function CreateJobForm({
         <FormProvider {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-6 py-4"
+            className="space-y-6 px-4 pt-4"
           >
             <JobDetailsSection />
             <ClientInformationSection />
             <ServiceLocationSection />
             <ScheduleSection />
+            <AssignmentSection />
+            <NotesSection />
 
             {/* Footer Inside Form (Correct) */}
-            <DialogFooter className="sticky bottom-0 pt-4 border-t bg-white">
+            <DialogFooter className="sticky bottom-0 p-4 border-t bg-white z-[90]">
               <Button
                 type="button"
                 variant="outline"

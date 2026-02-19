@@ -11,6 +11,7 @@ import {
 import { Input } from "@/src/components/ui/input";
 import SelectInput from "@/src/components/input/select";
 import { useMemo } from "react";
+import { Wrench } from "lucide-react";
 
 export default function JobDetailsSection() {
   const { control } = useFormContext();
@@ -123,7 +124,10 @@ export default function JobDetailsSection() {
 
   return (
     <div className="space-y-10 border-t-2 border-slate-200 py-6">
-      <h3 className="text-lg font-semibold">Job Details</h3>
+      <div className="flex items-center gap-2">
+        <Wrench className="w-5 h-5" />
+        <h3 className="text-lg font-semibold">Job Details</h3>
+      </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-10">
         {/* Dynamic Select Fields */}
         {selectOptions.map(({ name, label, options, multiple, isRequired }) => (
