@@ -4,6 +4,8 @@ import { GoogleMap, Marker } from '@react-google-maps/api'
 import { useTheme } from 'next-themes'
 import {
   AlertTriangle,
+  Brain,
+  CheckCircle2,
   Clock3,
   ChevronLeft,
   ChevronRight,
@@ -12,6 +14,7 @@ import {
   Eye,
   Lightbulb,
   MapPin,
+  MousePointer2,
   Plus,
   Route,
   Settings,
@@ -98,6 +101,7 @@ export default function LiveMapIndex(): React.JSX.Element {
   const [mounted, setMounted] = useState(false)
   const [isJobsQueueCollapsed, setIsJobsQueueCollapsed] = useState(false)
   const [isTechniciansCollapsed, setIsTechniciansCollapsed] = useState(false)
+  const [selectedQueueJob, setSelectedQueueJob] = useState<string | null>(null)
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
@@ -610,47 +614,117 @@ export default function LiveMapIndex(): React.JSX.Element {
                 type: 'Plumbing',
                 assignedTo: 'Sarah Wilson',
               },
-            ].map(job => (
-              <div
-                key={job.title}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/40"
-              >
-                <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{job.title}</p>
-                <p className="text-xs text-slate-600 dark:text-slate-400">{job.customer}</p>
-                <div className="mt-2 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                  <MapPin className="h-3.5 w-3.5" />
-                  <span className="truncate">{job.address}</span>
-                </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
-                    <Clock3 className="h-3.5 w-3.5" />
-                    {job.time}
-                  </div>
-                  <span className="text-base font-semibold text-green-600">{job.value}</span>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <div className="inline-flex rounded-full border border-slate-300 px-2 py-0.5 text-xs text-slate-700 dark:border-slate-600 dark:text-slate-200">
-                    {job.type}
-                  </div>
-                  {job.statusBadge && (
-                    <div
-                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        job.statusBadge.tone === 'red'
-                          ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
-                          : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                      }`}
-                    >
-                      {job.statusBadge.label}
+            ].map(job => {
+              const isSelected = selectedQueueJob === job.title
+              return (
+                <div
+                  key={job.title}
+                  className={`w-full rounded-xl border p-3 text-left transition ${
+                    isSelected
+                      ? 'border-brandGreen-400 bg-brandGreen-50/60 dark:border-brandGreen-600 dark:bg-brandGreen-900/20'
+                      : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-slate-600'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedQueueJob(prev =>
+                        prev === job.title ? null : job.title
+                      )
+                    }
+                    className="w-full text-left cursor-pointer"
+                    aria-label={`Open ${job.title}`}
+                  >
+                    <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{job.title}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">{job.customer}</p>
+                    <div className="mt-2 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                      <MapPin className="h-3.5 w-3.5" />
+                      <span className="truncate">{job.address}</span>
                     </div>
-                  )}
-                </div>
-                {job.assignedTo && (
-                  <div className="mt-2 rounded-md border border-emerald-200/70 bg-emerald-50/55 px-2.5 py-1 text-[11px] text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-300">
-                    Assigned to: <span className="font-medium">{job.assignedTo}</span>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300">
+                        <Clock3 className="h-3.5 w-3.5" />
+                        {job.time}
+                      </div>
+                      <span className="text-base font-semibold text-green-600">{job.value}</span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <div className="inline-flex font-xs rounded-full border border-slate-300 px-2 py-0.5 text-xs text-slate-700 dark:border-slate-600 dark:text-slate-200">
+                        {job.type}
+                      </div>
+                      {job.statusBadge && (
+                        <div
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            job.statusBadge.tone === 'red'
+                              ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
+                              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                          }`}
+                        >
+                          {job.statusBadge.label}
+                        </div>
+                      )}
+                    </div>
+                    {job.assignedTo && (
+                      <div className="mt-2 rounded-md border border-emerald-200/70 bg-emerald-50/55 px-2.5 py-1 text-[11px] text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/25 dark:text-emerald-300">
+                        Assigned to: <span className="font-medium">{job.assignedTo}</span>
+                      </div>
+                    )}
+                  </button>
+
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                      isSelected
+                        ? 'mt-3 max-h-[520px] border-t border-slate-200 pt-3 opacity-100 dark:border-slate-700'
+                        : 'max-h-0 border-t-0 pt-0 opacity-0'
+                    }`}
+                  >
+                    <div className="transform transition-all duration-300 ease-in-out">
+                      <div className="mb-3 flex items-center gap-2 text-base font-bold text-slate-900 dark:text-slate-100">
+                        <Brain className="h-5 w-5 text-violet-600" />
+                        AI Suggestions
+                      </div>
+
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                            Best Match
+                          </span>
+                          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                            56% confidence
+                          </span>
+                        </div>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Mike Johnson</p>
+                        <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
+                          Mike Johnson: balanced optimized (route efficient)
+                        </p>
+                        <Button className="mt-3 h-8 w-full rounded-sm bg-brandGreen-900 text-white text-xs hover:bg-brandGreen-800">
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          Assign to Mike Johnson
+                        </Button>
+                      </div>
+
+                      <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                            Alternative 1
+                          </span>
+                          <span className="rounded-full border border-slate-300 px-2.5 py-0.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">
+                            12% match
+                          </span>
+                        </div>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Sarah Wilson</p>
+                        <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
+                          Sarah Wilson: balanced optimized (new area)
+                        </p>
+                        <Button variant="outline" className="mt-3 h-8 w-full rounded-sm">
+                          Assign to Sarah Wilson
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
+                </div>
+              )
+            })}
           </div>
         </div>
         </div>
@@ -706,6 +780,20 @@ export default function LiveMapIndex(): React.JSX.Element {
                 </Button>
               </div>
             )}
+            <div className="absolute bottom-4 left-4">
+              <div className="max-w-xs rounded-xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/90">
+                <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  <MousePointer2 className="h-4 w-4" />
+                  Interactive Route Map
+                </div>
+                <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
+                  <li>- Click technicians to view/hide routes</li>
+                  <li>- Hover jobs for quick assign/reassign</li>
+                  <li>- Colored lines show route connections</li>
+                  <li>- Numbers show route sequence</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
 

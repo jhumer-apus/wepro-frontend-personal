@@ -331,6 +331,7 @@ export function JobForm(props: JobFormProps) {
   const [invoiceTablePage, setInvoiceTablePage] = useState(1);
   const [invoiceTablePageSize, setInvoiceTablePageSize] = useState(10);
   const [addPaymentForm, setAddPaymentForm] = useState<AddPaymentFormState>(initialAddPaymentForm);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (open && (formDataProp != null || jobId)) {
@@ -342,11 +343,19 @@ export function JobForm(props: JobFormProps) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
     // TODO: API call to save job
-    const isUpdateAction = Boolean(jobId);
-    toast.success(`Job ${isUpdateAction ? "updated" : "saved"} successfully`);
-    onJobUpdated?.();
+    try {
+      // Simulate network save request for UX feedback.
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      const isUpdateAction = Boolean(jobId);
+      toast.success(`Job ${isUpdateAction ? "updated" : "saved"} successfully`);
+      onJobUpdated?.();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleAddNote = () => {
@@ -1028,8 +1037,8 @@ export function JobForm(props: JobFormProps) {
                     <div className="fixed bottom-0 left-0 right-0 bg-white">
                       <div className="flex items-center justify-end gap-3 py-3 px-6 border-t">
                         <div className="flex items-center gap-2">
-                          <Button size="sm" onClick={handleSave}>
-                            Save
+                          <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                            {isSaving ? "Loading..." : "Save"}
                           </Button>
                         </div>
                       </div>
