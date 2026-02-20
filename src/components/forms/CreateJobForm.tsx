@@ -15,12 +15,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { jobSchema } from "@/src/constants/schema/jobSchema";
 import type { z } from "zod";
 
-import JobDetailsSection from "../forms/job/JobDetailsSection";
-import ClientInformationSection from "../forms/job/ClientInformationSection";
-import ServiceLocationSection from "../forms/job/ServiceLocation";
-import ScheduleSection from "../forms/job/ScheduleSection";
-import AssignmentSection from "../forms/job/AssignmentSection";
-import NotesSection from "../forms/job/NotesSection";
+import JobDetailsSection from "./job/JobDetailsSection";
+import ClientInformationSection from "./job/ClientInformationSection";
+import ServiceLocationSection from "./job/ServiceLocation";
+import ScheduleSection from "./job/ScheduleSection";
+import AssignmentSection from "./job/AssignmentSection";
+import NotesSection from "./job/NotesSection";
 
 type JobFormValues = z.input<typeof jobSchema>;
 
