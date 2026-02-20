@@ -1,18 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import type { DateValueType } from 'react-tailwindcss-datepicker'
-import { GoogleMap, Marker } from '@react-google-maps/api'
+import { GoogleMap, Marker, OverlayView } from '@react-google-maps/api'
 import { useTheme } from 'next-themes'
 import {
   AlertTriangle,
-  Brain,
-  CheckCircle2,
+  Car,
   Clock3,
   ChevronLeft,
   ChevronRight,
   DollarSign,
-  Droplets,
   Eye,
-  Lightbulb,
   MapPin,
   MousePointer2,
   Plus,
@@ -21,14 +18,12 @@ import {
   Search,
   Sparkles,
   Star,
-  Wind,
-  Wrench,
-  Zap,
 } from 'lucide-react'
 import { Input } from '@/src/components/ui/input'
 import { Button } from '@/src/components/ui/button'
 import InputDatepicker from '@/src/components/input/datepicker'
 import SelectInput from '@/src/components/input/select'
+import SidePanel from '@/src/components/sidePanel'
 
 type StatusItem = {
   id: string
@@ -50,18 +45,41 @@ const STATUS_FILTERS: StatusItem[] = [
   { id: 'confirmed', name: 'Confirmed', color: '#22C55E' },
 ]
 
-type JobTypeItem = {
+type JobTagItem = {
   id: string
   name: string
-  icon: React.ComponentType<{ className?: string }>
+  color: string
 }
 
-const JOB_TYPES: JobTypeItem[] = [
-  { id: 'hvac', name: 'HVAC', icon: Wind },
-  { id: 'plumbing', name: 'Plumbing', icon: Droplets },
-  { id: 'electrical', name: 'Electrical', icon: Lightbulb },
-  { id: 'general', name: 'General', icon: Wrench },
-  { id: 'emergency', name: 'Emergency', icon: AlertTriangle },
+const JOB_TAGS: JobTagItem[] = [
+  { id: 'urgent', name: 'Urgent', color: '#EF4444' },
+  { id: 'warranty', name: 'Warranty', color: '#2563EB' },
+  { id: 'contract', name: 'Contract', color: '#8B5CF6' },
+  { id: 'commercial', name: 'Commercial', color: '#22C55E' },
+  { id: 'new-system', name: 'New-system', color: '#F59E42' },
+]
+
+const TECHNICIAN_FILTER_OPTIONS = [
+  'Mike Johnson',
+  'Sarah Davis',
+  'David Wilson',
+  'Lisa Martinez',
+  'Chris Brown',
+]
+
+const DISPATCH_TYPE_FILTER_OPTIONS = [
+  'Manual Dispatch',
+  'Auto Dispatch',
+  'Emergency Dispatch',
+  'Reassigned',
+]
+
+const FILTER_BY_OPTIONS = [
+  'Updated At',
+  'Created At',
+  'Upcoming Appointment',
+  'Past Appointment',
+  'Schedule Date',
 ]
 
 const liveMapContainerStyle = {
@@ -88,12 +106,230 @@ const darkMapStyles = [
   },
 ]
 
+const JOB_QUEUE_ITEMS = [
+  {
+    jobId: 'JOB-1001',
+    title: 'AC Repair - No Cooling',
+    customer: 'Johnson Residence',
+    company: 'Johnson Properties',
+    address: '2123 Elm St, Houston, TX',
+    time: '09:00 - 12:00',
+    value: '$450',
+    type: 'HVAC',
+    statusBadge: { label: 'Need to Collect Payment', tone: 'red' as const },
+    lat: 29.7478,
+    lng: -95.3562,
+  },
+  {
+    jobId: 'JOB-1002',
+    title: 'Electrical Panel Upgrade',
+    customer: 'Smith Commercial',
+    company: 'Smith Commercial Group',
+    address: '3456 Business Blvd, Houston, TX',
+    time: '10:00 - 15:00',
+    value: '$850',
+    type: 'Electrical',
+    statusBadge: { label: 'Opportunity', tone: 'green' as const },
+    assignedTo: 'David Chen',
+    lat: 29.7726,
+    lng: -95.3885,
+  },
+  {
+    jobId: 'JOB-1003',
+    title: 'Water Heater Installation',
+    customer: 'Davis Family',
+    company: 'Davis Holdings',
+    address: '4789 Residential Dr, Houston, TX',
+    time: '11:30 - 14:30',
+    value: '$620',
+    type: 'Plumbing',
+    assignedTo: 'Mike Johnson',
+    lat: 29.7814,
+    lng: -95.3653,
+  },
+  {
+    jobId: 'JOB-1004',
+    title: 'Emergency Furnace Check',
+    customer: 'River Oaks Condo',
+    company: 'River Oaks Management',
+    address: '900 Park Ln, Houston, TX',
+    time: '12:00 - 13:30',
+    value: '$390',
+    type: 'HVAC',
+    statusBadge: { label: 'Need to Collect Payment', tone: 'red' as const },
+    lat: 29.7521,
+    lng: -95.3842,
+  },
+  {
+    jobId: 'JOB-1005',
+    title: 'Generator Diagnostics',
+    customer: 'Bayou Office Center',
+    company: 'Bayou Office Center LLC',
+    address: '1250 Commerce St, Houston, TX',
+    time: '13:15 - 16:00',
+    value: '$710',
+    type: 'Electrical',
+    statusBadge: { label: 'Opportunity', tone: 'green' as const },
+    lat: 29.7698,
+    lng: -95.3504,
+  },
+  {
+    jobId: 'JOB-1006',
+    title: 'Drain Line Cleaning',
+    customer: 'Westfield Apartments',
+    company: 'Westfield Communities',
+    address: '3321 Sunset Ave, Houston, TX',
+    time: '14:00 - 17:00',
+    value: '$540',
+    type: 'Plumbing',
+    assignedTo: 'Sarah Wilson',
+    lat: 29.7396,
+    lng: -95.3711,
+  },
+]
+
+const TECHNICIAN_ITEMS = [
+  {
+    initials: 'MJ',
+    name: 'Mike Johnson',
+    rating: '4.9',
+    load: '95% load',
+    skills: ['HVAC', 'Electrical', 'Plumbing', 'Smart Home'],
+    jobs: [
+      { title: 'Water Heater Installation', value: '$1200' },
+      { title: 'Smart Thermostat Setup', value: '$280' },
+    ],
+    jobId: '3139368',
+    status: 'Appointments',
+    client: 'Chuck',
+    company: 'N/A',
+    address: '209 Northwest 8th Street, Chiefland, FL, 32626',
+    lat: 29.7842,
+    lng: -95.3796,
+  },
+  {
+    initials: 'SW',
+    name: 'Sarah Wilson',
+    rating: '4.8',
+    load: '45% load',
+    skills: ['HVAC', 'Refrigeration', 'Commercial'],
+    jobs: [
+      { title: 'Commercial AC Tune-Up', value: '$640' },
+      { title: 'Unit Diagnostics', value: '$220' },
+    ],
+    jobId: '3139369',
+    status: 'Appointments',
+    client: 'Maria',
+    company: 'N/A',
+    address: '412 Pine Ridge Dr, Houston, TX, 77002',
+    lat: 29.7449,
+    lng: -95.3818,
+  },
+  {
+    initials: 'DC',
+    name: 'David Chen',
+    rating: '4.7',
+    load: '62% load',
+    skills: ['Electrical', 'Panel Upgrade', 'Safety'],
+    jobs: [
+      { title: 'Panel Upgrade - Suite B', value: '$910' },
+      { title: 'Breaker Replacement', value: '$340' },
+    ],
+    jobId: '3139370',
+    status: 'Appointments',
+    client: 'Ethan',
+    company: 'N/A',
+    address: '885 Commerce Ave, Houston, TX, 77003',
+    lat: 29.7749,
+    lng: -95.3488,
+  },
+  {
+    initials: 'AL',
+    name: 'Amanda Lee',
+    rating: '4.9',
+    load: '70% load',
+    skills: ['Plumbing', 'Leak Repair', 'Drainage'],
+    jobs: [
+      { title: 'Main Line Inspection', value: '$510' },
+      { title: 'Kitchen Leak Repair', value: '$390' },
+    ],
+    jobId: '3139371',
+    status: 'Appointments',
+    client: 'Olivia',
+    company: 'N/A',
+    address: '72 Harbor Point Rd, Houston, TX, 77007',
+    lat: 29.7464,
+    lng: -95.3517,
+  },
+  {
+    initials: 'RT',
+    name: 'Robert Taylor',
+    rating: '4.6',
+    load: '54% load',
+    skills: ['HVAC', 'Maintenance', 'Residential'],
+    jobs: [
+      { title: 'HVAC Seasonal Maintenance', value: '$430' },
+      { title: 'Blower Motor Check', value: '$260' },
+    ],
+    jobId: '3139372',
+    status: 'Appointments',
+    client: 'Noah',
+    company: 'N/A',
+    address: '1402 Brookside Ln, Houston, TX, 77011',
+    lat: 29.7348,
+    lng: -95.3689,
+  },
+  {
+    initials: 'KP',
+    name: 'Kevin Patel',
+    rating: '4.8',
+    load: '88% load',
+    skills: ['Electrical', 'Generators', 'Commercial'],
+    jobs: [
+      { title: 'Generator Diagnostics', value: '$780' },
+      { title: 'Power Audit', value: '$350' },
+    ],
+    jobId: '3139373',
+    status: 'Appointments',
+    client: 'Ava',
+    company: 'N/A',
+    address: '55 Midtown Plaza, Houston, TX, 77010',
+    lat: 29.7827,
+    lng: -95.3608,
+  },
+  {
+    initials: 'EM',
+    name: 'Emily Martinez',
+    rating: '4.7',
+    load: '39% load',
+    skills: ['Plumbing', 'Water Heaters', 'Residential'],
+    jobs: [
+      { title: 'Water Heater Flush', value: '$310' },
+      { title: 'Valve Replacement', value: '$180' },
+    ],
+    jobId: '3139374',
+    status: 'Appointments',
+    client: 'Liam',
+    company: 'N/A',
+    address: '980 South Main St, Houston, TX, 77012',
+    lat: 29.7575,
+    lng: -95.3921,
+  },
+]
+
 const mapMarkers = [
-  { id: 'mk-1', lat: 29.7527, lng: -95.3602 },
-  { id: 'mk-2', lat: 29.7704, lng: -95.3891 },
-  { id: 'mk-3', lat: 29.7425, lng: -95.3735 },
-  { id: 'mk-4', lat: 29.7834, lng: -95.3498 },
-  { id: 'mk-5', lat: 29.7315, lng: -95.3572 },
+  ...JOB_QUEUE_ITEMS.map(job => ({
+    id: job.jobId,
+    lat: job.lat,
+    lng: job.lng,
+    kind: 'job' as const,
+  })),
+  ...TECHNICIAN_ITEMS.map(tech => ({
+    id: `tech-${tech.initials}`,
+    lat: tech.lat,
+    lng: tech.lng,
+    kind: 'technician' as const,
+  })),
 ]
 
 export default function LiveMapIndex(): React.JSX.Element {
@@ -102,8 +338,19 @@ export default function LiveMapIndex(): React.JSX.Element {
   const [isJobsQueueCollapsed, setIsJobsQueueCollapsed] = useState(false)
   const [isTechniciansCollapsed, setIsTechniciansCollapsed] = useState(false)
   const [selectedQueueJob, setSelectedQueueJob] = useState<string | null>(null)
+  const [hoveredQueueJob, setHoveredQueueJob] = useState<string | null>(null)
+  const [selectedTechnician, setSelectedTechnician] = useState<string | null>(null)
+  const [hoveredTechnician, setHoveredTechnician] = useState<string | null>(null)
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([])
+  const [liveMapEntityFilter, setLiveMapEntityFilter] = useState<
+    'all' | 'job' | 'technician'
+  >('all')
+  const [selectedTechnicians, setSelectedTechnicians] = useState<string[]>([])
+  const [selectedDispatchTypes, setSelectedDispatchTypes] = useState<string[]>([])
+  const [filterBy, setFilterBy] = useState('')
+  const [technicianSearchTerm, setTechnicianSearchTerm] = useState('')
+  const [dispatchTypeSearchTerm, setDispatchTypeSearchTerm] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [routeParameter, setRouteParameter] = useState('Distance')
@@ -113,9 +360,33 @@ export default function LiveMapIndex(): React.JSX.Element {
     endDate: null,
   })
   const statusCount = useMemo(() => STATUS_FILTERS.length, [])
-  const jobTypeCount = useMemo(() => JOB_TYPES.length, [])
+  const jobTypeCount = useMemo(() => JOB_TAGS.length, [])
+  const technicianOptions = useMemo(
+    () =>
+      TECHNICIAN_FILTER_OPTIONS.filter(option =>
+        option.toLowerCase().includes(technicianSearchTerm.toLowerCase().trim())
+      ).map(option => ({ label: option, value: option })),
+    [technicianSearchTerm]
+  )
+  const dispatchTypeOptions = useMemo(
+    () =>
+      DISPATCH_TYPE_FILTER_OPTIONS.filter(option =>
+        option.toLowerCase().includes(dispatchTypeSearchTerm.toLowerCase().trim())
+      ).map(option => ({ label: option, value: option })),
+    [dispatchTypeSearchTerm]
+  )
+  const filterByOptions = useMemo(
+    () => FILTER_BY_OPTIONS.map(option => ({ label: option, value: option })),
+    []
+  )
   const statusPillsRef = useRef<HTMLDivElement | null>(null)
   const jobTypePillsRef = useRef<HTMLDivElement | null>(null)
+  const hoveredJobHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hoveredTechHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mapRef = useRef<{
+    getCenter: () => { lat: () => number; lng: () => number } | null | undefined
+    setCenter: (position: { lat: number; lng: number }) => void
+  } | null>(null)
   const [isDraggingStatusPills, setIsDraggingStatusPills] = useState(false)
   const [isDraggingJobTypePills, setIsDraggingJobTypePills] = useState(false)
   const statusDragStartX = useRef(0)
@@ -132,6 +403,178 @@ export default function LiveMapIndex(): React.JSX.Element {
     canScrollLeft: false,
     canScrollRight: false,
   })
+  const selectedQueueJobData = useMemo(
+    () => JOB_QUEUE_ITEMS.find(job => job.title === selectedQueueJob) ?? null,
+    [selectedQueueJob]
+  )
+  const hoveredQueueJobData = useMemo(
+    () => JOB_QUEUE_ITEMS.find(job => job.title === hoveredQueueJob) ?? null,
+    [hoveredQueueJob]
+  )
+  const hoveredTechnicianData = useMemo(
+    () => TECHNICIAN_ITEMS.find(tech => tech.name === hoveredTechnician) ?? null,
+    [hoveredTechnician]
+  )
+  const selectedTechnicianData = useMemo(
+    () => TECHNICIAN_ITEMS.find(tech => tech.name === selectedTechnician) ?? null,
+    [selectedTechnician]
+  )
+
+  const animateMapPan = (target: { lat: number; lng: number }) => {
+    if (!mapRef.current) return
+    const currentCenter = mapRef.current.getCenter()
+    if (!currentCenter) {
+      mapRef.current.setCenter(target)
+      return
+    }
+
+    const startLat = currentCenter.lat()
+    const startLng = currentCenter.lng()
+    const durationMs = 420
+    const startTime = performance.now()
+
+    const step = (now: number) => {
+      if (!mapRef.current) return
+      const progress = Math.min((now - startTime) / durationMs, 1)
+      const eased = 1 - (1 - progress) ** 3
+      mapRef.current.setCenter({
+        lat: startLat + (target.lat - startLat) * eased,
+        lng: startLng + (target.lng - startLng) * eased,
+      })
+      if (progress < 1) requestAnimationFrame(step)
+    }
+
+    requestAnimationFrame(step)
+  }
+
+  const openGoogleMapsLocation = (lat: number, lng: number) => {
+    const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`
+    window.open(mapsUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  const openJobQuickView = (job: {
+    jobId?: string
+    title?: string
+    customer?: string
+    company?: string
+    address?: string
+    time?: string
+    value?: string
+    type?: string
+    status?: string
+    assignedTo?: string
+    lat?: number
+    lng?: number
+    notes?: string
+  }) => {
+    SidePanel.open({
+      title: job.title || `Job #${job.jobId || 'N/A'}`,
+      content: () => (
+        <div className="space-y-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-xs uppercase text-slate-500">Job ID</p>
+              <p className="text-xl font-semibold text-slate-900">#{job.jobId || 'N/A'}</p>
+              <p className="text-sm text-slate-600">{job.title || 'Service Job'}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs uppercase text-slate-500">Status</p>
+              <p className="text-sm font-medium text-slate-900">{job.status || 'Appointments'}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+              <p className="text-xs uppercase text-slate-500 mb-1">Client</p>
+              <div className="space-y-1 text-sm text-slate-900">
+                <p className="font-medium">{job.customer || 'N/A'}</p>
+                <p className="text-slate-600">{job.company || 'N/A'}</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+              <p className="text-xs uppercase text-slate-500 mb-1">Schedule</p>
+              <div className="space-y-1 text-sm text-slate-900">
+                <p className="font-medium">{job.time || '09:00 - 12:00'}</p>
+                <p className="text-slate-600">{job.type || 'General Service'}</p>
+                <p className="text-slate-600">{job.value || '$0'}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+            <p className="text-xs uppercase text-slate-500 mb-1">Address</p>
+            <p className="text-sm text-slate-700">{job.address || 'N/A'}</p>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+            <p className="text-xs uppercase text-slate-500 mb-1">Assignment</p>
+            <p className="text-sm text-slate-700">{job.assignedTo || 'Unassigned'}</p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              onClick={() => {
+                if (job.lat != null && job.lng != null) openGoogleMapsLocation(job.lat, job.lng)
+              }}
+            >
+              View Location
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => SidePanel.close()}>
+              Close
+            </Button>
+          </div>
+        </div>
+      ),
+    })
+  }
+
+  const openTechnicianQuickView = (tech: (typeof TECHNICIAN_ITEMS)[number]) => {
+    openJobQuickView({
+      jobId: tech.jobId || '0000000',
+      title: `${tech.jobs.length} Jobs`,
+      customer: tech.client || 'N/A',
+      company: tech.company || 'N/A',
+      address: tech.address || 'N/A',
+      time: 'Today',
+      value: tech.jobs[0]?.value || '$0',
+      type: tech.skills[0] || 'General Service',
+      status: tech.status || 'Appointments',
+      assignedTo: tech.name,
+      lat: tech.lat,
+      lng: tech.lng,
+      notes: 'Technician quick view (dummy details where unavailable).',
+    })
+  }
+
+  const cancelHoveredJobHide = () => {
+    if (!hoveredJobHideTimeoutRef.current) return
+    clearTimeout(hoveredJobHideTimeoutRef.current)
+    hoveredJobHideTimeoutRef.current = null
+  }
+
+  const scheduleHoveredJobHide = () => {
+    cancelHoveredJobHide()
+    hoveredJobHideTimeoutRef.current = setTimeout(() => {
+      setHoveredQueueJob(null)
+      hoveredJobHideTimeoutRef.current = null
+    }, 180)
+  }
+
+  const cancelHoveredTechHide = () => {
+    if (!hoveredTechHideTimeoutRef.current) return
+    clearTimeout(hoveredTechHideTimeoutRef.current)
+    hoveredTechHideTimeoutRef.current = null
+  }
+
+  const scheduleHoveredTechHide = () => {
+    cancelHoveredTechHide()
+    hoveredTechHideTimeoutRef.current = setTimeout(() => {
+      setHoveredTechnician(null)
+      hoveredTechHideTimeoutRef.current = null
+    }, 180)
+  }
 
   const updateStatusPillScrollState = () => {
     const el = statusPillsRef.current
@@ -241,6 +684,29 @@ export default function LiveMapIndex(): React.JSX.Element {
     return () => window.removeEventListener('resize', onResize)
   }, [showFilters])
 
+  useEffect(() => {
+    if (!selectedQueueJobData || !mapRef.current) return
+    animateMapPan({
+      lat: selectedQueueJobData.lat,
+      lng: selectedQueueJobData.lng,
+    })
+  }, [selectedQueueJobData])
+
+  useEffect(() => {
+    if (!selectedTechnicianData || !mapRef.current) return
+    animateMapPan({
+      lat: selectedTechnicianData.lat,
+      lng: selectedTechnicianData.lng,
+    })
+  }, [selectedTechnicianData])
+
+  useEffect(() => {
+    return () => {
+      cancelHoveredJobHide()
+      cancelHoveredTechHide()
+    }
+  }, [])
+
   const handleDateRangeChange = (value: DateValueType) => {
     setDateRangeValue(value)
   }
@@ -252,14 +718,30 @@ export default function LiveMapIndex(): React.JSX.Element {
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="space-y-2">
               <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-slate-900 to-blue-900 dark:from-slate-100 dark:to-blue-100 bg-clip-text text-transparent">
-              AI Dispatch Master
+              Live Map
               </h2>
             </div>
-            <div className='md:flex items-start gap-2 hidden'>
-              <Button className="h-10 rounded-xl px-5 text-sm font-semibold text-white shadow-sm transition-all hover:opacity-95 bg-gradient-to-r from-brandGreen-900 to-brandGreen-300">
-                <Zap className="h-4 w-4 mr-2" />
-                Auto-Assign All
-              </Button>
+            <div className="md:flex items-start gap-2 hidden">
+              <div className="flex items-center gap-1 rounded-full bg-slate-50 border border-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
+                {([
+                  { key: 'all', label: 'All' },
+                  { key: 'job', label: 'Jobs' },
+                  { key: 'technician', label: 'Technicians' },
+                ] as const).map(item => (
+                  <Button
+                    key={item.key}
+                    variant="ghost"
+                    className={`h-8 rounded-full px-4 text-xs ${
+                      liveMapEntityFilter === item.key
+                        ? 'bg-brandGreen-900 text-white hover:bg-brandGreen-600'
+                        : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700'
+                    }`}
+                    onClick={() => setLiveMapEntityFilter(item.key)}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -275,13 +757,6 @@ export default function LiveMapIndex(): React.JSX.Element {
                 onChange={e => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="w-[260px] shrink-0">
-              <InputDatepicker
-                value={dateRangeValue}
-                onChange={handleDateRangeChange}
-                label={undefined}
-              />
-            </div>
             <Button
               variant="outline"
               onClick={() => setShowFilters(prev => !prev)}
@@ -291,8 +766,40 @@ export default function LiveMapIndex(): React.JSX.Element {
           </div>
 
           {showFilters && (
-            <div className="space-y-3 mt-2">
-              <div className="flex flex-row items-center">
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
+                <SelectInput
+                  label="Technician"
+                  options={technicianOptions}
+                  placeholder="All technicians"
+                  value={selectedTechnicians}
+                  multiselect
+                  onSearch={setTechnicianSearchTerm}
+                  onSelect={val => setSelectedTechnicians(Array.isArray(val) ? val : [])}
+                />
+                <SelectInput
+                  label="Dispatch Type"
+                  options={dispatchTypeOptions}
+                  placeholder="All dispatch types"
+                  value={selectedDispatchTypes}
+                  multiselect
+                  onSearch={setDispatchTypeSearchTerm}
+                  onSelect={val => setSelectedDispatchTypes(Array.isArray(val) ? val : [])}
+                />
+                <InputDatepicker
+                  value={dateRangeValue}
+                  onChange={handleDateRangeChange}
+                  label="Date Range"
+                />
+                <SelectInput
+                  label="Filter By"
+                  options={filterByOptions}
+                  placeholder="Select filter type"
+                  value={filterBy}
+                  onSelect={val => setFilterBy(Array.isArray(val) ? '' : val)}
+                />
+              </div>
+              <div className="flex flex-row items-center pt-2">
                 <p className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium mr-1 w-[70px]">Status:</p>
                 <div className="overflow-hidden flex-1">
                   <div className="sticky top-0 px-1 pb-0 backdrop-blur supports-[backdrop-filter]:backdrop-blur">
@@ -387,7 +894,7 @@ export default function LiveMapIndex(): React.JSX.Element {
                 </div>
               </div>
               <div className="flex flex-row items-center">
-                <p className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium mr-1 w-[70px]">Job Type:</p>
+                <p className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium mr-1 w-[70px]">Job Tags:</p>
                 <div className="overflow-hidden flex-1">
                   <div className="sticky top-0 mt-2 px-1 pb-0 backdrop-blur supports-[backdrop-filter]:backdrop-blur">
                     <div className="relative">
@@ -430,12 +937,11 @@ export default function LiveMapIndex(): React.JSX.Element {
                           <span className="hidden opacity-70 sm:inline">{jobTypeCount}</span>
                         </button>
 
-                        {JOB_TYPES.map(jobType => {
-                          const isActive = selectedJobTypes.includes(jobType.id)
-                          const Icon = jobType.icon
+                        {JOB_TAGS.map(jobTag => {
+                          const isActive = selectedJobTypes.includes(jobTag.id)
                           return (
                             <button
-                              key={jobType.id}
+                              key={jobTag.id}
                               type="button"
                               onClick={() => {
                                 if (jobTypeDragMoved.current) {
@@ -443,19 +949,26 @@ export default function LiveMapIndex(): React.JSX.Element {
                                   return
                                 }
                                 setSelectedJobTypes(prev =>
-                                  prev.includes(jobType.id)
-                                    ? prev.filter(item => item !== jobType.id)
-                                    : [...prev, jobType.id]
+                                  prev.includes(jobTag.id)
+                                    ? prev.filter(item => item !== jobTag.id)
+                                    : [...prev, jobTag.id]
                                 )
+                              }}
+                              style={{
+                                color: isActive ? 'white' : undefined,
+                                backgroundColor: isActive ? jobTag.color : undefined,
                               }}
                               className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs whitespace-nowrap ${
                                 isActive
-                                  ? 'bg-slate-900 text-white'
+                                  ? 'bg-slate-900'
                                   : 'border border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
                               }`}
                             >
-                              <Icon className="h-3.5 w-3.5" />
-                              <span>{jobType.name}</span>
+                              <span
+                                className="h-2 w-2 rounded-full"
+                                style={{ backgroundColor: isActive ? 'white' : jobTag.color }}
+                              />
+                              <span>{jobTag.name}</span>
                             </button>
                           )
                         })}
@@ -488,11 +1001,7 @@ export default function LiveMapIndex(): React.JSX.Element {
             </div>
             <div className="inline-flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200">
               <span className="h-3 w-3 rounded-full bg-red-500" />
-              <span className="font-medium">2 Unassigned Jobs</span>
-            </div>
-            <div className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-              <DollarSign className="h-4 w-4 text-green-600" />
-              <span className="font-medium">$3,160 Total Value</span>
+              <span className="font-medium">2 Jobs</span>
             </div>
           </div>
 
@@ -558,63 +1067,7 @@ export default function LiveMapIndex(): React.JSX.Element {
             </Button>
           </div>
           <div className="space-y-3 flex-1 overflow-y-auto pr-2">
-            {[
-              {
-                title: 'AC Repair - No Cooling',
-                customer: 'Johnson Residence',
-                address: '2123 Elm St, Houston, TX',
-                time: '09:00 - 12:00',
-                value: '$450',
-                type: 'HVAC',
-                statusBadge: { label: 'Need to Collect Payment', tone: 'red' },
-              },
-              {
-                title: 'Electrical Panel Upgrade',
-                customer: 'Smith Commercial',
-                address: '3456 Business Blvd, Houston, TX',
-                time: '10:00 - 15:00',
-                value: '$850',
-                type: 'Electrical',
-                statusBadge: { label: 'Opportunity', tone: 'green' },
-                assignedTo: 'David Chen',
-              },
-              {
-                title: 'Water Heater Installation',
-                customer: 'Davis Family',
-                address: '4789 Residential Dr, Houston, TX',
-                time: '11:30 - 14:30',
-                value: '$620',
-                type: 'Plumbing',
-                assignedTo: 'Mike Johnson',
-              },
-              {
-                title: 'Emergency Furnace Check',
-                customer: 'River Oaks Condo',
-                address: '900 Park Ln, Houston, TX',
-                time: '12:00 - 13:30',
-                value: '$390',
-                type: 'HVAC',
-                statusBadge: { label: 'Need to Collect Payment', tone: 'red' },
-              },
-              {
-                title: 'Generator Diagnostics',
-                customer: 'Bayou Office Center',
-                address: '1250 Commerce St, Houston, TX',
-                time: '13:15 - 16:00',
-                value: '$710',
-                type: 'Electrical',
-                statusBadge: { label: 'Opportunity', tone: 'green' },
-              },
-              {
-                title: 'Drain Line Cleaning',
-                customer: 'Westfield Apartments',
-                address: '3321 Sunset Ave, Houston, TX',
-                time: '14:00 - 17:00',
-                value: '$540',
-                type: 'Plumbing',
-                assignedTo: 'Sarah Wilson',
-              },
-            ].map(job => {
+            {JOB_QUEUE_ITEMS.map(job => {
               const isSelected = selectedQueueJob === job.title
               return (
                 <div
@@ -627,15 +1080,20 @@ export default function LiveMapIndex(): React.JSX.Element {
                 >
                   <button
                     type="button"
-                    onClick={() =>
-                      setSelectedQueueJob(prev =>
-                        prev === job.title ? null : job.title
-                      )
-                    }
+                    onClick={() => {
+                      if (selectedQueueJob === job.title) {
+                        setSelectedQueueJob(null)
+                        return
+                      }
+                      setSelectedTechnician(null)
+                      setSelectedQueueJob(job.title)
+                    }}
                     className="w-full text-left cursor-pointer"
                     aria-label={`Open ${job.title}`}
                   >
                     <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{job.title}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Job ID: {job.jobId}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Company: {job.company}</p>
                     <p className="text-xs text-slate-600 dark:text-slate-400">{job.customer}</p>
                     <div className="mt-2 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                       <MapPin className="h-3.5 w-3.5" />
@@ -679,45 +1137,35 @@ export default function LiveMapIndex(): React.JSX.Element {
                     }`}
                   >
                     <div className="transform transition-all duration-300 ease-in-out">
-                      <div className="mb-3 flex items-center gap-2 text-base font-bold text-slate-900 dark:text-slate-100">
-                        <Brain className="h-5 w-5 text-violet-600" />
-                        AI Suggestions
-                      </div>
-
-                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 dark:border-emerald-900/40 dark:bg-emerald-950/20">
-                        <div className="mb-2 flex items-center justify-between">
-                          <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-                            Best Match
-                          </span>
-                          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                            56% confidence
-                          </span>
-                        </div>
-                        <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Mike Johnson</p>
-                        <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-                          Mike Johnson: balanced optimized (route efficient)
-                        </p>
-                        <Button className="mt-3 h-8 w-full rounded-sm bg-brandGreen-900 text-white text-xs hover:bg-brandGreen-800">
-                          <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Assign to Mike Johnson
+                      <div className="flex w-full items-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-8 flex-1 rounded-sm border-brandGreen-500 text-xs text-brandGreen-900 hover:bg-brandGreen-50 dark:border-brandGreen-700 dark:text-brandGreen-300"
+                          onClick={e => {
+                            e.stopPropagation()
+                            openJobQuickView({
+                              jobId: job.jobId,
+                              title: job.title,
+                              customer: job.customer,
+                              company: job.company,
+                              address: job.address,
+                              time: job.time,
+                              value: job.value,
+                              type: job.type,
+                              status: job.statusBadge?.label,
+                              assignedTo: job.assignedTo,
+                              lat: job.lat,
+                              lng: job.lng,
+                            })
+                          }}
+                        >
+                          Quick View
                         </Button>
-                      </div>
-
-                      <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-                        <div className="mb-2 flex items-center justify-between">
-                          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                            Alternative 1
-                          </span>
-                          <span className="rounded-full border border-slate-300 px-2.5 py-0.5 text-xs font-semibold text-slate-600 dark:border-slate-600 dark:text-slate-300">
-                            12% match
-                          </span>
-                        </div>
-                        <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">Sarah Wilson</p>
-                        <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-                          Sarah Wilson: balanced optimized (new area)
-                        </p>
-                        <Button variant="outline" className="mt-3 h-8 w-full rounded-sm">
-                          Assign to Sarah Wilson
+                        <Button
+                          className="h-8 flex-1 rounded-sm bg-brandGreen-900 text-xs text-white hover:bg-brandGreen-800"
+                          onClick={() => openGoogleMapsLocation(job.lat, job.lng)}
+                        >
+                          View Location
                         </Button>
                       </div>
                     </div>
@@ -735,6 +1183,12 @@ export default function LiveMapIndex(): React.JSX.Element {
               mapContainerStyle={liveMapContainerStyle}
               center={liveMapCenter}
               zoom={12}
+              onLoad={map => {
+                mapRef.current = map
+              }}
+              onUnmount={() => {
+                mapRef.current = null
+              }}
               options={{
                 mapTypeId: 'roadmap',
                 disableDefaultUI: false,
@@ -746,11 +1200,168 @@ export default function LiveMapIndex(): React.JSX.Element {
               }}
             >
               {mapMarkers.map(marker => (
-                <Marker
-                  key={marker.id}
-                  position={{ lat: marker.lat, lng: marker.lng }}
-                />
+                marker.kind === 'job' ? (
+                  <Marker
+                    key={marker.id}
+                    position={{ lat: marker.lat, lng: marker.lng }}
+                    onMouseOver={() => {
+                      cancelHoveredJobHide()
+                      const hoveredJob = JOB_QUEUE_ITEMS.find(job => job.jobId === marker.id)
+                      if (hoveredJob) setHoveredQueueJob(hoveredJob.title)
+                    }}
+                    onMouseOut={scheduleHoveredJobHide}
+                  />
+                ) : (
+                  <OverlayView
+                    key={marker.id}
+                    position={{ lat: marker.lat, lng: marker.lng }}
+                    mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                  >
+                    <div
+                      className="-translate-x-1/2 -translate-y-1/2"
+                      onMouseEnter={() => {
+                        cancelHoveredTechHide()
+                        const hoveredTech = TECHNICIAN_ITEMS.find(
+                          tech => `tech-${tech.initials}` === marker.id
+                        )
+                        if (hoveredTech) {
+                          setHoveredQueueJob(null)
+                          setHoveredTechnician(hoveredTech.name)
+                        }
+                      }}
+                      onMouseLeave={scheduleHoveredTechHide}
+                    >
+                      <div className="flex h-8 w-12 items-center justify-center rounded-full bg-white  shadow-md ring-2 ring-brandGreen-900 dark:ring-slate-900/90">
+                        <Car className="h-8 w-8 text-brandGreen-900" />
+                      </div>
+                    </div>
+                  </OverlayView>
+                )
               ))}
+              {hoveredQueueJobData && (
+                <OverlayView
+                  position={{ lat: hoveredQueueJobData.lat, lng: hoveredQueueJobData.lng }}
+                  mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                >
+                  <div
+                    className="-translate-x-1/2 -translate-y-[calc(100%+20px)]"
+                    onMouseEnter={cancelHoveredJobHide}
+                    onMouseLeave={scheduleHoveredJobHide}
+                  >
+                    <div className="w-[330px] rounded-xl border border-slate-200 bg-white p-4 text-slate-700 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                      <div className="mb-3 flex items-start justify-between gap-3">
+                        <p className="text-sm font-semibold leading-5 text-slate-900 dark:text-slate-100">
+                          {hoveredQueueJobData.title}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setHoveredQueueJob(null)}
+                          className="text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200"
+                          aria-label="Close tooltip"
+                        >
+                          ×
+                        </button>
+                      </div>
+
+                      <div className="space-y-1.5 text-xs">
+                        <p><span className="font-semibold">Job ID:</span> {hoveredQueueJobData.jobId}</p>
+                        <p><span className="font-semibold">Status:</span> {hoveredQueueJobData.statusBadge?.label ?? 'Scheduled'}</p>
+                        <p><span className="font-semibold">Client:</span> {hoveredQueueJobData.customer}</p>
+                        <p><span className="font-semibold">Company:</span> {hoveredQueueJobData.company}</p>
+                        <p><span className="font-semibold">Address:</span> {hoveredQueueJobData.address}</p>
+                      </div>
+
+                      <div className="mt-4 flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-8 flex-1 rounded-sm border-brandGreen-500 text-xs text-brandGreen-900 hover:bg-brandGreen-50 dark:border-brandGreen-700 dark:text-brandGreen-300"
+                          onClick={() =>
+                            openJobQuickView({
+                              jobId: hoveredQueueJobData.jobId,
+                              title: hoveredQueueJobData.title,
+                              customer: hoveredQueueJobData.customer,
+                              company: hoveredQueueJobData.company,
+                              address: hoveredQueueJobData.address,
+                              time: hoveredQueueJobData.time,
+                              value: hoveredQueueJobData.value,
+                              type: hoveredQueueJobData.type,
+                              status: hoveredQueueJobData.statusBadge?.label,
+                              assignedTo: hoveredQueueJobData.assignedTo,
+                              lat: hoveredQueueJobData.lat,
+                              lng: hoveredQueueJobData.lng,
+                            })
+                          }
+                        >
+                          Quick View
+                        </Button>
+                        <Button
+                          type="button"
+                          className="h-8 flex-1 rounded-sm bg-brandGreen-900 text-xs text-white hover:bg-brandGreen-800"
+                          onClick={() => openGoogleMapsLocation(hoveredQueueJobData.lat, hoveredQueueJobData.lng)}
+                        >
+                          View Location
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </OverlayView>
+              )}
+              {hoveredTechnicianData && (
+                <OverlayView
+                  position={{ lat: hoveredTechnicianData.lat, lng: hoveredTechnicianData.lng }}
+                  mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                >
+                  <div
+                    className="-translate-x-1/2 -translate-y-[calc(100%+20px)]"
+                    onMouseEnter={cancelHoveredTechHide}
+                    onMouseLeave={scheduleHoveredTechHide}
+                  >
+                    <div className="w-[330px] rounded-xl border border-slate-200 bg-white p-4 text-slate-700 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                      <div className="mb-3 flex items-start justify-between gap-3">
+                        <p className="text-sm font-semibold leading-5 text-slate-900 dark:text-slate-100">
+                          {hoveredTechnicianData.jobs.length} Jobs
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setHoveredTechnician(null)}
+                          className="text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200"
+                          aria-label="Close tooltip"
+                        >
+                          ×
+                        </button>
+                      </div>
+
+                      <div className="space-y-1.5 text-xs">
+                        <p><span className="font-semibold">Job ID:</span> {hoveredTechnicianData.jobId}</p>
+                        <p><span className="font-semibold">Technician:</span> {hoveredTechnicianData.name} jobs</p>
+                        <p><span className="font-semibold">Status:</span> {hoveredTechnicianData.status}</p>
+                        <p><span className="font-semibold">Client:</span> {hoveredTechnicianData.client}</p>
+                        <p><span className="font-semibold">Company:</span> {hoveredTechnicianData.company}</p>
+                        <p><span className="font-semibold">Address:</span> {hoveredTechnicianData.address}</p>
+                      </div>
+
+                      <div className="mt-4 flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-8 flex-1 rounded-sm border-brandGreen-500 text-xs text-brandGreen-900 hover:bg-brandGreen-50 dark:border-brandGreen-700 dark:text-brandGreen-300"
+                          onClick={() => openTechnicianQuickView(hoveredTechnicianData)}
+                        >
+                          Quick View
+                        </Button>
+                        <Button
+                          type="button"
+                          className="h-8 flex-1 rounded-sm bg-brandGreen-900 text-xs text-white hover:bg-brandGreen-800"
+                          onClick={() => openGoogleMapsLocation(hoveredTechnicianData.lat, hoveredTechnicianData.lng)}
+                        >
+                          View Location
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </OverlayView>
+              )}
             </GoogleMap>
             {isJobsQueueCollapsed && (
               <div className="absolute top-4 left-4">
@@ -820,89 +1431,21 @@ export default function LiveMapIndex(): React.JSX.Element {
             </h3>
           </div>
           <div className="space-y-3 flex-1 overflow-y-auto pr-2">
-            {[
-              {
-                initials: 'MJ',
-                name: 'Mike Johnson',
-                rating: '4.9',
-                load: '95% load',
-                skills: ['HVAC', 'Electrical', 'Plumbing', 'Smart Home'],
-                jobs: [
-                  { title: 'Water Heater Installation', value: '$1200' },
-                  { title: 'Smart Thermostat Setup', value: '$280' },
-                ],
-              },
-              {
-                initials: 'SW',
-                name: 'Sarah Wilson',
-                rating: '4.8',
-                load: '45% load',
-                skills: ['HVAC', 'Refrigeration', 'Commercial'],
-                jobs: [
-                  { title: 'Commercial AC Tune-Up', value: '$640' },
-                  { title: 'Unit Diagnostics', value: '$220' },
-                ],
-              },
-              {
-                initials: 'DC',
-                name: 'David Chen',
-                rating: '4.7',
-                load: '62% load',
-                skills: ['Electrical', 'Panel Upgrade', 'Safety'],
-                jobs: [
-                  { title: 'Panel Upgrade - Suite B', value: '$910' },
-                  { title: 'Breaker Replacement', value: '$340' },
-                ],
-              },
-              {
-                initials: 'AL',
-                name: 'Amanda Lee',
-                rating: '4.9',
-                load: '70% load',
-                skills: ['Plumbing', 'Leak Repair', 'Drainage'],
-                jobs: [
-                  { title: 'Main Line Inspection', value: '$510' },
-                  { title: 'Kitchen Leak Repair', value: '$390' },
-                ],
-              },
-              {
-                initials: 'RT',
-                name: 'Robert Taylor',
-                rating: '4.6',
-                load: '54% load',
-                skills: ['HVAC', 'Maintenance', 'Residential'],
-                jobs: [
-                  { title: 'HVAC Seasonal Maintenance', value: '$430' },
-                  { title: 'Blower Motor Check', value: '$260' },
-                ],
-              },
-              {
-                initials: 'KP',
-                name: 'Kevin Patel',
-                rating: '4.8',
-                load: '88% load',
-                skills: ['Electrical', 'Generators', 'Commercial'],
-                jobs: [
-                  { title: 'Generator Diagnostics', value: '$780' },
-                  { title: 'Power Audit', value: '$350' },
-                ],
-              },
-              {
-                initials: 'EM',
-                name: 'Emily Martinez',
-                rating: '4.7',
-                load: '39% load',
-                skills: ['Plumbing', 'Water Heaters', 'Residential'],
-                jobs: [
-                  { title: 'Water Heater Flush', value: '$310' },
-                  { title: 'Valve Replacement', value: '$180' },
-                ],
-              },
-            ].map(tech => (
-              <div
-                key={tech.name}
-                className="rounded-xl border border-dashed border-slate-300 p-3 dark:border-slate-600"
-              >
+            {TECHNICIAN_ITEMS.map(tech => {
+              const isTechSelected = selectedTechnician === tech.name
+              return (
+                <div
+                  key={tech.name}
+                  className={`rounded-xl border p-3 transition cursor-pointer ${
+                    isTechSelected
+                      ? 'border-brandGreen-400 bg-brandGreen-50/60 dark:border-brandGreen-600 dark:bg-brandGreen-900/20'
+                      : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-slate-600'
+                  }`}
+                  onClick={() => {
+                    setSelectedQueueJob(null)
+                    setSelectedTechnician(prev => (prev === tech.name ? null : tech.name))
+                  }}
+                >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-sm font-semibold text-white">
@@ -961,23 +1504,40 @@ export default function LiveMapIndex(): React.JSX.Element {
                     ))}
                   </div>
                 </div>
-                
-                <Button variant="outline" className="mt-2 h-8 flex-1 rounded-sm text-xs border-slate-300 dark:border-slate-600 w-full">
-                  <Eye className="mr-1.5 h-3.5 w-3.5" />
-                  View Route
-                </Button>
-                <div className="mt-2 flex items-center gap-2 w-full">
-                  <Button variant="outline" className="h-8 flex-1 rounded-sm text-xs px-2.5 border-slate-300 dark:border-slate-600">
-                    <Plus className="h-3.5 w-3.5 mr-1" />
-                    Manual
-                  </Button>
-                  <Button className="h-8 rounded-sm bg-violet-600 flex-1 px-2.5 text-xs text-white hover:bg-violet-700">
-                    <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                    AI Route
-                  </Button>
+
+                <div
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                    isTechSelected
+                      ? 'mt-3 max-h-[120px] border-t border-slate-200 pt-3 opacity-100 dark:border-slate-700'
+                      : 'max-h-0 border-t-0 pt-0 opacity-0'
+                  }`}
+                >
+                  <div className="transform transition-all duration-300 ease-in-out">
+                    <div className="flex w-full items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-8 flex-1 rounded-sm border-brandGreen-500 text-xs text-brandGreen-900 hover:bg-brandGreen-50 dark:border-brandGreen-700 dark:text-brandGreen-300"
+                        onClick={e => {
+                          e.stopPropagation()
+                          openTechnicianQuickView(tech)
+                        }}
+                      >
+                        Quick View
+                      </Button>
+                      <Button
+                        type="button"
+                        className="h-8 flex-1 rounded-sm bg-brandGreen-900 text-xs text-white hover:bg-brandGreen-800"
+                        onClick={() => openGoogleMapsLocation(tech.lat, tech.lng)}
+                      >
+                        View Location
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
         </div>
