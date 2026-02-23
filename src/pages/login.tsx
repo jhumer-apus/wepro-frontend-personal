@@ -77,7 +77,13 @@ export default function Login(): React.JSX.Element {
         //   password: formData.password,
         // })
 
-        const response = await apiService.post('/login/loginPost')
+
+        const response = await apiService.post('/v3/auth/login', {
+          username: formData.username,
+          password: formData.password,
+        })
+
+        // const response = await apiService.post('/login/loginPost')
 
         // Update Redux state with the full user data from API response
         dispatch(
