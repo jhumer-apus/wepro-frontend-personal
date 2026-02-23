@@ -41,8 +41,16 @@ import {
   MapPin,
   Wrench,
   Calendar,
+  ChevronLeft,
+  ChevronRight,
   Users,
+  File,
+  FileArchive,
+  FileAudio,
+  FileCode,
+  FileSpreadsheet,
   FileText,
+  FileVideo,
   Calculator,
   CreditCard,
   MessageSquare,
@@ -52,6 +60,7 @@ import {
   Minus,
   Pause,
   Play,
+  Upload,
   Volume2,
   VolumeX,
   MoreVertical,
@@ -332,6 +341,17 @@ export function JobForm(props: JobFormProps) {
   const [invoiceTablePageSize, setInvoiceTablePageSize] = useState(10);
   const [addPaymentForm, setAddPaymentForm] = useState<AddPaymentFormState>(initialAddPaymentForm);
   const [isSaving, setIsSaving] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [isAttachmentDragOver, setIsAttachmentDragOver] = useState(false);
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
+  const attachmentListRef = useRef<HTMLDivElement>(null);
+  const attachmentIsDragging = useRef(false);
+  const attachmentDragStartX = useRef(0);
+  const attachmentStartScrollLeft = useRef(0);
+  const [attachmentScrollState, setAttachmentScrollState] = useState({ canScrollLeft: false, canScrollRight: false });
+
+  const getAttachmentKey = (file: File) => `${file.name}-${file.size}-${file.lastModified}`;
+  const [attachmentPreviewUrls, setAttachmentPreviewUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (open && (formDataProp != null || jobId)) {
@@ -368,6 +388,129 @@ export function JobForm(props: JobFormProps) {
     if (!replyNote.trim()) return;
     setReplyNote("");
     setShowReplyNote(null);
+  };
+
+  useEffect(() => {
+    const imageFiles = attachments.filter((file) => file.type.startsWith("image/"));
+    const nextUrls: Record<string, string> = {};
+    imageFiles.forEach((file) => {
+      nextUrls[getAttachmentKey(file)] = URL.createObjectURL(file);
+    });
+    setAttachmentPreviewUrls(nextUrls);
+
+    return () => {
+      Object.values(nextUrls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [attachments]);
+
+  const addAttachmentFiles = (files: FileList | File[]) => {
+    const incomingFiles = Array.from(files);
+    if (!incomingFiles.length) return;
+
+    setAttachments((prev) => {
+      const seen = new Set(prev.map((file) => getAttachmentKey(file)));
+      const merged = [...prev];
+
+      incomingFiles.forEach((file) => {
+        const key = getAttachmentKey(file);
+        if (!seen.has(key)) {
+          seen.add(key);
+          merged.push(file);
+        }
+      });
+
+      return merged;
+    });
+  };
+
+  const handleAttachmentInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      addAttachmentFiles(event.target.files);
+    }
+    event.target.value = "";
+  };
+
+  const handleAttachmentDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsAttachmentDragOver(false);
+    if (event.dataTransfer.files?.length) {
+      addAttachmentFiles(event.dataTransfer.files);
+    }
+  };
+
+  const removeAttachmentByKey = (keyToRemove: string) => {
+    setAttachments((prev) => prev.filter((file) => getAttachmentKey(file) !== keyToRemove));
+  };
+
+  const startAttachmentListDrag = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || !attachmentListRef.current) return;
+    attachmentIsDragging.current = true;
+    attachmentDragStartX.current = event.pageX - attachmentListRef.current.offsetLeft;
+    attachmentStartScrollLeft.current = attachmentListRef.current.scrollLeft;
+  };
+
+  const handleAttachmentListDrag = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!attachmentIsDragging.current || !attachmentListRef.current) return;
+    event.preventDefault();
+    const x = event.pageX - attachmentListRef.current.offsetLeft;
+    const walk = x - attachmentDragStartX.current;
+    attachmentListRef.current.scrollLeft = attachmentStartScrollLeft.current - walk;
+  };
+
+  const endAttachmentListDrag = () => {
+    attachmentIsDragging.current = false;
+  };
+
+  const updateAttachmentScrollState = React.useCallback(() => {
+    const el = attachmentListRef.current;
+    if (!el) {
+      setAttachmentScrollState({ canScrollLeft: false, canScrollRight: false });
+      return;
+    }
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setAttachmentScrollState({
+      canScrollLeft: el.scrollLeft > 0,
+      canScrollRight: el.scrollLeft < maxScroll - 1,
+    });
+  }, []);
+
+  const scrollAttachmentList = (direction: "left" | "right") => {
+    const el = attachmentListRef.current;
+    if (!el) return;
+    const amount = direction === "left" ? -220 : 220;
+    el.scrollBy({ left: amount, behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    const el = attachmentListRef.current;
+    if (!el || attachments.length === 0) return;
+
+    updateAttachmentScrollState();
+    const onScroll = () => updateAttachmentScrollState();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", updateAttachmentScrollState);
+
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", updateAttachmentScrollState);
+    };
+  }, [attachments.length, updateAttachmentScrollState]);
+
+  const formatAttachmentSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getAttachmentIcon = (file: File) => {
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+    if (file.type.startsWith("audio/")) return <FileAudio className="h-8 w-8" />;
+    if (file.type.startsWith("video/")) return <FileVideo className="h-8 w-8" />;
+    if (["zip", "rar", "7z", "tar", "gz"].includes(extension)) return <FileArchive className="h-8 w-8" />;
+    if (["csv", "xls", "xlsx"].includes(extension)) return <FileSpreadsheet className="h-8 w-8" />;
+    if (["json", "xml", "js", "jsx", "ts", "tsx", "html", "css", "md"].includes(extension)) return <FileCode className="h-8 w-8" />;
+    if (["txt", "pdf", "doc", "docx", "rtf"].includes(extension)) return <FileText className="h-8 w-8" />;
+    return <File className="h-8 w-8" />;
   };
 
   const filteredActivity = activityFilter === "all" ? activity : activity.filter((a) => a.type === activityFilter);
@@ -878,77 +1021,39 @@ export function JobForm(props: JobFormProps) {
                         </CardContent>
                       </Card>
 
-                      <Card>
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <Calendar className="w-5 h-5" />
-                            Scheduled
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              {isEditing ? (
-                                <InputDatepicker
-                                  label="Start DateTime"
-                                  range={false}
-                                  withTime={true}
-                                  datetimeValue={formData.startDate && formData.startTime ? `${formData.startDate}T${String(formData.startTime)}` : ""}
-                                  onDateTimeChange={(v) => {
-                                    if (v) {
-                                      const [d, t] = v.split("T");
-                                      handleEditChange("startDate", d || "");
-                                      handleEditChange("startTime", t || "");
-                                    } else {
-                                      handleEditChange("startDate", "");
-                                      handleEditChange("startTime", "");
-                                    }
-                                  }}
-                                />
-                              ) : (
-                                <div className="mt-1 text-sm">
-                                  {selectedJob.startDate && selectedJob.startTime
-                                    ? new Date(`${selectedJob.startDate}T${selectedJob.startTime}`).toLocaleString("en-US", {
-                                        month: "2-digit",
-                                        day: "2-digit",
-                                        year: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        hour12: true,
-                                      })
-                                    : "—"}
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              {isEditing ? (
-                                <InputDatepicker
-                                  label="End DateTime"
-                                  range={false}
-                                  withTime={true}
-                                  datetimeValue={(() => {
-                                    const endD = (formData as { endDate?: string }).endDate;
-                                    const endT = (formData as { estimatedEndTime?: string }).estimatedEndTime;
-                                    return endD && endT ? `${endD}T${String(endT)}` : "";
-                                  })()}
-                                  onDateTimeChange={(v) => {
-                                    if (v) {
-                                      const [d, t] = v.split("T");
-                                      handleEditChange("endDate", d || "");
-                                      handleEditChange("estimatedEndTime", t || "");
-                                    } else {
-                                      handleEditChange("endDate", "");
-                                      handleEditChange("estimatedEndTime", "");
-                                    }
-                                  }}
-                                />
-                              ) : (
-                                <div className="mt-1 text-sm">
-                                  {(() => {
-                                    const endD = (selectedJob as { endDate?: string }).endDate || selectedJob.startDate;
-                                    const endT = (selectedJob as { estimatedEndTime?: string }).estimatedEndTime || selectedJob.startTime;
-                                    return endD && endT
-                                      ? new Date(`${endD}T${endT}`).toLocaleString("en-US", {
+                      <div className="space-y-6">
+                        <Card>
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              <Calendar className="w-5 h-5" />
+                              Scheduled
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                {isEditing ? (
+                                  <InputDatepicker
+                                    label="Start Date Time"
+                                    range={false}
+                                    withTime={true}
+                                    datetimeValue={formData.startDate && formData.startTime ? `${formData.startDate}T${String(formData.startTime)}` : ""}
+                                    onDateTimeChange={(v) => {
+                                      if (v) {
+                                        const [d, t] = v.split("T");
+                                        handleEditChange("startDate", d || "");
+                                        handleEditChange("startTime", t || "");
+                                      } else {
+                                        handleEditChange("startDate", "");
+                                        handleEditChange("startTime", "");
+                                      }
+                                    }}
+                                    minuteInterval={15}
+                                  />
+                                ) : (
+                                  <div className="mt-1 text-sm">
+                                    {selectedJob.startDate && selectedJob.startTime
+                                      ? new Date(`${selectedJob.startDate}T${selectedJob.startTime}`).toLocaleString("en-US", {
                                           month: "2-digit",
                                           day: "2-digit",
                                           year: "numeric",
@@ -956,64 +1061,105 @@ export function JobForm(props: JobFormProps) {
                                           minute: "2-digit",
                                           hour12: true,
                                         })
-                                      : "—";
-                                  })()}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <Users className="w-5 h-5" />
-                            Assignment
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          {isEditing ? (
-                            <SelectInput
-                              options={[
-                                { label: "All", value: "all" },
-                                { label: "Closest Distance", value: "closest-distance" },
-                                { label: "Matching Skills", value: "matching-skills" },
-                                { label: "Matching Metro", value: "matching-metro" },
-                                { label: "Closest Distance + Matching Skill + Matching Metro", value: "closest-distance-matching-skill-matching-metro" },
-                              ]}
-                              placeholder="Closest Distance"
-                              value={(formData as { closestDistance?: string }).closestDistance ?? (selectedJob as { closestDistance?: string }).closestDistance ?? ""}
-                              onSelect={(val) => handleEditChange("closestDistance", Array.isArray(val) ? (val[0] ?? "") : val)}
-                            />
-                          ) : (
-                            <div>
-                              <Label className="text-sm font-medium">Closest Distance</Label>
-                              <div className="mt-1 text-sm">
-                                {([{ label: "All", value: "all" }, { label: "Closest Distance", value: "closest-distance" }, { label: "Matching Skills", value: "matching-skills" }, { label: "Matching Metro", value: "matching-metro" }, { label: "Closest Distance + Matching Skill + Matching Metro", value: "closest-distance-matching-skill-matching-metro" }].find(
-                                  (o) => o.value === (selectedJob as { closestDistance?: string }).closestDistance
-                                )?.label) ??
-                                  (selectedJob as { closestDistance?: string }).closestDistance ??
-                                  "—"}
+                                      : "—"}
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                {isEditing ? (
+                                  <InputDatepicker
+                                    label="End Date Time"
+                                    range={false}
+                                    withTime={true}
+                                    datetimeValue={(() => {
+                                      const endD = (formData as { endDate?: string }).endDate;
+                                      const endT = (formData as { estimatedEndTime?: string }).estimatedEndTime;
+                                      return endD && endT ? `${endD}T${String(endT)}` : "";
+                                    })()}
+                                    onDateTimeChange={(v) => {
+                                      if (v) {
+                                        const [d, t] = v.split("T");
+                                        handleEditChange("endDate", d || "");
+                                        handleEditChange("estimatedEndTime", t || "");
+                                      } else {
+                                        handleEditChange("endDate", "");
+                                        handleEditChange("estimatedEndTime", "");
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="mt-1 text-sm">
+                                    {(() => {
+                                      const endD = (selectedJob as { endDate?: string }).endDate || selectedJob.startDate;
+                                      const endT = (selectedJob as { estimatedEndTime?: string }).estimatedEndTime || selectedJob.startTime;
+                                      return endD && endT
+                                        ? new Date(`${endD}T${endT}`).toLocaleString("en-US", {
+                                            month: "2-digit",
+                                            day: "2-digit",
+                                            year: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                            hour12: true,
+                                          })
+                                        : "—";
+                                    })()}
+                                  </div>
+                                )}
                               </div>
                             </div>
-                          )}
-                          {isEditing ? (
-                            <SelectInput
-                              label="Assign Technician"
-                              options={DEFAULT_TECHNICIAN_OPTIONS.map((name) => ({ label: name, value: name }))}
-                              placeholder="Select Technician"
-                              value={formData.assignedTechnician ?? selectedJob?.assignedTechnician ?? ""}
-                              onSelect={(val) => handleEditChange("assignedTechnician", Array.isArray(val) ? (val[0] ?? "") : val)}
-                            />
-                          ) : (
-                            <div>
-                              <Label className="text-sm font-medium">Assign Technician</Label>
-                              <div className="mt-1 text-sm">{selectedJob?.assignedTechnician ?? "—"}</div>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              <Users className="w-5 h-5" />
+                              Assignment
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            {isEditing ? (
+                              <SelectInput
+                                options={[
+                                  { label: "All", value: "all" },
+                                  { label: "Closest Distance", value: "closest-distance" },
+                                  { label: "Matching Skills", value: "matching-skills" },
+                                  { label: "Matching Metro", value: "matching-metro" },
+                                  { label: "Closest Distance + Matching Skill + Matching Metro", value: "closest-distance-matching-skill-matching-metro" },
+                                ]}
+                                placeholder="Closest Distance"
+                                value={(formData as { closestDistance?: string }).closestDistance ?? (selectedJob as { closestDistance?: string }).closestDistance ?? ""}
+                                onSelect={(val) => handleEditChange("closestDistance", Array.isArray(val) ? (val[0] ?? "") : val)}
+                              />
+                            ) : (
+                              <div>
+                                <Label className="text-sm font-medium">Closest Distance</Label>
+                                <div className="mt-1 text-sm">
+                                  {([{ label: "All", value: "all" }, { label: "Closest Distance", value: "closest-distance" }, { label: "Matching Skills", value: "matching-skills" }, { label: "Matching Metro", value: "matching-metro" }, { label: "Closest Distance + Matching Skill + Matching Metro", value: "closest-distance-matching-skill-matching-metro" }].find(
+                                    (o) => o.value === (selectedJob as { closestDistance?: string }).closestDistance
+                                  )?.label) ??
+                                    (selectedJob as { closestDistance?: string }).closestDistance ??
+                                    "—"}
+                                </div>
+                              </div>
+                            )}
+                            {isEditing ? (
+                              <SelectInput
+                                label="Assign Technician"
+                                options={DEFAULT_TECHNICIAN_OPTIONS.map((name) => ({ label: name, value: name }))}
+                                placeholder="Select Technician"
+                                value={formData.assignedTechnician ?? selectedJob?.assignedTechnician ?? ""}
+                                onSelect={(val) => handleEditChange("assignedTechnician", Array.isArray(val) ? (val[0] ?? "") : val)}
+                              />
+                            ) : (
+                              <div>
+                                <Label className="text-sm font-medium">Assign Technician</Label>
+                                <div className="mt-1 text-sm">{selectedJob?.assignedTechnician ?? "—"}</div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
 
                       <Card className="flex flex-col">
                         <CardHeader className="pb-3">
@@ -1030,6 +1176,118 @@ export function JobForm(props: JobFormProps) {
                               <div className="mt-1 text-sm">{selectedJob.jobDescription}</div>
                             )}
                           </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="flex flex-col">
+                        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Upload className="w-5 h-5" />
+                            Attachment
+                          </CardTitle>
+                          <Button type="button" variant="outline" size="sm" onClick={() => attachmentInputRef.current?.click()}>
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add More
+                          </Button>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <input ref={attachmentInputRef} type="file" multiple className="hidden" onChange={handleAttachmentInputChange} />
+
+                          {attachments.length === 0 ? (
+                            <div
+                              onDragOver={(event) => {
+                                event.preventDefault();
+                                setIsAttachmentDragOver(true);
+                              }}
+                              onDragLeave={() => setIsAttachmentDragOver(false)}
+                              onDrop={handleAttachmentDrop}
+                              className={cn(
+                                "rounded-lg border-2 border-dashed p-6 text-center transition-colors",
+                                isAttachmentDragOver ? "border-blue-500 bg-blue-50" : "border-slate-300 bg-slate-50"
+                              )}
+                            >
+                              <Upload className="w-6 h-6 mx-auto mb-2 text-slate-500" />
+                              <p className="text-sm font-medium text-slate-700">Drag and drop files here</p>
+                              <p className="text-xs text-slate-500 my-2">or</p>
+                              <Button type="button" variant="outline" onClick={() => attachmentInputRef.current?.click()}>
+                                Upload Files
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="min-w-0">
+                              <div className="relative flex-1 min-w-0 overflow-hidden">
+                                {attachmentScrollState.canScrollLeft && (
+                                  <button
+                                    type="button"
+                                    className="absolute left-0 top-[3.5rem] -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                                    onClick={() => scrollAttachmentList("left")}
+                                    disabled={!attachmentScrollState.canScrollLeft}
+                                  >
+                                    <ChevronLeft className="w-4 h-4" />
+                                  </button>
+                                )}
+                                <div
+                                  ref={attachmentListRef}
+                                  className={`w-full overflow-x-auto pb-1 cursor-grab active:cursor-grabbing select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${attachmentScrollState.canScrollLeft ? "pl-8" : "pl-0"} ${attachmentScrollState.canScrollRight ? "pr-8" : "pr-0"}`}
+                                  onMouseDown={startAttachmentListDrag}
+                                  onMouseMove={handleAttachmentListDrag}
+                                  onMouseUp={endAttachmentListDrag}
+                                  onMouseLeave={endAttachmentListDrag}
+                                  onDragStart={(event) => event.preventDefault()}
+                                >
+                                  <div className="flex min-w-max gap-3">
+                                    {attachments.map((file) => {
+                                      const attachmentKey = getAttachmentKey(file);
+                                      return (
+                                      <div key={attachmentKey} className="w-28 shrink-0">
+                                        <div className="relative w-28 h-28 rounded-md border bg-slate-50 overflow-hidden flex items-center justify-center">
+                                          <button
+                                            type="button"
+                                            className="absolute right-1 top-1 z-10 h-5 w-5 rounded-full bg-white/95 border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-white"
+                                            onMouseDown={(event) => event.stopPropagation()}
+                                            onClick={(event) => {
+                                              event.preventDefault();
+                                              event.stopPropagation();
+                                              removeAttachmentByKey(attachmentKey);
+                                            }}
+                                            aria-label={`Remove ${file.name}`}
+                                          >
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                          {file.type.startsWith("image/") && attachmentPreviewUrls[attachmentKey] ? (
+                                            <img
+                                              src={attachmentPreviewUrls[attachmentKey]}
+                                              alt={file.name}
+                                              className="h-full w-full object-cover"
+                                              draggable={false}
+                                            />
+                                          ) : (
+                                            <div className="flex flex-col items-center gap-1 text-slate-600">
+                                              {getAttachmentIcon(file)}
+                                              <span className="text-[10px] uppercase font-medium">{file.name.split(".").pop() ?? "file"}</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                        <p className="mt-1 text-xs truncate">{file.name}</p>
+                                        <p className="text-[11px] text-slate-500">{formatAttachmentSize(file.size)}</p>
+                                      </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                                {attachmentScrollState.canScrollRight && (
+                                  <button
+                                    type="button"
+                                    className="absolute right-0 top-[3.5rem] -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                                    onClick={() => scrollAttachmentList("right")}
+                                    disabled={!attachmentScrollState.canScrollRight}
+                                  >
+                                    <ChevronRight className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     </div>

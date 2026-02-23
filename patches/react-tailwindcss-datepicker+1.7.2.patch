@@ -1,8 +1,16 @@
 diff --git a/node_modules/react-tailwindcss-datepicker/dist/index.esm.js b/node_modules/react-tailwindcss-datepicker/dist/index.esm.js
-index 5fccc57..13fafc3 100644
+index 5fccc57..71adcc0 100644
 --- a/node_modules/react-tailwindcss-datepicker/dist/index.esm.js
 +++ b/node_modules/react-tailwindcss-datepicker/dist/index.esm.js
-@@ -1674,12 +1674,17 @@ const DatepickerContext = createContext({
+@@ -1667,6 +1667,7 @@ const DatepickerContext = createContext({
+     inputId: undefined,
+     inputName: undefined,
+     inputText: "",
++    isMilitary: true,
+     maxDate: null,
+     minDate: null,
+     period: { start: null, end: null },
+@@ -1674,12 +1675,17 @@ const DatepickerContext = createContext({
      primaryColor: DEFAULT_COLOR,
      readOnly: false,
      required: false,
@@ -20,7 +28,7 @@ index 5fccc57..13fafc3 100644
      value: null
  });
  
-@@ -2793,7 +2798,7 @@ const PrimaryButton = (props) => {
+@@ -2793,7 +2799,7 @@ const PrimaryButton = (props) => {
      const ringColor = RING_COLOR.focus[primaryColor];
      // Functions
      const getClassName = useCallback(() => {
@@ -29,7 +37,7 @@ index 5fccc57..13fafc3 100644
      }, [bgColor, bgColorHover, borderColor, disabled, ringColor]);
      return (jsxRuntimeExports.jsx("button", { type: "button", className: getClassName(), onClick: onClick, disabled: disabled, children: children }));
  };
-@@ -2805,32 +2810,37 @@ const SecondaryButton = (props) => {
+@@ -2805,32 +2811,37 @@ const SecondaryButton = (props) => {
      // Functions
      const getClassName = useCallback(() => {
          const ringColor = RING_COLOR.focus[primaryColor];
@@ -42,7 +50,7 @@ index 5fccc57..13fafc3 100644
  const Footer = () => {
      // Contexts
 -    const { hideDatepicker, period, changeDatepickerValue, configs, classNames } = useContext(DatepickerContext);
-+    const { hideDatepicker, period, changeDatepickerValue, configs, classNames, withTime, selectedHour, selectedMinute, selectedMeridiem } = useContext(DatepickerContext);
++    const { hideDatepicker, period, changeDatepickerValue, configs, classNames, withTime, isMilitary, selectedHour, selectedMinute, selectedMeridiem } = useContext(DatepickerContext);
      // Functions
      const getClassName = useCallback(() => {
          if (typeof classNames !== "undefined" && typeof classNames?.footer === "function") {
@@ -52,7 +60,7 @@ index 5fccc57..13fafc3 100644
 +        return "flex items-center justify-end py-2 px-1 border-t border-gray-300 dark:border-gray-700";
      }, [classNames]);
 -    return (jsxRuntimeExports.jsx("div", { className: getClassName(), children: jsxRuntimeExports.jsxs("div", { className: "w-full md:w-auto flex items-center justify-center space-x-3", children: [jsxRuntimeExports.jsx(SecondaryButton, { onClick: () => {
-+    const isTimeSelected = Boolean(selectedHour && selectedMinute && selectedMeridiem);
++    const isTimeSelected = Boolean(selectedHour && selectedMinute && (isMilitary || selectedMeridiem));
 +    const isApplyDisabled = !(period.start && period.end) || (withTime && !isTimeSelected);
 +    return (jsxRuntimeExports.jsx("div", { className: getClassName(), children: jsxRuntimeExports.jsxs("div", { className: "w-full md:w-auto flex items-center justify-center space-x-2", children: [jsxRuntimeExports.jsx(SecondaryButton, { onClick: () => {
                          hideDatepicker();
@@ -62,8 +70,8 @@ index 5fccc57..13fafc3 100644
                                  startDate: period.start,
 -                                endDate: period.end
 +                                endDate: period.end,
-+                                ...(withTime && selectedHour && selectedMinute && selectedMeridiem
-+                                    ? { time: `${selectedHour}:${selectedMinute} ${selectedMeridiem}` }
++                                ...(withTime && selectedHour && selectedMinute && (isMilitary || selectedMeridiem)
++                                    ? { time: isMilitary ? `${selectedHour}:${selectedMinute}` : `${selectedHour}:${selectedMinute} ${selectedMeridiem}` }
 +                                    : {})
                              });
                              hideDatepicker();
@@ -73,16 +81,16 @@ index 5fccc57..13fafc3 100644
  };
  
  const CloseIcon = (props) => {
-@@ -2849,7 +2859,7 @@ const ToggleButton = (e) => {
+@@ -2849,7 +2860,7 @@ const ToggleButton = (e) => {
  
  const Input = (e) => {
      // Context
 -    const { primaryColor, period, dayHover, changeDayHover, calendarContainer, arrowContainer, inputText, changeInputText, hideDatepicker, changeDatepickerValue, asSingle, placeholder, separator, disabled, inputClassName, toggleClassName, toggleIcon, readOnly, displayFormat, inputId, inputName, classNames, popoverDirection, required } = useContext(DatepickerContext);
-+    const { primaryColor, period, dayHover, changeDayHover, calendarContainer, arrowContainer, inputText, changeInputText, hideDatepicker, changeDatepickerValue, asSingle, placeholder, separator, disabled, inputClassName, toggleClassName, toggleIcon, readOnly, displayFormat, inputId, inputName, classNames, popoverDirection, required, onReset, withTime } = useContext(DatepickerContext);
++    const { primaryColor, period, dayHover, changeDayHover, calendarContainer, arrowContainer, inputText, changeInputText, hideDatepicker, changeDatepickerValue, asSingle, placeholder, separator, disabled, inputClassName, toggleClassName, toggleIcon, readOnly, displayFormat, inputId, inputName, classNames, popoverDirection, required, onReset, withTime, isMilitary } = useContext(DatepickerContext);
      // UseRefs
      const buttonRef = useRef(null);
      const inputRef = useRef(null);
-@@ -2961,6 +2971,7 @@ const Input = (e) => {
+@@ -2961,6 +2972,7 @@ const Input = (e) => {
                              endDate: null
                          }, input);
                      }
@@ -90,7 +98,7 @@ index 5fccc57..13fafc3 100644
                  }
              }
          }
-@@ -2978,6 +2989,7 @@ const Input = (e) => {
+@@ -2978,6 +2990,7 @@ const Input = (e) => {
          changeInputText,
          dayHover,
          inputText,
@@ -98,7 +106,7 @@ index 5fccc57..13fafc3 100644
          period.end,
          period.start,
          inputRef
-@@ -3023,9 +3035,9 @@ const Input = (e) => {
+@@ -3023,9 +3036,9 @@ const Input = (e) => {
              }
          };
      }, [calendarContainer, arrowContainer, popoverDirection]);
@@ -106,20 +114,20 @@ index 5fccc57..13fafc3 100644
 +    return (jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [jsxRuntimeExports.jsx("input", { ref: inputRef, type: "text", className: getClassName(), disabled: disabled, readOnly: readOnly, required: required, placeholder: `${placeholder
                      ? placeholder
 -                    : `${displayFormat}${asSingle ? "" : ` ${separator} ${displayFormat}`}`, value: inputText, id: inputId, name: inputName, autoComplete: "off", role: "presentation", onChange: handleInputChange, onKeyDown: handleInputKeyDown }), jsxRuntimeExports.jsx("button", { type: "button", ref: buttonRef, disabled: disabled, className: getToggleClassName(), children: renderToggleIcon(inputText == null || !inputText?.length) })] }));
-+                    : `${displayFormat}${asSingle ? "" : ` ${separator} ${displayFormat}`}`}${withTime ? " hh:mm AM/PM" : ""}`, value: inputText, id: inputId, name: inputName, autoComplete: "off", role: "presentation", onChange: handleInputChange, onKeyDown: handleInputKeyDown }), jsxRuntimeExports.jsx("button", { type: "button", ref: buttonRef, disabled: disabled, className: getToggleClassName(), children: renderToggleIcon(inputText == null || !inputText?.length) })] }));
++                    : `${displayFormat}${asSingle ? "" : ` ${separator} ${displayFormat}`}`}${withTime ? (isMilitary ? " HH:mm" : " hh:mm AM/PM") : ""}`, value: inputText, id: inputId, name: inputName, autoComplete: "off", role: "presentation", onChange: handleInputChange, onKeyDown: handleInputKeyDown }), jsxRuntimeExports.jsx("button", { type: "button", ref: buttonRef, disabled: disabled, className: getToggleClassName(), children: renderToggleIcon(inputText == null || !inputText?.length) })] }));
  };
  
  const CURRENT_DATE = new Date();
-@@ -3204,7 +3216,7 @@ const VerticalDash = () => {
+@@ -3204,7 +3217,7 @@ const VerticalDash = () => {
  
  const Datepicker = (props) => {
      // Props
 -    const { asSingle = false, classNames = undefined, configs = undefined, containerClassName = null, dateLooking = DEFAULT_DATE_LOOKING, disabledDates = null, disabled = false, displayFormat = DATE_FORMAT, i18n = LANGUAGE, inputClassName = null, inputId, inputName, minDate = undefined, maxDate = undefined, onChange, placeholder = null, popupClassName = null, popoverDirection = undefined, primaryColor = DEFAULT_COLOR, separator = DEFAULT_SEPARATOR, showFooter = false, showShortcuts = false, startFrom = null, startWeekOn = START_WEEK, readOnly = false, required = false, toggleClassName = null, toggleIcon = undefined, useRange = true, value = null } = props;
-+    const { asSingle = false, classNames = undefined, configs = undefined, containerClassName = null, dateLooking = DEFAULT_DATE_LOOKING, disabledDates = null, disabled = false, displayFormat = DATE_FORMAT, i18n = LANGUAGE, inputClassName = null, inputId, inputName, minDate = undefined, maxDate = undefined, onChange, onReset = undefined, placeholder = null, popupClassName = null, popoverDirection = undefined, primaryColor = DEFAULT_COLOR, separator = DEFAULT_SEPARATOR, showFooter = false, showShortcuts = false, startFrom = null, startWeekOn = START_WEEK, readOnly = false, required = false, timeValue = undefined, toggleClassName = null, toggleIcon = undefined, useRange = true, withTime = false, value = null } = props;
++    const { asSingle = false, classNames = undefined, configs = undefined, containerClassName = null, dateLooking = DEFAULT_DATE_LOOKING, disabledDates = null, disabled = false, displayFormat = DATE_FORMAT, i18n = LANGUAGE, inputClassName = null, inputId, inputName, isMilitary = true, minDate = undefined, maxDate = undefined, minuteInterval = 15, onChange, onReset = undefined, placeholder = null, popupClassName = null, popoverDirection = undefined, primaryColor = DEFAULT_COLOR, separator = DEFAULT_SEPARATOR, showFooter = false, showShortcuts = false, startFrom = null, startWeekOn = START_WEEK, readOnly = false, required = false, timeValue = undefined, toggleClassName = null, toggleIcon = undefined, useRange = true, withTime = false, value = null } = props;
      // Refs
      const containerRef = useRef(null);
      const calendarContainerRef = useRef(null);
-@@ -3219,6 +3231,209 @@ const Datepicker = (props) => {
+@@ -3219,6 +3232,264 @@ const Datepicker = (props) => {
      const [dayHover, setDayHover] = useState(null);
      const [inputText, setInputText] = useState("");
      const [inputRef, setInputRef] = useState(createRef());
@@ -134,21 +142,64 @@ index 5fccc57..13fafc3 100644
 +        const text = normalizeTimeValue(value);
 +        if (!text)
 +            return fallback;
-+        const match = text.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-+        if (!match)
-+            return fallback;
-+        const rawHour = Number(match[1]);
-+        const rawMinute = Number(match[2]);
-+        if (!Number.isFinite(rawHour) || !Number.isFinite(rawMinute) || rawHour < 1 || rawHour > 12 || rawMinute < 0 || rawMinute > 59) {
++        const twelveHourMatch = text.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
++        const twentyFourHourMatch = text.match(/^(\d{1,2}):(\d{2})$/);
++        if (isMilitary) {
++            if (twentyFourHourMatch) {
++                const rawHour = Number(twentyFourHourMatch[1]);
++                const rawMinute = Number(twentyFourHourMatch[2]);
++                if (Number.isFinite(rawHour) && Number.isFinite(rawMinute) && rawHour >= 0 && rawHour <= 23 && rawMinute >= 0 && rawMinute <= 59) {
++                    return {
++                        hour: String(rawHour).padStart(2, "0"),
++                        minute: String(rawMinute).padStart(2, "0"),
++                        meridiem: ""
++                    };
++                }
++            }
++            if (twelveHourMatch) {
++                const rawHour12 = Number(twelveHourMatch[1]);
++                const rawMinute = Number(twelveHourMatch[2]);
++                const meridiem = String(twelveHourMatch[3]).toUpperCase();
++                if (Number.isFinite(rawHour12) && Number.isFinite(rawMinute) && rawHour12 >= 1 && rawHour12 <= 12 && rawMinute >= 0 && rawMinute <= 59) {
++                    const hour24 = meridiem === "PM" ? (rawHour12 % 12) + 12 : rawHour12 % 12;
++                    return {
++                        hour: String(hour24).padStart(2, "0"),
++                        minute: String(rawMinute).padStart(2, "0"),
++                        meridiem: ""
++                    };
++                }
++            }
 +            return fallback;
 +        }
-+        return {
-+            hour: String(rawHour).padStart(2, "0"),
-+            minute: String(rawMinute).padStart(2, "0"),
-+            meridiem: String(match[3]).toUpperCase()
-+        };
++        if (twelveHourMatch) {
++            const rawHour = Number(twelveHourMatch[1]);
++            const rawMinute = Number(twelveHourMatch[2]);
++            if (!Number.isFinite(rawHour) || !Number.isFinite(rawMinute) || rawHour < 1 || rawHour > 12 || rawMinute < 0 || rawMinute > 59) {
++                return fallback;
++            }
++            return {
++                hour: String(rawHour).padStart(2, "0"),
++                minute: String(rawMinute).padStart(2, "0"),
++                meridiem: String(twelveHourMatch[3]).toUpperCase()
++            };
++        }
++        if (twentyFourHourMatch) {
++            const rawHour24 = Number(twentyFourHourMatch[1]);
++            const rawMinute = Number(twentyFourHourMatch[2]);
++            if (!Number.isFinite(rawHour24) || !Number.isFinite(rawMinute) || rawHour24 < 0 || rawHour24 > 23 || rawMinute < 0 || rawMinute > 59) {
++                return fallback;
++            }
++            const meridiem = rawHour24 >= 12 ? "PM" : "AM";
++            const hour12 = rawHour24 % 12 === 0 ? 12 : rawHour24 % 12;
++            return {
++                hour: String(hour12).padStart(2, "0"),
++                minute: String(rawMinute).padStart(2, "0"),
++                meridiem
++            };
++        }
++        return fallback;
 +    };
-+    const parsedTimeValue = useMemo(() => parseTimeValue(timeValue), [timeValue]);
++    const parsedTimeValue = useMemo(() => parseTimeValue(timeValue), [timeValue, isMilitary]);
 +    const [selectedHour, setSelectedHour] = useState(parsedTimeValue.hour);
 +    const [selectedMinute, setSelectedMinute] = useState(parsedTimeValue.minute);
 +    const [selectedMeridiem, setSelectedMeridiem] = useState(parsedTimeValue.meridiem);
@@ -161,18 +212,32 @@ index 5fccc57..13fafc3 100644
 +    const scrollLoopLockRef = useRef({ hour: false, minute: false });
 +    const LOOP_REPEAT_COUNT = 5;
 +    const MIDDLE_LOOP_INDEX = Math.floor(LOOP_REPEAT_COUNT / 2);
-+    const hourOptions = useMemo(() => Array.from({ length: 12 }, (_, index) => String(index + 1).padStart(2, "0")), []);
-+    const minuteOptions = useMemo(() => Array.from({ length: 60 }, (_, index) => String(index).padStart(2, "0")), []);
-+    const rotateOptions = (options, startValue) => {
-+        const startIndex = options.indexOf(startValue);
-+        if (startIndex <= 0)
-+            return options;
-+        return [...options.slice(startIndex), ...options.slice(0, startIndex)];
-+    };
-+    const hourOrderedOptions = useMemo(() => rotateOptions(hourOptions, parsedTimeValue.hour), [hourOptions, parsedTimeValue.hour]);
-+    const minuteOrderedOptions = useMemo(() => rotateOptions(minuteOptions, parsedTimeValue.minute), [minuteOptions, parsedTimeValue.minute]);
-+    const hourLoopOptions = useMemo(() => Array.from({ length: LOOP_REPEAT_COUNT }, () => hourOrderedOptions).flat(), [hourOrderedOptions]);
-+    const minuteLoopOptions = useMemo(() => Array.from({ length: LOOP_REPEAT_COUNT }, () => minuteOrderedOptions).flat(), [minuteOrderedOptions]);
++    const hourOptions = useMemo(() => isMilitary
++        ? Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"))
++        : Array.from({ length: 12 }, (_, index) => String(index + 1).padStart(2, "0")), [isMilitary]);
++    const normalizedMinuteInterval = useMemo(() => {
++        const value = Number(minuteInterval);
++        if (!Number.isFinite(value))
++            return 15;
++        const floored = Math.floor(value);
++        if (floored < 1)
++            return 15;
++        if (floored > 59)
++            return 59;
++        return floored;
++    }, [minuteInterval]);
++    const minuteOptions = useMemo(() => {
++        const options = [];
++        for (let minute = 0; minute < 60; minute += normalizedMinuteInterval) {
++            options.push(String(minute).padStart(2, "0"));
++        }
++        return options;
++    }, [normalizedMinuteInterval]);
++    const hourOrderedOptions = useMemo(() => hourOptions, [hourOptions]);
++    const normalizedParsedMinute = useMemo(() => minuteOptions.includes(parsedTimeValue.minute) ? parsedTimeValue.minute : minuteOptions[0] ?? "", [minuteOptions, parsedTimeValue.minute]);
++    const minuteOrderedOptions = useMemo(() => minuteOptions, [minuteOptions]);
++    const hourLoopOptions = useMemo(() => hourOrderedOptions, [hourOrderedOptions]);
++    const minuteLoopOptions = useMemo(() => minuteOrderedOptions, [minuteOrderedOptions]);
 +    const calendarPanelRef = useRef(null);
 +    const beginHourDrag = (e) => {
 +        hourDragRef.current.active = true;
@@ -201,7 +266,6 @@ index 5fccc57..13fafc3 100644
 +        }
 +        hourDragRef.current.lastY = e.clientY;
 +        e.currentTarget.scrollTop -= diff;
-+        wrapInfiniteScroll(e.currentTarget, "hour");
 +    };
 +    const endHourDrag = (e) => {
 +        if (hourDragRef.current.pointerId === e.pointerId) {
@@ -240,7 +304,6 @@ index 5fccc57..13fafc3 100644
 +        }
 +        minuteDragRef.current.lastY = e.clientY;
 +        e.currentTarget.scrollTop -= diff;
-+        wrapInfiniteScroll(e.currentTarget, "minute");
 +    };
 +    const endMinuteDrag = (e) => {
 +        if (minuteDragRef.current.pointerId === e.pointerId) {
@@ -256,9 +319,9 @@ index 5fccc57..13fafc3 100644
 +        if (!withTime)
 +            return;
 +        setSelectedHour(parsedTimeValue.hour);
-+        setSelectedMinute(parsedTimeValue.minute);
++        setSelectedMinute(normalizedParsedMinute);
 +        setSelectedMeridiem(parsedTimeValue.meridiem);
-+    }, [withTime, parsedTimeValue.hour, parsedTimeValue.minute, parsedTimeValue.meridiem]);
++    }, [withTime, parsedTimeValue.hour, parsedTimeValue.meridiem, normalizedParsedMinute]);
 +    const wrapInfiniteScroll = (target, key) => {
 +        if (!target || scrollLoopLockRef.current[key])
 +            return;
@@ -285,10 +348,10 @@ index 5fccc57..13fafc3 100644
 +        }
 +    };
 +    const handleHourScroll = () => {
-+        wrapInfiniteScroll(hourScrollRef.current, "hour");
++        // Hour list is intentionally finite (non-looping).
 +    };
 +    const handleMinuteScroll = () => {
-+        wrapInfiniteScroll(minuteScrollRef.current, "minute");
++        // Minute list is intentionally finite (non-looping).
 +    };
 +    useEffect(() => {
 +        if (!withTime)
@@ -297,10 +360,10 @@ index 5fccc57..13fafc3 100644
 +            const hourNode = hourScrollRef.current;
 +            const minuteNode = minuteScrollRef.current;
 +            if (hourNode) {
-+                hourNode.scrollTop = hourNode.scrollHeight / LOOP_REPEAT_COUNT * MIDDLE_LOOP_INDEX;
++                hourNode.scrollTop = 0;
 +            }
 +            if (minuteNode) {
-+                minuteNode.scrollTop = minuteNode.scrollHeight / LOOP_REPEAT_COUNT * MIDDLE_LOOP_INDEX;
++                minuteNode.scrollTop = 0;
 +            }
 +        };
 +        requestAnimationFrame(setMiddleSegmentStart);
@@ -329,7 +392,7 @@ index 5fccc57..13fafc3 100644
      // Custom Hooks use
      useOnClickOutside(containerRef, () => {
          const container = containerRef.current;
-@@ -3313,9 +3528,12 @@ const Datepicker = (props) => {
+@@ -3313,9 +3584,12 @@ const Datepicker = (props) => {
                      start: value.startDate,
                      end: value.endDate
                  });
@@ -343,7 +406,7 @@ index 5fccc57..13fafc3 100644
              }
          }
          if (value && value.startDate === null && value.endDate === null) {
-@@ -3325,7 +3543,7 @@ const Datepicker = (props) => {
+@@ -3325,7 +3599,7 @@ const Datepicker = (props) => {
              });
              setInputText("");
          }
@@ -352,15 +415,18 @@ index 5fccc57..13fafc3 100644
      useEffect(() => {
          if (startFrom && dateIsValid(startFrom)) {
              const startDate = value?.startDate;
-@@ -3397,6 +3615,7 @@ const Datepicker = (props) => {
+@@ -3395,8 +3669,10 @@ const Datepicker = (props) => {
+             inputId,
+             inputName,
              inputText,
++            isMilitary,
              maxDate,
              minDate,
 +            onReset,
              onChange,
              period,
              placeholder,
-@@ -3405,11 +3624,15 @@ const Datepicker = (props) => {
+@@ -3405,11 +3681,15 @@ const Datepicker = (props) => {
              readOnly,
              required,
              separator,
@@ -376,7 +442,7 @@ index 5fccc57..13fafc3 100644
              value
          };
      }, [
-@@ -3433,8 +3656,12 @@ const Datepicker = (props) => {
+@@ -3433,8 +3713,12 @@ const Datepicker = (props) => {
          toggleIcon,
          readOnly,
          displayFormat,
@@ -389,15 +455,16 @@ index 5fccc57..13fafc3 100644
          dateLooking,
          disabledDates,
          inputId,
-@@ -3444,6 +3671,7 @@ const Datepicker = (props) => {
+@@ -3444,6 +3728,8 @@ const Datepicker = (props) => {
          inputRef,
          popoverDirection,
          required,
++        isMilitary,
 +        withTime,
          firstGotoDate
      ]);
      const containerClassNameOverload = useMemo(() => {
-@@ -3462,7 +3690,151 @@ const Datepicker = (props) => {
+@@ -3462,7 +3748,151 @@ const Datepicker = (props) => {
                  ? popupClassName
                  : defaultPopupClassName;
      }, [popupClassName]);
@@ -513,7 +580,7 @@ index 5fccc57..13fafc3 100644
 +                                                            })
 +                                                        ]
 +                                                    }),
-+                                                    jsxRuntimeExports.jsxs("div", {
++                                                    !isMilitary && jsxRuntimeExports.jsxs("div", {
 +                                                        className: "border-t pt-2 pb-2 grid grid-cols-2 gap-2",
 +                                                        children: [
 +                                                            jsxRuntimeExports.jsx("button", {
@@ -551,7 +618,7 @@ index 5fccc57..13fafc3 100644
  
  var af$1 = {exports: {}};
 diff --git a/node_modules/react-tailwindcss-datepicker/dist/types/index.d.ts b/node_modules/react-tailwindcss-datepicker/dist/types/index.d.ts
-index bc4f1ed..664cae1 100644
+index bc4f1ed..8bf93b9 100644
 --- a/node_modules/react-tailwindcss-datepicker/dist/types/index.d.ts
 +++ b/node_modules/react-tailwindcss-datepicker/dist/types/index.d.ts
 @@ -50,6 +50,7 @@ export interface DatepickerType {
@@ -562,3 +629,12 @@ index bc4f1ed..664cae1 100644
      useRange?: boolean;
      showFooter?: boolean;
      showShortcuts?: boolean;
+@@ -68,6 +69,8 @@ export interface DatepickerType {
+     toggleIcon?: (open: boolean) => ReactNode;
+     inputId?: string;
+     inputName?: string;
++    isMilitary?: boolean;
++    minuteInterval?: number;
+     displayFormat?: string;
+     readOnly?: boolean;
+     minDate?: DateType;

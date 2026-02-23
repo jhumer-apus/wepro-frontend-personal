@@ -14,6 +14,8 @@ type DatepickerProps = {
   label?: string;
   range?: boolean;
   withTime?: boolean;
+  minuteInterval?: number;
+  isMilitary?: boolean;
   /** When withTime is true, use a single datetime string (YYYY-MM-DDTHH:mm or ''). Simpler than value/onChange for single datetime. */
   datetimeValue?: string;
   /** Called when date or time changes. Receives combined datetime string (YYYY-MM-DDTHH:mm) or ''. */
@@ -72,6 +74,26 @@ const normalizeTimeForPicker = (rawTime: string) => {
   return "";
 };
 
+const normalizeTimeForMilitaryPicker = (rawTime: string) => {
+  const value = String(rawTime).trim();
+  const twelveHourMatch = value.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (twelveHourMatch) {
+    const [, h, m, period] = twelveHourMatch;
+    const hourNum = Number(h);
+    if (!Number.isFinite(hourNum)) return "";
+    const hour24 = period.toUpperCase() === "PM" ? (hourNum % 12) + 12 : hourNum % 12;
+    return `${String(hour24).padStart(2, "0")}:${m}`;
+  }
+
+  const twentyFourHourMatch = value.match(/^(\d{1,2}):(\d{2})/);
+  if (twentyFourHourMatch) {
+    const [, h, m] = twentyFourHourMatch;
+    return `${String(Number(h)).padStart(2, "0")}:${m}`;
+  }
+
+  return "";
+};
+
 const InputDatepicker = ({
   value,
   onChange,
@@ -79,6 +101,8 @@ const InputDatepicker = ({
   label,
   range = true,
   withTime = false,
+  minuteInterval = 15,
+  isMilitary = true,
   datetimeValue,
   onDateTimeChange,
 }: DatepickerProps) => {
@@ -89,7 +113,9 @@ const InputDatepicker = ({
   const singleDateFromDatetime = datePart || null;
   const pickerTimeValue = (() => {
     if (timePart) {
-      return normalizeTimeForPicker(timePart);
+      return isMilitary
+        ? normalizeTimeForMilitaryPicker(timePart)
+        : normalizeTimeForPicker(timePart);
     }
     return "";
   })();
@@ -202,6 +228,8 @@ const InputDatepicker = ({
               configs={{ shortcuts }}
               disabled={disabled}
               withTime={withTime}
+              minuteInterval={minuteInterval}
+              isMilitary={isMilitary}
               showFooter={withTime}
               onReset={() => {
                 (onDateTimeChange as ((datetime?: string) => void) | undefined)?.(undefined);

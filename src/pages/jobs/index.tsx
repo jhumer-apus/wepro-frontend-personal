@@ -49,6 +49,7 @@ import {
   Wrench,
   Search,
   Plus,
+  Upload,
   Star,
   CheckCircle,
   AlertCircle,
@@ -72,6 +73,13 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
+  File,
+  FileArchive,
+  FileAudio,
+  FileCode,
+  FileSpreadsheet,
+  FileText,
+  FileVideo,
 } from "lucide-react";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
@@ -81,6 +89,7 @@ const timeAgo = new TimeAgo("en-US");
 import { Checkbox } from "@/src/components/ui/checkbox";
 import Table, { type ColumnOption as TableColumnOption } from "@/src/components/table";
 import SelectInput from "@/src/components/input/select";
+import AddressInput from "@/src/components/input/address";
 import { dummyJobs } from "@/src/constants/dummyData/jobs";
 import { type Job } from "@/src/constants/interface/jobs";
 import SidePanel from "@/src/components/sidePanel";
@@ -114,6 +123,225 @@ interface JobStatus {
   showLeads: boolean;
   showDispatch: boolean;
   isActive?: boolean;
+}
+
+type JobAttachment = {
+  name: string;
+  type: string;
+  url?: string;
+  size?: number;
+};
+
+function PanelAttachmentSection({
+  isEditMode,
+  attachments,
+  onAddFiles,
+  onRemoveAttachment,
+  getAttachmentIcon,
+  formatAttachmentSize,
+}: {
+  isEditMode: boolean;
+  attachments: JobAttachment[];
+  onAddFiles: (files: FileList | File[]) => void;
+  onRemoveAttachment: (index: number) => void;
+  getAttachmentIcon: (attachment: JobAttachment) => React.ReactNode;
+  formatAttachmentSize: (bytes?: number) => string;
+}) {
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
+  const attachmentListRef = useRef<HTMLDivElement | null>(null);
+  const [isAttachmentDragOver, setIsAttachmentDragOver] = useState(false);
+  const [attachmentScrollState, setAttachmentScrollState] = useState({
+    canScrollLeft: false,
+    canScrollRight: false,
+  });
+  const [isDraggingAttachmentList, setIsDraggingAttachmentList] = useState(false);
+  const attachmentDragStartX = useRef(0);
+  const attachmentDragStartScroll = useRef(0);
+
+  const updateAttachmentScrollState = () => {
+    const el = attachmentListRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setAttachmentScrollState({
+      canScrollLeft: scrollLeft > 2,
+      canScrollRight: scrollLeft + clientWidth < scrollWidth - 2,
+    });
+  };
+
+  const scrollAttachmentList = (direction: "left" | "right") => {
+    const el = attachmentListRef.current;
+    if (!el) return;
+    const delta = direction === "left" ? -220 : 220;
+    el.scrollBy({ left: delta, behavior: "smooth" });
+    setTimeout(updateAttachmentScrollState, 180);
+  };
+
+  const startAttachmentListDrag = (event: React.MouseEvent<HTMLDivElement>) => {
+    const container = attachmentListRef.current;
+    if (!container) return;
+    setIsDraggingAttachmentList(true);
+    attachmentDragStartX.current = event.clientX;
+    attachmentDragStartScroll.current = container.scrollLeft;
+    container.classList.add("cursor-grabbing", "select-none");
+  };
+
+  const handleAttachmentListDrag = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDraggingAttachmentList) return;
+    const container = attachmentListRef.current;
+    if (!container) return;
+    const deltaX = event.clientX - attachmentDragStartX.current;
+    container.scrollLeft = attachmentDragStartScroll.current - deltaX;
+    updateAttachmentScrollState();
+  };
+
+  const endAttachmentListDrag = () => {
+    if (!isDraggingAttachmentList) return;
+    setIsDraggingAttachmentList(false);
+    const container = attachmentListRef.current;
+    container?.classList.remove("cursor-grabbing", "select-none");
+    updateAttachmentScrollState();
+  };
+
+  useEffect(() => {
+    updateAttachmentScrollState();
+    const el = attachmentListRef.current;
+    if (!el) return;
+    const onScroll = () => updateAttachmentScrollState();
+    const onResize = () => updateAttachmentScrollState();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [attachments.length]);
+
+  return (
+    <div className="mt-4">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-xs uppercase text-slate-500">Attachment</p>
+        {isEditMode && (
+          <Button type="button" variant="outline" size="sm" onClick={() => attachmentInputRef.current?.click()}>
+            <Plus className="h-4 w-4 mr-1" />
+            Add More
+          </Button>
+        )}
+      </div>
+
+      {isEditMode && (
+        <input
+          ref={attachmentInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files) onAddFiles(e.target.files);
+            e.target.value = "";
+          }}
+        />
+      )}
+
+      {attachments.length === 0 ? (
+        isEditMode ? (
+          <div
+            onDragOver={(event) => {
+              event.preventDefault();
+              setIsAttachmentDragOver(true);
+            }}
+            onDragLeave={() => setIsAttachmentDragOver(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setIsAttachmentDragOver(false);
+              if (event.dataTransfer.files?.length) {
+                onAddFiles(event.dataTransfer.files);
+              }
+            }}
+            className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+              isAttachmentDragOver ? "border-blue-500 bg-blue-50" : "border-slate-300 bg-slate-50"
+            }`}
+          >
+            <Upload className="w-6 h-6 mx-auto mb-2 text-slate-500" />
+            <p className="text-sm font-medium text-slate-700">Drag and drop files here</p>
+            <p className="text-xs text-slate-500 my-2">or</p>
+            <Button type="button" variant="outline" onClick={() => attachmentInputRef.current?.click()}>
+              Upload Files
+            </Button>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">No attachments</p>
+        )
+      ) : (
+        <div className="min-w-0">
+          <div className="relative flex-1 min-w-0 overflow-hidden">
+            {attachmentScrollState.canScrollLeft && (
+              <button
+                type="button"
+                className="absolute left-0 top-[3.5rem] -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={() => scrollAttachmentList("left")}
+                disabled={!attachmentScrollState.canScrollLeft}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            )}
+            <div
+              ref={attachmentListRef}
+              className={`w-full overflow-x-auto pb-1 cursor-grab active:cursor-grabbing select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${attachmentScrollState.canScrollLeft ? "pl-8" : "pl-0"} ${attachmentScrollState.canScrollRight ? "pr-8" : "pr-0"}`}
+              onMouseDown={startAttachmentListDrag}
+              onMouseMove={handleAttachmentListDrag}
+              onMouseUp={endAttachmentListDrag}
+              onMouseLeave={endAttachmentListDrag}
+              onDragStart={(event) => event.preventDefault()}
+            >
+              <div className="flex min-w-max gap-3">
+                {attachments.map((attachment, idx) => (
+                  <div key={`${attachment.name}-${idx}`} className="w-28 shrink-0">
+                    <div className="relative w-28 h-28 rounded-md border bg-slate-50 overflow-hidden flex items-center justify-center">
+                      {isEditMode && (
+                        <button
+                          type="button"
+                          className="absolute right-1 top-1 z-10 h-5 w-5 rounded-full bg-white/95 border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-white"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onRemoveAttachment(idx);
+                          }}
+                          aria-label="Remove attachment"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                      {attachment.type.startsWith("image/") && attachment.url ? (
+                        <img src={attachment.url} alt={attachment.name} className="h-full w-full object-cover" draggable={false} />
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 text-slate-600">
+                          {getAttachmentIcon(attachment)}
+                          <span className="text-[10px] uppercase font-medium">{attachment.name.split(".").pop() ?? "file"}</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs truncate">{attachment.name}</p>
+                    {formatAttachmentSize(attachment.size) && (
+                      <p className="text-[11px] text-slate-500">{formatAttachmentSize(attachment.size)}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {attachmentScrollState.canScrollRight && (
+              <button
+                type="button"
+                className="absolute right-0 top-[3.5rem] -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={() => scrollAttachmentList("right")}
+                disabled={!attachmentScrollState.canScrollRight}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 const jobStatuses: JobStatus[] = [
@@ -2091,8 +2319,51 @@ export default function Jobs() {
       </div>
     </div>
   );
-  // Sample jobs data for dispatch board
-  const [jobs, setJobs] = useState<Job[]>(dummyJobs);
+  // Sample jobs data for dispatch board (with dummy attachments for preview)
+  const jobsSeed = useMemo<any[]>(
+    () =>
+      [...dummyJobs].map((job, index) => {
+        const attachments: JobAttachment[] =
+          index === 0
+            ? [
+                {
+                  name: "kitchen-sink.jpg",
+                  type: "image/jpeg",
+                  url: "https://placehold.co/200x200/png",
+                  size: 182300,
+                },
+                {
+                  name: "invoice.pdf",
+                  type: "application/pdf",
+                  size: 254800,
+                },
+                {
+                  name: "before-repair.zip",
+                  type: "application/zip",
+                  size: 980120,
+                },
+              ]
+            : index === 1
+            ? [
+                {
+                  name: "ac-filter.png",
+                  type: "image/png",
+                  url: "https://placehold.co/200x200/png",
+                  size: 140220,
+                },
+                {
+                  name: "service-report.docx",
+                  type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                  size: 118900,
+                },
+              ]
+            : [];
+
+        return { ...job, attachments };
+      }),
+    []
+  );
+  const [jobs, setJobs] = useState<any[]>(jobsSeed);
 
   const [dispatchView, setDispatchView] = useState<"board" | "list" | "calendar">("board");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -2106,6 +2377,7 @@ export default function Jobs() {
   const [isEditing, setIsEditing] = useState(true);
   const [editFormData, setEditFormData] = useState({});
   const [showSecondPhone, setShowSecondPhone] = useState(false);
+  const [panelAttachments, setPanelAttachments] = useState<JobAttachment[]>([]);
   const [activeTab, setActiveTab] = useState('details');
   const [boardStatusFilter, setBoardStatusFilter] = useState<string>('All');
   const [jobDetailsTab, setJobDetailsTab] = useState('details');
@@ -2143,54 +2415,54 @@ export default function Jobs() {
   // Track job type filter changes
   useEffect(() => {
     setJobs(
-      [...dummyJobs].filter(job => {
+      [...jobsSeed].filter(job => {
         if (quickJobTypes.length === 0) return true;
         return quickJobTypes.includes(job.jobType);
       })
     );
-  }, [quickJobTypes]);
+  }, [quickJobTypes, jobsSeed]);
 
   // Track tags filter changes (normalize to lowercase to match dummy data)
   useEffect(() => {
     const selectedTags = quickTags.map(tag => tag.toLowerCase());
     setJobs(
-      [...dummyJobs].filter(job => {
+      [...jobsSeed].filter(job => {
         if (selectedTags.length === 0) return true;
         const jobTags = (job.jobTags || []).map(t => t.toLowerCase());
         return jobTags.some(tag => selectedTags.includes(tag));
       })
     );
-  }, [quickTags]);
+  }, [quickTags, jobsSeed]);
 
   // Track tag notes filter changes (normalize to lowercase to match dummy data)
   useEffect(() => {
     const selectedNotes = quickTagNotes.map(tag => tag.toLowerCase());
     setJobs(
-      [...dummyJobs].filter(job => {
+      [...jobsSeed].filter(job => {
         if (selectedNotes.length === 0) return true;
         const jobNotes = (job.noteTags || []).map(t => t.toLowerCase());
         return jobNotes.some(tag => selectedNotes.includes(tag));
       })
     );
-  }, [quickTagNotes]);
+  }, [quickTagNotes, jobsSeed]);
 
   // Track source filter changes (normalize to lowercase to match dummy data)
   useEffect(() => {
     const selectedSource = (quickSingleChoice || '').toLowerCase();
     if (!selectedSource) {
-      setJobs([...dummyJobs]);
+      setJobs([...jobsSeed]);
       return;
     }
     setJobs(
-      [...dummyJobs].filter(job => (job.source || '').toLowerCase() === selectedSource)
+      [...jobsSeed].filter(job => (job.source || '').toLowerCase() === selectedSource)
     );
-  }, [quickSingleChoice]);
+  }, [quickSingleChoice, jobsSeed]);
 
   // Track date range filter changes (startDate)
   useEffect(() => {
     const { startDate, endDate } = dateRangeValue || {};
     if (!startDate || !endDate) {
-      setJobs([...dummyJobs]);
+      setJobs([...jobsSeed]);
       return;
     }
 
@@ -2198,12 +2470,12 @@ export default function Jobs() {
     const end = new Date(endDate);
 
     setJobs(
-      [...dummyJobs].filter(job => {
+      [...jobsSeed].filter(job => {
         const jobDate = new Date(job.startDate);
         return jobDate >= start && jobDate <= end;
       })
     );
-  }, [dateRangeValue]);
+  }, [dateRangeValue, jobsSeed]);
 
   const handleSaveTagNote = () => {
     const name = newTagNoteName.trim();
@@ -2248,11 +2520,84 @@ export default function Jobs() {
   const quickDispatchOptions = ['Dispatch 1', 'Dispatch 2', 'Dispatch 3'];
   const technicianOptions = useMemo(() => {
     const names = new Set<string>();
-    dummyJobs.forEach((job: Job) => {
+    jobsSeed.forEach((job: Job) => {
       if (job.assignedTechnician) names.add(job.assignedTechnician);
     });
     return Array.from(names);
-  }, []);
+  }, [jobsSeed]);
+
+  const formatAttachmentSize = (bytes?: number) => {
+    if (!bytes) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getAttachmentIcon = (attachment: JobAttachment) => {
+    const extension = attachment.name.split(".").pop()?.toLowerCase() ?? "";
+    if (attachment.type.startsWith("audio/")) return <FileAudio className="h-8 w-8" />;
+    if (attachment.type.startsWith("video/")) return <FileVideo className="h-8 w-8" />;
+    if (["zip", "rar", "7z", "tar", "gz"].includes(extension)) return <FileArchive className="h-8 w-8" />;
+    if (["csv", "xls", "xlsx"].includes(extension)) return <FileSpreadsheet className="h-8 w-8" />;
+    if (["json", "xml", "js", "jsx", "ts", "tsx", "html", "css", "md"].includes(extension)) return <FileCode className="h-8 w-8" />;
+    if (["txt", "pdf", "doc", "docx", "rtf"].includes(extension)) return <FileText className="h-8 w-8" />;
+    return <File className="h-8 w-8" />;
+  };
+
+  const addPanelAttachmentFiles = (files: FileList | File[]) => {
+    const incomingFiles = Array.from(files);
+    if (!incomingFiles.length) return;
+
+    const mapped: JobAttachment[] = incomingFiles.map((file) => ({
+      name: file.name,
+      type: file.type || "application/octet-stream",
+      size: file.size,
+      url: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+    }));
+
+    setPanelAttachments((prev) => {
+      const seen = new Set(prev.map((a) => `${a.name}-${a.size ?? 0}`));
+      const merged = [...prev];
+      mapped.forEach((item) => {
+        const key = `${item.name}-${item.size ?? 0}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          merged.push(item);
+        }
+      });
+      const nextJob = {
+        ...(selectedJob ?? {}),
+        ...(editFormData as Record<string, unknown>),
+        attachments: merged,
+      };
+      setSelectedJob(nextJob);
+      setEditFormData((prevEdit) => ({ ...prevEdit, attachments: merged }));
+      setTimeout(() => {
+        openJobPanel(nextJob, true);
+      }, 0);
+      return merged;
+    });
+  };
+  const removePanelAttachment = (index: number) => {
+    setPanelAttachments((prev) => {
+      const removed = prev[index];
+      if (removed?.url?.startsWith("blob:")) {
+        URL.revokeObjectURL(removed.url);
+      }
+      const nextAttachments = prev.filter((_, i) => i !== index);
+      const nextJob = {
+        ...(selectedJob ?? {}),
+        ...(editFormData as Record<string, unknown>),
+        attachments: nextAttachments,
+      };
+      setSelectedJob(nextJob);
+      setEditFormData((prevEdit) => ({ ...prevEdit, attachments: nextAttachments }));
+      setTimeout(() => {
+        openJobPanel(nextJob, true);
+      }, 0);
+      return nextAttachments;
+    });
+  };
   useEffect(() => {
     if (selectedDateRange === 'custom-picker') return;
     const presetRange = getRangeDates(selectedDateRange);
@@ -2955,16 +3300,20 @@ export default function Jobs() {
   };
 
   const handleSave = () => {
-    // Here you would typically save to backend
-    console.log('Saving job data:', editFormData);
-    setIsEditing(true);
-    // Update the selectedJob with new data
-    // setSelectedJob(editFormData);
+    const nextJob = {
+      ...(selectedJob ?? {}),
+      ...(editFormData as Record<string, unknown>),
+      attachments: panelAttachments,
+    };
+    setSelectedJob(nextJob);
+    setJobs(prev => prev.map(j => (j.id === nextJob.id ? { ...j, ...nextJob } : j)));
+    openJobPanel(nextJob, false);
   };
 
-  const openJobPanel = (job: any) => {
+  const openJobPanel = (job: any, isEditMode = false) => {
     setSelectedJob(job);
     setEditFormData(job);
+    setPanelAttachments(Array.isArray((job as { attachments?: JobAttachment[] }).attachments) ? (job as { attachments?: JobAttachment[] }).attachments! : []);
     SidePanel.open({
       title: job?.jobType || `Job #${job?.id}`,
       content: () => (
@@ -2988,105 +3337,424 @@ export default function Jobs() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-              <p className="text-xs uppercase text-slate-500 mb-1">Client</p>
-              <div className="space-y-1 text-sm text-slate-900">
-                <p className="font-medium">{job?.clientName || 'N/A'}</p>
-                {job?.companyName && <p className="text-slate-600">{job.companyName}</p>}
-                {job?.phoneNumber && <p className="text-slate-600">{job.phoneNumber}</p>}
-                {job?.email && <p className="text-slate-600">{job.email}</p>}
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-              <p className="text-xs uppercase text-slate-500 mb-1">Schedule</p>
-              <div className="space-y-1 text-sm text-slate-900">
-                <p className="font-medium">
-                  {job?.startDate || '—'} {job?.startTime || ''}
-                </p>
-                {job?.estimatedDuration && (
-                  <p className="text-slate-600">Est. duration: {job.estimatedDuration}</p>
+            <div className="space-y-4 flex flex-col">
+              <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-1">
+                <p className="text-xs uppercase text-slate-500 mb-1">Client Information</p>
+                {isEditMode ? (
+                  <div className="space-y-2">
+                    <Input defaultValue={job?.clientName || ""} placeholder="Client Name" onChange={(e) => handleEditChange("clientName", e.target.value)} />
+                    <Input defaultValue={job?.companyName || ""} placeholder="Company" onChange={(e) => handleEditChange("companyName", e.target.value)} />
+                    <Input defaultValue={job?.email || ""} placeholder="Email" onChange={(e) => handleEditChange("email", e.target.value)} />
+                    <Input defaultValue={job?.phoneNumber || ""} placeholder="Phone" onChange={(e) => handleEditChange("phoneNumber", e.target.value)} />
+                    <Input
+                      defaultValue={(job as { phoneNumber2?: string }).phoneNumber2 || ""}
+                      placeholder="Phone 2"
+                      onChange={(e) => handleEditChange("phoneNumber2", e.target.value)}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm font-medium text-slate-900">{job?.clientName || "—"}</p>
+                    {job?.companyName && <p className="text-sm text-slate-700">{job.companyName}</p>}
+                    <p className="text-sm text-slate-700">{job?.email || "—"}</p>
+                    <p className="text-sm text-slate-700">{job?.phoneNumber || "—"}</p>
+                    {(job as { phoneNumber2?: string }).phoneNumber2 && (
+                      <p className="text-sm text-slate-700">{(job as { phoneNumber2?: string }).phoneNumber2}</p>
+                    )}
+                  </>
                 )}
-                {job?.location && <p className="text-slate-600">{job.location}</p>}
-                {(job?.city || job?.state || job?.zipCode) && (
-                  <p className="text-slate-500">
-                    {[job.city, job.state, job.zipCode].filter(Boolean).join(', ')}
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-1 grow">
+                <p className="text-xs uppercase text-slate-500 mb-1">Service Location</p>
+                {isEditMode ? (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="col-span-2">
+                        <AddressInput
+                          isEditing={true}
+                          value={(editFormData as { location?: string }).location ?? job?.location ?? ""}
+                          displayValue={job?.location}
+                          onChange={(value) => handleEditChange("location", value ?? "")}
+                          onAddressChange={({ address, address2, city, zip, state, country }) => {
+                            handleEditChange("location", address ?? "");
+                            handleEditChange("apartmentNumber", address2 ?? "");
+                            handleEditChange("city", city ?? "");
+                            handleEditChange("zipCode", zip ?? "");
+                            handleEditChange("state", state ?? "");
+                            handleEditChange("country", country ?? "");
+                          }}
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <Label className="text-sm font-medium">Apartment #</Label>
+                        <Input
+                          value={(editFormData as { apartmentNumber?: string }).apartmentNumber ?? (job as { apartmentNumber?: string }).apartmentNumber ?? ""}
+                          placeholder="Apartment #"
+                          onChange={(e) => handleEditChange("apartmentNumber", e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-sm font-medium">City</Label>
+                        <Input
+                          value={(editFormData as { city?: string }).city ?? job?.city ?? ""}
+                          placeholder="City"
+                          onChange={(e) => handleEditChange("city", e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Zip</Label>
+                        <Input
+                          value={(editFormData as { zipCode?: string }).zipCode ?? job?.zipCode ?? ""}
+                          placeholder="Zip"
+                          onChange={(e) => handleEditChange("zipCode", e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-sm font-medium">State</Label>
+                        <Input
+                          value={(editFormData as { state?: string }).state ?? job?.state ?? ""}
+                          placeholder="State"
+                          onChange={(e) => handleEditChange("state", e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Country</Label>
+                        <Input
+                          value={(editFormData as { country?: string }).country ?? (job as { country?: string }).country ?? ""}
+                          placeholder="Country"
+                          onChange={(e) => handleEditChange("country", e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-700">
+                    {[
+                      job?.location,
+                      (job as { apartmentNumber?: string }).apartmentNumber,
+                      job?.city,
+                      job?.state,
+                      job?.zipCode,
+                      (job as { country?: string }).country,
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "—"}
                   </p>
                 )}
               </div>
             </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-2">
+              <p className="text-xs uppercase text-slate-500 mb-1">Job Details</p>
+              {isEditMode ? (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-1 gap-2">
+                    <SelectInput
+                      label="Job Category"
+                      options={[
+                        { label: "Plumbing", value: "Plumbing" },
+                        { label: "Electrical", value: "Electrical" },
+                        { label: "HVAC", value: "HVAC" },
+                        { label: "General", value: "General" },
+                      ]}
+                      placeholder="Select category"
+                      value={(editFormData as { jobCategory?: string }).jobCategory ?? job?.jobCategory ?? ""}
+                      onSelect={(val) => handleEditChange("jobCategory", Array.isArray(val) ? (val[0] ?? "") : val)}
+                    />
+                    <SelectInput
+                      label="Job Type"
+                      options={[
+                        { label: "Repair", value: "Repair" },
+                        { label: "Installation", value: "Installation" },
+                        { label: "Maintenance", value: "Maintenance" },
+                        { label: "Emergency", value: "Emergency" },
+                      ]}
+                      placeholder="Select type"
+                      value={(editFormData as { jobType?: string }).jobType ?? job?.jobType ?? ""}
+                      onSelect={(val) => handleEditChange("jobType", Array.isArray(val) ? (val[0] ?? "") : val)}
+                    />
+                  </div>
+                  <SelectInput
+                    label="Source"
+                    options={[
+                      { label: "Yelp", value: "yelp" },
+                      { label: "Google Ads", value: "google-ads" },
+                      { label: "Facebook", value: "facebook" },
+                      { label: "Referral", value: "referral" },
+                      { label: "Website", value: "website" },
+                      { label: "Direct Call", value: "phone" },
+                    ]}
+                    placeholder="Select source"
+                    value={(editFormData as { source?: string }).source ?? job?.source ?? ""}
+                    onSelect={(val) => handleEditChange("source", Array.isArray(val) ? (val[0] ?? "") : val)}
+                  />
+                  <div className="grid grid-cols-1 gap-2">
+                    <SelectInput
+                      label="Job Status"
+                      options={jobStatuses.map((s) => ({ label: s.name, value: s.name }))}
+                      placeholder="Select status"
+                      value={(editFormData as { status?: string }).status ?? job?.status ?? ""}
+                      onSelect={(val) => handleEditChange("status", Array.isArray(val) ? (val[0] ?? "") : val)}
+                    />
+                    <SelectInput
+                      label="Sub Status"
+                      options={[
+                        { label: "Nothing selected", value: "" },
+                        { label: "Follow up", value: "follow-up" },
+                        { label: "Rescheduled", value: "rescheduled" },
+                        { label: "No answer", value: "no-answer" },
+                        { label: "Customer cancelled", value: "customer-cancelled" },
+                        { label: "Pending confirmation", value: "pending-confirmation" },
+                      ]}
+                      placeholder="Nothing selected"
+                      value={(editFormData as { subStatus?: string }).subStatus ?? (job as { subStatus?: string }).subStatus ?? ""}
+                      onSelect={(val) => handleEditChange("subStatus", Array.isArray(val) ? (val[0] ?? "") : val)}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    <SelectInput
+                      label="Jobs Tag"
+                      options={[
+                        { label: "Urgent", value: "urgent" },
+                        { label: "Warranty", value: "warranty" },
+                        { label: "Follow-up", value: "follow-up" },
+                        { label: "Commercial", value: "commercial" },
+                        { label: "Test1", value: "test1" },
+                        { label: "Job", value: "job" },
+                      ]}
+                      placeholder="Select tags"
+                      multiselect
+                      value={
+                        Array.isArray((editFormData as { jobTags?: string[] }).jobTags)
+                          ? (editFormData as { jobTags?: string[] }).jobTags!
+                          : Array.isArray(job?.jobTags)
+                          ? job.jobTags
+                          : []
+                      }
+                      onSelect={(val) => handleEditChange("jobTags", Array.isArray(val) ? val : [])}
+                    />
+                    <SelectInput
+                      label="Jobs Tag Note"
+                      options={quickTagNoteOptions.map((t) => ({ label: t.replace(/-/g, " "), value: t }))}
+                      placeholder="Select Tag Note"
+                      multiselect
+                      value={
+                        Array.isArray((editFormData as { noteTags?: string[] }).noteTags)
+                          ? (editFormData as { noteTags?: string[] }).noteTags!
+                          : Array.isArray(job?.noteTags)
+                          ? job.noteTags
+                          : []
+                      }
+                      onSelect={(val) => handleEditChange("noteTags", Array.isArray(val) ? val : [])}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm"><span className="font-medium text-slate-900">Job Category:</span> <span className="text-slate-700">{job?.jobCategory || "—"}</span></p>
+                  <p className="text-sm"><span className="font-medium text-slate-900">Job Type:</span> <span className="text-slate-700">{job?.jobType || "—"}</span></p>
+                  <p className="text-sm"><span className="font-medium text-slate-900">Source:</span> <span className="text-slate-700">{job?.source || "—"}</span></p>
+                  <p className="text-sm"><span className="font-medium text-slate-900">Job Status:</span> <span className="text-slate-700">{job?.status || "—"}</span></p>
+                  <p className="text-sm"><span className="font-medium text-slate-900">Sub Status:</span> <span className="text-slate-700">{(job as { subStatus?: string }).subStatus || "—"}</span></p>
+                </>
+              )}
+              {!isEditMode &&
+                <div>
+                  <p className="text-xs uppercase text-slate-500 mb-1">Tags</p>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {(job?.jobTags || []).map((tag: string) => (
+                      <Badge key={tag} variant="outline">
+                        {tag}
+                      </Badge>
+                    ))}
+                    {(job?.noteTags || []).map((tag: string) => (
+                      <Badge key={tag} variant="secondary">
+                        {tag}
+                      </Badge>
+                    ))}
+                    {!job?.jobTags?.length && !job?.noteTags?.length && (
+                      <span className="text-slate-500 text-sm">No tags</span>
+                    )}
+                  </div>
+                </div>
+              }
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-1">
+              <p className="text-xs uppercase text-slate-500 mb-1">Scheduled</p>
+              {isEditMode ? (
+                <div className="space-y-2">
+                  <InputDatepicker
+                    label="Start DateTime"
+                    range={false}
+                    withTime={true}
+                    datetimeValue={
+                      (editFormData as { startDate?: string; startTime?: string }).startDate &&
+                      (editFormData as { startDate?: string; startTime?: string }).startTime
+                        ? `${(editFormData as { startDate?: string; startTime?: string }).startDate}T${String((editFormData as { startDate?: string; startTime?: string }).startTime)}`
+                        : job?.startDate && job?.startTime
+                        ? `${job.startDate}T${String(job.startTime)}`
+                        : ""
+                    }
+                    onDateTimeChange={(v) => {
+                      if (v) {
+                        const [d, t] = v.split("T");
+                        handleEditChange("startDate", d || "");
+                        handleEditChange("startTime", t || "");
+                      } else {
+                        handleEditChange("startDate", "");
+                        handleEditChange("startTime", "");
+                      }
+                    }}
+                  />
+                  <InputDatepicker
+                    label="End DateTime"
+                    range={false}
+                    withTime={true}
+                    datetimeValue={(() => {
+                      const endD =
+                        (editFormData as { endDate?: string }).endDate ??
+                        (job as { endDate?: string }).endDate;
+                      const endT =
+                        (editFormData as { estimatedEndTime?: string }).estimatedEndTime ??
+                        (job as { estimatedEndTime?: string }).estimatedEndTime;
+                      return endD && endT ? `${endD}T${String(endT)}` : "";
+                    })()}
+                    onDateTimeChange={(v) => {
+                      if (v) {
+                        const [d, t] = v.split("T");
+                        handleEditChange("endDate", d || "");
+                        handleEditChange("estimatedEndTime", t || "");
+                      } else {
+                        handleEditChange("endDate", "");
+                        handleEditChange("estimatedEndTime", "");
+                      }
+                    }}
+                  />
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm"><span className="font-medium text-slate-900">Start DateTime:</span> <span className="text-slate-700">{job?.startDate || "—"} {job?.startTime || ""}</span></p>
+                  <p className="text-sm"><span className="font-medium text-slate-900">End DateTime:</span> <span className="text-slate-700">{(job as { endDate?: string }).endDate || job?.startDate || "—"} {(job as { estimatedEndTime?: string }).estimatedEndTime || job?.startTime || ""}</span></p>
+                </>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-1">
               <p className="text-xs uppercase text-slate-500 mb-1">Assignment</p>
-              <div className="space-y-1 text-sm text-slate-900">
-                <p className="font-medium">{job?.assignedTechnician || 'Unassigned'}</p>
-                {job?.source && <p className="text-slate-600">Source: {job.source}</p>}
-                {job?.jobCategory && <p className="text-slate-600">Category: {job.jobCategory}</p>}
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-              <p className="text-xs uppercase text-slate-500 mb-1">Tags</p>
-              <div className="flex flex-wrap gap-2 text-xs">
-                {(job?.jobTags || []).map(tag => (
-                  <Badge key={tag} variant="outline">
-                    {tag}
-                  </Badge>
-                ))}
-                {(job?.noteTags || []).map(tag => (
-                  <Badge key={tag} variant="secondary">
-                    {tag}
-                  </Badge>
-                ))}
-                {!job?.jobTags?.length && !job?.noteTags?.length && (
-                  <span className="text-slate-500 text-sm">No tags</span>
-                )}
-              </div>
+              {isEditMode ? (
+                <div className="space-y-2">
+                  <SelectInput
+                    options={[
+                      { label: "All", value: "all" },
+                      { label: "Closest Distance", value: "closest-distance" },
+                      { label: "Matching Skills", value: "matching-skills" },
+                      { label: "Matching Metro", value: "matching-metro" },
+                      { label: "Closest Distance + Matching Skill + Matching Metro", value: "closest-distance-matching-skill-matching-metro" },
+                    ]}
+                    placeholder="Closest Distance"
+                    value={(editFormData as { closestDistance?: string }).closestDistance ?? (job as { closestDistance?: string }).closestDistance ?? ""}
+                    onSelect={(val) => handleEditChange("closestDistance", Array.isArray(val) ? (val[0] ?? "") : val)}
+                  />
+                  <SelectInput
+                    label="Assign Technician"
+                    options={technicianOptions.map((name) => ({ label: name, value: name }))}
+                    placeholder="Select Technician"
+                    value={(editFormData as { assignedTechnician?: string }).assignedTechnician ?? job?.assignedTechnician ?? ""}
+                    onSelect={(val) => handleEditChange("assignedTechnician", Array.isArray(val) ? (val[0] ?? "") : val)}
+                  />
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm"><span className="font-medium text-slate-900">Closest Distance:</span> <span className="text-slate-700">{(job as { closestDistance?: string }).closestDistance || "—"}</span></p>
+                  <p className="text-sm"><span className="font-medium text-slate-900">Assign Technician:</span> <span className="text-slate-700">{job?.assignedTechnician || "—"}</span></p>
+                </>
+              )}
             </div>
           </div>
 
-          {(job?.notes || job?.specialInstructions || job?.partsNeeded?.length) && (
-            <div className="grid grid-cols-1 gap-4">
-              {job?.notes && (
-                <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                  <p className="text-xs uppercase text-slate-500 mb-1">Notes</p>
-                  <p className="text-sm text-slate-700">{job.notes}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:col-span-2">
+              <p className="text-xs uppercase text-slate-500 mb-1">Description & Notes</p>
+              {isEditMode ? (
+                <div className="space-y-2">
+                  <div>
+                    <Label className="text-sm font-medium">Description</Label>
+                    <Textarea
+                      defaultValue={job?.jobDescription || ""}
+                      rows={4}
+                      className="mt-1"
+                      onChange={(e) => handleEditChange("jobDescription", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Notes</Label>
+                    <Textarea
+                      defaultValue={job?.notes || ""}
+                      rows={3}
+                      className="mt-1"
+                      onChange={(e) => handleEditChange("notes", e.target.value)}
+                    />
+                  </div>
                 </div>
+              ) : (
+                <>
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap">{job?.jobDescription || "No description"}</p>
+                  {job?.notes && <p className="text-sm text-slate-600 mt-2">{job.notes}</p>}
+                </>
               )}
-              {job?.specialInstructions && (
-                <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                  <p className="text-xs uppercase text-slate-500 mb-1">Instructions</p>
-                  <p className="text-sm text-slate-700">{job.specialInstructions}</p>
-                </div>
-              )}
-              {job?.partsNeeded?.length ? (
-                <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                  <p className="text-xs uppercase text-slate-500 mb-1">Parts Needed</p>
-                  <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
-                    {job.partsNeeded.map(part => (
-                      <li key={part}>{part}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
+
+              <PanelAttachmentSection
+                isEditMode={isEditMode}
+                attachments={Array.isArray((job as { attachments?: JobAttachment[] }).attachments) ? (job as { attachments?: JobAttachment[] }).attachments! : []}
+                onAddFiles={addPanelAttachmentFiles}
+                onRemoveAttachment={removePanelAttachment}
+                getAttachmentIcon={getAttachmentIcon}
+                formatAttachmentSize={formatAttachmentSize}
+              />
             </div>
+          </div>
+
+        </div>
+      ),
+      footer: () => (
+        <div className="flex flex-wrap gap-2">
+          {isEditMode ? (
+            <>
+              <Button size="sm" onClick={() => handleSave()}>
+                Save
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => openJobPanel(job, false)}>
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setShowJobDetails(true);
+                }}
+              >
+                Open full view
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => openJobPanel(job, true)}>
+                Edit
+              </Button>
+            </>
           )}
-
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              onClick={() => {
-                setShowJobDetails(true);
-              }}
-            >
-              Open full view
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => SidePanel.close()}>
-              Close
-            </Button>
-          </div>
         </div>
       ),
     });
