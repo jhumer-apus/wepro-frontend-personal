@@ -34,6 +34,7 @@ export default function ScheduleIndex() {
   const [showMoreJobsDialog, setShowMoreJobsDialog] = useState(false);
   const [moreJobsDate, setMoreJobsDate] = useState('');
   const [moreJobsList, setMoreJobsList] = useState<JobSchedule[]>([]);
+  const [returnToMoreJobsDate, setReturnToMoreJobsDate] = useState<string | null>(null);
   const [showUnassignedOnly, setShowUnassignedOnly] = useState(false);
 
   
@@ -501,7 +502,10 @@ export default function ScheduleIndex() {
           {/* Job Details Dialog */}
           <JobScheduleDetailsDialog
             open={showJobDetails}
-            onOpenChange={setShowJobDetails}
+            onOpenChange={(open) => {
+              setShowJobDetails(open);
+              if (!open) setReturnToMoreJobsDate(null);
+            }}
             job={selectedJob}
             getTechnicianColor={getTechnicianColor}
             getTechnicianName={getTechnicianName}
@@ -509,6 +513,17 @@ export default function ScheduleIndex() {
             onEdit={(job) => console.log("Edit", job)}
             onCall={(job) => console.log("Call", job)}
             onDirections={(job) => console.log("Directions", job)}
+            onBackToMoreJobs={
+              returnToMoreJobsDate
+                ? () => {
+                    setShowJobDetails(false);
+                    setMoreJobsDate(returnToMoreJobsDate);
+                    setMoreJobsList(getJobsForDate(returnToMoreJobsDate));
+                    setShowMoreJobsDialog(true);
+                    setReturnToMoreJobsDate(null);
+                  }
+                : undefined
+            }
           />
 
           {/* New Job Dialog */}
@@ -535,7 +550,7 @@ export default function ScheduleIndex() {
 
 
           {/* More Jobs Dialog */}
-          <MoreJobsDialog 
+          <MoreJobsDialog
             showMoreJobsDialog={showMoreJobsDialog}
             setShowMoreJobsDialog={setShowMoreJobsDialog}
             moreJobsDate={moreJobsDate}
@@ -543,6 +558,12 @@ export default function ScheduleIndex() {
             setSelectedJob={setSelectedJob}
             setShowJobDetails={setShowJobDetails}
             handleEmptySpotClick={handleEmptySpotClick}
+            onViewDetails={(job, dateStr) => {
+              setReturnToMoreJobsDate(dateStr);
+              setSelectedJob(job);
+              setShowMoreJobsDialog(false);
+              setShowJobDetails(true);
+            }}
           />
 
           {/* Drag Overlay */}

@@ -13,18 +13,31 @@ interface Props {
     setSelectedJob: React.Dispatch<React.SetStateAction<any>>;
     setShowJobDetails: React.Dispatch<React.SetStateAction<boolean>>;
     handleEmptySpotClick: (dateStr: string) => void;
+    /** When provided, called instead of setters when opening job details (so parent can reopen this dialog on Back) */
+    onViewDetails?: (job: any, dateStr: string) => void;
 }
 export default function MoreJobsDialog(props:Props) {
 
-    const { 
-        showMoreJobsDialog, 
-        setShowMoreJobsDialog, 
-        moreJobsDate, 
-        moreJobsList, 
-        setSelectedJob, 
-        setShowJobDetails, 
-        handleEmptySpotClick 
+    const {
+        showMoreJobsDialog,
+        setShowMoreJobsDialog,
+        moreJobsDate,
+        moreJobsList,
+        setSelectedJob,
+        setShowJobDetails,
+        handleEmptySpotClick,
+        onViewDetails,
     } = props;
+
+    const openJobDetails = (job: any) => {
+        if (onViewDetails) {
+            onViewDetails(job, moreJobsDate);
+        } else {
+            setSelectedJob(job);
+            setShowJobDetails(true);
+            setShowMoreJobsDialog(false);
+        }
+    };
     const { getTechnicianColor, getTechnicianName } = useTechnician();
 
     return (
@@ -53,11 +66,7 @@ export default function MoreJobsDialog(props:Props) {
                       <div
                         key={job.id}
                         className={`p-4 rounded-lg border-l-4 ${getStatusColor(job.status)} ${getStatusBorderColor(job.status)} hover:shadow-md transition-all duration-200 cursor-pointer`}
-                        onClick={() => {
-                          setSelectedJob(job);
-                          setShowJobDetails(true);
-                          setShowMoreJobsDialog(false);
-                        }}
+                        onClick={() => openJobDetails(job)}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -127,9 +136,7 @@ export default function MoreJobsDialog(props:Props) {
                               variant="outline"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedJob(job);
-                                setShowJobDetails(true);
-                                setShowMoreJobsDialog(false);
+                                openJobDetails(job);
                               }}
                             >
                               <Eye className="w-4 h-4 mr-2" />

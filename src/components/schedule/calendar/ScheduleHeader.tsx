@@ -43,7 +43,7 @@ export default function ScheduleHeader(props:Props) {
 
 
     return (
-        <div className="flex justify-between items-center gap-6">
+        <div className="flex justify-between items-center gap-6 w-full">
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                     <Button

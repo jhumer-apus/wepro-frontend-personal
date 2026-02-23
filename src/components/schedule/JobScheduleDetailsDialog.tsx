@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/src/componen
 import { Label } from "@/src/components/ui/label";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
-import { Wrench, Edit3, Phone, Navigation } from "lucide-react";
+import { Wrench, Edit3, Phone, Navigation, ArrowLeft, X } from "lucide-react";
 import { JobSchedule } from "@/src/constants/interface/jobSchedule";
 
 interface Props {
@@ -15,6 +15,8 @@ interface Props {
   onEdit?: (job: JobSchedule) => void;
   onCall?: (job: JobSchedule) => void;
   onDirections?: (job: JobSchedule) => void;
+  /** When provided, shows a Back button that returns to the day's jobs list (e.g. from More Jobs dialog) */
+  onBackToMoreJobs?: () => void;
 }
 
 const JobScheduleDetailsDialog: React.FC<Props> = ({
@@ -27,20 +29,46 @@ const JobScheduleDetailsDialog: React.FC<Props> = ({
   onEdit,
   onCall,
   onDirections,
+  onBackToMoreJobs,
 }) => {
   if (!job) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl pt-2 [&>button]:hidden px-0">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Wrench className="w-5 h-5" />
-            Job Details
+          <DialogTitle>
+            <div className="flex items-center justify-between w-full px-3 mb-10">
+              {onBackToMoreJobs && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="-ml-2 mr-1"
+                  onClick={onBackToMoreJobs}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  Back
+                </Button>
+              )}
+              {/* Custom Close Button */}
+              <Button
+                  variant="outline"
+                  size="sm"
+                  className="shadow-sm hover:shadow-md rounded-full transition-all duration-200 text-xs h-9 w-9"
+                  onClick={() => onOpenChange(false)}
+              >
+                  <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 px-4">
+              <Wrench className="w-5 h-5" />
+              Job Details
+            </div>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* LEFT COLUMN */}

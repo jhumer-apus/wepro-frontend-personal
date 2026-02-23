@@ -48,12 +48,12 @@ export default function ScheduleMonthContent(props: Props) {
                             ? 'bg-blue-100 dark:bg-blue-900 ring-2 ring-blue-500 ring-inset' 
                             : 'bg-white dark:bg-neutral-950'
                         }`}
-                        onClick={(e:any) => {
+                        onClick={(e: any) => {
                             // Only trigger if clicking on empty space (not on a job)
                             if (e.target === e.currentTarget || e.target.closest('.day-header')) {
-                                handleEmptySpotClick(day.dateStr);
+                                handleShowMoreJobs(day.dateStr);
                             }
-                    }}
+                        }}
                     >
                     <div className="flex justify-between items-start mb-2 day-header">
                         <span className={`text-sm font-medium ${

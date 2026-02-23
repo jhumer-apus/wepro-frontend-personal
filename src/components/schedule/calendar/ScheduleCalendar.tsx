@@ -10,8 +10,9 @@ import {
   DialogTrigger,
 } from "@/src/components/ui/dialog";
 
-import { Maximize2 } from "lucide-react";
+import { Maximize2, X } from "lucide-react";
 import { Fragment, SetStateAction, useState } from "react";
+import { Button } from "../../ui/button";
 
 interface Props {
     calendarDays: any[];
@@ -138,13 +139,13 @@ export default function ScheduleCalendar(props:Props) {
 
             {/* Full Screen Dialog */}
             <Dialog open={openFullScreen} onOpenChange={setOpenFullScreen}>
-                <DialogContent className="max-w-none max-h-screen p-0 rounded-none overflow-y-auto">
+                <DialogContent className="[&>button]:hidden max-w-none max-h-screen p-0 rounded-none overflow-y-auto">
 
 
                     <div className="h-full flex flex-col bg-white dark:bg-slate-900">
 
                         {/* Header Inside Dialog */}
-                        <div className="p-3 border-b flex items-center justify-between">
+                        <div className="p-1 border-b flex items-center justify-between gap-4">
                             <ScheduleHeader
                                 setCurrentDate={setCurrentDate}
                                 currentDate={currentDate}
@@ -154,6 +155,15 @@ export default function ScheduleCalendar(props:Props) {
                                 setOpenFullScreen={setOpenFullScreen} 
                                 isOpenFullScreen={openFullScreen}                            
                             />
+                            {/* Custom Close Button */}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="shadow-sm hover:shadow-md rounded-full transition-all duration-200 text-xs h-9 w-9"
+                                onClick={() => setOpenFullScreen(false)}
+                            >
+                                <X className="w-4 h-4" />
+                            </Button>
                         </div>
 
                         {/* Calendar Content */}
