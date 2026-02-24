@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/src/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/src/components/ui/popover";
 import {
@@ -43,9 +43,21 @@ const SelectInput = ({
   onAction,
   actionLabel,
 }: SelectInputProps) => {
-  const selectedValues = multiselect
+  const normalizedInitialValue = multiselect
     ? (Array.isArray(value) ? value : [])
     : (typeof value === "string" ? value : "");
+  const [internalValue, setInternalValue] = useState<string | string[]>(normalizedInitialValue);
+
+  useEffect(() => {
+    const nextValue = multiselect
+      ? (Array.isArray(value) ? value : [])
+      : (typeof value === "string" ? value : "");
+    setInternalValue(nextValue);
+  }, [multiselect, value]);
+
+  const selectedValues = multiselect
+    ? (Array.isArray(internalValue) ? internalValue : [])
+    : (typeof internalValue === "string" ? internalValue : "");
 
   const displayValue = useMemo(() => {
     if (multiselect) {
@@ -69,10 +81,12 @@ const SelectInput = ({
       const nextValues = currentValues.includes(optionValue)
         ? currentValues.filter(v => v !== optionValue)
         : [...currentValues, optionValue];
+      setInternalValue(nextValues);
       onSelect(nextValues);
       return;
     }
 
+    setInternalValue(optionValue);
     onSelect(optionValue);
   };
 
@@ -82,12 +96,14 @@ const SelectInput = ({
 
   const handleSelectAll = () => {
     if (multiselect) {
+      setInternalValue(allValues);
       onSelect(allValues);
     }
   };
 
   const handleDeselectAll = () => {
     if (multiselect) {
+      setInternalValue([]);
       onSelect([]);
     }
   };
