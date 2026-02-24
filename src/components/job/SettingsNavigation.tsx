@@ -8,6 +8,7 @@ interface NavigationItem {
   path: string
   label: string
   icon: React.ComponentType<{ className?: string }>
+  moduleCodes?: string[]
 }
 
 const mainNavigationItems: NavigationItem[] = [

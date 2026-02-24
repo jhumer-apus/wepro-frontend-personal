@@ -27,6 +27,15 @@ export const CustomerCard = ({
   customer,
   openCustomerProfile,
 }: CustomerCardProps) => {
+
+  const addressParts = [
+    customer.apartmentUnit,
+    customer.city,
+    customer.state,
+    customer.zipCode,
+    customer.country,
+    customer.location,
+  ].filter((value) => value && value.trim() !== "");
   return (
     <Card
       className="border-0 bg-white/70 backdrop-blur-sm hover:shadow-lg transition-all duration-200 cursor-pointer"
@@ -99,13 +108,11 @@ export const CustomerCard = ({
                 </p>
               )}
 
-              {(customer.addressUnit || customer.location) && (
+              {addressParts.length > 0 && (
                 <p className="flex items-center space-x-2">
-                  <MapPin className="w-3 h-3" />
+                  <MapPin className="w-3 h-3 flex-shrink-0" />
                   <span className="truncate">
-                    {[customer.addressUnit, customer.location]
-                      .filter(Boolean)
-                      .join(", ")}
+                    {addressParts.join(", ")}
                   </span>
                 </p>
               )}

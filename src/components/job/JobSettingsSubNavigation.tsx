@@ -18,6 +18,7 @@ interface SubNavigationItem {
   icon: React.ComponentType<{ className?: string }>
   requiresPermission?: boolean
   permissionCheck?: () => boolean
+  moduleCodes: string[]
 }
 
 const subNavigationItems: SubNavigationItem[] = [

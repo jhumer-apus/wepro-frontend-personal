@@ -105,7 +105,8 @@ export default function ScheduleWeekContent(props: Props) {
                         className="h-16 border-b hover:bg-blue-50 dark:hover:bg-blue-950 cursor-pointer transition-colors relative overflow-hidden"
                         onClick={(e) => {
                             // Only trigger if clicking on empty space (not on a job)
-                            if (e.target === e.currentTarget || e.target.closest('.droppable-area')) {
+                            const target = e.target as HTMLElement
+                            if (target === e.currentTarget || target.closest('.droppable-area')) {
                                 const timeStr = `${hour.toString().padStart(2, '0')}:00`;
                                 handleEmptySpotClick(day.dateStr, timeStr);
                             }
