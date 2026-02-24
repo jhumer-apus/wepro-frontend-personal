@@ -259,6 +259,9 @@ export function Sidebar({
     if (item.name === 'Live Map') {
       return true
     }
+    if (item.name === 'Messages') {
+      return true
+    }
     if (item.name === 'Billing Answering Subscription') {
       return true
     }

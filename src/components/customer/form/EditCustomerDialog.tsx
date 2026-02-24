@@ -21,13 +21,7 @@ import {
   FormMessage,
 } from "@/src/components/ui/form"
 import { Input } from "@/src/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/src/components/ui/select"
+import SelectInput from "@/src/components/input/select"
 
 import { CustomerT } from "@/src/constants/interface/customer"
 import { toast } from "sonner"
@@ -198,29 +192,25 @@ export default function EditCustomerDialog({
                   <FormLabel className="text-slate-800">
                     Source <Required />
                   </FormLabel>
-                  <Select
+                  <SelectInput
+                    label=""
+                    options={[
+                      { label: "Website", value: "Website" },
+                      { label: "Facebook Ads", value: "Facebook Ads" },
+                      { label: "Referral", value: "Referral" },
+                      { label: "Walk-in", value: "Walk-in" },
+                      { label: "Email Campaign", value: "Email Campaign" },
+                    ]}
+                    placeholder="Select source"
                     value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <FormControl>
-                      <SelectTrigger
-                        className={
-                          fieldState.error
-                            ? "border-red-500 focus-visible:ring-red-500"
-                            : ""
-                        }
-                      >
-                        <SelectValue placeholder="Select source" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Website">Website</SelectItem>
-                      <SelectItem value="Facebook Ads">Facebook Ads</SelectItem>
-                      <SelectItem value="Referral">Referral</SelectItem>
-                      <SelectItem value="Walk-in">Walk-in</SelectItem>
-                      <SelectItem value="Email Campaign">Email Campaign</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    className={
+                      fieldState.error
+                        ? "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }
+                    onSearch={() => {}}
+                    onSelect={(val) => field.onChange(Array.isArray(val) ? (val[0] ?? "") : val)}
+                  />
                   <FormMessage />
                 </FormItem>
               )}

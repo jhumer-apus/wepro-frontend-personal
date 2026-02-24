@@ -7,13 +7,7 @@ import {
 import { Label } from "@/src/components/ui/label";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/src/components/ui/select";
+import SelectInput from "@/src/components/input/select";
 import { Plus } from "lucide-react";
 
 interface Props {
@@ -63,26 +57,23 @@ const NewJobScheduleDialog: React.FC<Props> = ({
                   placeholder="e.g., HVAC System Repair"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="jobType">Job Type</Label>
-                <Select
+                <SelectInput
+                  label=""
+                  options={[
+                    { label: "HVAC", value: "HVAC" },
+                    { label: "Plumbing", value: "Plumbing" },
+                    { label: "Electrical", value: "Electrical" },
+                    { label: "Installation", value: "Installation" },
+                  ]}
+                  placeholder="Select job type"
                   value={newJobData.jobType}
-                  onValueChange={(value) =>
+                  onSearch={() => {}}
+                  onSelect={(value) =>
                     setNewJobData({ ...newJobData, jobType: value })
                   }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="HVAC">HVAC</SelectItem>
-                    <SelectItem value="Plumbing">Plumbing</SelectItem>
-                    <SelectItem value="Electrical">Electrical</SelectItem>
-                    <SelectItem value="Installation">
-                      Installation
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                />
               </div>
             </div>
 
@@ -218,37 +209,27 @@ const NewJobScheduleDialog: React.FC<Props> = ({
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="technician">Technician</Label>
-                <Select
+                <SelectInput
+                  label=""
+                  options={[
+                    { label: "Unassigned", value: "unassigned" },
+                    ...technicians.map((tech) => ({
+                      label: tech.name,
+                      value: tech.id,
+                    })),
+                  ]}
+                  placeholder="Select technician"
                   value={newJobData.technicianId}
-                  onValueChange={(value) =>
+                  onSearch={() => {}}
+                  onSelect={(value) =>
                     setNewJobData({
                       ...newJobData,
                       technicianId: value,
                     })
                   }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unassigned">
-                      Unassigned
-                    </SelectItem>
-                    {technicians.map((tech) => (
-                      <SelectItem key={tech.id} value={tech.id}>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: tech.color }}
-                          />
-                          {tech.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
               </div>
             </div>
           </div>
@@ -276,28 +257,24 @@ const NewJobScheduleDialog: React.FC<Props> = ({
                   placeholder="0.00"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="metroArea">Metro Area</Label>
-                <Select
+                <SelectInput
+                  label=""
+                  options={metroAreas.map((area) => ({
+                    label: area,
+                    value: area,
+                  }))}
+                  placeholder="Select metro area"
                   value={newJobData.metroArea}
-                  onValueChange={(value) =>
+                  onSearch={() => {}}
+                  onSelect={(value) =>
                     setNewJobData({
                       ...newJobData,
                       metroArea: value,
                     })
                   }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {metroAreas.map((area) => (
-                      <SelectItem key={area} value={area}>
-                        {area}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
               </div>
             </div>
 

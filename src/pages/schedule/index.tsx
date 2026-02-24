@@ -465,6 +465,7 @@ export default function ScheduleIndex() {
                 options={filter.options}
                 placeholder={`All ${filter.label}`}
                 value={filters[filter.key]}
+                onSearch={() => {}}
                 onSelect={val => handleFilterChange(filter.key, val)}
               />
             ))}
