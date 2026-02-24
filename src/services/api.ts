@@ -9,6 +9,7 @@ const apiClient: AxiosInstance = axios.create({
   timeout: config.api.timeout,
   headers: {
     'Content-Type': 'application/json',
+    'Authorization': `Bearer ${config.api.apiKey}`,
     // 'ngrok-skip-browser-warning': 'true',
   },
 })

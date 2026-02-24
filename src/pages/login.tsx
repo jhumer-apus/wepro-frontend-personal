@@ -83,8 +83,6 @@ export default function Login(): React.JSX.Element {
           password: formData.password,
         })
 
-        // const response = await apiService.post('/login/loginPost')
-
         // Update Redux state with the full user data from API response
         dispatch(
           login({
@@ -96,7 +94,7 @@ export default function Login(): React.JSX.Element {
         )
 
         // Fetch and save user profile data
-        const profile = await apiService.get('/v1/profile')
+        const profile = await apiService.get('/v3/profile')
         console.log(profile, 'profile')
         // Save user profile data to Redux store
         if (profile.data.success && profile.data.data) {
