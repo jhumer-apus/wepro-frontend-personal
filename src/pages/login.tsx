@@ -46,8 +46,8 @@ export default function Login(): React.JSX.Element {
     if (
       isAuthenticated &&
       !loading &&
-      !userData.loading &&
-      userData?.data?._id
+      !userData.loading 
+      && userData?.data?._id
     ) {
       router.push('/dashboard')
     }
@@ -78,10 +78,13 @@ export default function Login(): React.JSX.Element {
         // })
 
 
-        const response = await apiService.post('/v3/auth/login', {
-          username: formData.username,
-          password: formData.password,
-        })
+        const fd = new FormData()
+        fd.append("username", formData.username)
+        fd.append("password", formData.password)
+        fd.append("deviceToken", "sdsd")
+
+        const response = await apiService.post('/v3/auth/login', fd)
+        console.log(response);
 
         // Update Redux state with the full user data from API response
         dispatch(
@@ -94,12 +97,16 @@ export default function Login(): React.JSX.Element {
         )
 
         // Fetch and save user profile data
-        const profile = await apiService.get('/v3/profile')
-        console.log(profile, 'profile')
-        // Save user profile data to Redux store
-        if (profile.data.success && profile.data.data) {
-          dispatch(setUserData(profile.data.data))
+        // const profile = await apiService.get('/v3/profile')
+        // console.log(profile, 'profile')
+        // // Save user profile data to Redux store
+        // if (profile.data.success && profile.data.data) {
+        //   dispatch(setUserData(profile.data.data))
+        // }
+        const profile = {
+          _id: "dfdfdf",
         }
+        // dispatch(setUserData(profile))
       } catch (apiError: any) {
         // Handle API errors
         if (apiError.response?.status === 401) {
