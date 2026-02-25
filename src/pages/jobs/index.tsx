@@ -3469,6 +3469,7 @@ export default function Jobs() {
                       ]}
                       placeholder="Select category"
                       value={(editFormData as { jobCategory?: string }).jobCategory ?? job?.jobCategory ?? ""}
+                      onSearch={() => {}}
                       onSelect={(val) => handleEditChange("jobCategory", Array.isArray(val) ? (val[0] ?? "") : val)}
                     />
                     <SelectInput
@@ -3481,6 +3482,7 @@ export default function Jobs() {
                       ]}
                       placeholder="Select type"
                       value={(editFormData as { jobType?: string }).jobType ?? job?.jobType ?? ""}
+                      onSearch={() => {}}
                       onSelect={(val) => handleEditChange("jobType", Array.isArray(val) ? (val[0] ?? "") : val)}
                     />
                   </div>
@@ -3496,6 +3498,7 @@ export default function Jobs() {
                     ]}
                     placeholder="Select source"
                     value={(editFormData as { source?: string }).source ?? job?.source ?? ""}
+                    onSearch={() => {}}
                     onSelect={(val) => handleEditChange("source", Array.isArray(val) ? (val[0] ?? "") : val)}
                   />
                   <div className="grid grid-cols-1 gap-2">
@@ -3504,6 +3507,7 @@ export default function Jobs() {
                       options={jobStatuses.map((s) => ({ label: s.name, value: s.name }))}
                       placeholder="Select status"
                       value={(editFormData as { status?: string }).status ?? job?.status ?? ""}
+                      onSearch={() => {}}
                       onSelect={(val) => handleEditChange("status", Array.isArray(val) ? (val[0] ?? "") : val)}
                     />
                     <SelectInput
@@ -3518,6 +3522,7 @@ export default function Jobs() {
                       ]}
                       placeholder="Nothing selected"
                       value={(editFormData as { subStatus?: string }).subStatus ?? (job as { subStatus?: string }).subStatus ?? ""}
+                      onSearch={() => {}}
                       onSelect={(val) => handleEditChange("subStatus", Array.isArray(val) ? (val[0] ?? "") : val)}
                     />
                   </div>
@@ -3541,6 +3546,7 @@ export default function Jobs() {
                           ? job.jobTags
                           : []
                       }
+                      onSearch={() => {}}
                       onSelect={(val) => handleEditChange("jobTags", Array.isArray(val) ? val : [])}
                     />
                     <SelectInput
@@ -3555,6 +3561,7 @@ export default function Jobs() {
                           ? job.noteTags
                           : []
                       }
+                      onSearch={() => {}}
                       onSelect={(val) => handleEditChange("noteTags", Array.isArray(val) ? val : [])}
                     />
                   </div>
@@ -3666,6 +3673,7 @@ export default function Jobs() {
                     ]}
                     placeholder="Closest Distance"
                     value={(editFormData as { closestDistance?: string }).closestDistance ?? (job as { closestDistance?: string }).closestDistance ?? ""}
+                    onSearch={() => {}}
                     onSelect={(val) => handleEditChange("closestDistance", Array.isArray(val) ? (val[0] ?? "") : val)}
                   />
                   <SelectInput
@@ -3673,6 +3681,7 @@ export default function Jobs() {
                     options={technicianOptions.map((name) => ({ label: name, value: name }))}
                     placeholder="Select Technician"
                     value={(editFormData as { assignedTechnician?: string }).assignedTechnician ?? job?.assignedTechnician ?? ""}
+                    onSearch={() => {}}
                     onSelect={(val) => handleEditChange("assignedTechnician", Array.isArray(val) ? (val[0] ?? "") : val)}
                   />
                 </div>
@@ -4213,6 +4222,7 @@ export default function Jobs() {
                 placeholder="All job types"
                 value={quickJobTypes}
                 multiselect
+                onSearch={() => {}}
                 onSelect={val => setQuickJobTypes(Array.isArray(val) ? val : [])}
               />
               <SelectInput
@@ -4224,6 +4234,7 @@ export default function Jobs() {
                 placeholder="All agents"
                 value={quickAgents}
                 multiselect
+                onSearch={() => {}}
                 onSelect={val => setQuickAgents(Array.isArray(val) ? val : [])}
               />
               <InputDatepicker
@@ -4240,6 +4251,7 @@ export default function Jobs() {
                 placeholder="All dispatches"
                 value={quickDispatches}
                 multiselect
+                onSearch={() => {}}
                 onSelect={val => setQuickDispatches(Array.isArray(val) ? val : [])}
               />
             </div>
@@ -4255,6 +4267,7 @@ export default function Jobs() {
                 placeholder="All Tag Notes"
                 value={quickTagNotes}
                 multiselect
+                onSearch={() => {}}
                 onSelect={val => setQuickTagNotes(Array.isArray(val) ? val : [])}
                 actionLabel="Add Tag Notes"
                 onAction={() => setShowAddTagNoteModal(true)}
@@ -4268,6 +4281,7 @@ export default function Jobs() {
                 placeholder="All Tags"
                 value={quickTags}
                 multiselect
+                onSearch={() => {}}
                 onSelect={val => setQuickTags(Array.isArray(val) ? val : [])}
                 actionLabel="Add Tag"
                 onAction={() => setShowAddTagModal(true)}
@@ -4277,6 +4291,7 @@ export default function Jobs() {
                 options={quickSingleOptions}
                 placeholder="All Sources"
                 value={quickSingleChoice}
+                onSearch={() => {}}
                 onSelect={val => setQuickSingleChoice(Array.isArray(val) ? (val[0] ?? '') : val)}
               />
               <SelectInput
@@ -4289,6 +4304,7 @@ export default function Jobs() {
                 ]}
                 placeholder="All technicians"
                 value={assignedTechFilter}
+                onSearch={() => {}}
                 onSelect={val => setAssignedTechFilter(Array.isArray(val) ? (val[0] ?? "all") : val)}
               />
             </div>
