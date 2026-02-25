@@ -796,6 +796,7 @@ export default function LiveMapIndex(): React.JSX.Element {
                   options={filterByOptions}
                   placeholder="Select filter type"
                   value={filterBy}
+                  onSearch={() => {}}
                   onSelect={val => setFilterBy(Array.isArray(val) ? '' : val)}
                 />
               </div>

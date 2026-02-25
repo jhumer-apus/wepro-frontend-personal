@@ -861,6 +861,7 @@ export function JobForm(props: JobFormProps) {
                                   ]}
                                   placeholder="Select category"
                                   value={formData.jobCategory || ""}
+                                  onSearch={() => {}}
                                   onSelect={(val) => handleEditChange("jobCategory", Array.isArray(val) ? (val[0] ?? "") : val)}
                                 />
                               ) : (
@@ -882,6 +883,7 @@ export function JobForm(props: JobFormProps) {
                                   ]}
                                   placeholder="Select type"
                                   value={formData.jobType || ""}
+                                  onSearch={() => {}}
                                   onSelect={(val) => handleEditChange("jobType", Array.isArray(val) ? (val[0] ?? "") : val)}
                                 />
                               ) : (
@@ -906,6 +908,7 @@ export function JobForm(props: JobFormProps) {
                                 ]}
                                 placeholder="Select source"
                                 value={formData.source ?? ""}
+                                onSearch={() => {}}
                                 onSelect={(val) => handleEditChange("source", Array.isArray(val) ? (val[0] ?? "") : val)}
                               />
                             ) : (
@@ -933,6 +936,7 @@ export function JobForm(props: JobFormProps) {
                                 options={DEFAULT_JOB_STATUSES.map((s) => ({ label: s.name, value: s.name }))}
                                 placeholder="Select status"
                                 value={formData.status ?? selectedJob?.status ?? ""}
+                                onSearch={() => {}}
                                 onSelect={(val) => handleEditChange("status", Array.isArray(val) ? (val[0] ?? "") : val)}
                               />
                             ) : (
@@ -954,6 +958,7 @@ export function JobForm(props: JobFormProps) {
                                 ]}
                                 placeholder="Nothing selected"
                                 value={(formData as { subStatus?: string }).subStatus ?? (selectedJob as { subStatus?: string }).subStatus ?? ""}
+                                onSearch={() => {}}
                                 onSelect={(val) => handleEditChange("subStatus", Array.isArray(val) ? (val[0] ?? "") : val)}
                               />
                             ) : (
@@ -988,6 +993,7 @@ export function JobForm(props: JobFormProps) {
                                     ? selectedJob.jobTags
                                     : []
                                 }
+                                onSearch={() => {}}
                                 onSelect={(val) => handleEditChange("jobTags", Array.isArray(val) ? val : [])}
                               />
                             ) : (
@@ -1009,6 +1015,7 @@ export function JobForm(props: JobFormProps) {
                                     ? selectedJob.noteTags
                                     : []
                                 }
+                                onSearch={() => {}}
                                 onSelect={(val) => handleEditChange("noteTags", Array.isArray(val) ? val : [])}
                               />
                             ) : (
@@ -1129,6 +1136,7 @@ export function JobForm(props: JobFormProps) {
                                 ]}
                                 placeholder="Closest Distance"
                                 value={(formData as { closestDistance?: string }).closestDistance ?? (selectedJob as { closestDistance?: string }).closestDistance ?? ""}
+                                onSearch={() => {}}
                                 onSelect={(val) => handleEditChange("closestDistance", Array.isArray(val) ? (val[0] ?? "") : val)}
                               />
                             ) : (
@@ -1149,6 +1157,7 @@ export function JobForm(props: JobFormProps) {
                                 options={DEFAULT_TECHNICIAN_OPTIONS.map((name) => ({ label: name, value: name }))}
                                 placeholder="Select Technician"
                                 value={formData.assignedTechnician ?? selectedJob?.assignedTechnician ?? ""}
+                                onSearch={() => {}}
                                 onSelect={(val) => handleEditChange("assignedTechnician", Array.isArray(val) ? (val[0] ?? "") : val)}
                               />
                             ) : (
@@ -1364,6 +1373,7 @@ export function JobForm(props: JobFormProps) {
                               ]}
                               placeholder="Filter Activity"
                               value={activityFilter}
+                              onSearch={() => {}}
                               onSelect={(val) => setActivityFilter(Array.isArray(val) ? (val[0] ?? "all") : val)}
                             />
                           </div>
@@ -1630,6 +1640,7 @@ export function JobForm(props: JobFormProps) {
                     options={[{ label: "Invoice", value: "Invoice" }, { label: "Estimate", value: "Estimate" }]}
                     placeholder="Type"
                     value={addPaymentForm.type}
+                    onSearch={() => {}}
                     onSelect={(v) => setAddPaymentForm((prev) => ({ ...prev, type: Array.isArray(v) ? (v[0] ?? "") : v }))}
                   />
                 </div>
@@ -1649,6 +1660,7 @@ export function JobForm(props: JobFormProps) {
                     ]}
                     placeholder="Payment Method"
                     value={addPaymentForm.paymentMethod}
+                    onSearch={() => {}}
                     onSelect={(v) => setAddPaymentForm((prev) => ({ ...prev, paymentMethod: Array.isArray(v) ? (v[0] ?? "") : v }))}
                   />
                 </div>
@@ -1677,6 +1689,7 @@ export function JobForm(props: JobFormProps) {
                     options={[{ label: "Pending", value: "Pending" }, { label: "Paid", value: "Paid" }, { label: "Overdue", value: "Overdue" }]}
                     placeholder="Status"
                     value={addPaymentForm.status}
+                    onSearch={() => {}}
                     onSelect={(v) => setAddPaymentForm((prev) => ({ ...prev, status: Array.isArray(v) ? (v[0] ?? "") : v }))}
                   />
                 </div>
