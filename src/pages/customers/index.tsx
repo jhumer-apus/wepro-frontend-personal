@@ -11,21 +11,30 @@ import JobsTable from '@/src/components/table'
 import { CustomerCard } from '@/src/components/customer/CustomerCard'
 import { CustomerT } from '@/src/constants/interface/customer'
 import { CustomerProfileView } from '@/src/components/customer/CustomerProfileView'
-import DashboardFilter from '@/src/components/dashboardFilter/DashboardFilter'
-import SelectInput from '@/src/components/input/select'
+import { exportToCSV } from '@/src/utils/exportToCSV'
+import { Checkbox } from '@/src/components/ui/checkbox'
+import CustomerDashboardFilter from '@/src/components/customer/CustomerDashboardFilter'
+import CreateCustomerDialog from '@/src/components/customer/form/CreateCustomerDialog'
+import EditCustomerDialog from '@/src/components/customer/form/EditCustomerDialog'
+import SidePanel from '@/src/components/sidePanel'
+import { Badge } from '@/src/components/ui/badge'
+import CustomerQuickView from '@/src/components/customer/CustomerQuickView'
 
 
 
 const CustomersIndex: React.FC = (): React.JSX.Element => {
 
+  const [openCreateCustomerDialog, setOpenCreateCustomerDialog] = useState<boolean>(false)
+  const [openEditCustomerDialog, setOpenEditCustomerDialog] = useState<boolean>(false)
   const [pageSize, setPageSize] = useState<number>(10)
   const [currentPage, setCurrentPage] = useState<number>(1)
+  const [customers, setCustomers] = useState<CustomerT[]>(customersMockData)
+  const [customerToEdit, setCustomerToEdit] = useState<CustomerT | null>(null)
 
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerT | null>(
     null
   )
   const [searchTerm, setSearchTerm] = useState<string>('')
-  const [toggleStatus, setToggleStatus] = useState<string>('')
   const [showProfile, setShowProfile] = useState<boolean>(false)
 
   /* Filters */
@@ -36,9 +45,27 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
   // Sortings
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
+
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+
+
+  const handleRowToggle = (id: string, isChecked: boolean) => {
+    setSelectedRows(prev => {
+      const newSet = new Set(prev);
+
+      if (isChecked) {
+        newSet.add(id);
+      } else {
+        newSet.delete(id);
+      }
+
+      return newSet;
+    });
+  };
+
   
 
-  const filteredCustomers = customersMockData.filter(customer => {
+  const filteredCustomers = customers.filter(customer => {
     const matchesSearch =
       customer.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -46,21 +73,12 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
 
     const matchesSource = moreFiltersData.source === 'all' || customer.sourceTitle === moreFiltersData.source
 
-    const matchesStatus = toggleStatus === "" || customer.status === toggleStatus
-    return matchesSearch && matchesSource && matchesStatus
+    return matchesSearch && matchesSource
   })
 
   const sources= Array.from(
     new Set(customersMockData.map(c => c.sourceTitle).filter(Boolean))
   )
-
-  const sourcesFormatted = [
-    { label: "All", value: "all" },
-    ...sources.map(source => ({
-      label: source,
-      value: source,
-    })),
-  ]
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -89,108 +107,113 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
       : String(bVal).localeCompare(String(aVal))
   })
 
-  const handleViewCustomer = (customer: CustomerT) => {
-    setSelectedCustomer(customer)
-    setShowProfile(true)
-  }
+    const openCustomerQuickView = (customer: CustomerT) => {
+      SidePanel.open({
+        title: customer.clientName ?? "Customer",
+        content: () => (
+          <CustomerQuickView
+            customer={customer}
+            onViewFullProfile={(c) => {
+              setSelectedCustomer(c);
+              setShowProfile(true);
+            }}
+          />
+        ),
+      });
+    };
 
   const customerColumns = [
-      {
-        columnName: "Serial No.",
-        sortKey: "serialNumber",
-        cell: (row: CustomerT) => (
-          <span className="whitespace-nowrap">
-            {row.serialNumber ?? "—"}
-          </span>
-        ),
-      },
-      {
-        columnName: "Client",
-        sortKey: "clientName",
-        cell: (row: CustomerT) => (
-          <span className="whitespace-nowrap">
-            {row.clientName ?? "—"}
-          </span>
-        ),
-      },
-      {
-        columnName: "Company",
-        sortKey: "companyName",
-        cell: (row: CustomerT) => (
-          <span className="whitespace-nowrap">
-            {row.companyName ?? "—"}
-          </span>
-        ),
-      },
-      {
-        columnName: "Email",
-        sortKey: "email",
-        cell: (row: CustomerT) => (
-          <span className="whitespace-nowrap">
-            {row.email ?? "—"}
-          </span>
-        ),
-      },
-      {
-        columnName: "Phone",
-        sortKey: "phoneNumber",
-        cell: (row: CustomerT) => (
-          <span className="whitespace-nowrap">
-            {row.phoneNumber ?? "—"}
-          </span>
-        ),
-      },
-      {
-        columnName: "Source",
-        sortKey: "sourceTitle",
-        cell: (row: CustomerT) => (
-          <span className="whitespace-nowrap">
-            {row.sourceTitle}
-          </span>
-        ),
-      },
-      {
-        columnName: "Unit",
-        cell: (row: CustomerT) => `${row.addressUnit ?? "-"}`,
-        sortKey: "addressUnit",
-      },
-      {
-        columnName: "Location",
-        cell: (row: CustomerT) => row.location ?? "—",
-        sortKey: "location",
-      },
     {
-      columnName: "Actions",
+      columnName: "",
       cell: (row: CustomerT) => (
-        <div className="flex items-center">
+        <div className="flex items-center justify-center mt-1.5">
+          <Checkbox
+            aria-label={`Select customer ${row.id}`}
+            checked={selectedRows.has(row.id)}
+            onCheckedChange={(checked) =>
+              handleRowToggle(row.id, Boolean(checked))
+            }
+          />
+        </div>
+      ),
+    },
+    {
+      columnName: "Client",
+      sortKey: "clientName",
+      cell: (row: CustomerT) => (
+        <div className="flex items-center gap-2 whitespace-nowrap">
           <Button
-            size="sm"
+            size="icon"
             variant="ghost"
-            onClick={() => handleViewCustomer(row)}
+            className="h-7 w-7 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 shadow-sm"
+            onClick={() => openCustomerQuickView(row)}
+            title="View customer"
           >
             <Eye className="w-4 h-4" />
           </Button>
 
-          <Button
-            size="sm"
-            variant="ghost"
-            // onClick={() => handleEditCustomer(row.id)}
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
-
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-red-600 hover:text-red-700"
-            // onClick={() => handleDeleteCustomer(row.id)}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          <span className="font-medium">
+            {row.clientName ?? "—"}
+          </span>
         </div>
       ),
     },
-  ]
+    {
+      columnName: "Company",
+      sortKey: "companyName",
+      cell: (row: CustomerT) => (
+        <span className="whitespace-nowrap">
+          {row.companyName ?? "—"}
+        </span>
+      ),
+    },
+    {
+      columnName: "Email",
+      sortKey: "email",
+      cell: (row: CustomerT) => (
+        <span className="whitespace-nowrap">
+          {row.email ?? "—"}
+        </span>
+      ),
+    },
+    {
+      columnName: "Phone",
+      sortKey: "phoneNumber",
+      cell: (row: CustomerT) => (
+        <span className="whitespace-nowrap">
+          {row.phoneNumber ?? "—"}
+        </span>
+      ),
+    },
+    {
+      columnName: "Source",
+      sortKey: "sourceTitle",
+      cell: (row: CustomerT) => (
+        <span className="whitespace-nowrap">
+          {row.sourceTitle ?? "—"}
+        </span>
+      ),
+    },
+    {
+      columnName: "Address",
+      cell: (row: CustomerT) => (
+        <span className="whitespace-nowrap">
+          {[row.city, row.state, row.country]
+            .filter(Boolean)
+            .join(", ") || "—"}
+        </span>
+      ),
+    },
+    {
+      columnName: "Location",
+      sortKey: "location",
+      cell: (row: CustomerT) => (
+        <span className="whitespace-nowrap">
+          {row.location ?? "—"}
+        </span>
+      ),
+    },
+  ];
 
 
   const totalCount = filteredCustomers.length
@@ -212,12 +235,36 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
     setCurrentPage(page)
   }
 
+  const handleExport = () => {
+    exportToCSV(
+      sortedCustomers,
+      [
+        { header: "Serial No.", accessor: c => c.serialNumber ?? "" },
+        { header: "Client", accessor: c => c.clientName ?? "" },
+        { header: "Company", accessor: c => c.companyName ?? "" },
+        { header: "Email", accessor: c => c.email ?? "" },
+        { header: "Phone", accessor: c => c.phoneNumber ?? "" },
+        { header: "Source", accessor: c => c.sourceTitle ?? "" },
+        { header: "Unit", accessor: c => c.apartmentUnit ?? "" },
+        { header: "Location", accessor: c => c.location ?? "" },
+        {
+          header: "Full Address",
+          accessor: c =>
+            [c.apartmentUnit, c.city, c.state, c.country, c.zipCode]
+              .filter(Boolean)
+              .join(", "),
+        },
+      ],
+      "customers_export.csv"
+    );
+  };
 
-  const toggleList = [
-    { label: "All", value: "" },
-    { label: "Active", value: "active" },
-    { label: "Inactive", value: "inactive" },
-  ]
+
+  const nextSerialNumber =
+    customers.length > 0
+      ? Math.max(...customers.map(c => c.serialNumber)) + 1
+      : 1;
+
 
   /* To Be Set Soon After Finishing Table */
 
@@ -231,33 +278,75 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
   }
   
   return (
-    <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
+    <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col md:h-[calc(100vh-8rem)]">
       {/* Header */}
-      <DashboardFilter 
-        title='Customer Dashboard'
-        description='Manage customer relationships and history'
-        toggleList={toggleList}
+      <CustomerDashboardFilter 
         searchQuery={searchTerm}
         onChangeSearchQuery={setSearchTerm}
-        onToggleChange={setToggleStatus} 
-        toggleStatus={toggleStatus} 
-        moreFilters={
-          (
-            /* Source Filter */
-            <SelectInput
-              label="Source"
-              options={sourcesFormatted}
-              placeholder="All Source"
-              value={moreFiltersData.source}
-              onSelect={val => setMoreFiltersData(prev => ({
-                ...prev,
-                source: typeof val === "string" ? val : prev.source,
-              }))}
-              onSearch={() => {}}
-            />
-          )
-        }     
+        moreFiltersData={moreFiltersData}
+        setMoreFiltersData={setMoreFiltersData} 
+        handleOpenCreateCustomer={() => setOpenCreateCustomerDialog(() => true)}
       />
+
+      
+      {selectedRows.size > 0 && (
+        <div className="flex items-center gap-3 my-2">
+
+          {/* Bulk Delete */}
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              const confirmed = window.confirm(
+                `Delete ${selectedRows.size} selected customer(s)?`
+              );
+              if (!confirmed) return;
+
+              // If using real state:
+              setCustomers(prev =>
+                prev.filter(c => !selectedRows.has(c.id))
+              );
+              console.log("Deleting:", Array.from(selectedRows));
+
+              setSelectedRows(new Set());
+            }}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Delete
+          </Button>
+
+          {/* Edit Section */}
+          <div className="flex items-center gap-2 bg-gray-200 rounded-md">
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const selectedId = Array.from(selectedRows)[0];
+
+                const findCustomer = customers.find(c => c.id === selectedId) ?? null
+                setCustomerToEdit(() => findCustomer)
+
+                if (findCustomer) {
+                  setOpenEditCustomerDialog(() => true)
+                }
+              }}
+              disabled={selectedRows.size !== 1}
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+
+            {selectedRows.size !== 1 && (
+              <p className="text-xs text-gray-500 pr-2">
+                Select exactly one customer to edit
+              </p>
+            )}
+          </div>
+
+        </div>
+      )}
+
 
       {/* Table */}
       <JobsTable
@@ -267,7 +356,7 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
         mobileCard={(row) => (
           <CustomerCard
             customer={row}
-            openCustomerProfile={handleViewCustomer}
+            openCustomerProfile={openCustomerQuickView}
           />
         )}
         onSort={handleSort}
@@ -279,7 +368,35 @@ const CustomersIndex: React.FC = (): React.JSX.Element => {
         totalCount={totalCount}
         onPageSizeChange={handlePageSizeChange}
         onPageChange={handlePageChange}
+        onExport={handleExport}
+        className="flex-1 flex flex-col"
+        tableClassName="flex-1 flex flex-col overflow-y-hidden"
+        lockedColumns={2}
       />
+
+
+      {/* Create Customer Dialog */}
+      <CreateCustomerDialog
+        nextSerialNumber={nextSerialNumber}
+        open={openCreateCustomerDialog}
+        setOpen={setOpenCreateCustomerDialog}
+        onCreate={(newCustomer) => {
+          setCustomers(prev => [...prev, newCustomer]);
+        }}
+      />
+
+      {/* Edit Customer Dialog */}
+      <EditCustomerDialog 
+        customer={customerToEdit} 
+        onUpdate={(updated: CustomerT) => {
+          setCustomers(prev =>
+            prev.map(c => (c.id === updated.id ? updated : c))
+          )
+        }} 
+        open={openEditCustomerDialog} 
+        setOpen={setOpenEditCustomerDialog} 
+      />
+
     </div>
   )
 }

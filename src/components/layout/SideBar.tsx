@@ -25,6 +25,7 @@ import {
   Database,
   Clock,
   Factory,
+  MapPinned,
   Bell,
   FileText,
   Megaphone,
@@ -139,11 +140,16 @@ export function Sidebar({
       href: '/customers',
       icon: Home,
     },
-    // {
-    //   name: 'Schedule',
-    //   href: '/schedule',
-    //   icon: Calendar,
-    // },
+    {
+      name: 'Schedule',
+      href: '/schedule',
+      icon: Calendar,
+    },
+    {
+      name: 'Live Map',
+      href: '/live-map',
+      icon: MapPinned,
+    },
     // {
     //   name: 'WePro Phone',
     //   href: '/calls',
@@ -245,6 +251,12 @@ export function Sidebar({
       return true
     }
     if (item.name === 'Customers') {
+      return true
+    }
+    if (item.name === 'Schedule') {
+      return true
+    }
+    if (item.name === 'Live Map') {
       return true
     }
     if (item.name === 'Billing Answering Subscription') {

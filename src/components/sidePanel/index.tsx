@@ -15,6 +15,7 @@ type WidthPreset = 'sm' | 'md' | 'lg' | 'xl'
 type SidePanelOptions = {
   title?: React.ReactNode
   content?: React.ReactNode | (() => React.ReactNode)
+  footer?: React.ReactNode | (() => React.ReactNode)
   width?: WidthPreset | string | number
 }
 
@@ -23,6 +24,7 @@ type SidePanelState = {
   options: {
     title?: React.ReactNode
     content?: React.ReactNode | (() => React.ReactNode)
+    footer?: React.ReactNode | (() => React.ReactNode)
     width: WidthPreset | string | number
   }
 }
@@ -43,6 +45,7 @@ const WIDTH_MAP: Record<WidthPreset, string> = {
 const defaultOptions: SidePanelState['options'] = {
   title: undefined,
   content: null,
+  footer: null,
   width: 'md',
 }
 
@@ -134,6 +137,7 @@ export function SidePanelViewport({
     [state.options.width]
   )
   const panelContent = renderContent(state.options.content)
+  const panelFooter = renderContent(state.options.footer)
 
   const gridStyle: React.CSSProperties = useMemo(
     () => ({
@@ -149,7 +153,7 @@ export function SidePanelViewport({
     <div
       className={`grid h-full min-h-0 max-h-screen ${minHeight} ${className ?? ''} ${
         state.isOpen
-          ? 'grid-cols-[1fr_100%] xl:grid-cols-[1fr_400px] 2xl:grid-cols-[1fr_640px]'
+          ? 'grid-cols-[1fr_100%] xl:grid-cols-[1fr_600px] 2xl:grid-cols-[1fr_640px]'
           : 'grid-cols-[1fr_0px]'
       }`}
       style={gridStyle}
@@ -157,7 +161,7 @@ export function SidePanelViewport({
       <div className="min-w-0 overflow-auto flex">{children}</div>
 
       <aside
-        className={`relative z-20 h-screen max-h-screen min-h-0 lg:h-full lg:max-h-screen overflow-hidden border-l border-neutral-200 bg-white shadow-lg transition-transform duration-300 ease-in-out dark:border-neutral-800 dark:bg-neutral-900 w-full xl:w-[400px] 2xl:w-[640px]`}
+        className={`relative z-20 h-screen max-h-screen min-h-0 lg:h-full lg:max-h-screen overflow-visible border-l border-neutral-200 bg-white shadow-lg transition-transform duration-300 ease-in-out dark:border-neutral-800 dark:bg-neutral-900 w-full xl:w-[600px] 2xl:w-[640px]`}
         style={{
           transform: state.isOpen ? 'translateX(0)' : 'translateX(100%)'
         }}
@@ -178,9 +182,14 @@ export function SidePanelViewport({
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="flex-1 overflow-auto px-4 py-4 text-neutral-900 dark:text-neutral-100">
+          <div className="flex-1 overflow-auto overflow-x-visible px-4 py-4 text-neutral-900 dark:text-neutral-100">
             {panelContent}
           </div>
+          {panelFooter ? (
+            <div className="border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
+              {panelFooter}
+            </div>
+          ) : null}
         </div>
       </aside>
     </div>

@@ -1,0 +1,640 @@
+diff --git a/node_modules/react-tailwindcss-datepicker/dist/index.esm.js b/node_modules/react-tailwindcss-datepicker/dist/index.esm.js
+index 5fccc57..71adcc0 100644
+--- a/node_modules/react-tailwindcss-datepicker/dist/index.esm.js
++++ b/node_modules/react-tailwindcss-datepicker/dist/index.esm.js
+@@ -1667,6 +1667,7 @@ const DatepickerContext = createContext({
+     inputId: undefined,
+     inputName: undefined,
+     inputText: "",
++    isMilitary: true,
+     maxDate: null,
+     minDate: null,
+     period: { start: null, end: null },
+@@ -1674,12 +1675,17 @@ const DatepickerContext = createContext({
+     primaryColor: DEFAULT_COLOR,
+     readOnly: false,
+     required: false,
++    onReset: () => { },
+     separator: DEFAULT_SEPARATOR,
++    selectedHour: "",
++    selectedMeridiem: "",
++    selectedMinute: "",
+     showFooter: false,
+     startWeekOn: START_WEEK,
+     toggleClassName: "",
+     toggleIcon: undefined,
+     updateFirstDate: () => { },
++    withTime: false,
+     value: null
+ });
+ 
+@@ -2793,7 +2799,7 @@ const PrimaryButton = (props) => {
+     const ringColor = RING_COLOR.focus[primaryColor];
+     // Functions
+     const getClassName = useCallback(() => {
+-        return `w-full transition-all duration-300 ${bgColor} ${borderColor} text-white font-medium border px-4 py-2 text-sm rounded-md focus:ring-2 focus:ring-offset-2 ${bgColorHover} ${ringColor} ${disabled ? " cursor-no-drop" : ""}`;
++        return `w-full transition-all duration-300 ${bgColor} ${borderColor} text-white font-medium border px-4 py-1 text-sm rounded-sm focus:ring-2 focus:ring-offset-2 ${bgColorHover} ${ringColor} ${disabled ? " cursor-no-drop" : ""}`;
+     }, [bgColor, bgColorHover, borderColor, disabled, ringColor]);
+     return (jsxRuntimeExports.jsx("button", { type: "button", className: getClassName(), onClick: onClick, disabled: disabled, children: children }));
+ };
+@@ -2805,32 +2811,37 @@ const SecondaryButton = (props) => {
+     // Functions
+     const getClassName = useCallback(() => {
+         const ringColor = RING_COLOR.focus[primaryColor];
+-        return `w-full transition-all duration-300 bg-white dark:text-gray-700 font-medium border border-gray-300 px-4 py-2 text-sm rounded-md focus:ring-2 focus:ring-offset-2 hover:bg-gray-50 ${ringColor}`;
++        return `w-full transition-all duration-300 bg-white dark:text-gray-700 font-medium border border-gray-300 px-4 py-1 text-sm rounded-sm focus:ring-2 focus:ring-offset-2 hover:bg-gray-50 ${ringColor}`;
+     }, [primaryColor]);
+     return (jsxRuntimeExports.jsx("button", { type: "button", className: getClassName(), onClick: onClick, disabled: disabled, children: children }));
+ };
+ 
+ const Footer = () => {
+     // Contexts
+-    const { hideDatepicker, period, changeDatepickerValue, configs, classNames } = useContext(DatepickerContext);
++    const { hideDatepicker, period, changeDatepickerValue, configs, classNames, withTime, isMilitary, selectedHour, selectedMinute, selectedMeridiem } = useContext(DatepickerContext);
+     // Functions
+     const getClassName = useCallback(() => {
+         if (typeof classNames !== "undefined" && typeof classNames?.footer === "function") {
+             return classNames.footer();
+         }
+-        return "flex items-center justify-end pb-2.5 pt-3 border-t border-gray-300 dark:border-gray-700";
++        return "flex items-center justify-end py-2 px-1 border-t border-gray-300 dark:border-gray-700";
+     }, [classNames]);
+-    return (jsxRuntimeExports.jsx("div", { className: getClassName(), children: jsxRuntimeExports.jsxs("div", { className: "w-full md:w-auto flex items-center justify-center space-x-3", children: [jsxRuntimeExports.jsx(SecondaryButton, { onClick: () => {
++    const isTimeSelected = Boolean(selectedHour && selectedMinute && (isMilitary || selectedMeridiem));
++    const isApplyDisabled = !(period.start && period.end) || (withTime && !isTimeSelected);
++    return (jsxRuntimeExports.jsx("div", { className: getClassName(), children: jsxRuntimeExports.jsxs("div", { className: "w-full md:w-auto flex items-center justify-center space-x-2", children: [jsxRuntimeExports.jsx(SecondaryButton, { onClick: () => {
+                         hideDatepicker();
+                     }, children: jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: configs?.footer?.cancel ? configs.footer.cancel : "Cancel" }) }), jsxRuntimeExports.jsx(PrimaryButton, { onClick: () => {
+                         if (period.start && period.end) {
+                             changeDatepickerValue({
+                                 startDate: period.start,
+-                                endDate: period.end
++                                endDate: period.end,
++                                ...(withTime && selectedHour && selectedMinute && (isMilitary || selectedMeridiem)
++                                    ? { time: isMilitary ? `${selectedHour}:${selectedMinute}` : `${selectedHour}:${selectedMinute} ${selectedMeridiem}` }
++                                    : {})
+                             });
+                             hideDatepicker();
+                         }
+-                    }, disabled: !(period.start && period.end), children: jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: configs?.footer?.apply ? configs.footer.apply : "Apply" }) })] }) }));
++                    }, disabled: isApplyDisabled, children: jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: configs?.footer?.apply ? configs.footer.apply : "Apply" }) })] }) }));
+ };
+ 
+ const CloseIcon = (props) => {
+@@ -2849,7 +2860,7 @@ const ToggleButton = (e) => {
+ 
+ const Input = (e) => {
+     // Context
+-    const { primaryColor, period, dayHover, changeDayHover, calendarContainer, arrowContainer, inputText, changeInputText, hideDatepicker, changeDatepickerValue, asSingle, placeholder, separator, disabled, inputClassName, toggleClassName, toggleIcon, readOnly, displayFormat, inputId, inputName, classNames, popoverDirection, required } = useContext(DatepickerContext);
++    const { primaryColor, period, dayHover, changeDayHover, calendarContainer, arrowContainer, inputText, changeInputText, hideDatepicker, changeDatepickerValue, asSingle, placeholder, separator, disabled, inputClassName, toggleClassName, toggleIcon, readOnly, displayFormat, inputId, inputName, classNames, popoverDirection, required, onReset, withTime, isMilitary } = useContext(DatepickerContext);
+     // UseRefs
+     const buttonRef = useRef(null);
+     const inputRef = useRef(null);
+@@ -2961,6 +2972,7 @@ const Input = (e) => {
+                             endDate: null
+                         }, input);
+                     }
++                    onReset?.();
+                 }
+             }
+         }
+@@ -2978,6 +2990,7 @@ const Input = (e) => {
+         changeInputText,
+         dayHover,
+         inputText,
++        onReset,
+         period.end,
+         period.start,
+         inputRef
+@@ -3023,9 +3036,9 @@ const Input = (e) => {
+             }
+         };
+     }, [calendarContainer, arrowContainer, popoverDirection]);
+-    return (jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [jsxRuntimeExports.jsx("input", { ref: inputRef, type: "text", className: getClassName(), disabled: disabled, readOnly: readOnly, required: required, placeholder: placeholder
++    return (jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [jsxRuntimeExports.jsx("input", { ref: inputRef, type: "text", className: getClassName(), disabled: disabled, readOnly: readOnly, required: required, placeholder: `${placeholder
+                     ? placeholder
+-                    : `${displayFormat}${asSingle ? "" : ` ${separator} ${displayFormat}`}`, value: inputText, id: inputId, name: inputName, autoComplete: "off", role: "presentation", onChange: handleInputChange, onKeyDown: handleInputKeyDown }), jsxRuntimeExports.jsx("button", { type: "button", ref: buttonRef, disabled: disabled, className: getToggleClassName(), children: renderToggleIcon(inputText == null || !inputText?.length) })] }));
++                    : `${displayFormat}${asSingle ? "" : ` ${separator} ${displayFormat}`}`}${withTime ? (isMilitary ? " HH:mm" : " hh:mm AM/PM") : ""}`, value: inputText, id: inputId, name: inputName, autoComplete: "off", role: "presentation", onChange: handleInputChange, onKeyDown: handleInputKeyDown }), jsxRuntimeExports.jsx("button", { type: "button", ref: buttonRef, disabled: disabled, className: getToggleClassName(), children: renderToggleIcon(inputText == null || !inputText?.length) })] }));
+ };
+ 
+ const CURRENT_DATE = new Date();
+@@ -3204,7 +3217,7 @@ const VerticalDash = () => {
+ 
+ const Datepicker = (props) => {
+     // Props
+-    const { asSingle = false, classNames = undefined, configs = undefined, containerClassName = null, dateLooking = DEFAULT_DATE_LOOKING, disabledDates = null, disabled = false, displayFormat = DATE_FORMAT, i18n = LANGUAGE, inputClassName = null, inputId, inputName, minDate = undefined, maxDate = undefined, onChange, placeholder = null, popupClassName = null, popoverDirection = undefined, primaryColor = DEFAULT_COLOR, separator = DEFAULT_SEPARATOR, showFooter = false, showShortcuts = false, startFrom = null, startWeekOn = START_WEEK, readOnly = false, required = false, toggleClassName = null, toggleIcon = undefined, useRange = true, value = null } = props;
++    const { asSingle = false, classNames = undefined, configs = undefined, containerClassName = null, dateLooking = DEFAULT_DATE_LOOKING, disabledDates = null, disabled = false, displayFormat = DATE_FORMAT, i18n = LANGUAGE, inputClassName = null, inputId, inputName, isMilitary = true, minDate = undefined, maxDate = undefined, minuteInterval = 15, onChange, onReset = undefined, placeholder = null, popupClassName = null, popoverDirection = undefined, primaryColor = DEFAULT_COLOR, separator = DEFAULT_SEPARATOR, showFooter = false, showShortcuts = false, startFrom = null, startWeekOn = START_WEEK, readOnly = false, required = false, timeValue = undefined, toggleClassName = null, toggleIcon = undefined, useRange = true, withTime = false, value = null } = props;
+     // Refs
+     const containerRef = useRef(null);
+     const calendarContainerRef = useRef(null);
+@@ -3219,6 +3232,264 @@ const Datepicker = (props) => {
+     const [dayHover, setDayHover] = useState(null);
+     const [inputText, setInputText] = useState("");
+     const [inputRef, setInputRef] = useState(createRef());
++    const normalizeTimeValue = (value) => {
++        if (value == null)
++            return null;
++        const text = String(value).trim();
++        return text.length > 0 ? text : null;
++    };
++    const parseTimeValue = (value) => {
++        const fallback = { hour: "", minute: "", meridiem: "" };
++        const text = normalizeTimeValue(value);
++        if (!text)
++            return fallback;
++        const twelveHourMatch = text.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
++        const twentyFourHourMatch = text.match(/^(\d{1,2}):(\d{2})$/);
++        if (isMilitary) {
++            if (twentyFourHourMatch) {
++                const rawHour = Number(twentyFourHourMatch[1]);
++                const rawMinute = Number(twentyFourHourMatch[2]);
++                if (Number.isFinite(rawHour) && Number.isFinite(rawMinute) && rawHour >= 0 && rawHour <= 23 && rawMinute >= 0 && rawMinute <= 59) {
++                    return {
++                        hour: String(rawHour).padStart(2, "0"),
++                        minute: String(rawMinute).padStart(2, "0"),
++                        meridiem: ""
++                    };
++                }
++            }
++            if (twelveHourMatch) {
++                const rawHour12 = Number(twelveHourMatch[1]);
++                const rawMinute = Number(twelveHourMatch[2]);
++                const meridiem = String(twelveHourMatch[3]).toUpperCase();
++                if (Number.isFinite(rawHour12) && Number.isFinite(rawMinute) && rawHour12 >= 1 && rawHour12 <= 12 && rawMinute >= 0 && rawMinute <= 59) {
++                    const hour24 = meridiem === "PM" ? (rawHour12 % 12) + 12 : rawHour12 % 12;
++                    return {
++                        hour: String(hour24).padStart(2, "0"),
++                        minute: String(rawMinute).padStart(2, "0"),
++                        meridiem: ""
++                    };
++                }
++            }
++            return fallback;
++        }
++        if (twelveHourMatch) {
++            const rawHour = Number(twelveHourMatch[1]);
++            const rawMinute = Number(twelveHourMatch[2]);
++            if (!Number.isFinite(rawHour) || !Number.isFinite(rawMinute) || rawHour < 1 || rawHour > 12 || rawMinute < 0 || rawMinute > 59) {
++                return fallback;
++            }
++            return {
++                hour: String(rawHour).padStart(2, "0"),
++                minute: String(rawMinute).padStart(2, "0"),
++                meridiem: String(twelveHourMatch[3]).toUpperCase()
++            };
++        }
++        if (twentyFourHourMatch) {
++            const rawHour24 = Number(twentyFourHourMatch[1]);
++            const rawMinute = Number(twentyFourHourMatch[2]);
++            if (!Number.isFinite(rawHour24) || !Number.isFinite(rawMinute) || rawHour24 < 0 || rawHour24 > 23 || rawMinute < 0 || rawMinute > 59) {
++                return fallback;
++            }
++            const meridiem = rawHour24 >= 12 ? "PM" : "AM";
++            const hour12 = rawHour24 % 12 === 0 ? 12 : rawHour24 % 12;
++            return {
++                hour: String(hour12).padStart(2, "0"),
++                minute: String(rawMinute).padStart(2, "0"),
++                meridiem
++            };
++        }
++        return fallback;
++    };
++    const parsedTimeValue = useMemo(() => parseTimeValue(timeValue), [timeValue, isMilitary]);
++    const [selectedHour, setSelectedHour] = useState(parsedTimeValue.hour);
++    const [selectedMinute, setSelectedMinute] = useState(parsedTimeValue.minute);
++    const [selectedMeridiem, setSelectedMeridiem] = useState(parsedTimeValue.meridiem);
++    const [calendarPanelHeight, setCalendarPanelHeight] = useState(0);
++    const hourDragRef = useRef({ active: false, pointerId: null, startY: 0, lastY: 0, moved: false, captured: false });
++    const minuteDragRef = useRef({ active: false, pointerId: null, startY: 0, lastY: 0, moved: false, captured: false });
++    const DRAG_THRESHOLD_PX = 6;
++    const hourScrollRef = useRef(null);
++    const minuteScrollRef = useRef(null);
++    const scrollLoopLockRef = useRef({ hour: false, minute: false });
++    const LOOP_REPEAT_COUNT = 5;
++    const MIDDLE_LOOP_INDEX = Math.floor(LOOP_REPEAT_COUNT / 2);
++    const hourOptions = useMemo(() => isMilitary
++        ? Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"))
++        : Array.from({ length: 12 }, (_, index) => String(index + 1).padStart(2, "0")), [isMilitary]);
++    const normalizedMinuteInterval = useMemo(() => {
++        const value = Number(minuteInterval);
++        if (!Number.isFinite(value))
++            return 15;
++        const floored = Math.floor(value);
++        if (floored < 1)
++            return 15;
++        if (floored > 59)
++            return 59;
++        return floored;
++    }, [minuteInterval]);
++    const minuteOptions = useMemo(() => {
++        const options = [];
++        for (let minute = 0; minute < 60; minute += normalizedMinuteInterval) {
++            options.push(String(minute).padStart(2, "0"));
++        }
++        return options;
++    }, [normalizedMinuteInterval]);
++    const hourOrderedOptions = useMemo(() => hourOptions, [hourOptions]);
++    const normalizedParsedMinute = useMemo(() => minuteOptions.includes(parsedTimeValue.minute) ? parsedTimeValue.minute : minuteOptions[0] ?? "", [minuteOptions, parsedTimeValue.minute]);
++    const minuteOrderedOptions = useMemo(() => minuteOptions, [minuteOptions]);
++    const hourLoopOptions = useMemo(() => hourOrderedOptions, [hourOrderedOptions]);
++    const minuteLoopOptions = useMemo(() => minuteOrderedOptions, [minuteOrderedOptions]);
++    const calendarPanelRef = useRef(null);
++    const beginHourDrag = (e) => {
++        hourDragRef.current.active = true;
++        hourDragRef.current.pointerId = e.pointerId;
++        hourDragRef.current.startY = e.clientY;
++        hourDragRef.current.lastY = e.clientY;
++        hourDragRef.current.moved = false;
++        hourDragRef.current.captured = false;
++    };
++    const moveHourDrag = (e) => {
++        if (!hourDragRef.current.active || hourDragRef.current.pointerId !== e.pointerId)
++            return;
++        const totalDelta = e.clientY - hourDragRef.current.startY;
++        if (!hourDragRef.current.moved && Math.abs(totalDelta) <= DRAG_THRESHOLD_PX) {
++            hourDragRef.current.lastY = e.clientY;
++            return;
++        }
++        const diff = e.clientY - hourDragRef.current.lastY;
++        if (Math.abs(diff) > 1) {
++            hourDragRef.current.moved = true;
++            if (!hourDragRef.current.captured) {
++                e.currentTarget.setPointerCapture?.(e.pointerId);
++                hourDragRef.current.captured = true;
++            }
++            e.preventDefault();
++        }
++        hourDragRef.current.lastY = e.clientY;
++        e.currentTarget.scrollTop -= diff;
++    };
++    const endHourDrag = (e) => {
++        if (hourDragRef.current.pointerId === e.pointerId) {
++            hourDragRef.current.active = false;
++            hourDragRef.current.pointerId = null;
++            if (hourDragRef.current.captured) {
++                e.currentTarget.releasePointerCapture?.(e.pointerId);
++            }
++            hourDragRef.current.captured = false;
++        }
++    };
++    const beginMinuteDrag = (e) => {
++        minuteDragRef.current.active = true;
++        minuteDragRef.current.pointerId = e.pointerId;
++        minuteDragRef.current.startY = e.clientY;
++        minuteDragRef.current.lastY = e.clientY;
++        minuteDragRef.current.moved = false;
++        minuteDragRef.current.captured = false;
++    };
++    const moveMinuteDrag = (e) => {
++        if (!minuteDragRef.current.active || minuteDragRef.current.pointerId !== e.pointerId)
++            return;
++        const totalDelta = e.clientY - minuteDragRef.current.startY;
++        if (!minuteDragRef.current.moved && Math.abs(totalDelta) <= DRAG_THRESHOLD_PX) {
++            minuteDragRef.current.lastY = e.clientY;
++            return;
++        }
++        const diff = e.clientY - minuteDragRef.current.lastY;
++        if (Math.abs(diff) > 1) {
++            minuteDragRef.current.moved = true;
++            if (!minuteDragRef.current.captured) {
++                e.currentTarget.setPointerCapture?.(e.pointerId);
++                minuteDragRef.current.captured = true;
++            }
++            e.preventDefault();
++        }
++        minuteDragRef.current.lastY = e.clientY;
++        e.currentTarget.scrollTop -= diff;
++    };
++    const endMinuteDrag = (e) => {
++        if (minuteDragRef.current.pointerId === e.pointerId) {
++            minuteDragRef.current.active = false;
++            minuteDragRef.current.pointerId = null;
++            if (minuteDragRef.current.captured) {
++                e.currentTarget.releasePointerCapture?.(e.pointerId);
++            }
++            minuteDragRef.current.captured = false;
++        }
++    };
++    useEffect(() => {
++        if (!withTime)
++            return;
++        setSelectedHour(parsedTimeValue.hour);
++        setSelectedMinute(normalizedParsedMinute);
++        setSelectedMeridiem(parsedTimeValue.meridiem);
++    }, [withTime, parsedTimeValue.hour, parsedTimeValue.meridiem, normalizedParsedMinute]);
++    const wrapInfiniteScroll = (target, key) => {
++        if (!target || scrollLoopLockRef.current[key])
++            return;
++        const segmentHeight = target.scrollHeight / LOOP_REPEAT_COUNT;
++        if (!Number.isFinite(segmentHeight) || segmentHeight <= 0)
++            return;
++        const threshold = 8;
++        const maxScrollTop = target.scrollHeight - target.clientHeight;
++        if (maxScrollTop <= 0)
++            return;
++        if (target.scrollTop <= threshold) {
++            scrollLoopLockRef.current[key] = true;
++            target.scrollTop += segmentHeight;
++            requestAnimationFrame(() => {
++                scrollLoopLockRef.current[key] = false;
++            });
++        }
++        else if (target.scrollTop >= maxScrollTop - threshold) {
++            scrollLoopLockRef.current[key] = true;
++            target.scrollTop -= segmentHeight;
++            requestAnimationFrame(() => {
++                scrollLoopLockRef.current[key] = false;
++            });
++        }
++    };
++    const handleHourScroll = () => {
++        // Hour list is intentionally finite (non-looping).
++    };
++    const handleMinuteScroll = () => {
++        // Minute list is intentionally finite (non-looping).
++    };
++    useEffect(() => {
++        if (!withTime)
++            return;
++        const setMiddleSegmentStart = () => {
++            const hourNode = hourScrollRef.current;
++            const minuteNode = minuteScrollRef.current;
++            if (hourNode) {
++                hourNode.scrollTop = 0;
++            }
++            if (minuteNode) {
++                minuteNode.scrollTop = 0;
++            }
++        };
++        requestAnimationFrame(setMiddleSegmentStart);
++    }, [withTime, hourLoopOptions, minuteLoopOptions]);
++    useEffect(() => {
++        const node = calendarPanelRef.current;
++        if (!node)
++            return;
++        const updateHeight = () => {
++            setCalendarPanelHeight(node.getBoundingClientRect().height);
++        };
++        updateHeight();
++        let resizeObserver = null;
++        if (typeof ResizeObserver !== "undefined") {
++            resizeObserver = new ResizeObserver(() => updateHeight());
++            resizeObserver.observe(node);
++        }
++        window.addEventListener("resize", updateHeight);
++        return () => {
++            if (resizeObserver) {
++                resizeObserver.disconnect();
++            }
++            window.removeEventListener("resize", updateHeight);
++        };
++    }, [showShortcuts, useRange, showFooter]);
+     // Custom Hooks use
+     useOnClickOutside(containerRef, () => {
+         const container = containerRef.current;
+@@ -3313,9 +3584,12 @@ const Datepicker = (props) => {
+                     start: value.startDate,
+                     end: value.endDate
+                 });
++                const formattedTime = withTime && typeof timeValue === "string" && timeValue.trim()
++                    ? ` ${timeValue.trim()}`
++                    : "";
+                 setInputText(`${dateFormat(value.startDate, displayFormat, i18n)}${asSingle
+                     ? ""
+-                    : ` ${separator} ${dateFormat(value.endDate, displayFormat, i18n)}`}`);
++                    : ` ${separator} ${dateFormat(value.endDate, displayFormat, i18n)}`}${formattedTime}`);
+             }
+         }
+         if (value && value.startDate === null && value.endDate === null) {
+@@ -3325,7 +3599,7 @@ const Datepicker = (props) => {
+             });
+             setInputText("");
+         }
+-    }, [asSingle, value, displayFormat, separator, i18n]);
++    }, [asSingle, value, displayFormat, separator, i18n, withTime, timeValue]);
+     useEffect(() => {
+         if (startFrom && dateIsValid(startFrom)) {
+             const startDate = value?.startDate;
+@@ -3395,8 +3669,10 @@ const Datepicker = (props) => {
+             inputId,
+             inputName,
+             inputText,
++            isMilitary,
+             maxDate,
+             minDate,
++            onReset,
+             onChange,
+             period,
+             placeholder,
+@@ -3405,11 +3681,15 @@ const Datepicker = (props) => {
+             readOnly,
+             required,
+             separator,
++            selectedHour,
++            selectedMeridiem,
++            selectedMinute,
+             showFooter,
+             startWeekOn: startWeekOn || START_WEEK,
+             toggleClassName,
+             toggleIcon,
+             updateFirstDate: (newDate) => firstGotoDate(newDate),
++            withTime,
+             value
+         };
+     }, [
+@@ -3433,8 +3713,12 @@ const Datepicker = (props) => {
+         toggleIcon,
+         readOnly,
+         displayFormat,
++        selectedHour,
++        selectedMeridiem,
++        selectedMinute,
+         minDate,
+         maxDate,
++        onReset,
+         dateLooking,
+         disabledDates,
+         inputId,
+@@ -3444,6 +3728,8 @@ const Datepicker = (props) => {
+         inputRef,
+         popoverDirection,
+         required,
++        isMilitary,
++        withTime,
+         firstGotoDate
+     ]);
+     const containerClassNameOverload = useMemo(() => {
+@@ -3462,7 +3748,151 @@ const Datepicker = (props) => {
+                 ? popupClassName
+                 : defaultPopupClassName;
+     }, [popupClassName]);
+-    return (jsxRuntimeExports.jsx(DatepickerContext.Provider, { value: contextValues, children: jsxRuntimeExports.jsxs("div", { className: containerClassNameOverload, ref: containerRef, children: [jsxRuntimeExports.jsx(Input, { setContextRef: setInputRef }), jsxRuntimeExports.jsxs("div", { className: popupClassNameOverload, ref: calendarContainerRef, children: [jsxRuntimeExports.jsx(Arrow, { ref: arrowRef }), jsxRuntimeExports.jsxs("div", { className: "mt-2.5 shadow-sm border border-gray-300 px-1 py-0.5 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-600 rounded-lg", children: [jsxRuntimeExports.jsxs("div", { className: "flex flex-col lg:flex-row py-2", children: [showShortcuts && jsxRuntimeExports.jsx(Shortcuts, {}), jsxRuntimeExports.jsxs("div", { className: `flex items-stretch flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-1.5 ${showShortcuts ? "md:pl-2" : "md:pl-1"} pr-2 lg:pr-1`, children: [jsxRuntimeExports.jsx(Calendar, { date: firstDate, onClickPrevious: previousMonthFirst, onClickNext: nextMonthFirst, changeMonth: changeFirstMonth, changeYear: changeFirstYear, minDate: minDate, maxDate: maxDate }), useRange && (jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [jsxRuntimeExports.jsx("div", { className: "flex items-center", children: jsxRuntimeExports.jsx(VerticalDash, {}) }), jsxRuntimeExports.jsx(Calendar, { date: secondDate, onClickPrevious: previousMonthSecond, onClickNext: nextMonthSecond, changeMonth: changeSecondMonth, changeYear: changeSecondYear, minDate: minDate, maxDate: maxDate })] }))] })] }), showFooter && jsxRuntimeExports.jsx(Footer, {})] })] })] }) }));
++    return (jsxRuntimeExports.jsx(DatepickerContext.Provider, {
++        value: contextValues,
++        children: jsxRuntimeExports.jsxs("div", {
++            className: containerClassNameOverload,
++            ref: containerRef,
++            children: [
++                jsxRuntimeExports.jsx(Input, { setContextRef: setInputRef }),
++                jsxRuntimeExports.jsxs("div", {
++                    className: popupClassNameOverload,
++                    ref: calendarContainerRef,
++                    children: [
++                        jsxRuntimeExports.jsx(Arrow, { ref: arrowRef }),
++                        jsxRuntimeExports.jsxs("div", {
++                            className: "mt-2.5 shadow-sm border border-gray-300 px-1 py-0.5 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-600 rounded-lg",
++                            children: [
++                                jsxRuntimeExports.jsxs("div", {
++                                    className: "flex flex-row items-start",
++                                    children: [
++                                        jsxRuntimeExports.jsxs("div", {
++                                            className: "asasasasa flex flex-col lg:flex-row py-2",
++                                            ref: calendarPanelRef,
++                                            children: [
++                                                showShortcuts && jsxRuntimeExports.jsx(Shortcuts, {}),
++                                                jsxRuntimeExports.jsxs("div", {
++                                                    className: `flex items-stretch flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-1.5 ${showShortcuts ? "md:pl-2" : "md:pl-1"} pr-2 lg:pr-1`,
++                                                    children: [
++                                                        jsxRuntimeExports.jsx(Calendar, {
++                                                            date: firstDate,
++                                                            onClickPrevious: previousMonthFirst,
++                                                            onClickNext: nextMonthFirst,
++                                                            changeMonth: changeFirstMonth,
++                                                            changeYear: changeFirstYear,
++                                                            minDate: minDate,
++                                                            maxDate: maxDate
++                                                        }),
++                                                        useRange && (jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, {
++                                                            children: [
++                                                                jsxRuntimeExports.jsx("div", {
++                                                                    className: "flex items-center",
++                                                                    children: jsxRuntimeExports.jsx(VerticalDash, {})
++                                                                }),
++                                                                jsxRuntimeExports.jsx(Calendar, {
++                                                                    date: secondDate,
++                                                                    onClickPrevious: previousMonthSecond,
++                                                                    onClickNext: nextMonthSecond,
++                                                                    changeMonth: changeSecondMonth,
++                                                                    changeYear: changeSecondYear,
++                                                                    minDate: minDate,
++                                                                    maxDate: maxDate
++                                                                })
++                                                            ]
++                                                        }))
++                                                    ]
++                                                })
++                                            ]
++                                        }),
++                                        withTime && jsxRuntimeExports.jsx("div", {
++                                            className: "ml-1 flex border-l pl-1 overflow-hidden",
++                                            children: jsxRuntimeExports.jsxs("div", {
++                                                className: "flex flex-col overflow-hidden",
++                                                style: {
++                                                    maxHeight: calendarPanelHeight ? `${calendarPanelHeight}px` : undefined
++                                                },
++                                                children: [
++                                                    jsxRuntimeExports.jsxs("div", {
++                                                        className: "flex flex-row gap-2 flex-1 min-h-0",
++                                                        children: [
++                                                            jsxRuntimeExports.jsx("div", {
++                                                                className: "flex w-[50px] flex-col items-center min-h-0",
++                                                                children: jsxRuntimeExports.jsx("div", {
++                                                                    className: "h-full max-h-full w-full overflow-y-auto pt-1 cursor-grab active:cursor-grabbing select-none touch-none scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
++                                                                    ref: hourScrollRef,
++                                                                    onPointerDown: beginHourDrag,
++                                                                    onPointerMove: moveHourDrag,
++                                                                    onPointerUp: endHourDrag,
++                                                                    onPointerCancel: endHourDrag,
++                                                                    onLostPointerCapture: endHourDrag,
++                                                                    onScroll: handleHourScroll,
++                                                                    children: hourLoopOptions.map((hour, index) => jsxRuntimeExports.jsx("button", {
++                                                                        type: "button",
++                                                                        onClick: () => setSelectedHour(hour),
++                                                                        className: `mb-1 block w-full cursor-pointer rounded px-2 py-1.5 text-center leading-none ${selectedHour === hour
++                                                                            ? "bg-blue-500 text-white"
++                                                                            : "text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-700"}`,
++                                                                        children: hour
++                                                                    }, `${hour}-${index}`))
++                                                                })
++                                                            }),
++                                                            jsxRuntimeExports.jsx("div", {
++                                                                className: "flex w-[50px] flex-col items-center min-h-0",
++                                                                children: jsxRuntimeExports.jsx("div", {
++                                                                    className: "h-full max-h-full w-full overflow-y-auto pt-1 cursor-grab active:cursor-grabbing select-none touch-none scrollbar-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
++                                                                    ref: minuteScrollRef,
++                                                                    onPointerDown: beginMinuteDrag,
++                                                                    onPointerMove: moveMinuteDrag,
++                                                                    onPointerUp: endMinuteDrag,
++                                                                    onPointerCancel: endMinuteDrag,
++                                                                    onLostPointerCapture: endMinuteDrag,
++                                                                    onScroll: handleMinuteScroll,
++                                                                    children: minuteLoopOptions.map((minute, index) => jsxRuntimeExports.jsx("button", {
++                                                                        type: "button",
++                                                                        onClick: () => setSelectedMinute(minute),
++                                                                        className: `mb-1 block w-full cursor-pointer rounded px-2 py-1.5 text-center leading-none ${selectedMinute === minute
++                                                                            ? "bg-blue-500 text-white"
++                                                                            : "text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-700"}`,
++                                                                        children: minute
++                                                                    }, `${minute}-${index}`))
++                                                                })
++                                                            })
++                                                        ]
++                                                    }),
++                                                    !isMilitary && jsxRuntimeExports.jsxs("div", {
++                                                        className: "border-t pt-2 pb-2 grid grid-cols-2 gap-2",
++                                                        children: [
++                                                            jsxRuntimeExports.jsx("button", {
++                                                                type: "button",
++                                                                onClick: () => setSelectedMeridiem("AM"),
++                                                                className: `block w-full cursor-pointer rounded px-2 py-1.5 text-center leading-none ${selectedMeridiem === "AM"
++                                                                    ? "bg-blue-500 text-white"
++                                                                    : "text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-700"}`,
++                                                                children: "AM"
++                                                            }),
++                                                            jsxRuntimeExports.jsx("button", {
++                                                                type: "button",
++                                                                onClick: () => setSelectedMeridiem("PM"),
++                                                                className: `block w-full cursor-pointer rounded px-2 py-1.5 text-center leading-none ${selectedMeridiem === "PM"
++                                                                    ? "bg-blue-500 text-white"
++                                                                    : "text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-700"}`,
++                                                                children: "PM"
++                                                            })
++                                                        ]
++                                                    })
++                                                ]
++                                            })
++                                        })
++                                    ]
++                                }),
++                                showFooter && jsxRuntimeExports.jsx(Footer, {})
++                            ]
++                        })
++                    ]
++                })
++            ]
++        })
++    }));
+ };
+ 
+ var af$1 = {exports: {}};
+diff --git a/node_modules/react-tailwindcss-datepicker/dist/types/index.d.ts b/node_modules/react-tailwindcss-datepicker/dist/types/index.d.ts
+index bc4f1ed..8bf93b9 100644
+--- a/node_modules/react-tailwindcss-datepicker/dist/types/index.d.ts
++++ b/node_modules/react-tailwindcss-datepicker/dist/types/index.d.ts
+@@ -50,6 +50,7 @@ export interface DatepickerType {
+     primaryColor?: ColorKeys;
+     value: DateValueType;
+     onChange: (value: DateValueType, e?: HTMLInputElement | null | undefined) => void;
++    onReset?: () => void;
+     useRange?: boolean;
+     showFooter?: boolean;
+     showShortcuts?: boolean;
+@@ -68,6 +69,8 @@ export interface DatepickerType {
+     toggleIcon?: (open: boolean) => ReactNode;
+     inputId?: string;
+     inputName?: string;
++    isMilitary?: boolean;
++    minuteInterval?: number;
+     displayFormat?: string;
+     readOnly?: boolean;
+     minDate?: DateType;

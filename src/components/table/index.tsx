@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -10,16 +10,11 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Label } from "@/src/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/src/components/ui/select";
+import SelectInput from "@/src/components/input/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/src/components/ui/sheet";
 import { Checkbox } from "@/src/components/ui/checkbox";
 import { Columns3, Download } from "lucide-react";
+import { cn } from "@/src/lib/utils";
 
 type ColumnConfig = {
   columnName: string;
@@ -57,6 +52,16 @@ type JobsTableProps = {
   headerRightComponent?: React.ReactNode;
   /** When set, column visibility is persisted to localStorage under this key (e.g. router.pathname) */
   tableKey?: string;
+  /** Optional additional class names for the table container wrapper */
+  className?: string;
+  /** Optional additional class names for the table content wrapper (the div that wraps the table) */
+  tableClassName?: string;
+  /** Number of columns to lock (sticky) from the first column, e.g. 3 = columns 1, 2, 3 */
+  lockedColumns?: number;
+  /** When false, hides the "Columns" button that toggles column visibility. Default true. */
+  showColumnConfig?: boolean;
+  /** When true, removes border and shadow from the table container. Default false. */
+  hideBorder?: boolean;
 };
 
 const JobsTable: React.FC<JobsTableProps> = ({
@@ -80,6 +85,11 @@ const JobsTable: React.FC<JobsTableProps> = ({
   columnOptions,
   headerRightComponent,
   tableKey,
+  className,
+  tableClassName,
+  lockedColumns,
+  showColumnConfig = true,
+  hideBorder = false,
 }) => {
   const startEntry = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endEntry = Math.min(currentPage * pageSize, totalCount);
@@ -93,6 +103,8 @@ const JobsTable: React.FC<JobsTableProps> = ({
 
   const [hiddenColumnKeys, setHiddenColumnKeys] = useState<Set<string>>(() => new Set());
   const hasLoadedFromStorage = useRef(false);
+  const headerCellRefs = useRef<(HTMLTableCellElement | null)[]>([]);
+  const [lockedColumnLefts, setLockedColumnLefts] = useState<number[]>([]);
 
   // Load from localStorage when storage key is set or changes
   useEffect(() => {
@@ -153,8 +165,44 @@ const JobsTable: React.FC<JobsTableProps> = ({
     onColumnsChange?.(nextOptions);
   };
 
+  const numLocked = lockedColumns != null && lockedColumns > 0 ? Math.min(lockedColumns, visibleColumns.length) : 0;
+
+  const measureLockedLefts = () => {
+    if (numLocked === 0) {
+      setLockedColumnLefts([]);
+      return;
+    }
+    const refs = headerCellRefs.current;
+    const widths: number[] = [];
+    for (let i = 0; i < numLocked; i++) {
+      const el = refs[i];
+      if (el) widths.push(el.offsetWidth);
+      else widths.push(0);
+    }
+    const lefts: number[] = [];
+    let sum = 0;
+    for (let i = 0; i < numLocked; i++) {
+      lefts.push(sum);
+      sum += widths[i];
+    }
+    setLockedColumnLefts(lefts);
+  };
+
+  useLayoutEffect(() => {
+    measureLockedLefts();
+  }, [numLocked, visibleColumns.length, rows.length]);
+
+  useLayoutEffect(() => {
+    if (numLocked === 0) return;
+    const firstEl = headerCellRefs.current[0];
+    if (!firstEl) return;
+    const ro = new ResizeObserver(() => measureLockedLefts());
+    ro.observe(firstEl);
+    return () => ro.disconnect();
+  }, [numLocked, visibleColumns.length]);
+
   return (
-    <div className="bg-transparent border-0 shadow-none md:bg-white md:dark:bg-slate-900 rounded-lg md:border md:border-slate-200 md:dark:border-slate-800 md:shadow-xl overflow-hidden">
+    <div className={cn("bg-transparent border-0 shadow-none md:bg-white md:dark:bg-slate-900 rounded-lg overflow-hidden", !hideBorder && "md:border md:border-slate-200 md:dark:border-slate-800 md:shadow-xl", className)}>
       {/* Table Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 md:px-4 px-0 py-3">
         <div className="flex items-center gap-2">
@@ -164,18 +212,16 @@ const JobsTable: React.FC<JobsTableProps> = ({
           >
             Show
           </Label>
-          <Select value={pageSize.toString()} onValueChange={onPageSizeChange}>
-            <SelectTrigger className="w-20 h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[10, 20, 30, 40, 50, 100].map(num => (
-                <SelectItem key={num} value={num.toString()}>
-                  {num}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SelectInput
+            options={[10, 20, 30, 40, 50, 100].map(num => ({
+              label: num.toString(),
+              value: num.toString(),
+            }))}
+            placeholder="10"
+            value={pageSize.toString()}
+            onSelect={val => onPageSizeChange(Array.isArray(val) ? (val[0] ?? "") : val)}
+            onSearch={() => {}}
+          />
           <Label className="text-sm text-neutral-600 dark:text-neutral-400">
             entries
           </Label>
@@ -193,7 +239,7 @@ const JobsTable: React.FC<JobsTableProps> = ({
                 Export
               </Button>
             )}
-            {hasColumnOptions ? (
+            {hasColumnOptions && showColumnConfig ? (
               <Sheet>
                 <SheetTrigger asChild>
                   <Button
@@ -229,26 +275,34 @@ const JobsTable: React.FC<JobsTableProps> = ({
         {headerRightComponent && headerRightComponent}
       </div>
 
-      <div className="px-0">
+      <div className={cn("px-0", tableClassName)}>
         {/* Desktop table */}
-        <div className="hidden md:block">
-          <Table className="min-w-[900px] border-collapse" maxHeightClassName={maxHeightClassName}>
-            <TableHeader className="sticky top-0 z-10 whitespace-nowrap">
+        <div className="hidden md:flex h-full w-full">
+          <Table className="min-w-[900px] border-collapse">
+            <TableHeader className="sticky top-0 z-10">
               <TableRow className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
                 {visibleColumns.map((col, idx) => {
                   const sortKey =
                     col.sortKey ??
                     (typeof col.cell === "string" ? col.cell : undefined);
                   const isActive = !!sortKey && activeSortKey === sortKey;
-                  const fixedHeadClass = col.isFixed
-                    ? "sticky left-0 z-20 bg-slate-50 dark:bg-slate-800/50"
-                    : "";
+                  const isLocked =
+                    lockedColumns != null && lockedColumns > 0 && idx < lockedColumns;
+                  const fixedHeadClass =
+                    col.isFixed || isLocked
+                      ? "sticky z-20 bg-slate-50 dark:bg-slate-800/50"
+                      : "";
+                  const leftOffset = isLocked && lockedColumnLefts[idx] !== undefined ? lockedColumnLefts[idx] : 0;
                   return (
                     <TableHead
+                      ref={el => {
+                        if (isLocked && el) headerCellRefs.current[idx] = el;
+                      }}
                       key={`${col.columnName}-${idx}`}
                       className={`h-10 font-semibold text-slate-900 dark:text-slate-100 text-left align-middle select-none ${
                         sortKey ? "cursor-pointer" : "cursor-default"
                       } ${fixedHeadClass}`}
+                      style={isLocked ? { left: leftOffset } : undefined}
                       onClick={() => sortKey && onSort?.(sortKey)}
                     >
                       <span className="inline-flex items-center gap-1">
@@ -287,13 +341,18 @@ const JobsTable: React.FC<JobsTableProps> = ({
                           typeof col.cell === "function"
                             ? col.cell(row)
                             : row[col.cell as keyof typeof row];
-                        const fixedCellClass = col.isFixed
-                          ? "sticky left-0 z-10 bg-white dark:bg-slate-900"
-                          : "";
+                        const isLocked =
+                          lockedColumns != null && lockedColumns > 0 && idx < lockedColumns;
+                        const fixedCellClass =
+                          col.isFixed || isLocked
+                            ? "sticky z-10 bg-white dark:bg-slate-900"
+                            : "";
+                        const leftOffset = isLocked && lockedColumnLefts[idx] !== undefined ? lockedColumnLefts[idx] : 0;
                         return (
                           <TableCell
                             key={`${col.columnName}-${row.id}-${idx}`}
                             className={`py-3 align-top ${fixedCellClass}`}
+                            style={isLocked ? { left: leftOffset } : undefined}
                           >
                             {content}
                           </TableCell>

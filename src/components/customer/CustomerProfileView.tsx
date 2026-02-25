@@ -148,9 +148,6 @@ export const CustomerProfileView = ({
                         </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                        <Badge className={getStatusColor(selectedCustomer.status)}>
-                            {selectedCustomer.status}
-                        </Badge>
                         <Button className="bg-gradient-to-r from-[#53a533] to-[#53a533] text-white">
                             <Edit className="w-4 h-4 mr-2" />
                             Edit Customer

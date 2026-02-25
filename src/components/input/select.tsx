@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/src/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/src/components/ui/popover";
 import {
@@ -9,6 +9,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/src/components/ui/command";
+import { Label } from "@/src/components/ui/label";
 import { ChevronsUpDown, Check } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
@@ -22,6 +23,7 @@ type SelectInputProps = {
   options: SelectOption[];
   multiselect?: boolean;
   value: string | string[];
+  className?: string;
   placeholder?: string;
   label?: string;
   onSearch?: (term: string) => void;
@@ -34,15 +36,28 @@ const SelectInput = ({
   options,
   multiselect = false,
   value,
+  className,
   placeholder = "Select an option",
   label,
   onSearch,
   onAction,
   actionLabel,
 }: SelectInputProps) => {
-  const selectedValues = multiselect
+  const normalizedInitialValue = multiselect
     ? (Array.isArray(value) ? value : [])
     : (typeof value === "string" ? value : "");
+  const [internalValue, setInternalValue] = useState<string | string[]>(normalizedInitialValue);
+
+  useEffect(() => {
+    const nextValue = multiselect
+      ? (Array.isArray(value) ? value : [])
+      : (typeof value === "string" ? value : "");
+    setInternalValue(nextValue);
+  }, [multiselect, value]);
+
+  const selectedValues = multiselect
+    ? (Array.isArray(internalValue) ? internalValue : [])
+    : (typeof internalValue === "string" ? internalValue : "");
 
   const displayValue = useMemo(() => {
     if (multiselect) {
@@ -66,10 +81,12 @@ const SelectInput = ({
       const nextValues = currentValues.includes(optionValue)
         ? currentValues.filter(v => v !== optionValue)
         : [...currentValues, optionValue];
+      setInternalValue(nextValues);
       onSelect(nextValues);
       return;
     }
 
+    setInternalValue(optionValue);
     onSelect(optionValue);
   };
 
@@ -79,12 +96,14 @@ const SelectInput = ({
 
   const handleSelectAll = () => {
     if (multiselect) {
+      setInternalValue(allValues);
       onSelect(allValues);
     }
   };
 
   const handleDeselectAll = () => {
     if (multiselect) {
+      setInternalValue([]);
       onSelect([]);
     }
   };
@@ -92,20 +111,20 @@ const SelectInput = ({
   return (
     <div className="space-y-1">
       {label ? (
-        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{label}</p>
+        <Label className="text-sm font-medium">{label}</Label>
       ) : null}
       <Popover>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             role="combobox"
-            className="h-10 w-full justify-between"
+            className={cn("h-10 w-full justify-between mt-1", className)}
           >
             {displayValue}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="p-0 w-full" align="start">
+        <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]" align="start">
           <Command>
             {showSearch ? (
               <CommandInput
