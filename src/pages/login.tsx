@@ -16,6 +16,7 @@ import { useConfig } from '@/src/hooks/useConfig'
 import { useTheme } from 'next-themes'
 import logo from '../../public/logo.png'
 import logoAlt from '../../public/logo-alt.png'
+import { profileData } from '../constants/dummyData/profileData'
 
 export default function Login(): React.JSX.Element {
   const router = useRouter()
@@ -103,10 +104,7 @@ export default function Login(): React.JSX.Element {
         // if (profile.data.success && profile.data.data) {
         //   dispatch(setUserData(profile.data.data))
         // }
-        const profile = {
-          _id: "dfdfdf",
-        }
-        // dispatch(setUserData(profile))
+        dispatch(setUserData(profileData))
       } catch (apiError: any) {
         // Handle API errors
         if (apiError.response?.status === 401) {
