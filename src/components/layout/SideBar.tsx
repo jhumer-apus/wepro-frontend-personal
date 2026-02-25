@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { cn } from '@/src/lib/utils'
@@ -32,6 +32,7 @@ import {
   FileBarChart,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
 } from 'lucide-react'
 
 interface NavigationItem {
@@ -39,6 +40,14 @@ interface NavigationItem {
   href: string
   icon: React.ComponentType<{ className?: string }>
   badge?: string
+  subItems?: Array<{
+    name: string
+    href: string
+    hoverItems?: Array<{
+      name: string
+      href: string
+    }>
+  }>
   moduleCodes?: {
     [key: string]: string[]
   }
@@ -81,10 +90,60 @@ export function Sidebar({
   const { checkPermission, getUserType } = usePermissions()
   const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    Reports: false,
+  })
+  const [hoveredSubItem, setHoveredSubItem] = useState<string | null>(null)
+  const [hoverMenu, setHoverMenu] = useState<{
+    key: string
+    items: Array<{ name: string; href: string }>
+    top: number
+    left: number
+  } | null>(null)
+  const closeHoverTimeoutRef = useRef<number | null>(null)
+
+  const clearHoverCloseTimeout = () => {
+    if (closeHoverTimeoutRef.current !== null) {
+      window.clearTimeout(closeHoverTimeoutRef.current)
+      closeHoverTimeoutRef.current = null
+    }
+  }
+
+  const scheduleHoverClose = () => {
+    clearHoverCloseTimeout()
+    closeHoverTimeoutRef.current = window.setTimeout(() => {
+      setHoveredSubItem(null)
+      setHoverMenu(null)
+    }, 120)
+  }
+
+  const openHoverMenu = (
+    hoverKey: string,
+    items: Array<{ name: string; href: string }>,
+    target: HTMLDivElement
+  ) => {
+    clearHoverCloseTimeout()
+    const rect = target.getBoundingClientRect()
+    setHoveredSubItem(hoverKey)
+    setHoverMenu({
+      key: hoverKey,
+      items,
+      top: rect.top,
+      left: rect.right + 4,
+    })
+  }
 
   // Prevent hydration mismatch by only rendering after mount
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (closeHoverTimeoutRef.current !== null) {
+        window.clearTimeout(closeHoverTimeoutRef.current)
+      }
+    }
   }, [])
 
   console.log('User slice data:', user)
@@ -167,6 +226,28 @@ export function Sidebar({
       name: 'Analytics',
       href: '/analytics',
       icon: BarChart3,
+    },
+    {
+      name: 'Reports',
+      href: '/reports',
+      icon: FileBarChart,
+      subItems: [
+        {
+          name: 'Agents',
+          href: '/reports/agents',
+          hoverItems: [
+            { name: 'Calls', href: '/reports/agents/calls' },
+            { name: 'Jobs', href: '/reports/agents/jobs' },
+            {
+              name: 'Answering Service Jobs',
+              href: '/reports/agents/answering-service-jobs',
+            },
+            { name: 'Timesheet', href: '/reports/agents/timesheet' },
+          ],
+        },
+        { name: 'Commissions', href: '/reports/commissions' },
+        { name: 'Job Statistics', href: '/reports/job-statistics' },
+      ],
     },
     {
       name: 'Messages',
@@ -260,6 +341,9 @@ export function Sidebar({
       return true
     }
     if (item.name === 'Messages') {
+      return true
+    }
+    if (item.name === 'Reports') {
       return true
     }
     if (item.name === 'Billing Answering Subscription') {
@@ -376,7 +460,124 @@ export function Sidebar({
         )}
       >
         {filteredNavigation.map(item => {
-          const isActive = location.startsWith(item.href)
+          const hasSubItems = Boolean(item.subItems?.length)
+          const isSubItemActive = item.subItems?.some(subItem =>
+            location.startsWith(subItem.href)
+          )
+          const isActive = location.startsWith(item.href) || Boolean(isSubItemActive)
+          const isExpanded = expandedSections[item.name]
+
+          if (hasSubItems) {
+            return (
+              <div key={item.name}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpandedSections(prev => ({
+                      ...prev,
+                      [item.name]: !prev[item.name],
+                    }))
+                  }
+                  className={cn(
+                    'group flex w-full items-center rounded-xl py-3 text-sm font-medium transition-all duration-200',
+                    isCollapsed ? 'justify-center px-3' : 'px-4',
+                    isActive
+                      ? 'bg-gradient-to-r from-brandGreen-900 to-brandGreen-300 text-white shadow-lg shadow-brandGreen-900/25'
+                      : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100'
+                  )}
+                  title={item.name}
+                  aria-label={item.name}
+                  aria-expanded={Boolean(isExpanded)}
+                >
+                  <item.icon
+                    className={cn(
+                      'h-5 w-5 transition-colors',
+                      !isCollapsed && 'mr-3',
+                      isActive
+                        ? 'text-white'
+                        : 'text-neutral-500 group-hover:text-neutral-700 dark:group-hover:text-neutral-300'
+                    )}
+                  />
+                  {!isCollapsed && (
+                    <>
+                      <span className="truncate">{item.name}</span>
+                      <ChevronDown
+                        className={cn(
+                          'ml-auto h-4 w-4 transition-transform duration-200',
+                          isExpanded ? 'rotate-180' : 'rotate-0'
+                        )}
+                      />
+                    </>
+                  )}
+                </button>
+                {!isCollapsed && (
+                  <div
+                    className={cn(
+                      'ml-7 overflow-hidden transition-all duration-300 ease-in-out',
+                      isExpanded ? 'mt-1 max-h-60 opacity-100' : 'mt-0 max-h-0 opacity-0'
+                    )}
+                  >
+                    <div className="space-y-1 pb-1">
+                    {item.subItems?.map(subItem => {
+                      const isSubActive = location.startsWith(subItem.href)
+                      const hasHoverItems = Boolean(subItem.hoverItems?.length)
+                      const hoverKey = `${item.name}-${subItem.name}`
+                      const isHoverOpen = hoveredSubItem === hoverKey
+                      return (
+                        <div
+                          key={subItem.name}
+                          className="relative"
+                          onMouseEnter={(event: React.MouseEvent<HTMLDivElement>) => {
+                            if (hasHoverItems && subItem.hoverItems) {
+                              openHoverMenu(hoverKey, subItem.hoverItems, event.currentTarget)
+                            }
+                          }}
+                          onMouseLeave={() => {
+                            if (hasHoverItems) {
+                              scheduleHoverClose()
+                            }
+                          }}
+                        >
+                          {hasHoverItems ? (
+                            <button
+                              type="button"
+                              className={cn(
+                                'group flex w-full items-center rounded-lg px-3 py-2 text-sm text-left transition-all duration-200',
+                                isHoverOpen &&
+                                  'bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100',
+                                isSubActive
+                                  ? 'bg-brandGreen-100 text-brandGreen-900 dark:bg-brandGreen-900/30 dark:text-brandGreen-100'
+                                  : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100'
+                              )}
+                              aria-haspopup="menu"
+                              aria-expanded={isHoverOpen}
+                            >
+                              <span className="truncate">{subItem.name}</span>
+                              <ChevronRight className="ml-auto h-4 w-4 opacity-70 transition-opacity group-hover:opacity-100" />
+                            </button>
+                          ) : (
+                            <Link
+                              href={subItem.href}
+                              className={cn(
+                                'group flex items-center rounded-lg px-3 py-2 text-sm transition-all duration-200',
+                                isSubActive
+                                  ? 'bg-brandGreen-100 text-brandGreen-900 dark:bg-brandGreen-900/30 dark:text-brandGreen-100'
+                                  : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100'
+                              )}
+                            >
+                              <span className="truncate">{subItem.name}</span>
+                            </Link>
+                          )}
+                        </div>
+                      )
+                    })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          }
+
           return (
             <Link
               key={item.name}
@@ -442,6 +643,34 @@ export function Sidebar({
           })}
         </div>
       </nav>
+      {!isCollapsed && hoverMenu && (
+        <div
+          className="fixed z-[80] w-60 rounded-xl border border-neutral-200 bg-white p-2 shadow-xl transition-all duration-150 dark:border-neutral-700 dark:bg-neutral-900"
+          style={{ top: hoverMenu.top, left: hoverMenu.left }}
+          onMouseEnter={clearHoverCloseTimeout}
+          onMouseLeave={scheduleHoverClose}
+        >
+          <div className="space-y-1">
+            {hoverMenu.items.map(hoverItem => {
+              const isHoverItemActive = location.startsWith(hoverItem.href)
+              return (
+                <Link
+                  key={hoverItem.name}
+                  href={hoverItem.href}
+                  className={cn(
+                    'block rounded-lg px-3 py-2 text-sm transition-all duration-200',
+                    isHoverItemActive
+                      ? 'bg-brandGreen-100 text-brandGreen-900 dark:bg-brandGreen-900/30 dark:text-brandGreen-100'
+                      : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100'
+                  )}
+                >
+                  {hoverItem.name}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -220,7 +220,6 @@ const JobsTable: React.FC<JobsTableProps> = ({
             placeholder="10"
             value={pageSize.toString()}
             onSelect={val => onPageSizeChange(Array.isArray(val) ? (val[0] ?? "") : val)}
-            onSearch={() => {}}
           />
           <Label className="text-sm text-neutral-600 dark:text-neutral-400">
             entries
