@@ -25,9 +25,13 @@ export const profileData = {
 
   modules: [
     { 
+      _id: "6901ef005fbfec1947250506",
       code: "MOD006", 
       name: "Team", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [ 
         {_id: '6901ef065fbfec19472505b3', moduleCode: 'MOD007', key: 'create', description: 'Create new records', createdAt: '2025-10-29T10:40:06.297Z', updatedAt: '2025-10-29T10:40:06.297Z'},
         {_id: '6901ef065fbfec19472505b7', moduleCode: 'MOD007', key: 'view', description: 'View records', createdAt: '2025-10-29T10:40:06.334Z', updatedAt: '2025-10-29T10:40:06.297Z'},
@@ -36,10 +40,14 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250507",
       code: "MOD007", 
       name: "Role", 
       active: true,
-      permission: [
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
+      permissions: [
           {
             _id: "6901ef065fbfec19472505b3",
             moduleCode: "MOD007",
@@ -75,10 +83,14 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250508",
       code: "MOD008", 
       name: "Source Management", 
       active: true,
-      permission: [
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
+      permissions: [
           {
             _id: "6901ef065fbfec19472505c3",
             moduleCode: "MOD008",
@@ -114,9 +126,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250509",
       code: "MOD009", 
       name: "Timesheet", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef065fbfec19472505d4",
@@ -177,9 +193,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250513",
       code: "MOD013", 
       name: "Industry", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef065fbfec194725061a",
@@ -216,9 +236,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250515",
       code: "MOD015", 
       name: "Job Type", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef075fbfec194725063b",
@@ -255,9 +279,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250518",
       code: "MOD018", 
       name: "WePro Emails", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef075fbfec1947250681",
@@ -302,9 +330,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250520",
       code: "MOD020", 
       name: "Job Status", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef075fbfec19472506b6",
@@ -377,9 +409,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250522",
       code: "MOD022", 
       name: "Job Tags", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef075fbfec19472506e7",
@@ -416,9 +452,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250524",
       code: "MOD024", 
       name: "Job Tag Notes", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef085fbfec1947250708",
@@ -455,9 +495,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250526",
       code: "MOD026", 
       name: "Custom Job Fields", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef085fbfec1947250729",
@@ -494,9 +538,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250527",
       code: "MOD027", 
       name: "Franchise Management", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef085fbfec194725073a",
@@ -533,9 +581,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250528",
       code: "MOD028", 
       name: "Company Profile", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef085fbfec194725074a",
@@ -556,9 +608,13 @@ export const profileData = {
       ] 
     },
     { 
+      _id: "6901ef005fbfec1947250529",
       code: "MOD029", 
       name: "Metro Areas", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef085fbfec1947250753",
@@ -595,9 +651,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250531",
       code: "MOD031", 
       name: "Script Management", 
       active: true ,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef085fbfec1947250780",
@@ -634,9 +694,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250532",
       code: "MOD032", 
       name: "Note Management", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef085fbfec1947250784",
@@ -673,9 +737,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250533",
       code: "MOD033", 
       name: "SMS Template Management", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef085fbfec1947250795",
@@ -712,9 +780,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250534",
       code: "MOD034", 
       name: "Voice Template Management", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef085fbfec19472507a5",
@@ -751,9 +823,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250535",
       code: "MOD035", 
       name: "Email Template Management", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef095fbfec19472507b6",
@@ -790,9 +866,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250536",
       code: "MOD036", 
       name: "Invoice Template Management", 
       active: true, 
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef095fbfec19472507c7",
@@ -829,9 +909,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250537",
       code: "MOD037", 
       name: "Job Template Management", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef095fbfec19472507d8",
@@ -868,9 +952,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250538",
       code: "MOD038", 
       name: "External Job Template Management", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef095fbfec19472507e8",
@@ -907,9 +995,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250539",
       code: "MOD039", 
       name: "Call Blocking Management", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef095fbfec19472507f9",
@@ -978,9 +1070,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250540",
       code: "MOD040", 
       name: "Spam Protection", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef095fbfec1947250819",
@@ -1033,9 +1129,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250541",
       code: "MOD041", 
       name: "Phone Number Management", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef095fbfec1947250831",
@@ -1096,9 +1196,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250543",
       code: "MOD043", 
       name: "Answering Service Package Management", 
       active: true ,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef095fbfec1947250856",
@@ -1175,9 +1279,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250547",
       code: "MOD047", 
       name: "Stripe Accounts Management", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef0a5fbfec194725087c",
@@ -1230,9 +1338,13 @@ export const profileData = {
       ]
     },
     { 
+      _id: "6901ef005fbfec1947250545",
       code: "MOD045", 
       name: "Billing Answering Subscription", 
       active: true,
+      isP1Module: false,
+      createdAt: "2025-10-29T10:40:06.297Z",
+      updatedAt: "2025-10-29T10:40:06.297Z",
       permissions: [
         {
           _id: "6901ef0a5fbfec1947250894",

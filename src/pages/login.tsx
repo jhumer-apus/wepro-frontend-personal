@@ -93,7 +93,8 @@ export default function Login(): React.JSX.Element {
             accessToken: response.data.accessToken,
             expiresIn: response.data.expiresIn,
             refreshExpiresIn: response.data.refreshExpiresIn,
-            refreshToken: response.data.refreshToken,
+            // Need to update this
+            refreshToken: response.data.accessToken, 
           })
         )
 
