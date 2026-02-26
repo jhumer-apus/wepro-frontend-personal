@@ -330,6 +330,7 @@ export function JobForm(props: JobFormProps) {
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [newNote, setNewNote] = useState("");
   const [activityFilter, setActivityFilter] = useState("all");
+  const [locationActivityFilter, setLocationActivityFilter] = useState("all");
   const [activity, setActivity] = useState(DEFAULT_ACTIVITY);
   const [showReplyNote, setShowReplyNote] = useState<number | null>(null);
   const [replyNote, setReplyNote] = useState("");
@@ -514,6 +515,11 @@ export function JobForm(props: JobFormProps) {
   };
 
   const filteredActivity = activityFilter === "all" ? activity : activity.filter((a) => a.type === activityFilter);
+  const locationActivityItems = React.useMemo(() => {
+    const sourceActivity = activity.length > 0 ? activity : DEFAULT_ACTIVITY;
+    if (locationActivityFilter === "all") return sourceActivity;
+    return sourceActivity.filter((item) => item.type === locationActivityFilter);
+  }, [activity, locationActivityFilter]);
 
   const invoiceFilteredRows = React.useMemo(() => {
     if (!invoiceTableSearch.trim()) return INVOICE_DUMMY_DATA;
@@ -600,6 +606,21 @@ export function JobForm(props: JobFormProps) {
   );
 
   const selectedJob = formData;
+  const selectedJobWithCoords = selectedJob as {
+    lat?: number | string;
+    lng?: number | string;
+    latitude?: number | string;
+    longitude?: number | string;
+  };
+  const resolvedMapLat = Number(
+    selectedJobWithCoords.lat ?? selectedJobWithCoords.latitude ?? 29.7604
+  );
+  const resolvedMapLng = Number(
+    selectedJobWithCoords.lng ?? selectedJobWithCoords.longitude ?? -95.3698
+  );
+  const mapLat = Number.isFinite(resolvedMapLat) ? resolvedMapLat : 29.7604;
+  const mapLng = Number.isFinite(resolvedMapLng) ? resolvedMapLng : -95.3698;
+  const locationMapSrc = `https://maps.google.com/maps?q=${mapLat},${mapLng}&z=15&output=embed`;
 
   return (
     <>
@@ -607,13 +628,19 @@ export function JobForm(props: JobFormProps) {
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-[100vw] w-[100vw] h-[100vh] [&>button]:hidden rounded-none sm:rounded-none mx-auto p-0 shadow-2xl border bg-white overflow-hidden flex flex-col">
           <div className="flex flex-col min-h-0 flex-1 overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b bg-white sticky top-0 z-10">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between px-6 py-4 bg-white sticky top-0 z-10">
+              <div className="flex flex-row items-start gap-3">
+                <div className="flex flex-col">
                   {selectedJob?.id ? (
                     <>
-                      <span className="text-sm font-medium text-gray-600">Job ID:</span>
-                      <span className="text-lg font-bold text-brandGreen-700">{selectedJob.id}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-slate-700">{selectedJob.id}</span>
+                      </div>
+                      {(selectedJob?.jobCategory || selectedJob?.jobType) && (
+                        <div className="text-sm text-slate-500">
+                          {[selectedJob?.jobCategory, selectedJob?.jobType].filter(Boolean).join(" • ")}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <span className="text-lg font-bold text-brandGreen-700">Create New Job</span>
@@ -625,7 +652,7 @@ export function JobForm(props: JobFormProps) {
                       <button type="button" className="cursor-pointer focus:outline-none rounded-md">
                         <Badge
                           style={{ backgroundColor: getStatusObj(selectedJob?.status || "Pending").color, color: "white" }}
-                          className="px-3 py-1"
+                          className="px-3 h-6"
                         >
                           {selectedJob?.status || "Pending"}
                         </Badge>
@@ -646,7 +673,7 @@ export function JobForm(props: JobFormProps) {
                   </DropdownMenu>
                 }
                 {selectedJob?.revenue != null && (
-                  <Badge variant="outline" className="px-3 py-1">
+                  <Badge variant="outline" className="px-3 py-1 h-6">
                     ${selectedJob.revenue}
                   </Badge>
                 )}
@@ -668,439 +695,400 @@ export function JobForm(props: JobFormProps) {
 
               <div className="flex-1 flex flex-col min-h-0 border-b overflow-hidden">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 w-full">
-                  <TabsList className="grid w-full grid-cols-4 shrink-0">
+                  <TabsList className="grid w-[600px] grid-cols-4 shrink-0 ml-6">
                     <TabsTrigger value="details">Details</TabsTrigger>
                     <TabsTrigger value="activity">Activity</TabsTrigger>
                     <TabsTrigger value="financials">Financials</TabsTrigger>
                     <TabsTrigger value="nearest-jobs">Nearest Jobs</TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="details" className="flex-1 min-h-0 overflow-y-auto p-6 pb-20 space-y-6 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <Card>
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <User className="w-5 h-5" />
-                            Client Information
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <Label className="text-sm font-medium">Client Name</Label>
-                              {isEditing ? (
-                                <Input value={formData.clientName || ""} onChange={(e) => handleEditChange("clientName", e.target.value)} className="mt-1" />
-                              ) : (
-                                <div className="mt-1 text-sm">{selectedJob.clientName}</div>
-                              )}
-                            </div>
-                            <div>
-                              <Label className="text-sm font-medium">Company</Label>
-                              {isEditing ? (
-                                <Input value={formData.companyName || ""} onChange={(e) => handleEditChange("companyName", e.target.value)} className="mt-1" />
-                              ) : (
-                                <div className="mt-1 text-sm">{selectedJob.companyName}</div>
-                              )}
-                            </div>
-                          </div>
-                          <div className={`grid grid-cols-${showSecondPhone ? "3" : "2"} gap-3`}>
-                            <div>
-                              <Label className="text-sm font-medium">Email</Label>
-                              {isEditing ? (
-                                <Input value={formData.email || ""} onChange={(e) => handleEditChange("email", e.target.value)} className="mt-1" />
-                              ) : (
-                                <div className="mt-1 text-sm">{selectedJob.email}</div>
-                              )}
-                            </div>
-                            <div className="mt-1">
-                              <div className="flex items-center justify-between gap-2">
-                                <Label className="text-sm font-medium">Phone</Label>
-                                {isEditing && !showSecondPhone && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowSecondPhone(true)}
-                                    className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
-                                  >
-                                    + Add more
-                                  </button>
-                                )}
-                              </div>
-                              {isEditing ? (
-                                <div className="space-y-1 mt-1">
-                                  <Input value={formData.phoneNumber || ""} onChange={(e) => handleEditChange("phoneNumber", e.target.value)} />
-                                </div>
-                              ) : (
-                                <div className="mt-1 space-y-0.5">
-                                  <div className="text-sm">{selectedJob.phoneNumber}</div>
-                                  {(selectedJob as { phoneNumber2?: string }).phoneNumber2 && (
-                                    <div className="text-sm text-slate-600 dark:text-slate-400">
-                                      {(selectedJob as { phoneNumber2?: string }).phoneNumber2}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                            {showSecondPhone && (
-                              <div className="mt-1">
-                                <div className="flex items-center justify-between gap-2 mt-1">
-                                  <Label className="text-sm font-medium">&nbsp;</Label>
-                                  {showSecondPhone && (
-                                    <button
-                                      type="button"
-                                      onClick={() => setShowSecondPhone(false)}
-                                      className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
-                                    >
-                                      Remove
-                                    </button>
-                                  )}
-                                </div>
-                                <Input
-                                  value={(formData as { phoneNumber2?: string }).phoneNumber2 || ""}
-                                  onChange={(e) => handleEditChange("phoneNumber2", e.target.value)}
-                                  placeholder="Additional phone"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <MapPin className="w-5 h-5" />
-                            Service Location
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <AddressInput
-                              isEditing={isEditing}
-                              value={formData.location || ""}
-                              displayValue={selectedJob.location}
-                              onChange={(value) => handleEditChange("location", value)}
-                              onAddressChange={({ address, address2, city, zip, state, country }) => {
-                                handleEditChange("location", address);
-                                handleEditChange("apartmentNumber", address2);
-                                handleEditChange("city", city);
-                                handleEditChange("zipCode", zip);
-                                handleEditChange("state", state);
-                                handleEditChange("country", country);
-                              }}
-                            />
-                            <div>
-                              <Label className="text-sm font-medium">Apartment #</Label>
-                              {isEditing ? (
-                                <Input
-                                  value={(formData as { apartmentNumber?: string }).apartmentNumber || ""}
-                                  onChange={(e) => handleEditChange("apartmentNumber", e.target.value)}
-                                  className="mt-1"
-                                />
-                              ) : (
-                                <div className="mt-1 text-sm">{(selectedJob as { apartmentNumber?: string }).apartmentNumber ?? "—"}</div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <Label className="text-sm font-medium">City</Label>
-                              {isEditing ? (
-                                <Input value={formData.city || ""} onChange={(e) => handleEditChange("city", e.target.value)} className="mt-1" />
-                              ) : (
-                                <div className="mt-1 text-sm">{selectedJob.city}</div>
-                              )}
-                            </div>
-                            <div>
-                              <Label className="text-sm font-medium">Zip</Label>
-                              {isEditing ? (
-                                <Input value={formData.zipCode || ""} onChange={(e) => handleEditChange("zipCode", e.target.value)} className="mt-1" />
-                              ) : (
-                                <div className="mt-1 text-sm">{selectedJob.zipCode}</div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <Label className="text-sm font-medium">State</Label>
-                              {isEditing ? (
-                                <Input value={formData.state || ""} onChange={(e) => handleEditChange("state", e.target.value)} className="mt-1" />
-                              ) : (
-                                <div className="mt-1 text-sm">{selectedJob.state}</div>
-                              )}
-                            </div>
-                            <div>
-                              <Label className="text-sm font-medium">Country</Label>
-                              {isEditing ? (
-                                <Input value={formData.country || ""} onChange={(e) => handleEditChange("country", e.target.value)} className="mt-1" />
-                              ) : (
-                                <div className="mt-1 text-sm">{(selectedJob as { country?: string }).country ?? "United States"}</div>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card>
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <Wrench className="w-5 h-5" />
-                            Job Details
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              {isEditing ? (
-                                <SelectInput
-                                  label="Job Category"
-                                  options={[
-                                    { label: "Plumbing", value: "Plumbing" },
-                                    { label: "Electrical", value: "Electrical" },
-                                    { label: "HVAC", value: "HVAC" },
-                                    { label: "General", value: "General" },
-                                  ]}
-                                  placeholder="Select category"
-                                  value={formData.jobCategory || ""}
-                                  onSearch={() => {}}
-                                  onSelect={(val) => handleEditChange("jobCategory", Array.isArray(val) ? (val[0] ?? "") : val)}
-                                />
-                              ) : (
-                                <>
-                                  <Label className="text-sm font-medium">Job Category</Label>
-                                  <div className="mt-1 text-sm">{selectedJob.jobCategory}</div>
-                                </>
-                              )}
-                            </div>
-                            <div>
-                              {isEditing ? (
-                                <SelectInput
-                                  label="Job Type"
-                                  options={[
-                                    { label: "Repair", value: "Repair" },
-                                    { label: "Installation", value: "Installation" },
-                                    { label: "Maintenance", value: "Maintenance" },
-                                    { label: "Emergency", value: "Emergency" },
-                                  ]}
-                                  placeholder="Select type"
-                                  value={formData.jobType || ""}
-                                  onSearch={() => {}}
-                                  onSelect={(val) => handleEditChange("jobType", Array.isArray(val) ? (val[0] ?? "") : val)}
-                                />
-                              ) : (
-                                <>
-                                  <Label className="text-sm font-medium">Job Type</Label>
-                                  <div className="mt-1 text-sm">{selectedJob.jobType}</div>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <div>
-                            {isEditing ? (
-                              <SelectInput
-                                label="Source"
-                                options={[
-                                  { label: "Yelp", value: "yelp" },
-                                  { label: "Google Ads", value: "google-ads" },
-                                  { label: "Facebook", value: "facebook" },
-                                  { label: "Referral", value: "referral" },
-                                  { label: "Website", value: "website" },
-                                  { label: "Direct Call", value: "phone" },
-                                ]}
-                                placeholder="Select source"
-                                value={formData.source ?? ""}
-                                onSearch={() => {}}
-                                onSelect={(val) => handleEditChange("source", Array.isArray(val) ? (val[0] ?? "") : val)}
-                              />
-                            ) : (
-                              <>
-                                <Label className="text-sm font-medium">Source</Label>
-                                <div className="mt-1 text-sm">
-                                  {[
-                                    { label: "Yelp", value: "yelp" },
-                                    { label: "Google Ads", value: "google-ads" },
-                                    { label: "Facebook", value: "facebook" },
-                                    { label: "Referral", value: "referral" },
-                                    { label: "Website", value: "website" },
-                                    { label: "Direct Call", value: "phone" },
-                                  ].find((o) => o.value === (selectedJob as { source?: string }).source)?.label ??
-                                    (selectedJob as { source?: string }).source ??
-                                    "—"}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            {isEditing ? (
-                              <SelectInput
-                                label="Job Status"
-                                options={DEFAULT_JOB_STATUSES.map((s) => ({ label: s.name, value: s.name }))}
-                                placeholder="Select status"
-                                value={formData.status ?? selectedJob?.status ?? ""}
-                                onSearch={() => {}}
-                                onSelect={(val) => handleEditChange("status", Array.isArray(val) ? (val[0] ?? "") : val)}
-                              />
-                            ) : (
-                              <div>
-                                <Label className="text-sm font-medium">Job Status</Label>
-                                <div className="mt-1 text-sm">{selectedJob?.status ?? "—"}</div>
-                              </div>
-                            )}
-                            {isEditing ? (
-                              <SelectInput
-                                label="Sub Status"
-                                options={[
-                                  { label: "Nothing selected", value: "" },
-                                  { label: "Follow up", value: "follow-up" },
-                                  { label: "Rescheduled", value: "rescheduled" },
-                                  { label: "No answer", value: "no-answer" },
-                                  { label: "Customer cancelled", value: "customer-cancelled" },
-                                  { label: "Pending confirmation", value: "pending-confirmation" },
-                                ]}
-                                placeholder="Nothing selected"
-                                value={(formData as { subStatus?: string }).subStatus ?? (selectedJob as { subStatus?: string }).subStatus ?? ""}
-                                onSearch={() => {}}
-                                onSelect={(val) => handleEditChange("subStatus", Array.isArray(val) ? (val[0] ?? "") : val)}
-                              />
-                            ) : (
-                              <div>
-                                <Label className="text-sm font-medium">Sub Status</Label>
-                                <div className="mt-1 text-sm">
-                                  {([{ label: "Follow up", value: "follow-up" }, { label: "Rescheduled", value: "rescheduled" }, { label: "No answer", value: "no-answer" }, { label: "Customer cancelled", value: "customer-cancelled" }, { label: "Pending confirmation", value: "pending-confirmation" }].find(
-                                    (o) => o.value === (selectedJob as { subStatus?: string }).subStatus
-                                  )?.label) ??
-                                    (selectedJob as { subStatus?: string }).subStatus ??
-                                    "—"}
-                                </div>
-                              </div>
-                            )}
-                            {isEditing ? (
-                              <SelectInput
-                                label="Jobs Tag"
-                                options={[
-                                  { label: "Urgent", value: "urgent" },
-                                  { label: "Warranty", value: "warranty" },
-                                  { label: "Follow-up", value: "follow-up" },
-                                  { label: "Commercial", value: "commercial" },
-                                  { label: "Test1", value: "test1" },
-                                  { label: "Job", value: "job" },
-                                ]}
-                                placeholder="Select tags"
-                                multiselect
-                                value={
-                                  Array.isArray((formData as { jobTags?: string[] }).jobTags)
-                                    ? (formData as { jobTags?: string[] }).jobTags!
-                                    : Array.isArray(selectedJob?.jobTags)
-                                    ? selectedJob.jobTags
-                                    : []
-                                }
-                                onSearch={() => {}}
-                                onSelect={(val) => handleEditChange("jobTags", Array.isArray(val) ? val : [])}
-                              />
-                            ) : (
-                              <div>
-                                <Label className="text-sm font-medium">Jobs Tag</Label>
-                                <div className="mt-1 text-sm">{Array.isArray(selectedJob?.jobTags) ? selectedJob.jobTags.join(", ") : "—"}</div>
-                              </div>
-                            )}
-                            {isEditing ? (
-                              <SelectInput
-                                label="Jobs Tag Note"
-                                options={DEFAULT_QUICK_TAG_NOTE_OPTIONS.map((t) => ({ label: t.replace(/-/g, " "), value: t }))}
-                                placeholder="Select Tag Note"
-                                multiselect
-                                value={
-                                  Array.isArray((formData as { noteTags?: string[] }).noteTags)
-                                    ? (formData as { noteTags?: string[] }).noteTags!
-                                    : Array.isArray(selectedJob?.noteTags)
-                                    ? selectedJob.noteTags
-                                    : []
-                                }
-                                onSearch={() => {}}
-                                onSelect={(val) => handleEditChange("noteTags", Array.isArray(val) ? val : [])}
-                              />
-                            ) : (
-                              <div>
-                                <Label className="text-sm font-medium">Jobs Tag Note</Label>
-                                <div className="mt-1 text-sm">{Array.isArray(selectedJob?.noteTags) ? selectedJob.noteTags.join(", ") : "—"}</div>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <div className="space-y-6">
+                  <TabsContent value="details" className="flex-1 min-h-0 overflow-y-auto p-6 pt-4 pb-20 space-y-6 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-1 lg:col-span-2 gap-6">
                         <Card>
                           <CardHeader className="pb-3">
                             <CardTitle className="text-lg flex items-center gap-2">
-                              <Calendar className="w-5 h-5" />
-                              Scheduled
+                              <User className="w-5 h-5" />
+                              Client Information
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-sm font-medium">Client Name</Label>
+                                {isEditing ? (
+                                  <Input value={formData.clientName || ""} onChange={(e) => handleEditChange("clientName", e.target.value)} className="mt-1" />
+                                ) : (
+                                  <div className="mt-1 text-sm">{selectedJob.clientName}</div>
+                                )}
+                              </div>
+                              <div>
+                                <Label className="text-sm font-medium">Company</Label>
+                                {isEditing ? (
+                                  <Input value={formData.companyName || ""} onChange={(e) => handleEditChange("companyName", e.target.value)} className="mt-1" />
+                                ) : (
+                                  <div className="mt-1 text-sm">{selectedJob.companyName}</div>
+                                )}
+                              </div>
+                            </div>
+                            <div className={`grid grid-cols-${showSecondPhone ? "3" : "2"} gap-3`}>
+                              <div>
+                                <Label className="text-sm font-medium">Email</Label>
+                                {isEditing ? (
+                                  <Input value={formData.email || ""} onChange={(e) => handleEditChange("email", e.target.value)} className="mt-1" />
+                                ) : (
+                                  <div className="mt-1 text-sm">{selectedJob.email}</div>
+                                )}
+                              </div>
+                              <div className="mt-1">
+                                <div className="flex items-center justify-between gap-2">
+                                  <Label className="text-sm font-medium">Phone</Label>
+                                  {isEditing && !showSecondPhone && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowSecondPhone(true)}
+                                      className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+                                    >
+                                      + Add more
+                                    </button>
+                                  )}
+                                </div>
+                                {isEditing ? (
+                                  <div className="space-y-1 mt-1">
+                                    <Input value={formData.phoneNumber || ""} onChange={(e) => handleEditChange("phoneNumber", e.target.value)} />
+                                  </div>
+                                ) : (
+                                  <div className="mt-1 space-y-0.5">
+                                    <div className="text-sm">{selectedJob.phoneNumber}</div>
+                                    {(selectedJob as { phoneNumber2?: string }).phoneNumber2 && (
+                                      <div className="text-sm text-slate-600 dark:text-slate-400">
+                                        {(selectedJob as { phoneNumber2?: string }).phoneNumber2}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              {showSecondPhone && (
+                                <div className="mt-1">
+                                  <div className="flex items-center justify-between gap-2 mt-1">
+                                    <Label className="text-sm font-medium">&nbsp;</Label>
+                                    {showSecondPhone && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setShowSecondPhone(false)}
+                                        className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+                                      >
+                                        Remove
+                                      </button>
+                                    )}
+                                  </div>
+                                  <Input
+                                    value={(formData as { phoneNumber2?: string }).phoneNumber2 || ""}
+                                    onChange={(e) => handleEditChange("phoneNumber2", e.target.value)}
+                                    placeholder="Additional phone"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              <MapPin className="w-5 h-5" />
+                              Service Location
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <AddressInput
+                                isEditing={isEditing}
+                                value={formData.location || ""}
+                                displayValue={selectedJob.location}
+                                onChange={(value) => handleEditChange("location", value)}
+                                onAddressChange={({ address, address2, city, zip, state, country }) => {
+                                  handleEditChange("location", address);
+                                  handleEditChange("apartmentNumber", address2);
+                                  handleEditChange("city", city);
+                                  handleEditChange("zipCode", zip);
+                                  handleEditChange("state", state);
+                                  handleEditChange("country", country);
+                                }}
+                              />
+                              <div>
+                                <Label className="text-sm font-medium">Apartment #</Label>
+                                {isEditing ? (
+                                  <Input
+                                    value={(formData as { apartmentNumber?: string }).apartmentNumber || ""}
+                                    onChange={(e) => handleEditChange("apartmentNumber", e.target.value)}
+                                    className="mt-1"
+                                  />
+                                ) : (
+                                  <div className="mt-1 text-sm">{(selectedJob as { apartmentNumber?: string }).apartmentNumber ?? "—"}</div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-sm font-medium">City</Label>
+                                {isEditing ? (
+                                  <Input value={formData.city || ""} onChange={(e) => handleEditChange("city", e.target.value)} className="mt-1" />
+                                ) : (
+                                  <div className="mt-1 text-sm">{selectedJob.city}</div>
+                                )}
+                              </div>
+                              <div>
+                                <Label className="text-sm font-medium">Zip</Label>
+                                {isEditing ? (
+                                  <Input value={formData.zipCode || ""} onChange={(e) => handleEditChange("zipCode", e.target.value)} className="mt-1" />
+                                ) : (
+                                  <div className="mt-1 text-sm">{selectedJob.zipCode}</div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-sm font-medium">State</Label>
+                                {isEditing ? (
+                                  <Input value={formData.state || ""} onChange={(e) => handleEditChange("state", e.target.value)} className="mt-1" />
+                                ) : (
+                                  <div className="mt-1 text-sm">{selectedJob.state}</div>
+                                )}
+                              </div>
+                              <div>
+                                <Label className="text-sm font-medium">Country</Label>
+                                {isEditing ? (
+                                  <Input value={formData.country || ""} onChange={(e) => handleEditChange("country", e.target.value)} className="mt-1" />
+                                ) : (
+                                  <div className="mt-1 text-sm">{(selectedJob as { country?: string }).country ?? "United States"}</div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              <Wrench className="w-5 h-5" />
+                              Job Details
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-3">
                             <div className="grid grid-cols-2 gap-3">
                               <div>
                                 {isEditing ? (
-                                  <InputDatepicker
-                                    label="Start Date Time"
-                                    range={false}
-                                    withTime={true}
-                                    datetimeValue={formData.startDate && formData.startTime ? `${formData.startDate}T${String(formData.startTime)}` : ""}
-                                    onDateTimeChange={(v) => {
-                                      if (v) {
-                                        const [d, t] = v.split("T");
-                                        handleEditChange("startDate", d || "");
-                                        handleEditChange("startTime", t || "");
-                                      } else {
-                                        handleEditChange("startDate", "");
-                                        handleEditChange("startTime", "");
-                                      }
-                                    }}
-                                    minuteInterval={15}
+                                  <SelectInput
+                                    label="Job Category"
+                                    options={[
+                                      { label: "Plumbing", value: "Plumbing" },
+                                      { label: "Electrical", value: "Electrical" },
+                                      { label: "HVAC", value: "HVAC" },
+                                      { label: "General", value: "General" },
+                                    ]}
+                                    placeholder="Select category"
+                                    value={formData.jobCategory || ""}
+                                    onSearch={() => {}}
+                                    onSelect={(val) => handleEditChange("jobCategory", Array.isArray(val) ? (val[0] ?? "") : val)}
                                   />
                                 ) : (
-                                  <div className="mt-1 text-sm">
-                                    {selectedJob.startDate && selectedJob.startTime
-                                      ? new Date(`${selectedJob.startDate}T${selectedJob.startTime}`).toLocaleString("en-US", {
-                                          month: "2-digit",
-                                          day: "2-digit",
-                                          year: "numeric",
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                          hour12: true,
-                                        })
-                                      : "—"}
-                                  </div>
+                                  <>
+                                    <Label className="text-sm font-medium">Job Category</Label>
+                                    <div className="mt-1 text-sm">{selectedJob.jobCategory}</div>
+                                  </>
                                 )}
                               </div>
                               <div>
                                 {isEditing ? (
-                                  <InputDatepicker
-                                    label="End Date Time"
-                                    range={false}
-                                    withTime={true}
-                                    datetimeValue={(() => {
-                                      const endD = (formData as { endDate?: string }).endDate;
-                                      const endT = (formData as { estimatedEndTime?: string }).estimatedEndTime;
-                                      return endD && endT ? `${endD}T${String(endT)}` : "";
-                                    })()}
-                                    onDateTimeChange={(v) => {
-                                      if (v) {
-                                        const [d, t] = v.split("T");
-                                        handleEditChange("endDate", d || "");
-                                        handleEditChange("estimatedEndTime", t || "");
-                                      } else {
-                                        handleEditChange("endDate", "");
-                                        handleEditChange("estimatedEndTime", "");
-                                      }
-                                    }}
+                                  <SelectInput
+                                    label="Job Type"
+                                    options={[
+                                      { label: "Repair", value: "Repair" },
+                                      { label: "Installation", value: "Installation" },
+                                      { label: "Maintenance", value: "Maintenance" },
+                                      { label: "Emergency", value: "Emergency" },
+                                    ]}
+                                    placeholder="Select type"
+                                    value={formData.jobType || ""}
+                                    onSearch={() => {}}
+                                    onSelect={(val) => handleEditChange("jobType", Array.isArray(val) ? (val[0] ?? "") : val)}
                                   />
                                 ) : (
+                                  <>
+                                    <Label className="text-sm font-medium">Job Type</Label>
+                                    <div className="mt-1 text-sm">{selectedJob.jobType}</div>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            <div>
+                              {isEditing ? (
+                                <SelectInput
+                                  label="Source"
+                                  options={[
+                                    { label: "Yelp", value: "yelp" },
+                                    { label: "Google Ads", value: "google-ads" },
+                                    { label: "Facebook", value: "facebook" },
+                                    { label: "Referral", value: "referral" },
+                                    { label: "Website", value: "website" },
+                                    { label: "Direct Call", value: "phone" },
+                                  ]}
+                                  placeholder="Select source"
+                                  value={formData.source ?? ""}
+                                  onSearch={() => {}}
+                                  onSelect={(val) => handleEditChange("source", Array.isArray(val) ? (val[0] ?? "") : val)}
+                                />
+                              ) : (
+                                <>
+                                  <Label className="text-sm font-medium">Source</Label>
                                   <div className="mt-1 text-sm">
-                                    {(() => {
-                                      const endD = (selectedJob as { endDate?: string }).endDate || selectedJob.startDate;
-                                      const endT = (selectedJob as { estimatedEndTime?: string }).estimatedEndTime || selectedJob.startTime;
-                                      return endD && endT
-                                        ? new Date(`${endD}T${endT}`).toLocaleString("en-US", {
+                                    {[
+                                      { label: "Yelp", value: "yelp" },
+                                      { label: "Google Ads", value: "google-ads" },
+                                      { label: "Facebook", value: "facebook" },
+                                      { label: "Referral", value: "referral" },
+                                      { label: "Website", value: "website" },
+                                      { label: "Direct Call", value: "phone" },
+                                    ].find((o) => o.value === (selectedJob as { source?: string }).source)?.label ??
+                                      (selectedJob as { source?: string }).source ??
+                                      "—"}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              {isEditing ? (
+                                <SelectInput
+                                  label="Job Status"
+                                  options={DEFAULT_JOB_STATUSES.map((s) => ({ label: s.name, value: s.name }))}
+                                  placeholder="Select status"
+                                  value={formData.status ?? selectedJob?.status ?? ""}
+                                  onSearch={() => {}}
+                                  onSelect={(val) => handleEditChange("status", Array.isArray(val) ? (val[0] ?? "") : val)}
+                                />
+                              ) : (
+                                <div>
+                                  <Label className="text-sm font-medium">Job Status</Label>
+                                  <div className="mt-1 text-sm">{selectedJob?.status ?? "—"}</div>
+                                </div>
+                              )}
+                              {isEditing ? (
+                                <SelectInput
+                                  label="Sub Status"
+                                  options={[
+                                    { label: "Nothing selected", value: "" },
+                                    { label: "Follow up", value: "follow-up" },
+                                    { label: "Rescheduled", value: "rescheduled" },
+                                    { label: "No answer", value: "no-answer" },
+                                    { label: "Customer cancelled", value: "customer-cancelled" },
+                                    { label: "Pending confirmation", value: "pending-confirmation" },
+                                  ]}
+                                  placeholder="Nothing selected"
+                                  value={(formData as { subStatus?: string }).subStatus ?? (selectedJob as { subStatus?: string }).subStatus ?? ""}
+                                  onSearch={() => {}}
+                                  onSelect={(val) => handleEditChange("subStatus", Array.isArray(val) ? (val[0] ?? "") : val)}
+                                />
+                              ) : (
+                                <div>
+                                  <Label className="text-sm font-medium">Sub Status</Label>
+                                  <div className="mt-1 text-sm">
+                                    {([{ label: "Follow up", value: "follow-up" }, { label: "Rescheduled", value: "rescheduled" }, { label: "No answer", value: "no-answer" }, { label: "Customer cancelled", value: "customer-cancelled" }, { label: "Pending confirmation", value: "pending-confirmation" }].find(
+                                      (o) => o.value === (selectedJob as { subStatus?: string }).subStatus
+                                    )?.label) ??
+                                      (selectedJob as { subStatus?: string }).subStatus ??
+                                      "—"}
+                                  </div>
+                                </div>
+                              )}
+                              {isEditing ? (
+                                <SelectInput
+                                  label="Jobs Tag"
+                                  options={[
+                                    { label: "Urgent", value: "urgent" },
+                                    { label: "Warranty", value: "warranty" },
+                                    { label: "Follow-up", value: "follow-up" },
+                                    { label: "Commercial", value: "commercial" },
+                                    { label: "Test1", value: "test1" },
+                                    { label: "Job", value: "job" },
+                                  ]}
+                                  placeholder="Select tags"
+                                  multiselect
+                                  value={
+                                    Array.isArray((formData as { jobTags?: string[] }).jobTags)
+                                      ? (formData as { jobTags?: string[] }).jobTags!
+                                      : Array.isArray(selectedJob?.jobTags)
+                                      ? selectedJob.jobTags
+                                      : []
+                                  }
+                                  onSearch={() => {}}
+                                  onSelect={(val) => handleEditChange("jobTags", Array.isArray(val) ? val : [])}
+                                />
+                              ) : (
+                                <div>
+                                  <Label className="text-sm font-medium">Jobs Tag</Label>
+                                  <div className="mt-1 text-sm">{Array.isArray(selectedJob?.jobTags) ? selectedJob.jobTags.join(", ") : "—"}</div>
+                                </div>
+                              )}
+                              {isEditing ? (
+                                <SelectInput
+                                  label="Jobs Tag Note"
+                                  options={DEFAULT_QUICK_TAG_NOTE_OPTIONS.map((t) => ({ label: t.replace(/-/g, " "), value: t }))}
+                                  placeholder="Select Tag Note"
+                                  multiselect
+                                  value={
+                                    Array.isArray((formData as { noteTags?: string[] }).noteTags)
+                                      ? (formData as { noteTags?: string[] }).noteTags!
+                                      : Array.isArray(selectedJob?.noteTags)
+                                      ? selectedJob.noteTags
+                                      : []
+                                  }
+                                  onSearch={() => {}}
+                                  onSelect={(val) => handleEditChange("noteTags", Array.isArray(val) ? val : [])}
+                                />
+                              ) : (
+                                <div>
+                                  <Label className="text-sm font-medium">Jobs Tag Note</Label>
+                                  <div className="mt-1 text-sm">{Array.isArray(selectedJob?.noteTags) ? selectedJob.noteTags.join(", ") : "—"}</div>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <div className="space-y-6">
+                          <Card>
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                <Calendar className="w-5 h-5" />
+                                Scheduled
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  {isEditing ? (
+                                    <InputDatepicker
+                                      label="Start Date Time"
+                                      range={false}
+                                      withTime={true}
+                                      datetimeValue={formData.startDate && formData.startTime ? `${formData.startDate}T${String(formData.startTime)}` : ""}
+                                      onDateTimeChange={(v) => {
+                                        if (v) {
+                                          const [d, t] = v.split("T");
+                                          handleEditChange("startDate", d || "");
+                                          handleEditChange("startTime", t || "");
+                                        } else {
+                                          handleEditChange("startDate", "");
+                                          handleEditChange("startTime", "");
+                                        }
+                                      }}
+                                      minuteInterval={15}
+                                    />
+                                  ) : (
+                                    <div className="mt-1 text-sm">
+                                      {selectedJob.startDate && selectedJob.startTime
+                                        ? new Date(`${selectedJob.startDate}T${selectedJob.startTime}`).toLocaleString("en-US", {
                                             month: "2-digit",
                                             day: "2-digit",
                                             year: "numeric",
@@ -1108,197 +1096,311 @@ export function JobForm(props: JobFormProps) {
                                             minute: "2-digit",
                                             hour12: true,
                                           })
-                                        : "—";
-                                    })()}
-                                  </div>
-                                )}
+                                        : "—"}
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  {isEditing ? (
+                                    <InputDatepicker
+                                      label="End Date Time"
+                                      range={false}
+                                      withTime={true}
+                                      datetimeValue={(() => {
+                                        const endD = (formData as { endDate?: string }).endDate;
+                                        const endT = (formData as { estimatedEndTime?: string }).estimatedEndTime;
+                                        return endD && endT ? `${endD}T${String(endT)}` : "";
+                                      })()}
+                                      onDateTimeChange={(v) => {
+                                        if (v) {
+                                          const [d, t] = v.split("T");
+                                          handleEditChange("endDate", d || "");
+                                          handleEditChange("estimatedEndTime", t || "");
+                                        } else {
+                                          handleEditChange("endDate", "");
+                                          handleEditChange("estimatedEndTime", "");
+                                        }
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="mt-1 text-sm">
+                                      {(() => {
+                                        const endD = (selectedJob as { endDate?: string }).endDate || selectedJob.startDate;
+                                        const endT = (selectedJob as { estimatedEndTime?: string }).estimatedEndTime || selectedJob.startTime;
+                                        return endD && endT
+                                          ? new Date(`${endD}T${endT}`).toLocaleString("en-US", {
+                                              month: "2-digit",
+                                              day: "2-digit",
+                                              year: "numeric",
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                              hour12: true,
+                                            })
+                                          : "—";
+                                      })()}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
+                            </CardContent>
+                          </Card>
+
+                          <Card>
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                <Users className="w-5 h-5" />
+                                Assignment
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              {isEditing ? (
+                                <SelectInput
+                                  options={[
+                                    { label: "All", value: "all" },
+                                    { label: "Closest Distance", value: "closest-distance" },
+                                    { label: "Matching Skills", value: "matching-skills" },
+                                    { label: "Matching Metro", value: "matching-metro" },
+                                    { label: "Closest Distance + Matching Skill + Matching Metro", value: "closest-distance-matching-skill-matching-metro" },
+                                  ]}
+                                  placeholder="Closest Distance"
+                                  value={(formData as { closestDistance?: string }).closestDistance ?? (selectedJob as { closestDistance?: string }).closestDistance ?? ""}
+                                  onSearch={() => {}}
+                                  onSelect={(val) => handleEditChange("closestDistance", Array.isArray(val) ? (val[0] ?? "") : val)}
+                                />
+                              ) : (
+                                <div>
+                                  <Label className="text-sm font-medium">Closest Distance</Label>
+                                  <div className="mt-1 text-sm">
+                                    {([{ label: "All", value: "all" }, { label: "Closest Distance", value: "closest-distance" }, { label: "Matching Skills", value: "matching-skills" }, { label: "Matching Metro", value: "matching-metro" }, { label: "Closest Distance + Matching Skill + Matching Metro", value: "closest-distance-matching-skill-matching-metro" }].find(
+                                      (o) => o.value === (selectedJob as { closestDistance?: string }).closestDistance
+                                    )?.label) ??
+                                      (selectedJob as { closestDistance?: string }).closestDistance ??
+                                      "—"}
+                                  </div>
+                                </div>
+                              )}
+                              {isEditing ? (
+                                <SelectInput
+                                  label="Assign Technician"
+                                  options={DEFAULT_TECHNICIAN_OPTIONS.map((name) => ({ label: name, value: name }))}
+                                  placeholder="Select Technician"
+                                  value={formData.assignedTechnician ?? selectedJob?.assignedTechnician ?? ""}
+                                  onSearch={() => {}}
+                                  onSelect={(val) => handleEditChange("assignedTechnician", Array.isArray(val) ? (val[0] ?? "") : val)}
+                                />
+                              ) : (
+                                <div>
+                                  <Label className="text-sm font-medium">Assign Technician</Label>
+                                  <div className="mt-1 text-sm">{selectedJob?.assignedTechnician ?? "—"}</div>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        <Card className="flex flex-col">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              <FileText className="w-5 h-5" />
+                              Description & Notes
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="flex space-y-3 flex-1">
+                            <div className="flex-1 flex">
+                              {isEditing ? (
+                                <Textarea value={formData.jobDescription || ""} onChange={(e) => handleEditChange("jobDescription", e.target.value)} className="mt-1 flex-1" rows={3} />
+                              ) : (
+                                <div className="mt-1 text-sm">{selectedJob.jobDescription}</div>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
 
-                        <Card>
-                          <CardHeader className="pb-3">
+                        <Card className="flex flex-col">
+                          <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
                             <CardTitle className="text-lg flex items-center gap-2">
-                              <Users className="w-5 h-5" />
-                              Assignment
+                              <Upload className="w-5 h-5" />
+                              Attachment
                             </CardTitle>
+                            <Button type="button" variant="outline" size="sm" onClick={() => attachmentInputRef.current?.click()}>
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add More
+                            </Button>
                           </CardHeader>
                           <CardContent className="space-y-3">
-                            {isEditing ? (
-                              <SelectInput
-                                options={[
-                                  { label: "All", value: "all" },
-                                  { label: "Closest Distance", value: "closest-distance" },
-                                  { label: "Matching Skills", value: "matching-skills" },
-                                  { label: "Matching Metro", value: "matching-metro" },
-                                  { label: "Closest Distance + Matching Skill + Matching Metro", value: "closest-distance-matching-skill-matching-metro" },
-                                ]}
-                                placeholder="Closest Distance"
-                                value={(formData as { closestDistance?: string }).closestDistance ?? (selectedJob as { closestDistance?: string }).closestDistance ?? ""}
-                                onSearch={() => {}}
-                                onSelect={(val) => handleEditChange("closestDistance", Array.isArray(val) ? (val[0] ?? "") : val)}
-                              />
-                            ) : (
-                              <div>
-                                <Label className="text-sm font-medium">Closest Distance</Label>
-                                <div className="mt-1 text-sm">
-                                  {([{ label: "All", value: "all" }, { label: "Closest Distance", value: "closest-distance" }, { label: "Matching Skills", value: "matching-skills" }, { label: "Matching Metro", value: "matching-metro" }, { label: "Closest Distance + Matching Skill + Matching Metro", value: "closest-distance-matching-skill-matching-metro" }].find(
-                                    (o) => o.value === (selectedJob as { closestDistance?: string }).closestDistance
-                                  )?.label) ??
-                                    (selectedJob as { closestDistance?: string }).closestDistance ??
-                                    "—"}
-                                </div>
+                            <input ref={attachmentInputRef} type="file" multiple className="hidden" onChange={handleAttachmentInputChange} />
+
+                            {attachments.length === 0 ? (
+                              <div
+                                onDragOver={(event) => {
+                                  event.preventDefault();
+                                  setIsAttachmentDragOver(true);
+                                }}
+                                onDragLeave={() => setIsAttachmentDragOver(false)}
+                                onDrop={handleAttachmentDrop}
+                                className={cn(
+                                  "rounded-lg border-2 border-dashed p-6 text-center transition-colors",
+                                  isAttachmentDragOver ? "border-blue-500 bg-blue-50" : "border-slate-300 bg-slate-50"
+                                )}
+                              >
+                                <Upload className="w-6 h-6 mx-auto mb-2 text-slate-500" />
+                                <p className="text-sm font-medium text-slate-700">Drag and drop files here</p>
+                                <p className="text-xs text-slate-500 my-2">or</p>
+                                <Button type="button" variant="outline" onClick={() => attachmentInputRef.current?.click()}>
+                                  Upload Files
+                                </Button>
                               </div>
-                            )}
-                            {isEditing ? (
-                              <SelectInput
-                                label="Assign Technician"
-                                options={DEFAULT_TECHNICIAN_OPTIONS.map((name) => ({ label: name, value: name }))}
-                                placeholder="Select Technician"
-                                value={formData.assignedTechnician ?? selectedJob?.assignedTechnician ?? ""}
-                                onSearch={() => {}}
-                                onSelect={(val) => handleEditChange("assignedTechnician", Array.isArray(val) ? (val[0] ?? "") : val)}
-                              />
                             ) : (
-                              <div>
-                                <Label className="text-sm font-medium">Assign Technician</Label>
-                                <div className="mt-1 text-sm">{selectedJob?.assignedTechnician ?? "—"}</div>
+                              <div className="min-w-0">
+                                <div className="relative flex-1 min-w-0 overflow-hidden">
+                                  {attachmentScrollState.canScrollLeft && (
+                                    <button
+                                      type="button"
+                                      className="absolute left-0 top-[3.5rem] -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                                      onClick={() => scrollAttachmentList("left")}
+                                      disabled={!attachmentScrollState.canScrollLeft}
+                                    >
+                                      <ChevronLeft className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                  <div
+                                    ref={attachmentListRef}
+                                    className={`w-full overflow-x-auto pb-1 cursor-grab active:cursor-grabbing select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${attachmentScrollState.canScrollLeft ? "pl-8" : "pl-0"} ${attachmentScrollState.canScrollRight ? "pr-8" : "pr-0"}`}
+                                    onMouseDown={startAttachmentListDrag}
+                                    onMouseMove={handleAttachmentListDrag}
+                                    onMouseUp={endAttachmentListDrag}
+                                    onMouseLeave={endAttachmentListDrag}
+                                    onDragStart={(event) => event.preventDefault()}
+                                  >
+                                    <div className="flex min-w-max gap-3">
+                                      {attachments.map((file) => {
+                                        const attachmentKey = getAttachmentKey(file);
+                                        return (
+                                        <div key={attachmentKey} className="w-28 shrink-0">
+                                          <div className="relative w-28 h-28 rounded-md border bg-slate-50 overflow-hidden flex items-center justify-center">
+                                            <button
+                                              type="button"
+                                              className="absolute right-1 top-1 z-10 h-5 w-5 rounded-full bg-white/95 border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-white"
+                                              onMouseDown={(event) => event.stopPropagation()}
+                                              onClick={(event) => {
+                                                event.preventDefault();
+                                                event.stopPropagation();
+                                                removeAttachmentByKey(attachmentKey);
+                                              }}
+                                              aria-label={`Remove ${file.name}`}
+                                            >
+                                              <X className="h-3 w-3" />
+                                            </button>
+                                            {file.type.startsWith("image/") && attachmentPreviewUrls[attachmentKey] ? (
+                                              <img
+                                                src={attachmentPreviewUrls[attachmentKey]}
+                                                alt={file.name}
+                                                className="h-full w-full object-cover"
+                                                draggable={false}
+                                              />
+                                            ) : (
+                                              <div className="flex flex-col items-center gap-1 text-slate-600">
+                                                {getAttachmentIcon(file)}
+                                                <span className="text-[10px] uppercase font-medium">{file.name.split(".").pop() ?? "file"}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                          <p className="mt-1 text-xs truncate">{file.name}</p>
+                                          <p className="text-[11px] text-slate-500">{formatAttachmentSize(file.size)}</p>
+                                        </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                  {attachmentScrollState.canScrollRight && (
+                                    <button
+                                      type="button"
+                                      className="absolute right-0 top-[3.5rem] -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                                      onClick={() => scrollAttachmentList("right")}
+                                      disabled={!attachmentScrollState.canScrollRight}
+                                    >
+                                      <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             )}
                           </CardContent>
                         </Card>
                       </div>
-
-                      <Card className="flex flex-col">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <FileText className="w-5 h-5" />
-                            Description & Notes
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex space-y-3 flex-1">
-                          <div className="flex-1 flex">
-                            {isEditing ? (
-                              <Textarea value={formData.jobDescription || ""} onChange={(e) => handleEditChange("jobDescription", e.target.value)} className="mt-1 flex-1" rows={3} />
-                            ) : (
-                              <div className="mt-1 text-sm">{selectedJob.jobDescription}</div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="flex flex-col">
-                        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <Upload className="w-5 h-5" />
-                            Attachment
-                          </CardTitle>
-                          <Button type="button" variant="outline" size="sm" onClick={() => attachmentInputRef.current?.click()}>
-                            <Plus className="h-4 w-4 mr-1" />
-                            Add More
-                          </Button>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <input ref={attachmentInputRef} type="file" multiple className="hidden" onChange={handleAttachmentInputChange} />
-
-                          {attachments.length === 0 ? (
-                            <div
-                              onDragOver={(event) => {
-                                event.preventDefault();
-                                setIsAttachmentDragOver(true);
-                              }}
-                              onDragLeave={() => setIsAttachmentDragOver(false)}
-                              onDrop={handleAttachmentDrop}
-                              className={cn(
-                                "rounded-lg border-2 border-dashed p-6 text-center transition-colors",
-                                isAttachmentDragOver ? "border-blue-500 bg-blue-50" : "border-slate-300 bg-slate-50"
-                              )}
-                            >
-                              <Upload className="w-6 h-6 mx-auto mb-2 text-slate-500" />
-                              <p className="text-sm font-medium text-slate-700">Drag and drop files here</p>
-                              <p className="text-xs text-slate-500 my-2">or</p>
-                              <Button type="button" variant="outline" onClick={() => attachmentInputRef.current?.click()}>
-                                Upload Files
-                              </Button>
+                      <div className="space-y-6">
+                        <Card className="flex flex-col">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              <MapPin className="w-5 h-5" />
+                              Location
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-1 text-sm">
+                            <div>{selectedJob?.location || "—"}</div>
+                            <div className="text-slate-600">
+                              {[selectedJob?.city, selectedJob?.state, selectedJob?.zipCode].filter(Boolean).join(", ") || "—"}
                             </div>
-                          ) : (
-                            <div className="min-w-0">
-                              <div className="relative flex-1 min-w-0 overflow-hidden">
-                                {attachmentScrollState.canScrollLeft && (
-                                  <button
-                                    type="button"
-                                    className="absolute left-0 top-[3.5rem] -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
-                                    onClick={() => scrollAttachmentList("left")}
-                                    disabled={!attachmentScrollState.canScrollLeft}
-                                  >
-                                    <ChevronLeft className="w-4 h-4" />
-                                  </button>
-                                )}
-                                <div
-                                  ref={attachmentListRef}
-                                  className={`w-full overflow-x-auto pb-1 cursor-grab active:cursor-grabbing select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${attachmentScrollState.canScrollLeft ? "pl-8" : "pl-0"} ${attachmentScrollState.canScrollRight ? "pr-8" : "pr-0"}`}
-                                  onMouseDown={startAttachmentListDrag}
-                                  onMouseMove={handleAttachmentListDrag}
-                                  onMouseUp={endAttachmentListDrag}
-                                  onMouseLeave={endAttachmentListDrag}
-                                  onDragStart={(event) => event.preventDefault()}
-                                >
-                                  <div className="flex min-w-max gap-3">
-                                    {attachments.map((file) => {
-                                      const attachmentKey = getAttachmentKey(file);
-                                      return (
-                                      <div key={attachmentKey} className="w-28 shrink-0">
-                                        <div className="relative w-28 h-28 rounded-md border bg-slate-50 overflow-hidden flex items-center justify-center">
-                                          <button
-                                            type="button"
-                                            className="absolute right-1 top-1 z-10 h-5 w-5 rounded-full bg-white/95 border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-white"
-                                            onMouseDown={(event) => event.stopPropagation()}
-                                            onClick={(event) => {
-                                              event.preventDefault();
-                                              event.stopPropagation();
-                                              removeAttachmentByKey(attachmentKey);
-                                            }}
-                                            aria-label={`Remove ${file.name}`}
-                                          >
-                                            <X className="h-3 w-3" />
-                                          </button>
-                                          {file.type.startsWith("image/") && attachmentPreviewUrls[attachmentKey] ? (
-                                            <img
-                                              src={attachmentPreviewUrls[attachmentKey]}
-                                              alt={file.name}
-                                              className="h-full w-full object-cover"
-                                              draggable={false}
-                                            />
-                                          ) : (
-                                            <div className="flex flex-col items-center gap-1 text-slate-600">
-                                              {getAttachmentIcon(file)}
-                                              <span className="text-[10px] uppercase font-medium">{file.name.split(".").pop() ?? "file"}</span>
-                                            </div>
-                                          )}
+                            <div className="text-slate-600">{(selectedJob as { country?: string })?.country || "United States"}</div>
+                            <div className="mt-3 overflow-hidden rounded-lg border border-slate-200">
+                              <iframe
+                                title="Job location map"
+                                src={locationMapSrc}
+                                className="h-[260px] w-full"
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                                allowFullScreen
+                              />
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="flex flex-col">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <CardTitle className="text-lg">Activity</CardTitle>
+                              <div className="w-36">
+                                <SelectInput
+                                  options={[
+                                    { label: "Status", value: "activity" },
+                                    { label: "Assign", value: "assign" },
+                                    { label: "Payment", value: "payment" },
+                                    { label: "Part", value: "part" },
+                                    { label: "Note", value: "note" },
+                                    { label: "Call", value: "call" },
+                                  ]}
+                                  placeholder="Types"
+                                  value={locationActivityFilter}
+                                  onSearch={() => {}}
+                                  onSelect={(val) => setLocationActivityFilter(Array.isArray(val) ? (val[0] ?? "all") : val)}
+                                />
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="pt-0">
+                            <div className="max-h-[360px] overflow-y-auto pr-1">
+                              <div className="space-y-3">
+                                {locationActivityItems.length > 0 ? (
+                                  locationActivityItems.map((item, index) => {
+                                    const summaryText = String(item.summary || "").trim() || item.title;
+                                    const labelText = item.type === "note" ? `Note: ${summaryText}` : summaryText;
+                                    return (
+                                      <div key={`location-activity-${index}`} className="flex items-start gap-2.5">
+                                        <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-400" />
+                                        <div className="min-w-0">
+                                          <p className="truncate text-sm leading-5 text-slate-900">{labelText}</p>
+                                          <p className="text-xs text-slate-500">{item.timestamp}</p>
                                         </div>
-                                        <p className="mt-1 text-xs truncate">{file.name}</p>
-                                        <p className="text-[11px] text-slate-500">{formatAttachmentSize(file.size)}</p>
                                       </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                                {attachmentScrollState.canScrollRight && (
-                                  <button
-                                    type="button"
-                                    className="absolute right-0 top-[3.5rem] -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
-                                    onClick={() => scrollAttachmentList("right")}
-                                    disabled={!attachmentScrollState.canScrollRight}
-                                  >
-                                    <ChevronRight className="w-4 h-4" />
-                                  </button>
+                                    );
+                                  })
+                                ) : (
+                                  <p className="text-sm text-slate-500">No activity found.</p>
                                 )}
                               </div>
                             </div>
-                          )}
-                        </CardContent>
-                      </Card>
+                          </CardContent>
+                        </Card>
+                      </div>
                     </div>
 
                     <div className="fixed bottom-0 left-0 right-0 bg-white">
