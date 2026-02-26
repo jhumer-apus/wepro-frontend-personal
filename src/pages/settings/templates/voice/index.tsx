@@ -204,7 +204,7 @@ export default function VoiceTemplatesPage() {
       }
 
       const response = await apiService.get(
-        `/v1/templates/voice?${queryParams.toString()}`
+        `/v3/templates/voice?${queryParams.toString()}`
       )
       const responseData: VoiceTemplatesResponse = response.data
 
@@ -312,7 +312,7 @@ export default function VoiceTemplatesPage() {
 
     try {
       setDeleting(true)
-      await apiService.delete(`/v1/templates/voice/${templateToDelete._id}`)
+      await apiService.delete(`/v3/templates/voice/${templateToDelete._id}`)
 
       // Refresh the list
       await fetchTemplates()

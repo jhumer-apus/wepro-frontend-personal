@@ -216,7 +216,7 @@ export default function KnowledgeHubNotesPage() {
       })
 
       const response = await apiService.get(
-        `/v1/sources?${queryParams.toString()}`
+        `/v3/sources?${queryParams.toString()}`
       )
       const sourcesData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -243,7 +243,7 @@ export default function KnowledgeHubNotesPage() {
       })
 
       const response = await apiService.get(
-        `/v1/custom-job-fields?${queryParams.toString()}`
+        `/v3/custom-job-fields?${queryParams.toString()}`
       )
       const customJobFieldsData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -294,7 +294,7 @@ export default function KnowledgeHubNotesPage() {
       }
 
       const response = await apiService.get(
-        `/v1/knowledge-hub/notes?${queryParams.toString()}`
+        `/v3/knowledge-hub/notes?${queryParams.toString()}`
       )
       const responseData: NotesResponse = response.data
 
@@ -421,7 +421,7 @@ export default function KnowledgeHubNotesPage() {
 
     try {
       setDeleting(true)
-      await apiService.delete(`/v1/knowledge-hub/notes/${noteToDelete._id}`)
+      await apiService.delete(`/v3/knowledge-hub/notes/${noteToDelete._id}`)
 
       // Refresh the list
       await fetchNotes()

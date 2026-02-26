@@ -64,7 +64,7 @@ export default function IndustryViewPage(): React.JSX.Element {
         try {
           // Call the actual API endpoint
           const response = await apiService.get<IndustryResponse>(
-            `/v1/industries/${id}`
+            `/v3/industries/${id}`
           )
 
           if (response.data.success) {

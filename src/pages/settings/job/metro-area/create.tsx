@@ -116,7 +116,7 @@ export default function CreateMetroAreaPage() {
       if (isEditing && id && typeof id === 'string') {
         setIsLoading(true)
         try {
-          const response = await apiService.get(`/v1/metro-areas/${id}`)
+          const response = await apiService.get(`/v3/metro-areas/${id}`)
           const metroArea = response.data.data
 
           setFormData({
@@ -528,10 +528,10 @@ export default function CreateMetroAreaPage() {
         if (payload.is_advance_area_select) {
           payload.radius = 0
         }
-        await apiService.put(`/v1/metro-areas/${id}`, payload)
+        await apiService.put(`/v3/metro-areas/${id}`, payload)
         toast.success('Metro area updated successfully!')
       } else {
-        await apiService.post('/v1/metro-areas', payload)
+        await apiService.post('/v3/metro-areas', payload)
         toast.success('Metro area created successfully!')
       }
 

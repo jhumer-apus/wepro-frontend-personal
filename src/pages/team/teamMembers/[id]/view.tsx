@@ -130,7 +130,7 @@ export default function ViewTeamMember() {
         setError(null)
 
         try {
-          const response = await apiService.get<ApiResponse>(`/v1/users/${id}`)
+          const response = await apiService.get<ApiResponse>(`/v3/users/${id}`)
 
           if (response.data.success) {
             setUserData(response.data.data)

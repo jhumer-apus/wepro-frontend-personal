@@ -7,7 +7,7 @@ export const roleManagementService = {
   getRoles: async (tenantId: string): Promise<Role[]> => {
     try {
       const response = await apiService.get<RoleManagementResponse>(
-        `/v1/role-management?tenantId=${tenantId}`
+        `/v3/role-management?tenantId=${tenantId}`
       )
 
       if (response.data.success) {
@@ -25,7 +25,7 @@ export const roleManagementService = {
   getRoleById: async (roleId: string, tenantId: string): Promise<Role> => {
     try {
       const response = await apiService.get<RoleManagementResponse>(
-        `/v1/role-management?tenantId=${tenantId}&roleId=${roleId}`
+        `/v3/role-management?tenantId=${tenantId}&roleId=${roleId}`
       )
 
       if (response.data.success && response.data.data.length > 0) {
@@ -46,7 +46,7 @@ export const roleManagementService = {
   ): Promise<Role> => {
     try {
       const response = await apiService.post<RoleManagementResponse>(
-        `/v1/role-management?tenantId=${tenantId}`,
+        `/v3/role-management?tenantId=${tenantId}`,
         roleData
       )
 
@@ -69,7 +69,7 @@ export const roleManagementService = {
   ): Promise<Role> => {
     try {
       const response = await apiService.put<RoleManagementResponse>(
-        `/v1/role-management/${roleId}?tenantId=${tenantId}`,
+        `/v3/role-management/${roleId}?tenantId=${tenantId}`,
         roleData
       )
 
@@ -88,7 +88,7 @@ export const roleManagementService = {
   deleteRole: async (roleId: string, tenantId: string): Promise<void> => {
     try {
       const response = await apiService.delete<RoleManagementResponse>(
-        `/v1/role-management/${roleId}?tenantId=${tenantId}`
+        `/v3/role-management/${roleId}?tenantId=${tenantId}`
       )
 
       if (!response.data.success) {

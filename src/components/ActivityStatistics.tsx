@@ -147,8 +147,8 @@ const ActivityStatistics: React.FC<ActivityStatisticsProps> = React.memo(
           }
 
           const path = checkPermission('MOD017', 'view_all_logs')
-            ? `/v1/admin/activity-logs/stats`
-            : `/v1/activity-logs/stats`
+            ? `/v3/admin/activity-logs/stats`
+            : `/v3/activity-logs/stats`
 
           const url = queryParams.toString()
             ? `${path}?${queryParams.toString()}`

@@ -145,7 +145,7 @@ export default function JobTagsPage() {
         getUserType() === 'P1' || checkPermission('MOD023', 'view')
 
       // Use P1 endpoint if user has P1 permissions
-      const baseUrl = isP1User ? '/v1/job-tags/p1' : '/v1/job-tags'
+      const baseUrl = isP1User ? '/v3/job-tags/p1' : '/v3/job-tags'
       let url = `${baseUrl}?page=${currentPage}&limit=${entriesPerPage}&tenantId=${tenantId}`
 
       if (debouncedSearchTerm.trim()) {
@@ -226,8 +226,8 @@ export default function JobTagsPage() {
       const hasP1Permission = checkPermission('MOD021', 'delete')
       const endpoint =
         isP1User || hasP1Permission
-          ? `/v1/job-tags/p1/${jobTagToDelete._id}`
-          : `/v1/job-tags/${jobTagToDelete._id}`
+          ? `/v3/job-tags/p1/${jobTagToDelete._id}`
+          : `/v3/job-tags/${jobTagToDelete._id}`
 
       await apiService.delete(endpoint)
 
@@ -330,8 +330,8 @@ export default function JobTagsPage() {
         const hasP1Permission = checkPermission('MOD021', 'update')
         const endpoint =
           isP1User || hasP1Permission
-            ? `/v1/job-tags/p1/${editingJobTag._id}`
-            : `/v1/job-tags/${editingJobTag._id}`
+            ? `/v3/job-tags/p1/${editingJobTag._id}`
+            : `/v3/job-tags/${editingJobTag._id}`
 
         const updateResponse = await apiService.put<{
           success: boolean
@@ -352,7 +352,7 @@ export default function JobTagsPage() {
         const isP1User = getUserType() === 'P1'
         const hasP1Permission = checkPermission('MOD021', 'create')
         const endpoint =
-          isP1User || hasP1Permission ? '/v1/job-tags/p1' : '/v1/job-tags'
+          isP1User || hasP1Permission ? '/v3/job-tags/p1' : '/v3/job-tags'
 
         const createResponse = await apiService.post<{
           success: boolean

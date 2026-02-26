@@ -194,7 +194,7 @@ export default function CreateCustomFieldPage(): React.JSX.Element {
         setIsLoading(true)
         try {
           // Fetch custom field data from API
-          const response = await apiService.get(`/v1/custom-job-fields/${id}`)
+          const response = await apiService.get(`/v3/custom-job-fields/${id}`)
 
           // Handle different API response structures
           let customFieldData
@@ -479,13 +479,13 @@ export default function CreateCustomFieldPage(): React.JSX.Element {
       const hasP1Permission = checkPermission('MOD025', 'create')
       const baseEndpoint =
         isP1User || hasP1Permission
-          ? '/v1/custom-job-fields/p1'
-          : '/v1/custom-job-fields'
+          ? '/v3/custom-job-fields/p1'
+          : '/v3/custom-job-fields'
 
       let response
       if (isEditing && id) {
         // Edit mode - PUT request
-        const editEndpoint = `/v1/custom-job-fields/${id}`
+        const editEndpoint = `/v3/custom-job-fields/${id}`
 
         response = await apiService.put(editEndpoint, payload)
         console.log('Custom field updated successfully:', response.data)
@@ -534,13 +534,13 @@ export default function CreateCustomFieldPage(): React.JSX.Element {
       if (checked) {
         // Toggle to active - call DELETE API using code instead of id
         await apiService.delete(
-          `/v1/custom-job-fields/${formData.code}/inactivate`
+          `/v3/custom-job-fields/${formData.code}/inactivate`
         )
         toast.success('Field activated successfully')
       } else {
         // Toggle to inactive - call POST API using code instead of id
         await apiService.post(
-          `/v1/custom-job-fields/${formData.code}/inactivate`
+          `/v3/custom-job-fields/${formData.code}/inactivate`
         )
         toast.success('Field deactivated successfully')
       }

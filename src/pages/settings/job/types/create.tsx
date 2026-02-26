@@ -96,7 +96,7 @@ export default function CreateJobTypePage() {
       try {
         setIndustriesLoading(true)
         const userType = getUserType()
-        let url = '/v1/industries'
+        let url = '/v3/industries'
 
         if (userType === 'P1') {
           url += '/P1'
@@ -127,7 +127,7 @@ export default function CreateJobTypePage() {
         try {
           setSubmitting(true)
           const userType = getUserType()
-          let url = `/v1/job-types/${id}`
+          let url = `/v3/job-types/${id}`
 
           const response = await apiService.get(url)
           if (response.data.success) {
@@ -160,7 +160,7 @@ export default function CreateJobTypePage() {
     try {
       setJobTypesLoading(true)
       const userType = getUserType()
-      let url = '/v1/job-types'
+      let url = '/v3/job-types'
 
       if (userType === 'P1') {
         url += '/P1'
@@ -216,7 +216,7 @@ export default function CreateJobTypePage() {
         console.log('fetchJobTypesWithSearch called with:', searchTerm)
         setJobTypesSearching(true)
         const userType = getUserType()
-        let url = '/v1/job-types'
+        let url = '/v3/job-types'
 
         if (userType === 'P1') {
           url += '/P1'
@@ -307,7 +307,7 @@ export default function CreateJobTypePage() {
     try {
       setSubmitting(true)
       const userType = getUserType()
-      let url = '/v1/job-types'
+      let url = '/v3/job-types'
 
       // Prepare payload according to API specification
       const payload: any = {

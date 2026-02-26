@@ -130,7 +130,7 @@ export default function ViewRole() {
         setError(null)
 
         try {
-          const response = await apiService.get(`/v1/role-management/${id}`)
+          const response = await apiService.get(`/v3/role-management/${id}`)
           const roleData = response.data.data // The actual role data is nested under response.data.data
           setRole(roleData)
         } catch (error) {

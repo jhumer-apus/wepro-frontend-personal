@@ -101,7 +101,7 @@ export default function ProfilePage() {
   const fetchTimezones = async () => {
     try {
       setTimezonesLoading(true)
-      const response = await apiService.get('/v1/timezones?page=1&limit=20')
+      const response = await apiService.get('/v3/timezones?page=1&limit=20')
       setAvailableTimezones(response.data.data)
     } catch (error) {
       console.error('Error fetching timezones:', error)
@@ -113,7 +113,7 @@ export default function ProfilePage() {
   const fetchWorkingHours = async () => {
     try {
       setWorkingHoursLoading(true)
-      const response = await apiService.get('/v1/profile/working-hours')
+      const response = await apiService.get('/v3/profile/working-hours')
       setWorkingHours(response.data.data)
     } catch (error) {
       console.error('Error fetching working hours:', error)
@@ -261,7 +261,7 @@ export default function ProfilePage() {
       }
 
       // Always use POST for both creating and updating
-      await apiService.post('/v1/profile/working-hours', payload)
+      await apiService.post('/v3/profile/working-hours', payload)
       toast.success(
         existingHour
           ? 'Working hours updated successfully'

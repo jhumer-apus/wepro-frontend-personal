@@ -415,7 +415,7 @@ export default function CreateJobTemplatePage(): React.JSX.Element {
     setSourcesLoading(true)
     try {
       const response = await apiService.get(
-        '/v1/sources?page=1&limit=50&sort=-createdAt'
+        '/v3/sources?page=1&limit=50&sort=-createdAt'
       )
       const sourcesData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -437,7 +437,7 @@ export default function CreateJobTemplatePage(): React.JSX.Element {
 
     setIsLoading(true)
     try {
-      const response = await apiService.get(`/v1/templates/jobs/${templateId}`)
+      const response = await apiService.get(`/v3/templates/jobs/${templateId}`)
       const templateData = response.data.data
 
       // Update form data with existing template data
@@ -538,13 +538,13 @@ export default function CreateJobTemplatePage(): React.JSX.Element {
 
       if (isEditMode) {
         // Update existing template
-        await apiService.put(`/v1/templates/jobs/${templateId}`, payload)
+        await apiService.put(`/v3/templates/jobs/${templateId}`, payload)
         toast.success('Job template updated successfully!', {
           description: 'The template has been updated in the system.',
         })
       } else {
         // Create new template
-        await apiService.post('/v1/templates/jobs', payload)
+        await apiService.post('/v3/templates/jobs', payload)
         toast.success('Job template created successfully!', {
           description: 'The new template has been added to the system.',
         })

@@ -179,7 +179,7 @@ export default function JobCategoriesTypesPage() {
         process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
       )
 
-      const response = await apiService.get('/v1/job-types/tree?active=true')
+      const response = await apiService.get('/v3/job-types/tree?active=true')
 
       console.log('API Response:', response)
 
@@ -359,7 +359,7 @@ export default function JobCategoriesTypesPage() {
     try {
       setSubmitting(true)
       const userType = getUserType()
-      let url = '/v1/job-types'
+      let url = '/v3/job-types'
 
       const payload: any = {
         name: formData.name.trim(),
@@ -556,7 +556,7 @@ export default function JobCategoriesTypesPage() {
       setDeleting(true)
 
       // Call the DELETE endpoint
-      await apiService.delete(`/v1/job-types/${jobTypeToDelete._id}`)
+      await apiService.delete(`/v3/job-types/${jobTypeToDelete._id}`)
 
       // Remove the deleted job type from local state instead of refreshing
       if (data) {
@@ -681,7 +681,7 @@ export default function JobCategoriesTypesPage() {
     try {
       setIndustrySubmitting(true)
       const userType = getUserType()
-      let url = `/v1/industries`
+      let url = `/v3/industries`
 
       if (userType === 'P1') {
         url += `/P1`
@@ -691,7 +691,7 @@ export default function JobCategoriesTypesPage() {
       if (isIndustryEditMode && editingIndustry) {
         // Edit mode - PUT request
         response = await apiService.put(
-          `/v1/industries/${editingIndustry.id}`,
+          `/v3/industries/${editingIndustry.id}`,
           {
             name: industryFormData.name.trim(),
             active: industryFormData.active,
@@ -804,7 +804,7 @@ export default function JobCategoriesTypesPage() {
       setIndustryDeleting(true)
 
       // Call the DELETE endpoint
-      await apiService.delete(`/v1/industries/${industryToDelete.id}`)
+      await apiService.delete(`/v3/industries/${industryToDelete.id}`)
 
       // Remove the deleted industry from local state without refreshing
       if (data) {

@@ -74,7 +74,7 @@ apiClient.interceptors.response.use(
           if (refreshToken) {
             // Attempt to refresh the token
             const refreshResponse = await axios.post(
-              `${config.api.baseUrl}/v1/auth/refresh-token`,
+              `${config.api.baseUrl}/v3/auth/refresh-token`,
               {
                 refreshToken: refreshToken,
               }
@@ -193,17 +193,17 @@ export const apiService = {
     if (filters?.sortBy) params.append('sortBy', filters.sortBy)
 
     const queryString = params.toString()
-    const url = `/v1/wepro-phone/spam-protection${queryString ? `?${queryString}` : ''}`
+    const url = `/v3/wepro-phone/spam-protection${queryString ? `?${queryString}` : ''}`
 
     return apiClient.get(url)
   },
 
   getSpamProtectionById: (id: string) => {
-    return apiClient.get(`/v1/wepro-phone/spam-protection/${id}`)
+    return apiClient.get(`/v3/wepro-phone/spam-protection/${id}`)
   },
 
   deleteSpamProtection: (id: string) => {
-    return apiClient.delete(`/v1/wepro-phone/spam-protection/${id}`)
+    return apiClient.delete(`/v3/wepro-phone/spam-protection/${id}`)
   },
 
   createSpamProtection: (data: {
@@ -220,12 +220,12 @@ export const apiService = {
       use_speaker_boost: boolean
     }
   }) => {
-    return apiClient.post('/v1/wepro-phone/spam-protection', data)
+    return apiClient.post('/v3/wepro-phone/spam-protection', data)
   },
 
   regenerateSpamProtectionAudio: (id: string) => {
     return apiClient.post(
-      `/v1/wepro-phone/spam-protection/${id}/regenerate-audio`
+      `/v3/wepro-phone/spam-protection/${id}/regenerate-audio`
     )
   },
 
@@ -246,7 +246,7 @@ export const apiService = {
       }
     }
   ) => {
-    return apiClient.put(`/v1/wepro-phone/spam-protection/${id}`, data)
+    return apiClient.put(`/v3/wepro-phone/spam-protection/${id}`, data)
   },
 
   getSpamProtectionStatistics: (filters?: {
@@ -258,13 +258,13 @@ export const apiService = {
     if (filters?.endDate) params.append('endDate', filters.endDate)
 
     const queryString = params.toString()
-    const url = `/v1/wepro-phone/spam-protection/statistics${queryString ? `?${queryString}` : ''}`
+    const url = `/v3/wepro-phone/spam-protection/statistics${queryString ? `?${queryString}` : ''}`
 
     return apiClient.get(url)
   },
 
   getPhoneNumberById: (id: string) => {
-    return apiClient.get(`/v1/wepro-phone/phone-numbers/${id}`)
+    return apiClient.get(`/v3/wepro-phone/phone-numbers/${id}`)
   },
 
   getPhoneNumberStatistics: (filters?: {
@@ -276,7 +276,7 @@ export const apiService = {
     if (filters?.endDate) params.append('endDate', filters.endDate)
 
     const queryString = params.toString()
-    const url = `/v1/wepro-phone/phone-numbers/statistics${queryString ? `?${queryString}` : ''}`
+    const url = `/v3/wepro-phone/phone-numbers/statistics${queryString ? `?${queryString}` : ''}`
 
     return apiClient.get(url)
   },
@@ -314,7 +314,7 @@ export const apiService = {
       params.append('limit', filters.limit.toString())
 
     const queryString = params.toString()
-    const url = `/v1/wepro-phone/phone-numbers/available${queryString ? `?${queryString}` : ''}`
+    const url = `/v3/wepro-phone/phone-numbers/available${queryString ? `?${queryString}` : ''}`
 
     return apiClient.get(url)
   },
@@ -324,7 +324,7 @@ export const apiService = {
     numberType: string
     friendlyName: string
   }) => {
-    return apiClient.post('/v1/wepro-phone/phone-numbers/purchase', data)
+    return apiClient.post('/v3/wepro-phone/phone-numbers/purchase', data)
   },
 
   // Service Packages methods
@@ -341,13 +341,13 @@ export const apiService = {
     if (filters?.tenantId) params.append('tenantId', filters.tenantId)
 
     const queryString = params.toString()
-    const url = `/v1/answering-services/packages${queryString ? `?${queryString}` : ''}`
+    const url = `/v3/answering-services/packages${queryString ? `?${queryString}` : ''}`
 
     return apiClient.get(url)
   },
 
   getServicePackageById: (id: string) => {
-    return apiClient.get(`/v1/answering-services/packages/${id}`)
+    return apiClient.get(`/v3/answering-services/packages/${id}`)
   },
 
   createServicePackage: (data: {
@@ -361,7 +361,7 @@ export const apiService = {
     isActive: boolean
     isPublic: boolean
   }) => {
-    return apiClient.post('/v1/answering-services/packages', data)
+    return apiClient.post('/v3/answering-services/packages', data)
   },
 
   updateServicePackage: (
@@ -378,11 +378,11 @@ export const apiService = {
       isPublic: boolean
     }
   ) => {
-    return apiClient.put(`/v1/answering-services/packages/${id}`, data)
+    return apiClient.put(`/v3/answering-services/packages/${id}`, data)
   },
 
   deleteServicePackage: (id: string) => {
-    return apiClient.delete(`/v1/answering-services/packages/${id}`)
+    return apiClient.delete(`/v3/answering-services/packages/${id}`)
   },
 
   // Stripe Accounts methods
@@ -395,7 +395,7 @@ export const apiService = {
     if (filters?.limit) params.append('limit', filters.limit.toString())
 
     const queryString = params.toString()
-    const url = `/v1/stripe-accounts${queryString ? `?${queryString}` : ''}`
+    const url = `/v3/stripe-accounts${queryString ? `?${queryString}` : ''}`
 
     return apiClient.get(url)
   },

@@ -146,7 +146,7 @@ export default function ServicePackagesPage(): React.JSX.Element {
       }
       setLoading(true)
       try {
-        const url = `/v1/answering-services/packages?page=${currentPage}&limit=${entriesPerPage}&tenantId=${tenantId}`
+        const url = `/v3/answering-services/packages?page=${currentPage}&limit=${entriesPerPage}&tenantId=${tenantId}`
         const response = await apiService.get(url)
         const responseData: ServicePackagesResponse = response.data
         setPackages(responseData.data.data)
@@ -191,7 +191,7 @@ export default function ServicePackagesPage(): React.JSX.Element {
     setCalculating(true)
     try {
       const response = await apiService.post(
-        `/v1/answering-services/packages/${packageForPricing._id}/calculate-pricing`,
+        `/v3/answering-services/packages/${packageForPricing._id}/calculate-pricing`,
         { durationSeconds: seconds }
       )
 
@@ -224,11 +224,11 @@ export default function ServicePackagesPage(): React.JSX.Element {
     try {
       setDeleting(true)
       await apiService.delete(
-        `/v1/answering-services/packages/${packageToDelete._id}`
+        `/v3/answering-services/packages/${packageToDelete._id}`
       )
 
       // Refresh the current page data
-      const url = `/v1/answering-services/packages?page=${currentPage}&limit=${entriesPerPage}&tenantId=${tenantId}`
+      const url = `/v3/answering-services/packages?page=${currentPage}&limit=${entriesPerPage}&tenantId=${tenantId}`
       const response = await apiService.get(url)
       const responseData: ServicePackagesResponse = response.data
       setPackages(responseData.data.data)

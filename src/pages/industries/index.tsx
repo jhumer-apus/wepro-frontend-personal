@@ -132,7 +132,7 @@ export default function IndustriesPage(): React.JSX.Element {
 
     try {
       const userType = getUserType()
-      let url = `/v1/industries`
+      let url = `/v3/industries`
 
       // If user type is P1, append it to the URL
       if (
@@ -202,7 +202,7 @@ export default function IndustriesPage(): React.JSX.Element {
       setDeleting(true)
       // Use the correct endpoint format for industries based on user type
       const userType = getUserType()
-      let deleteUrl = `/v1/industries`
+      let deleteUrl = `/v3/industries`
 
       deleteUrl += `/${industryToDelete._id}`
       await apiService.delete(deleteUrl)
@@ -264,7 +264,7 @@ export default function IndustriesPage(): React.JSX.Element {
     try {
       setSubmitting(true)
       const userType = getUserType()
-      let url = `/v1/industries`
+      let url = `/v3/industries`
 
       let response
       if (isEditMode && editingIndustry) {

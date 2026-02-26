@@ -148,7 +148,7 @@ export default function CreateFranchisePage() {
     setIsFetching(true)
     try {
       const response = await apiService.get<FranchiseResponse>(
-        `/v1/franchises/${franchiseId}`
+        `/v3/franchises/${franchiseId}`
       )
 
       if (response.data.success) {
@@ -427,7 +427,7 @@ export default function CreateFranchisePage() {
         console.log('Updating franchise with ID:', id)
         console.log('Update payload:', formData)
 
-        response = await apiService.put(`/v1/franchises/${id}`, formData)
+        response = await apiService.put(`/v3/franchises/${id}`, formData)
 
         toast({
           title: 'Success!',
@@ -438,7 +438,7 @@ export default function CreateFranchisePage() {
         console.log('Creating new franchise')
         console.log('Create payload:', formData)
 
-        response = await apiService.post('/v1/franchises', formData)
+        response = await apiService.post('/v3/franchises', formData)
 
         toast({
           title: 'Success!',

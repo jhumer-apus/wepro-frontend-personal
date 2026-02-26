@@ -97,7 +97,7 @@ export default function CreateVoiceTemplatePage(): React.JSX.Element {
       if (isEditing && id && typeof id === 'string') {
         setIsLoading(true)
         try {
-          const response = await apiService.get(`/v1/templates/voice/${id}`)
+          const response = await apiService.get(`/v3/templates/voice/${id}`)
 
           let templateData
           if (response.data.success !== undefined) {
@@ -442,10 +442,10 @@ export default function CreateVoiceTemplatePage(): React.JSX.Element {
         }
 
         if (isEditing && id) {
-          await apiService.put(`/v1/templates/voice/${id}`, payload)
+          await apiService.put(`/v3/templates/voice/${id}`, payload)
         } else {
           await apiService.post(
-            '/v1/templates/voice/text-to-speech/create',
+            '/v3/templates/voice/text-to-speech/create',
             payload
           )
         }
@@ -463,11 +463,11 @@ export default function CreateVoiceTemplatePage(): React.JSX.Element {
 
         const endpoint =
           formData.voiceType === 'Audio File'
-            ? '/v1/templates/voice/audio-file/create'
-            : '/v1/templates/voice/record-voice/create'
+            ? '/v3/templates/voice/audio-file/create'
+            : '/v3/templates/voice/record-voice/create'
 
         if (isEditing && id) {
-          await apiService.put(`/v1/templates/voice/${id}`, formDataPayload, {
+          await apiService.put(`/v3/templates/voice/${id}`, formDataPayload, {
             headers: { 'Content-Type': 'multipart/form-data' },
           })
         } else {

@@ -88,7 +88,7 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
         try {
           setRolesLoading(true)
           const response = await apiService.get(
-            `/v1/role-management?tenantId=${user.tenantId}`
+            `/v3/role-management?tenantId=${user.tenantId}`
           )
           setAvailableRoles(response.data.data)
         } catch (error) {
@@ -107,7 +107,7 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
     const fetchTimezones = async () => {
       try {
         setTimezonesLoading(true)
-        const response = await apiService.get('/v1/timezones?page=1&limit=10')
+        const response = await apiService.get('/v3/timezones?page=1&limit=10')
         setAvailableTimezones(response.data.data)
       } catch (error) {
         console.error('Error fetching timezones:', error)
@@ -124,7 +124,7 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
     if (isEditing && id) {
       const fetchTeamMember = async () => {
         try {
-          const response = await apiService.get(`/v1/users/${id}`)
+          const response = await apiService.get(`/v3/users/${id}`)
           const teamMemberData = response.data.data
 
           // Map the API response to form data
@@ -218,7 +218,7 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
 
       if (isEditing) {
         // Make actual API call to update team member
-        const response = await apiService.put(`/v1/users/${id}`, payload)
+        const response = await apiService.put(`/v3/users/${id}`, payload)
 
         // Show success toast for update
         toast.success('Team member updated successfully!', {
@@ -226,7 +226,7 @@ export default function CreateTeamMemberPage(): React.JSX.Element {
         })
       } else {
         // Make actual API call to create team member
-        const response = await apiService.post('/v1/users', payload)
+        const response = await apiService.post('/v3/users', payload)
 
         // Show success toast for creation
         toast.success('Team member created successfully!', {

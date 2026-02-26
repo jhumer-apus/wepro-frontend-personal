@@ -272,7 +272,7 @@ export default function EmailTemplatesPage() {
       }
 
       const response = await apiService.get(
-        `/v1/templates/email?${queryParams.toString()}`
+        `/v3/templates/email?${queryParams.toString()}`
       )
       const responseData: EmailTemplatesResponse = response.data
 
@@ -383,7 +383,7 @@ export default function EmailTemplatesPage() {
 
     try {
       setDeleting(true)
-      await apiService.delete(`/v1/templates/email/${templateToDelete._id}`)
+      await apiService.delete(`/v3/templates/email/${templateToDelete._id}`)
 
       // Refresh the list
       await fetchTemplates()

@@ -207,7 +207,7 @@ export default function CreateScriptPage(): React.JSX.Element {
     setSourcesLoading(true)
     try {
       const response = await apiService.get(
-        '/v1/sources?page=1&limit=50&sort=-createdAt'
+        '/v3/sources?page=1&limit=50&sort=-createdAt'
       )
       const sourcesData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -234,7 +234,7 @@ export default function CreateScriptPage(): React.JSX.Element {
         setIsLoading(true)
         try {
           const response = await apiService.get(
-            `/v1/knowledge-hub/scripts/${id}`
+            `/v3/knowledge-hub/scripts/${id}`
           )
 
           let scriptData
@@ -328,13 +328,13 @@ export default function CreateScriptPage(): React.JSX.Element {
 
       if (isEditing && id) {
         // Update existing script
-        await apiService.put(`/v1/knowledge-hub/scripts/${id}`, payload)
+        await apiService.put(`/v3/knowledge-hub/scripts/${id}`, payload)
         toast.success('Script updated successfully!', {
           description: 'The script has been updated in the system.',
         })
       } else {
         // Create new script
-        await apiService.post('/v1/knowledge-hub/scripts', payload)
+        await apiService.post('/v3/knowledge-hub/scripts', payload)
         toast.success('Script created successfully!', {
           description: 'The new script has been added to the system.',
         })

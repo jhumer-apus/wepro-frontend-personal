@@ -153,7 +153,7 @@ export default function EmailTemplatePreviewPage(): React.JSX.Element {
         setLoading(true)
         setError(null)
 
-        const response = await apiService.get(`/v1/templates/email/${id}`)
+        const response = await apiService.get(`/v3/templates/email/${id}`)
 
         let templateData
         if (response.data.success !== undefined) {
@@ -250,7 +250,7 @@ export default function EmailTemplatePreviewPage(): React.JSX.Element {
       setError(null)
 
       const response = await apiService.post(
-        `/v1/templates/email/${id}/preview`,
+        `/v3/templates/email/${id}/preview`,
         {
           sampleData: variableValues,
         }

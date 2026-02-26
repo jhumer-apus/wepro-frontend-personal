@@ -158,7 +158,7 @@ export default function RolesPage() {
         return
       }
 
-      let url = `/v1/role-management?tenantId=${user.tenantId}&page=${page}&limit=${limit}`
+      let url = `/v3/role-management?tenantId=${user.tenantId}&page=${page}&limit=${limit}`
 
       if (search && search.trim() !== '') {
         url += `&search=${encodeURIComponent(search.trim())}`
@@ -226,7 +226,7 @@ export default function RolesPage() {
 
     try {
       setDeleting(true)
-      await apiService.delete(`/v1/role-management/${roleToDelete._id}`)
+      await apiService.delete(`/v3/role-management/${roleToDelete._id}`)
 
       // Refresh the current page data
       await fetchRoles(currentPage, entriesPerPage, searchTerm)

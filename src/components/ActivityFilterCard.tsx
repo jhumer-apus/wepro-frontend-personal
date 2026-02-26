@@ -99,7 +99,7 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
         params.append('search', searchTerm.trim())
       }
 
-      const response = await apiService.get(`/v1/users?${params}`)
+      const response = await apiService.get(`/v3/users?${params}`)
       if (response.data.success) {
         setUsers(response.data.data)
       }
@@ -144,7 +144,7 @@ const ActivityFilterCard: React.FC<ActivityFilterCardProps> = ({
       }
 
       // Fetch from all three package types
-      const response = await apiService.get(`/v1/users/tenants/all?${params}`)
+      const response = await apiService.get(`/v3/users/tenants/all?${params}`)
 
       // Combine results from all three APIs
       const allTenants = []

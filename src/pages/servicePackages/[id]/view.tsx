@@ -84,7 +84,7 @@ export default function ServicePackageViewPage(): React.JSX.Element {
       try {
         setLoading(true)
         const response = await apiService.get(
-          `/v1/answering-services/packages/${id}`
+          `/v3/answering-services/packages/${id}`
         )
         setPackageData(response.data.message.package)
         setError(null)

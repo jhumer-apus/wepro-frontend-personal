@@ -121,8 +121,8 @@ export default function TimesheetPage() {
         params.append('search', searchTerm.trim())
       }
 
-      console.log('API URL:', `/v1/users?${params}`)
-      const response = await apiService.get(`/v1/users?${params}`)
+      console.log('API URL:', `/v3/users?${params}`)
+      const response = await apiService.get(`/v3/users?${params}`)
       console.log('API Response:', response.data)
 
       if (response.data.success) {
@@ -149,10 +149,10 @@ export default function TimesheetPage() {
           return
         }
 
-        let url = `/v1/timesheets?page=${page}&limit=${limit}`
+        let url = `/v3/timesheets?page=${page}&limit=${limit}`
         const isAdminView = checkPermission('MOD016', 'view_all_timesheets')
         if (isAdminView) {
-          url = `/v1/admin/timesheets?page=${page}&limit=${limit}`
+          url = `/v3/admin/timesheets?page=${page}&limit=${limit}`
         }
 
         // Add search parameter if search term exists
@@ -517,10 +517,10 @@ export default function TimesheetPage() {
         updateData.clockOutAt = convertToUTC(editFormData.clockOutAt)
       }
       // console.log(updateData, 'updateData'); return;
-      let url = `/v1/timesheets/${selectedTimesheet._id}`
+      let url = `/v3/timesheets/${selectedTimesheet._id}`
       const isAdminView = checkPermission('MOD016', 'view_all_timesheets')
       if (isAdminView) {
-        url = `/v1/admin/timesheets/${selectedTimesheet._id}`
+        url = `/v3/admin/timesheets/${selectedTimesheet._id}`
       }
       await apiService.patch(url, updateData)
 

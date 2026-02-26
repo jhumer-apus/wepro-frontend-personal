@@ -227,7 +227,7 @@ export default function JobTemplatesPage() {
     setSourcesLoading(true)
     try {
       const response = await apiService.get(
-        '/v1/sources?page=1&limit=50&sort=-createdAt'
+        '/v3/sources?page=1&limit=50&sort=-createdAt'
       )
       const sourcesData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -278,7 +278,7 @@ export default function JobTemplatesPage() {
       }
 
       const response = await apiService.get(
-        `/v1/templates/jobs?${queryParams.toString()}`
+        `/v3/templates/jobs?${queryParams.toString()}`
       )
       const responseData: JobTemplatesResponse = response.data
 
@@ -397,7 +397,7 @@ export default function JobTemplatesPage() {
 
     try {
       setDeleting(true)
-      await apiService.delete(`/v1/templates/jobs/${templateToDelete._id}`)
+      await apiService.delete(`/v3/templates/jobs/${templateToDelete._id}`)
 
       // Refresh the list
       await fetchTemplates()

@@ -182,9 +182,9 @@ export default function JobStatusPage() {
         userType === 'P1' ||
         (userType === 'P5' && checkPermission('MOD019', 'view'))
       ) {
-        apiEndpoint = `/v1/job-statuses/p1?page=${currentPage}&limit=${entriesPerPage}&sort=order,name${debouncedSearchTerm ? `&search=${encodeURIComponent(debouncedSearchTerm)}` : ''}`
+        apiEndpoint = `/v3/job-statuses/p1?page=${currentPage}&limit=${entriesPerPage}&sort=order,name${debouncedSearchTerm ? `&search=${encodeURIComponent(debouncedSearchTerm)}` : ''}`
       } else {
-        apiEndpoint = `/v1/job-statuses?page=${currentPage}&limit=${entriesPerPage}&sort=order,name&include_visibility=true${debouncedSearchTerm ? `&search=${encodeURIComponent(debouncedSearchTerm)}` : ''}`
+        apiEndpoint = `/v3/job-statuses?page=${currentPage}&limit=${entriesPerPage}&sort=order,name&include_visibility=true${debouncedSearchTerm ? `&search=${encodeURIComponent(debouncedSearchTerm)}` : ''}`
       }
 
       const response = await apiService.get(apiEndpoint)
@@ -278,7 +278,7 @@ export default function JobStatusPage() {
     try {
       setDeleting(true)
       // Use the correct endpoint format for job statuses
-      await apiService.delete(`/v1/job-statuses/${jobStatusToDelete._id}`)
+      await apiService.delete(`/v3/job-statuses/${jobStatusToDelete._id}`)
 
       // Refresh the list by calling fetchJobStatuses
       await fetchJobStatuses()
@@ -367,7 +367,7 @@ export default function JobStatusPage() {
       if (isEditMode && editingJobStatus) {
         // Edit mode - PUT request
         response = await apiService.put(
-          `/v1/job-statuses/${editingJobStatus._id}`,
+          `/v3/job-statuses/${editingJobStatus._id}`,
           {
             name: formData.name.trim(),
             description: formData.description.trim(),
@@ -379,9 +379,9 @@ export default function JobStatusPage() {
         // Create mode - POST request to P1 endpoint
         let url = ``
         if (userType === 'P1' || checkPermission('MOD019', 'create')) {
-          url = `/v1/job-statuses/p1`
+          url = `/v3/job-statuses/p1`
         } else {
-          url = `/v1/job-statuses`
+          url = `/v3/job-statuses`
         }
         response = await apiService.post(url, {
           name: formData.name.trim(),

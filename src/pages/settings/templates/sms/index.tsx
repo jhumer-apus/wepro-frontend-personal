@@ -254,7 +254,7 @@ export default function SMSTemplatesPage() {
       }
 
       const response = await apiService.get(
-        `/v1/templates/sms?${queryParams.toString()}`
+        `/v3/templates/sms?${queryParams.toString()}`
       )
       const responseData: SMSTemplatesResponse = response.data
 
@@ -362,7 +362,7 @@ export default function SMSTemplatesPage() {
 
     try {
       setDeleting(true)
-      await apiService.delete(`/v1/templates/sms/${templateToDelete._id}`)
+      await apiService.delete(`/v3/templates/sms/${templateToDelete._id}`)
 
       // Refresh the list
       await fetchTemplates()

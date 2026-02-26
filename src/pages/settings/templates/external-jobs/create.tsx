@@ -223,7 +223,7 @@ export default function CreateExternalJobTemplatePage(): React.JSX.Element {
         setIsLoading(true)
         try {
           const response = await apiService.get(
-            `/v1/templates/external-jobs/${id}`
+            `/v3/templates/external-jobs/${id}`
           )
 
           let templateData
@@ -328,13 +328,13 @@ export default function CreateExternalJobTemplatePage(): React.JSX.Element {
 
       if (isEditing && id) {
         // Update existing template
-        await apiService.put(`/v1/templates/external-jobs/${id}`, payload)
+        await apiService.put(`/v3/templates/external-jobs/${id}`, payload)
         toast.success('External job template updated successfully!', {
           description: 'The template has been updated in the system.',
         })
       } else {
         // Create new template
-        await apiService.post('/v1/templates/external-jobs', payload)
+        await apiService.post('/v3/templates/external-jobs', payload)
         toast.success('External job template created successfully!', {
           description: 'The new template has been added to the system.',
         })

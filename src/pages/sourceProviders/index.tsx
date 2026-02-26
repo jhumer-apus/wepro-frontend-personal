@@ -156,7 +156,7 @@ export default function SourceProvidersPage(): React.JSX.Element {
     setLoading(true)
 
     try {
-      let url = `/v1/users/tenant?page=${currentPage}&limit=${entriesPerPage}&packageType=P3&tenantId=${tenantId}`
+      let url = `/v3/users/tenant?page=${currentPage}&limit=${entriesPerPage}&packageType=P3&tenantId=${tenantId}`
       if (debouncedSearchTerm) {
         url += `&search=${encodeURIComponent(debouncedSearchTerm)}`
       }
@@ -226,7 +226,7 @@ export default function SourceProvidersPage(): React.JSX.Element {
     const fetchPackages = async () => {
       setPackagesLoading(true)
       try {
-        const response = await apiService.get('/v1/packages?page=1&limit=100')
+        const response = await apiService.get('/v3/packages?page=1&limit=100')
         const responseData: PackagesResponse = response.data
         if (responseData?.success) {
           setPackages(responseData.data)
@@ -252,9 +252,9 @@ export default function SourceProvidersPage(): React.JSX.Element {
 
     try {
       setDeleting(true)
-      // Use the correct endpoint format: /v1/users/tenant/{{user_id}}?tenantId={{p1_tenant_id}}
+      // Use the correct endpoint format: /v3/users/tenant/{{user_id}}?tenantId={{p1_tenant_id}}
       await apiService.delete(
-        `/v1/users/tenant/${sourceProviderToDelete._id}?tenantId=${tenantId}`
+        `/v3/users/tenant/${sourceProviderToDelete._id}?tenantId=${tenantId}`
       )
 
       // Refresh the list by calling fetchSourceProviders

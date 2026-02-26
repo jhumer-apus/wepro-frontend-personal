@@ -98,7 +98,7 @@ export function Header({ onMenuClick, onCreateJobClick }: HeaderProps): React.JS
   const fetchTimesheetStatus = async () => {
     try {
       const response = await apiService.get<TimesheetResponse>(
-        '/v1/timesheets/status'
+        '/v3/timesheets/status'
       )
       if (response.data.success) {
         setTimesheetStatus(response.data.data.status)
@@ -124,7 +124,7 @@ export function Header({ onMenuClick, onCreateJobClick }: HeaderProps): React.JS
   const handleClockIn = async () => {
     setIsLoading(true)
     try {
-      await apiService.post('/v1/timesheets/clock-in', {
+      await apiService.post('/v3/timesheets/clock-in', {
         source: 'web',
         notes: clockNotes || 'Starting work',
       })
@@ -141,7 +141,7 @@ export function Header({ onMenuClick, onCreateJobClick }: HeaderProps): React.JS
   const handleClockOut = async () => {
     setIsLoading(true)
     try {
-      await apiService.post('/v1/timesheets/clock-out', {
+      await apiService.post('/v3/timesheets/clock-out', {
         notes: clockNotes || 'Ending work',
       })
       setTimesheetStatus('OUT')

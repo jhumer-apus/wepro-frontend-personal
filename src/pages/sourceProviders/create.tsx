@@ -99,7 +99,7 @@ export default function CreateSourceProviderPage(): React.JSX.Element {
     const fetchTimezones = async () => {
       try {
         setTimezonesLoading(true)
-        const response = await apiService.get('/v1/timezones?page=1&limit=10')
+        const response = await apiService.get('/v3/timezones?page=1&limit=10')
         setAvailableTimezones(response.data.data)
       } catch (error) {
         console.error('Error fetching timezones:', error)
@@ -118,7 +118,7 @@ export default function CreateSourceProviderPage(): React.JSX.Element {
         try {
           setPackagesLoading(true)
           const response = await apiService.get(
-            `/v1/packages?type=P3&tenantId=${userData.tenantId}&page=1&limit=20`
+            `/v3/packages?type=P3&tenantId=${userData.tenantId}&page=1&limit=20`
           )
           setAvailablePackages(response.data.data)
         } catch (error) {
@@ -145,7 +145,7 @@ export default function CreateSourceProviderPage(): React.JSX.Element {
         try {
           // Fetch source provider data from API
           const response = await apiService.get(
-            `/v1/users/tenant/${id}?tenantId=${userData.tenantId}`
+            `/v3/users/tenant/${id}?tenantId=${userData.tenantId}`
           )
           const sourceProviderData = response.data.data
 
@@ -298,7 +298,7 @@ export default function CreateSourceProviderPage(): React.JSX.Element {
         }
 
         const response = await apiService.put(
-          `/v1/users/tenant/${id}?tenantId=${userData.tenantId}`,
+          `/v3/users/tenant/${id}?tenantId=${userData.tenantId}`,
           updatePayload
         )
 
@@ -308,7 +308,7 @@ export default function CreateSourceProviderPage(): React.JSX.Element {
         })
       } else {
         // Make actual API call to create source provider
-        const response = await apiService.post('/v1/users', payload)
+        const response = await apiService.post('/v3/users', payload)
 
         // Show success toast for creation
         toast.success('Source provider created successfully!', {

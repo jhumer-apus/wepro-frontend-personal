@@ -62,7 +62,7 @@ export default function ViewSourcePage() {
         try {
           setLoading(true)
           setError(null)
-          const response = await apiService.get(`/v1/sources/${id}`)
+          const response = await apiService.get(`/v3/sources/${id}`)
           const sourceData = response.data.data
           setTimeout(() => {
             setMarkerBuffer(true)

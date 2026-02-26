@@ -94,7 +94,7 @@ export default function TeamMembersPage() {
         return
       }
 
-      let url = `/v1/users?page=${page}&limit=${limit}&type=P5`
+      let url = `/v3/users?page=${page}&limit=${limit}&type=P5`
 
       if (roleId && roleId !== 'all') {
         url += `&roleId=${roleId}`
@@ -131,7 +131,7 @@ export default function TeamMembersPage() {
         return
       }
       const response = await apiService.get<RoleManagementResponse>(
-        `/v1/role-management?tenantId=${userData.tenantId}`
+        `/v3/role-management?tenantId=${userData.tenantId}`
       )
       // Filter to only show featured roles
       const featuredRoles = response.data.data.filter(
@@ -212,7 +212,7 @@ export default function TeamMembersPage() {
 
     try {
       setDeleting(true)
-      await apiService.delete(`/v1/users/${userToDelete._id}`)
+      await apiService.delete(`/v3/users/${userToDelete._id}`)
 
       // Refresh the current page data
       await fetchUsers(

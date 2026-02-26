@@ -102,7 +102,7 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
     const fetchTimezones = async () => {
       try {
         setTimezonesLoading(true)
-        const response = await apiService.get('/v1/timezones?page=1&limit=10')
+        const response = await apiService.get('/v3/timezones?page=1&limit=10')
         setAvailableTimezones(response.data.data)
       } catch (error) {
         console.error('Error fetching timezones:', error)
@@ -121,7 +121,7 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
         try {
           setPackagesLoading(true)
           const response = await apiService.get(
-            `/v1/packages?type=P4&tenantId=${userData.tenantId}&page=1&limit=20`
+            `/v3/packages?type=P4&tenantId=${userData.tenantId}&page=1&limit=20`
           )
           setAvailablePackages(response.data.data)
         } catch (error) {
@@ -149,7 +149,7 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
         try {
           // Fetch answering service data from API
           const response = await apiService.get(
-            `/v1/users/tenant/${id}?tenantId=${userData.tenantId}`
+            `/v3/users/tenant/${id}?tenantId=${userData.tenantId}`
           )
           const answeringServiceData = response.data.data
 
@@ -339,7 +339,7 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
         }
 
         const response = await apiService.put(
-          `/v1/users/tenant/${id}?tenantId=${userData.tenantId}`,
+          `/v3/users/tenant/${id}?tenantId=${userData.tenantId}`,
           updatePayload
         )
         console.log('Answering service updated successfully:', response.data)
@@ -351,7 +351,7 @@ export default function CreateAnsweringServicePage(): React.JSX.Element {
       } else {
         console.log('Creating answering service:', payload)
         // Make actual API call to create answering service
-        const response = await apiService.post('/v1/users', payload)
+        const response = await apiService.post('/v3/users', payload)
         console.log('Answering service created successfully:', response.data)
 
         // Show success toast for creation
