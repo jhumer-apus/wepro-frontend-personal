@@ -72,18 +72,10 @@ export default function Login(): React.JSX.Element {
       // Example API call using the configured service
       // In a real implementation, you would call your authentication endpoint
       try {
-        // const response = await apiService.post('/v1/auth/login', {
-        //   username: formData.username,
-        //   password: formData.password,
-        // })
-
-
-        const response = await apiService.post('/v3/auth/login', {
+        const response = await apiService.post('/v1/auth/login', {
           username: formData.username,
           password: formData.password,
         })
-
-        // const response = await apiService.post('/login/loginPost')
 
         // Update Redux state with the full user data from API response
         dispatch(
