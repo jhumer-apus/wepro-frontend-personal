@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import type { DateValueType } from "react-tailwindcss-datepicker";
 import { cn } from "@/src/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
@@ -34,6 +35,7 @@ import Table from "@/src/components/table";
 import SelectInput from "@/src/components/input/select";
 import InputDatepicker from "@/src/components/input/datepicker";
 import AddressInput from "@/src/components/input/address";
+import { GoogleMap, Marker } from "@react-google-maps/api";
 import { toast } from "sonner";
 import {
   X,
@@ -58,12 +60,14 @@ import {
   Search,
   Plus,
   Minus,
+  Trash2,
   Pause,
   Play,
   Upload,
   Volume2,
   VolumeX,
   MoreVertical,
+  Pencil,
 } from "lucide-react";
 
 // Log message type for Activity > Logs
@@ -239,6 +243,26 @@ export interface AddPaymentFormState {
   sendToClient: string;
 }
 
+interface PartItem {
+  id: string;
+  part: string;
+  cost: number;
+  type: string;
+  createdAt: string;
+}
+
+type FinanceParty = {
+  name: string;
+  address1: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone: string;
+  email: string;
+};
+
+type FinanceLineItem = { description: string; qty: number; rate: number };
+
 /** Form data for the job details form. Can be passed from parent or loaded by jobId (API) later. */
 export type JobFormData = Record<string, any>;
 
@@ -283,6 +307,12 @@ const INVOICE_DUMMY_DATA = [
   { id: "5", amount: "$420.00", description: "Parts and labor", paymentMethod: "Credit Card", status: "Overdue", approvedStatus: "Rejected", dueDate: "2025-02-01", addedBy: "John Doe", referenceNo: "REF-005", dated: "2025-01-20" },
 ];
 
+const ESTIMATE_DUMMY_DATA = [
+  { id: "EST-1001", amount: "$650.00", status: "Draft", dated: "2025-02-11", validUntil: "2025-03-11" },
+  { id: "EST-1002", amount: "$980.00", status: "Sent", dated: "2025-02-05", validUntil: "2025-03-05" },
+  { id: "EST-1003", amount: "$1,250.00", status: "Approved", dated: "2025-01-28", validUntil: "2025-02-28" },
+];
+
 const DEFAULT_ACTIVITY = [
   { type: "activity", title: "Job Activity", summary: "Responder changed to Not Confirmed", timestamp: "07/02/2025 09:03 PM", user: "System", color: "#2563eb" },
   { type: "assign", title: "Job Assign", summary: "Job assigned to Technician: OK LINE", timestamp: "07/02/2025 09:03 PM", user: "Jocres Cartagena Cequiña", color: "#059669" },
@@ -297,6 +327,11 @@ const DEFAULT_NEAREST_JOBS = [
   { id: "job-2053", clientName: "test", companyName: "", phoneNumber: "3335555555555", email: "test", jobTags: ["Job"], noteTags: [], status: "Confirmed", revenue: 0, location: "123 Main St", city: "Houston", state: "TX", zipCode: "77001", jobDescription: "Test job description", assignedTechnician: "Tech One" },
   { id: "job-2054", clientName: "test", companyName: "", phoneNumber: "3335555555555", email: "test", jobTags: ["Job"], noteTags: [], status: "Confirmed", revenue: 0, location: "456 Oak Ave", city: "Houston", state: "TX", zipCode: "77002", jobDescription: "Follow-up job", assignedTechnician: "Tech Two" },
   { id: "job-2055", clientName: "tessss", companyName: "", phoneNumber: "3335555555555", email: "tesss", jobTags: ["Job", "Test Tags"], noteTags: [], status: "Done", revenue: 0, location: "789 Business Blvd", city: "Houston", state: "TX", zipCode: "77003", jobDescription: "Completed test job", assignedTechnician: "Tech Three" },
+];
+
+const DEFAULT_PART_ITEMS: PartItem[] = [
+  { id: "part-1", part: "Capacitor", cost: 4, type: "Company", createdAt: "2/27/2026, 10:18:54 PM" },
+  { id: "part-2", part: "Thermostat Wire", cost: 2, type: "Tech", createdAt: "2/27/2026, 10:18:27 PM" },
 ];
 
 const initialAddPaymentForm = (): AddPaymentFormState => ({
@@ -323,6 +358,19 @@ export function JobForm(props: JobFormProps) {
 
   // Form data: synced from prop when open/jobId/formDataProp changes; edited locally
   const [formData, setFormData] = useState<JobFormData>(() => formDataProp ?? {});
+  const toLocalYmd = (value: string | Date | null | undefined) => {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const day = String(value.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+  const fromYmdToDate = (value: string | null | undefined) => {
+    if (!value) return null;
+    const parsed = new Date(`${value}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
   const [activeTab, setActiveTab] = useState("details");
   const [isEditing, setIsEditing] = useState(true);
   const [showSecondPhone, setShowSecondPhone] = useState(false);
@@ -331,6 +379,14 @@ export function JobForm(props: JobFormProps) {
   const [newNote, setNewNote] = useState("");
   const [activityFilter, setActivityFilter] = useState("all");
   const [locationActivityFilter, setLocationActivityFilter] = useState("all");
+  const [showInlineLocationForm, setShowInlineLocationForm] = useState(false);
+  const [locationFormSnapshot, setLocationFormSnapshot] = useState<Record<string, any> | null>(null);
+  const [partsForm, setPartsForm] = useState<{ part: string; cost: string; type: string }>({ part: "", cost: "", type: "Tech" });
+  const [partsItems, setPartsItems] = useState<PartItem[]>(DEFAULT_PART_ITEMS);
+  const [locationMapCenter, setLocationMapCenter] = useState<{ lat: number; lng: number }>({
+    lat: 29.7604,
+    lng: -95.3698,
+  });
   const [activity, setActivity] = useState(DEFAULT_ACTIVITY);
   const [showReplyNote, setShowReplyNote] = useState<number | null>(null);
   const [replyNote, setReplyNote] = useState("");
@@ -340,16 +396,102 @@ export function JobForm(props: JobFormProps) {
   const [invoiceTableSearch, setInvoiceTableSearch] = useState("");
   const [invoiceTablePage, setInvoiceTablePage] = useState(1);
   const [invoiceTablePageSize, setInvoiceTablePageSize] = useState(10);
+  const [financeInvoiceSearch, setFinanceInvoiceSearch] = useState("");
+  const [financeInvoiceStatus, setFinanceInvoiceStatus] = useState("all");
+  const [financeEstimateSearch, setFinanceEstimateSearch] = useState("");
+  const [financeEstimateStatus, setFinanceEstimateStatus] = useState("all");
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const plus30 = new Date();
+  plus30.setDate(plus30.getDate() + 30);
+  const plus30Str = plus30.toISOString().slice(0, 10);
+  const [invoiceForm, setInvoiceForm] = useState<{
+    invoiceNumber: string;
+    date: string;
+    dueDate: string;
+    paymentTerms: string;
+    from: FinanceParty;
+    to: FinanceParty;
+    items: FinanceLineItem[];
+    discountPct: number;
+    taxPct: number;
+    depositAmount: number;
+    paymentMethods: {
+      creditCard: boolean;
+      debitCard: boolean;
+      check: boolean;
+      cash: boolean;
+      bankTransfer: boolean;
+      paypal: boolean;
+    };
+    notes: string;
+    terms: string;
+  }>({
+    invoiceNumber: `INV-${Date.now()}`,
+    date: todayStr,
+    dueDate: plus30Str,
+    paymentTerms: "Net 30",
+    from: { name: "", address1: "", city: "", state: "", zip: "", phone: "", email: "" },
+    to: { name: "", address1: "", city: "", state: "", zip: "", phone: "", email: "" },
+    items: [{ description: "", qty: 1, rate: 0 }],
+    discountPct: 0,
+    taxPct: 8.25,
+    depositAmount: 0,
+    paymentMethods: { creditCard: true, debitCard: true, check: true, cash: true, bankTransfer: true, paypal: true },
+    notes: "",
+    terms: "Payment is due within 30 days of invoice date.",
+  });
+  const [invoiceAttachments, setInvoiceAttachments] = useState<File[]>([]);
+  const [invoiceLogoPreview, setInvoiceLogoPreview] = useState<string | null>(null);
+  const [isInvoiceAttachmentDragOver, setIsInvoiceAttachmentDragOver] = useState(false);
+  const [invoiceAttachmentPreviewUrls, setInvoiceAttachmentPreviewUrls] = useState<Record<string, string>>({});
+  const [estimateForm, setEstimateForm] = useState<{
+    estimateNumber: string;
+    date: string;
+    validUntil: string;
+    paymentTerms: string;
+    items: FinanceLineItem[];
+    discountPct: number;
+    taxPct: number;
+    paymentMethods: {
+      creditCard: boolean;
+      debitCard: boolean;
+      check: boolean;
+      cash: boolean;
+      bankTransfer: boolean;
+      paypal: boolean;
+    };
+    requireSignature: boolean;
+    notes: string;
+  }>({
+    estimateNumber: `EST-${Date.now()}`,
+    date: todayStr,
+    validUntil: plus30Str,
+    paymentTerms: "Net 30",
+    items: [{ description: "", qty: 1, rate: 0 }],
+    discountPct: 0,
+    taxPct: 8.25,
+    paymentMethods: { creditCard: true, debitCard: true, check: true, cash: true, bankTransfer: true, paypal: true },
+    requireSignature: true,
+    notes: "",
+  });
   const [addPaymentForm, setAddPaymentForm] = useState<AddPaymentFormState>(initialAddPaymentForm);
   const [isSaving, setIsSaving] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isAttachmentDragOver, setIsAttachmentDragOver] = useState(false);
+  const locationMapRef = useRef<google.maps.Map | null>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
+  const invoiceAttachmentInputRef = useRef<HTMLInputElement>(null);
+  const invoiceLogoInputRef = useRef<HTMLInputElement>(null);
   const attachmentListRef = useRef<HTMLDivElement>(null);
+  const invoiceAttachmentListRef = useRef<HTMLDivElement>(null);
   const attachmentIsDragging = useRef(false);
+  const invoiceAttachmentIsDragging = useRef(false);
   const attachmentDragStartX = useRef(0);
   const attachmentStartScrollLeft = useRef(0);
+  const invoiceAttachmentDragStartX = useRef(0);
+  const invoiceAttachmentStartScrollLeft = useRef(0);
   const [attachmentScrollState, setAttachmentScrollState] = useState({ canScrollLeft: false, canScrollRight: false });
+  const [invoiceAttachmentScrollState, setInvoiceAttachmentScrollState] = useState({ canScrollLeft: false, canScrollRight: false });
 
   const getAttachmentKey = (file: File) => `${file.name}-${file.size}-${file.lastModified}`;
   const [attachmentPreviewUrls, setAttachmentPreviewUrls] = useState<Record<string, string>>({});
@@ -357,6 +499,18 @@ export function JobForm(props: JobFormProps) {
   useEffect(() => {
     if (open && (formDataProp != null || jobId)) {
       setFormData(formDataProp ?? {});
+      const incoming = (formDataProp ?? {}) as {
+        lat?: number | string;
+        lng?: number | string;
+        latitude?: number | string;
+        longitude?: number | string;
+      };
+      const incomingLat = Number(incoming.lat ?? incoming.latitude ?? 29.7604);
+      const incomingLng = Number(incoming.lng ?? incoming.longitude ?? -95.3698);
+      setLocationMapCenter({
+        lat: Number.isFinite(incomingLat) ? incomingLat : 29.7604,
+        lng: Number.isFinite(incomingLng) ? incomingLng : -95.3698,
+      });
     }
   }, [open, jobId, formDataProp]);
 
@@ -391,6 +545,124 @@ export function JobForm(props: JobFormProps) {
     setShowReplyNote(null);
   };
 
+  const handleEditLocationClick = () => {
+    setLocationFormSnapshot({
+      location: formData.location ?? "",
+      apartmentNumber: (formData as { apartmentNumber?: string }).apartmentNumber ?? "",
+      city: formData.city ?? "",
+      zipCode: formData.zipCode ?? "",
+      state: formData.state ?? "",
+      country: formData.country ?? "",
+      lat: (formData as { lat?: number | string }).lat ?? "",
+      lng: (formData as { lng?: number | string }).lng ?? "",
+      latitude: (formData as { latitude?: number | string }).latitude ?? "",
+      longitude: (formData as { longitude?: number | string }).longitude ?? "",
+    });
+    setIsEditing(true);
+    setActiveTab("details");
+    setShowInlineLocationForm(true);
+  };
+
+  const handleInlineLocationCancel = () => {
+    if (locationFormSnapshot) {
+      setFormData((prev) => ({ ...prev, ...locationFormSnapshot }));
+    }
+    setShowInlineLocationForm(false);
+  };
+
+  const handleInlineLocationSave = () => {
+    setShowInlineLocationForm(false);
+  };
+
+  const handleAddPart = () => {
+    const trimmedPart = partsForm.part.trim();
+    const parsedCost = Number(partsForm.cost);
+    if (!trimmedPart || !Number.isFinite(parsedCost) || parsedCost <= 0) return;
+
+    setPartsItems((prev) => [
+      {
+        id: `part-${Date.now()}`,
+        part: trimmedPart,
+        cost: parsedCost,
+        type: partsForm.type || "Tech",
+        createdAt: new Date().toLocaleString(),
+      },
+      ...prev,
+    ]);
+    setPartsForm((prev) => ({ ...prev, part: "", cost: "" }));
+  };
+
+  const handleRemovePart = (partId: string) => {
+    setPartsItems((prev) => prev.filter((item) => item.id !== partId));
+  };
+
+  const formatCurrency = (n: number) => `$${Number(n || 0).toFixed(2)}`;
+  const calcTotal = (items: FinanceLineItem[], discountPct = 0, taxPct = 0) => {
+    const subtotal = items.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.rate || 0), 0);
+    const discount = subtotal * (Number(discountPct || 0) / 100);
+    const taxedBase = Math.max(0, subtotal - discount);
+    const tax = taxedBase * (Number(taxPct || 0) / 100);
+    return { subtotal, discount, tax, total: taxedBase + tax };
+  };
+
+  const updatePinnedLocation = (lat: number, lng: number) => {
+    handleEditChange("lat", lat);
+    handleEditChange("lng", lng);
+    handleEditChange("latitude", lat);
+    handleEditChange("longitude", lng);
+  };
+
+  const populateAddressFromCoords = (lat: number, lng: number) => {
+    if (typeof window === "undefined" || !window.google?.maps?.Geocoder) return;
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+      if (status !== "OK" || !results?.[0]) return;
+      const primaryResult = results[0];
+      const components = primaryResult.address_components ?? [];
+
+      const getComponent = (type: string, useShortName = false) =>
+        components.find((component) => component.types.includes(type))?.[useShortName ? "short_name" : "long_name"] ?? "";
+
+      const streetNumber = getComponent("street_number");
+      const route = getComponent("route");
+      const city =
+        getComponent("locality") ||
+        getComponent("sublocality") ||
+        getComponent("administrative_area_level_2");
+      const state = getComponent("administrative_area_level_1", true) || getComponent("administrative_area_level_1");
+      const zip = getComponent("postal_code");
+      const country = getComponent("country");
+      const streetAddress = [streetNumber, route].filter(Boolean).join(" ").trim() || primaryResult.formatted_address || "";
+
+      handleEditChange("location", streetAddress);
+      handleEditChange("city", city);
+      handleEditChange("state", state);
+      handleEditChange("zipCode", zip);
+      handleEditChange("country", country);
+    });
+  };
+
+  const handleLocationMapClick = (event: google.maps.MapMouseEvent) => {
+    if (!showInlineLocationForm || !isEditing) return;
+    const lat = event.latLng?.lat();
+    const lng = event.latLng?.lng();
+    if (typeof lat !== "number" || typeof lng !== "number") return;
+    updatePinnedLocation(lat, lng);
+    populateAddressFromCoords(lat, lng);
+  };
+
+  const panMapToAddress = (fullAddress: string) => {
+    if (!fullAddress || typeof window === "undefined" || !window.google?.maps?.Geocoder) return;
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ address: fullAddress }, (results, status) => {
+      if (status !== "OK" || !results?.[0]?.geometry?.location) return;
+      const nextLat = results[0].geometry.location.lat();
+      const nextLng = results[0].geometry.location.lng();
+      setLocationMapCenter({ lat: nextLat, lng: nextLng });
+      locationMapRef.current?.panTo({ lat: nextLat, lng: nextLng });
+    });
+  };
+
   useEffect(() => {
     const imageFiles = attachments.filter((file) => file.type.startsWith("image/"));
     const nextUrls: Record<string, string> = {};
@@ -403,6 +675,19 @@ export function JobForm(props: JobFormProps) {
       Object.values(nextUrls).forEach((url) => URL.revokeObjectURL(url));
     };
   }, [attachments]);
+
+  useEffect(() => {
+    const imageFiles = invoiceAttachments.filter((file) => file.type.startsWith("image/"));
+    const nextUrls: Record<string, string> = {};
+    imageFiles.forEach((file) => {
+      nextUrls[getAttachmentKey(file)] = URL.createObjectURL(file);
+    });
+    setInvoiceAttachmentPreviewUrls(nextUrls);
+
+    return () => {
+      Object.values(nextUrls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [invoiceAttachments]);
 
   const addAttachmentFiles = (files: FileList | File[]) => {
     const incomingFiles = Array.from(files);
@@ -441,6 +726,64 @@ export function JobForm(props: JobFormProps) {
 
   const removeAttachmentByKey = (keyToRemove: string) => {
     setAttachments((prev) => prev.filter((file) => getAttachmentKey(file) !== keyToRemove));
+  };
+
+  const addInvoiceAttachmentFiles = (files: FileList | File[]) => {
+    const incomingFiles = Array.from(files);
+    if (!incomingFiles.length) return;
+
+    setInvoiceAttachments((prev) => {
+      const seen = new Set(prev.map((file) => getAttachmentKey(file)));
+      const merged = [...prev];
+
+      incomingFiles.forEach((file) => {
+        const key = getAttachmentKey(file);
+        if (!seen.has(key)) {
+          seen.add(key);
+          merged.push(file);
+        }
+      });
+
+      return merged;
+    });
+  };
+
+  const handleInvoiceAttachmentInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      addInvoiceAttachmentFiles(event.target.files);
+    }
+    event.target.value = "";
+  };
+
+  const handleInvoiceAttachmentDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsInvoiceAttachmentDragOver(false);
+    if (event.dataTransfer.files?.length) {
+      addInvoiceAttachmentFiles(event.dataTransfer.files);
+    }
+  };
+
+  const removeInvoiceAttachmentByKey = (keyToRemove: string) => {
+    setInvoiceAttachments((prev) => prev.filter((file) => getAttachmentKey(file) !== keyToRemove));
+  };
+
+  const startInvoiceAttachmentListDrag = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || !invoiceAttachmentListRef.current) return;
+    invoiceAttachmentIsDragging.current = true;
+    invoiceAttachmentDragStartX.current = event.pageX - invoiceAttachmentListRef.current.offsetLeft;
+    invoiceAttachmentStartScrollLeft.current = invoiceAttachmentListRef.current.scrollLeft;
+  };
+
+  const handleInvoiceAttachmentListDrag = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!invoiceAttachmentIsDragging.current || !invoiceAttachmentListRef.current) return;
+    event.preventDefault();
+    const x = event.pageX - invoiceAttachmentListRef.current.offsetLeft;
+    const walk = x - invoiceAttachmentDragStartX.current;
+    invoiceAttachmentListRef.current.scrollLeft = invoiceAttachmentStartScrollLeft.current - walk;
+  };
+
+  const endInvoiceAttachmentListDrag = () => {
+    invoiceAttachmentIsDragging.current = false;
   };
 
   const startAttachmentListDrag = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -482,6 +825,26 @@ export function JobForm(props: JobFormProps) {
     el.scrollBy({ left: amount, behavior: "smooth" });
   };
 
+  const updateInvoiceAttachmentScrollState = React.useCallback(() => {
+    const el = invoiceAttachmentListRef.current;
+    if (!el) {
+      setInvoiceAttachmentScrollState({ canScrollLeft: false, canScrollRight: false });
+      return;
+    }
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setInvoiceAttachmentScrollState({
+      canScrollLeft: el.scrollLeft > 0,
+      canScrollRight: el.scrollLeft < maxScroll - 1,
+    });
+  }, []);
+
+  const scrollInvoiceAttachmentList = (direction: "left" | "right") => {
+    const el = invoiceAttachmentListRef.current;
+    if (!el) return;
+    const amount = direction === "left" ? -220 : 220;
+    el.scrollBy({ left: amount, behavior: "smooth" });
+  };
+
   useEffect(() => {
     const el = attachmentListRef.current;
     if (!el || attachments.length === 0) return;
@@ -496,6 +859,21 @@ export function JobForm(props: JobFormProps) {
       window.removeEventListener("resize", updateAttachmentScrollState);
     };
   }, [attachments.length, updateAttachmentScrollState]);
+
+  useEffect(() => {
+    const el = invoiceAttachmentListRef.current;
+    if (!el || invoiceAttachments.length === 0) return;
+
+    updateInvoiceAttachmentScrollState();
+    const onScroll = () => updateInvoiceAttachmentScrollState();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", updateInvoiceAttachmentScrollState);
+
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", updateInvoiceAttachmentScrollState);
+    };
+  }, [invoiceAttachments.length, updateInvoiceAttachmentScrollState]);
 
   const formatAttachmentSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -620,7 +998,7 @@ export function JobForm(props: JobFormProps) {
   );
   const mapLat = Number.isFinite(resolvedMapLat) ? resolvedMapLat : 29.7604;
   const mapLng = Number.isFinite(resolvedMapLng) ? resolvedMapLng : -95.3698;
-  const locationMapSrc = `https://maps.google.com/maps?q=${mapLat},${mapLng}&z=15&output=embed`;
+  const pinnedLocation = { lat: mapLat, lng: mapLng };
 
   return (
     <>
@@ -679,9 +1057,9 @@ export function JobForm(props: JobFormProps) {
                 )}
               </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setShowInvoiceModal(true)}>
+                  {/* <Button variant="outline" size="sm" onClick={() => setShowInvoiceModal(true)}>
                     Invoice
-                  </Button>
+                  </Button> */}
                   <Button
                     variant="outline"
                     size="sm"
@@ -695,11 +1073,10 @@ export function JobForm(props: JobFormProps) {
 
               <div className="flex-1 flex flex-col min-h-0 border-b overflow-hidden">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 w-full">
-                  <TabsList className="grid w-[600px] grid-cols-4 shrink-0 ml-6">
+                  <TabsList className="grid w-[600px] grid-cols-3 shrink-0 ml-6">
                     <TabsTrigger value="details">Details</TabsTrigger>
-                    <TabsTrigger value="activity">Activity</TabsTrigger>
-                    <TabsTrigger value="financials">Financials</TabsTrigger>
-                    <TabsTrigger value="nearest-jobs">Nearest Jobs</TabsTrigger>
+                    <TabsTrigger value="financials">Finance</TabsTrigger>
+                    <TabsTrigger value="activity">Detailed Logs</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="details" className="flex-1 min-h-0 overflow-y-auto p-6 pt-4 pb-20 space-y-6 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
@@ -789,81 +1166,6 @@ export function JobForm(props: JobFormProps) {
                                   />
                                 </div>
                               )}
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card>
-                          <CardHeader className="pb-3">
-                            <CardTitle className="text-lg flex items-center gap-2">
-                              <MapPin className="w-5 h-5" />
-                              Service Location
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                              <AddressInput
-                                isEditing={isEditing}
-                                value={formData.location || ""}
-                                displayValue={selectedJob.location}
-                                onChange={(value) => handleEditChange("location", value)}
-                                onAddressChange={({ address, address2, city, zip, state, country }) => {
-                                  handleEditChange("location", address);
-                                  handleEditChange("apartmentNumber", address2);
-                                  handleEditChange("city", city);
-                                  handleEditChange("zipCode", zip);
-                                  handleEditChange("state", state);
-                                  handleEditChange("country", country);
-                                }}
-                              />
-                              <div>
-                                <Label className="text-sm font-medium">Apartment #</Label>
-                                {isEditing ? (
-                                  <Input
-                                    value={(formData as { apartmentNumber?: string }).apartmentNumber || ""}
-                                    onChange={(e) => handleEditChange("apartmentNumber", e.target.value)}
-                                    className="mt-1"
-                                  />
-                                ) : (
-                                  <div className="mt-1 text-sm">{(selectedJob as { apartmentNumber?: string }).apartmentNumber ?? "—"}</div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label className="text-sm font-medium">City</Label>
-                                {isEditing ? (
-                                  <Input value={formData.city || ""} onChange={(e) => handleEditChange("city", e.target.value)} className="mt-1" />
-                                ) : (
-                                  <div className="mt-1 text-sm">{selectedJob.city}</div>
-                                )}
-                              </div>
-                              <div>
-                                <Label className="text-sm font-medium">Zip</Label>
-                                {isEditing ? (
-                                  <Input value={formData.zipCode || ""} onChange={(e) => handleEditChange("zipCode", e.target.value)} className="mt-1" />
-                                ) : (
-                                  <div className="mt-1 text-sm">{selectedJob.zipCode}</div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label className="text-sm font-medium">State</Label>
-                                {isEditing ? (
-                                  <Input value={formData.state || ""} onChange={(e) => handleEditChange("state", e.target.value)} className="mt-1" />
-                                ) : (
-                                  <div className="mt-1 text-sm">{selectedJob.state}</div>
-                                )}
-                              </div>
-                              <div>
-                                <Label className="text-sm font-medium">Country</Label>
-                                {isEditing ? (
-                                  <Input value={formData.country || ""} onChange={(e) => handleEditChange("country", e.target.value)} className="mt-1" />
-                                ) : (
-                                  <div className="mt-1 text-sm">{(selectedJob as { country?: string }).country ?? "United States"}</div>
-                                )}
-                              </div>
                             </div>
                           </CardContent>
                         </Card>
@@ -1196,26 +1498,255 @@ export function JobForm(props: JobFormProps) {
                               )}
                             </CardContent>
                           </Card>
+                          <Card className="flex flex-col">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg">Nearest Jobs</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3 pb-0">
+                              
+                              <Table
+                                key="nearest-jobs"
+                                rows={nearestPaged}
+                                mobileRows={nearestJobsFiltered.slice(0, nearestJobsPage * nearestJobsEntriesPerPage)}
+                                columns={nearestJobsColumns}
+                                pageSize={nearestJobsEntriesPerPage}
+                                currentPage={nearestJobsPage}
+                                totalPages={nearestTotalPages}
+                                totalCount={nearestJobsFiltered.length}
+                                onPageSizeChange={(v) => {
+                                  setNearestJobsEntriesPerPage(Number(v));
+                                  setNearestJobsPage(1);
+                                }}
+                                onPageChange={setNearestJobsPage}
+                                maxHeightClassName="max-h-[calc(100vh-320px)]"
+                                className="flex-1 flex flex-col"
+                                tableClassName="flex-1"
+                                lockedColumns={0}
+                                hideBorder
+                                showColumnConfig={false}
+                                headerRightComponent={(
+                                  <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                    <Input
+                                      placeholder="Search jobs"
+                                      value={nearestJobsSearchQuery}
+                                      onChange={(e) => {
+                                        setNearestJobsSearchQuery(e.target.value);
+                                        setNearestJobsPage(1);
+                                      }}
+                                      className="pl-9 w-full max-w-xs"
+                                    />
+                                  </div>
+                                )}
+                              />
+                            </CardContent>
+                          </Card>
                         </div>
 
+                      </div>
+                      <div className="space-y-6 flex flex-col">
                         <Card className="flex flex-col">
                           <CardHeader className="pb-3">
                             <CardTitle className="text-lg flex items-center gap-2">
-                              <FileText className="w-5 h-5" />
-                              Description & Notes
+                              {showInlineLocationForm ? <Pencil className="w-5 h-5" /> : <MapPin className="w-5 h-5" />}
+                              {showInlineLocationForm ? "Edit Servive Location" : "Service Location"}
                             </CardTitle>
                           </CardHeader>
-                          <CardContent className="flex space-y-3 flex-1">
-                            <div className="flex-1 flex">
-                              {isEditing ? (
-                                <Textarea value={formData.jobDescription || ""} onChange={(e) => handleEditChange("jobDescription", e.target.value)} className="mt-1 flex-1" rows={3} />
-                              ) : (
-                                <div className="mt-1 text-sm">{selectedJob.jobDescription}</div>
-                              )}
+                          <CardContent className="space-y-4 text-sm">
+                            <div className="mt-3 overflow-hidden rounded-lg border border-slate-200">
+                              <GoogleMap
+                                mapContainerStyle={{ width: "100%", height: "260px" }}
+                                center={locationMapCenter}
+                                zoom={15}
+                                onLoad={(map) => {
+                                  locationMapRef.current = map;
+                                }}
+                                onUnmount={() => {
+                                  locationMapRef.current = null;
+                                }}
+                                onClick={handleLocationMapClick}
+                                options={{
+                                  mapTypeId: "roadmap",
+                                  streetViewControl: false,
+                                  fullscreenControl: false,
+                                  mapTypeControl: false,
+                                }}
+                              >
+                                <Marker
+                                  position={pinnedLocation}
+                                  draggable={isEditing && showInlineLocationForm}
+                                  onDragEnd={(event) => {
+                                    if (!showInlineLocationForm || !isEditing) return;
+                                    const lat = event.latLng?.lat();
+                                    const lng = event.latLng?.lng();
+                                    if (typeof lat !== "number" || typeof lng !== "number") return;
+                                    updatePinnedLocation(lat, lng);
+                                    populateAddressFromCoords(lat, lng);
+                                  }}
+                                />
+                              </GoogleMap>
+                            </div>
+                            {!showInlineLocationForm && (
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="text-slate-600 truncate">
+                                {[
+                                  selectedJob?.location,
+                                  [selectedJob?.city, selectedJob?.state, selectedJob?.zipCode].filter(Boolean).join(", "),
+                                  (selectedJob as { country?: string })?.country || "United States",
+                                ]
+                                  .filter(Boolean)
+                                  .join(" • ") || "—"}
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-3 text-xs gap-1"
+                                onClick={handleEditLocationClick}
+                                aria-label="Edit location"
+                                title="Edit location"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                <span>Edit</span>
+                              </Button>
+                            </div>
+                            )}
+                            {showInlineLocationForm && (
+                              <div className="mt-2">
+                                <div className="grid grid-cols-2 gap-3">
+                                  <AddressInput
+                                    isEditing={isEditing}
+                                    value={formData.location || ""}
+                                    displayValue={selectedJob.location}
+                                    onChange={(value) => handleEditChange("location", value)}
+                                    onAddressChange={({ address, address2, city, zip, state, country }) => {
+                                      handleEditChange("location", address);
+                                      handleEditChange("apartmentNumber", address2);
+                                      handleEditChange("city", city);
+                                      handleEditChange("zipCode", zip);
+                                      handleEditChange("state", state);
+                                      handleEditChange("country", country);
+                                      panMapToAddress(
+                                        [address, address2, city, state, zip, country].filter(Boolean).join(", ")
+                                      );
+                                    }}
+                                  />
+                                  <div>
+                                    <Label className="text-sm font-medium">Apartment #</Label>
+                                    {isEditing ? (
+                                      <Input
+                                        value={(formData as { apartmentNumber?: string }).apartmentNumber || ""}
+                                        onChange={(e) => handleEditChange("apartmentNumber", e.target.value)}
+                                        className="mt-1"
+                                      />
+                                    ) : (
+                                      <div className="mt-1 text-sm">{(selectedJob as { apartmentNumber?: string }).apartmentNumber ?? "—"}</div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="mt-3 grid grid-cols-2 gap-3">
+                                  <div>
+                                    <Label className="text-sm font-medium">City</Label>
+                                    {isEditing ? (
+                                      <Input value={formData.city || ""} onChange={(e) => handleEditChange("city", e.target.value)} className="mt-1" />
+                                    ) : (
+                                      <div className="mt-1 text-sm">{selectedJob.city}</div>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <Label className="text-sm font-medium">Zip</Label>
+                                    {isEditing ? (
+                                      <Input value={formData.zipCode || ""} onChange={(e) => handleEditChange("zipCode", e.target.value)} className="mt-1" />
+                                    ) : (
+                                      <div className="mt-1 text-sm">{selectedJob.zipCode}</div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="mt-3 grid grid-cols-2 gap-3">
+                                  <div>
+                                    <Label className="text-sm font-medium">State</Label>
+                                    {isEditing ? (
+                                      <Input value={formData.state || ""} onChange={(e) => handleEditChange("state", e.target.value)} className="mt-1" />
+                                    ) : (
+                                      <div className="mt-1 text-sm">{selectedJob.state}</div>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <Label className="text-sm font-medium">Country</Label>
+                                    {isEditing ? (
+                                      <Input value={formData.country || ""} onChange={(e) => handleEditChange("country", e.target.value)} className="mt-1" />
+                                    ) : (
+                                      <div className="mt-1 text-sm">{(selectedJob as { country?: string }).country ?? "United States"}</div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="mt-4 flex items-center justify-end gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleInlineLocationCancel}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={handleInlineLocationSave}
+                                  >
+                                    Save
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                        <Card className="flex flex-col">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <CardTitle className="text-lg">Activity</CardTitle>
+                              <div className="w-36">
+                                <SelectInput
+                                  options={[
+                                    { label: "Status", value: "activity" },
+                                    { label: "Assign", value: "assign" },
+                                    { label: "Payment", value: "payment" },
+                                    { label: "Part", value: "part" },
+                                    { label: "Note", value: "note" },
+                                    { label: "Call", value: "call" },
+                                  ]}
+                                  placeholder="Types"
+                                  value={locationActivityFilter}
+                                  onSearch={() => {}}
+                                  onSelect={(val) => setLocationActivityFilter(Array.isArray(val) ? (val[0] ?? "all") : val)}
+                                />
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="pt-0">
+                            <div className="max-h-[360px] overflow-y-auto pr-1">
+                              <div className="space-y-3">
+                                {locationActivityItems.length > 0 ? (
+                                  locationActivityItems.map((item, index) => {
+                                    const summaryText = String(item.summary || "").trim() || item.title;
+                                    const labelText = item.type === "note" ? `Note: ${summaryText}` : summaryText;
+                                    return (
+                                      <div key={`location-activity-${index}`} className="flex items-start gap-2.5">
+                                        <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-400" />
+                                        <div className="min-w-0">
+                                          <p className="truncate text-sm leading-5 text-slate-900">{labelText}</p>
+                                          <p className="text-xs text-slate-500">{item.timestamp}</p>
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                ) : (
+                                  <p className="text-sm text-slate-500">No activity found.</p>
+                                )}
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
-
                         <Card className="flex flex-col">
                           <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
                             <CardTitle className="text-lg flex items-center gap-2">
@@ -1276,38 +1807,38 @@ export function JobForm(props: JobFormProps) {
                                       {attachments.map((file) => {
                                         const attachmentKey = getAttachmentKey(file);
                                         return (
-                                        <div key={attachmentKey} className="w-28 shrink-0">
-                                          <div className="relative w-28 h-28 rounded-md border bg-slate-50 overflow-hidden flex items-center justify-center">
-                                            <button
-                                              type="button"
-                                              className="absolute right-1 top-1 z-10 h-5 w-5 rounded-full bg-white/95 border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-white"
-                                              onMouseDown={(event) => event.stopPropagation()}
-                                              onClick={(event) => {
-                                                event.preventDefault();
-                                                event.stopPropagation();
-                                                removeAttachmentByKey(attachmentKey);
-                                              }}
-                                              aria-label={`Remove ${file.name}`}
-                                            >
-                                              <X className="h-3 w-3" />
-                                            </button>
-                                            {file.type.startsWith("image/") && attachmentPreviewUrls[attachmentKey] ? (
-                                              <img
-                                                src={attachmentPreviewUrls[attachmentKey]}
-                                                alt={file.name}
-                                                className="h-full w-full object-cover"
-                                                draggable={false}
-                                              />
-                                            ) : (
-                                              <div className="flex flex-col items-center gap-1 text-slate-600">
-                                                {getAttachmentIcon(file)}
-                                                <span className="text-[10px] uppercase font-medium">{file.name.split(".").pop() ?? "file"}</span>
-                                              </div>
-                                            )}
+                                          <div key={attachmentKey} className="w-28 shrink-0">
+                                            <div className="relative w-28 h-28 rounded-md border bg-slate-50 overflow-hidden flex items-center justify-center">
+                                              <button
+                                                type="button"
+                                                className="absolute right-1 top-1 z-10 h-5 w-5 rounded-full bg-white/95 border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-white"
+                                                onMouseDown={(event) => event.stopPropagation()}
+                                                onClick={(event) => {
+                                                  event.preventDefault();
+                                                  event.stopPropagation();
+                                                  removeAttachmentByKey(attachmentKey);
+                                                }}
+                                                aria-label={`Remove ${file.name}`}
+                                              >
+                                                <X className="h-3 w-3" />
+                                              </button>
+                                              {file.type.startsWith("image/") && attachmentPreviewUrls[attachmentKey] ? (
+                                                <img
+                                                  src={attachmentPreviewUrls[attachmentKey]}
+                                                  alt={file.name}
+                                                  className="h-full w-full object-cover"
+                                                  draggable={false}
+                                                />
+                                              ) : (
+                                                <div className="flex flex-col items-center gap-1 text-slate-600">
+                                                  {getAttachmentIcon(file)}
+                                                  <span className="text-[10px] uppercase font-medium">{file.name.split(".").pop() ?? "file"}</span>
+                                                </div>
+                                              )}
+                                            </div>
+                                            <p className="mt-1 text-xs truncate">{file.name}</p>
+                                            <p className="text-[11px] text-slate-500">{formatAttachmentSize(file.size)}</p>
                                           </div>
-                                          <p className="mt-1 text-xs truncate">{file.name}</p>
-                                          <p className="text-[11px] text-slate-500">{formatAttachmentSize(file.size)}</p>
-                                        </div>
                                         );
                                       })}
                                     </div>
@@ -1327,80 +1858,101 @@ export function JobForm(props: JobFormProps) {
                             )}
                           </CardContent>
                         </Card>
-                      </div>
-                      <div className="space-y-6">
-                        <Card className="flex flex-col">
-                          <CardHeader className="pb-3">
-                            <CardTitle className="text-lg flex items-center gap-2">
-                              <MapPin className="w-5 h-5" />
-                              Location
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-1 text-sm">
-                            <div>{selectedJob?.location || "—"}</div>
-                            <div className="text-slate-600">
-                              {[selectedJob?.city, selectedJob?.state, selectedJob?.zipCode].filter(Boolean).join(", ") || "—"}
-                            </div>
-                            <div className="text-slate-600">{(selectedJob as { country?: string })?.country || "United States"}</div>
-                            <div className="mt-3 overflow-hidden rounded-lg border border-slate-200">
-                              <iframe
-                                title="Job location map"
-                                src={locationMapSrc}
-                                className="h-[260px] w-full"
-                                loading="lazy"
-                                referrerPolicy="no-referrer-when-downgrade"
-                                allowFullScreen
-                              />
-                            </div>
-                          </CardContent>
-                        </Card>
-                        <Card className="flex flex-col">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between gap-3">
-                              <CardTitle className="text-lg">Activity</CardTitle>
-                              <div className="w-36">
-                                <SelectInput
-                                  options={[
-                                    { label: "Status", value: "activity" },
-                                    { label: "Assign", value: "assign" },
-                                    { label: "Payment", value: "payment" },
-                                    { label: "Part", value: "part" },
-                                    { label: "Note", value: "note" },
-                                    { label: "Call", value: "call" },
-                                  ]}
-                                  placeholder="Types"
-                                  value={locationActivityFilter}
-                                  onSearch={() => {}}
-                                  onSelect={(val) => setLocationActivityFilter(Array.isArray(val) ? (val[0] ?? "all") : val)}
-                                />
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-0">
-                            <div className="max-h-[360px] overflow-y-auto pr-1">
-                              <div className="space-y-3">
-                                {locationActivityItems.length > 0 ? (
-                                  locationActivityItems.map((item, index) => {
-                                    const summaryText = String(item.summary || "").trim() || item.title;
-                                    const labelText = item.type === "note" ? `Note: ${summaryText}` : summaryText;
-                                    return (
-                                      <div key={`location-activity-${index}`} className="flex items-start gap-2.5">
-                                        <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-400" />
-                                        <div className="min-w-0">
-                                          <p className="truncate text-sm leading-5 text-slate-900">{labelText}</p>
-                                          <p className="text-xs text-slate-500">{item.timestamp}</p>
-                                        </div>
-                                      </div>
-                                    );
-                                  })
+                        <div className="flex flex-1">
+                          <Card className="flex flex-col w-full">
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                <FileText className="w-5 h-5" />
+                                Description & Notes
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex space-y-3 flex-1">
+                              <div className="flex-1 flex">
+                                {isEditing ? (
+                                  <Textarea value={formData.jobDescription || ""} onChange={(e) => handleEditChange("jobDescription", e.target.value)} className="mt-1 flex-1" rows={3} />
                                 ) : (
-                                  <p className="text-sm text-slate-500">No activity found.</p>
+                                  <div className="mt-1 text-sm">{selectedJob.jobDescription}</div>
                                 )}
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+                            </CardContent>
+                          </Card>
+                        </div>
                       </div>
+                      <Card className="lg:grid-cols-1 lg:col-span-3">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg">Parts</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr_0.8fr_auto] gap-2 items-end">
+                            <div>
+                              <Label className="text-sm font-medium">Part</Label>
+                              <Input
+                                value={partsForm.part}
+                                onChange={(e) => setPartsForm((prev) => ({ ...prev, part: e.target.value }))}
+                                placeholder="Part name"
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-sm font-medium">Cost</Label>
+                              <Input
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                value={partsForm.cost}
+                                onChange={(e) => setPartsForm((prev) => ({ ...prev, cost: e.target.value }))}
+                                placeholder="0.00"
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <SelectInput
+                                label="Type"
+                                options={[
+                                  { label: "Tech", value: "Tech" },
+                                  { label: "Company", value: "Company" },
+                                ]}
+                                placeholder="Type"
+                                value={partsForm.type}
+                                onSearch={() => {}}
+                                onSelect={(val) => setPartsForm((prev) => ({ ...prev, type: Array.isArray(val) ? (val[0] ?? "Tech") : val }))}
+                              />
+                            </div>
+                            <Button type="button" className="h-10" onClick={handleAddPart}>
+                              Add Part
+                            </Button>
+                          </div>
+
+                          <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                            {partsItems.length > 0 ? (
+                              partsItems.map((item) => (
+                                <div key={item.id} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="secondary" className="text-xs">{item.type}</Badge>
+                                      <span className="font-medium">${item.cost.toFixed(2)}</span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 truncate mt-1">{item.part}</p>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-xs text-slate-500 whitespace-nowrap">{item.createdAt}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemovePart(item.id)}
+                                      className="text-slate-500 hover:text-slate-700"
+                                      aria-label={`Remove ${item.part}`}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-sm text-slate-500">No parts added yet.</p>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
 
                     <div className="fixed bottom-0 left-0 right-0 bg-white">
@@ -1518,78 +2070,774 @@ export function JobForm(props: JobFormProps) {
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="financials" className="flex-1 flex flex-col justify-between min-h-0 overflow-y-auto p-6 pb-4 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2">
-                            <Calculator className="w-5 h-5" />
-                            Invoice Details
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-sm">Subtotal:</span>
-                            <span className="text-sm font-medium">${selectedJob.revenue}</span>
+                  <TabsContent value="financials" className="flex-1 min-h-0 overflow-y-auto p-6 pb-4 space-y-4 data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-col">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Finance Summary</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {(() => {
+                          const total = Number(selectedJob?.revenue || 0);
+                          const paid = 0;
+                          const due = Math.max(0, total - paid);
+                          return (
+                            <>
+                              <div className="flex items-center justify-between text-sm"><span>Total</span><span>${total.toFixed(2)}</span></div>
+                              <div className="flex items-center justify-between text-sm"><span>Paid</span><span>${paid.toFixed(2)}</span></div>
+                              <div className="flex items-center justify-between text-sm"><span>Due</span><span className={due > 0 ? "text-red-600 font-medium" : "text-emerald-600 font-medium"}>${due.toFixed(2)}</span></div>
+                            </>
+                          );
+                        })()}
+                      </CardContent>
+                    </Card>
+
+                    <Tabs defaultValue="invoices" className="w-full">
+                      <TabsList className="grid grid-cols-3 w-full max-w-lg">
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="invoices">Invoices</TabsTrigger>
+                        <TabsTrigger value="estimates">Estimates</TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="all" className="mt-4 space-y-4">
+                        <Card>
+                          <CardHeader className="py-3">
+                            <CardTitle className="text-base">All Documents</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2 text-sm">
+                            {[...INVOICE_DUMMY_DATA.map((d) => ({ kind: "Invoice", id: d.referenceNo || d.id, amount: d.amount, status: d.status, date: d.dated })), ...ESTIMATE_DUMMY_DATA.map((d) => ({ kind: "Estimate", id: d.id, amount: d.amount, status: d.status, date: d.dated }))].map((doc, index) => (
+                              <div key={`${doc.kind}-${doc.id}-${index}`} className="grid grid-cols-5 gap-2 items-center px-2 py-2 border-b last:border-b-0">
+                                <div className="text-xs text-slate-500">{doc.kind}</div>
+                                <div className="font-medium">{doc.id}</div>
+                                <div>{doc.status}</div>
+                                <div>{doc.date}</div>
+                                <div className="text-right">{doc.amount}</div>
+                              </div>
+                            ))}
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+
+                      <TabsContent value="invoices" className="mt-4 space-y-4 pb-24">
+                        <Card>
+                          <CardHeader className="py-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <CardTitle className="text-base">Invoices</CardTitle>
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  className="w-44"
+                                  placeholder="Search by ID"
+                                  value={financeInvoiceSearch}
+                                  onChange={(e) => setFinanceInvoiceSearch(e.target.value)}
+                                />
+                                <div className="w-36">
+                                  <SelectInput
+                                    options={["all", "Paid", "Pending", "Overdue", "Rejected"].map((status) => ({
+                                      label: status,
+                                      value: status,
+                                    }))}
+                                    placeholder="Status"
+                                    value={financeInvoiceStatus}
+                                    onSearch={() => {}}
+                                    onSelect={(val) =>
+                                      setFinanceInvoiceStatus(Array.isArray(val) ? (val[0] ?? "all") : val)
+                                    }
+                                    className="mt-0"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-sm">
+                              <div className="grid grid-cols-5 px-2 py-2 text-xs text-slate-500">
+                                <div>ID</div><div>Status</div><div>Date</div><div>Amount</div><div className="text-right">Actions</div>
+                              </div>
+                              {INVOICE_DUMMY_DATA.filter((inv: any) => {
+                                const matchesSearch = !financeInvoiceSearch.trim() || String(inv.referenceNo || inv.id).toLowerCase().includes(financeInvoiceSearch.toLowerCase());
+                                const matchesStatus = financeInvoiceStatus === "all" || String(inv.status) === financeInvoiceStatus;
+                                return matchesSearch && matchesStatus;
+                              }).map((inv: any) => (
+                                <div key={`finance-inv-${inv.id}`} className="grid grid-cols-5 items-center px-2 py-2 border-b last:border-b-0">
+                                  <div className="font-medium">{inv.referenceNo || inv.id}</div>
+                                  <div><Badge variant="secondary">{inv.status || "Unpaid"}</Badge></div>
+                                  <div>{inv.dated}</div>
+                                  <div className="text-slate-700">{inv.amount}</div>
+                                  <div className="text-right space-x-2">
+                                    <Button size="sm" variant="outline">View</Button>
+                                    <Button size="sm">Send</Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardHeader className="py-3">
+                            <CardTitle className="text-base">Create Invoice</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="rounded-md border bg-slate-50 p-3">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="flex flex-row items-start gap-3">
+                                  <div className="shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => invoiceLogoInputRef.current?.click()}
+                                      className="mt-6 flex h-[96px] w-[96px] cursor-pointer items-center justify-center rounded-md border border-dashed border-slate-400 bg-white text-xs text-slate-500 transition hover:border-brandGreen-500 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandGreen-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-brandGreen-500 dark:hover:bg-slate-800"
+                                      aria-label="Upload company logo"
+                                    >
+                                      {invoiceLogoPreview ? (
+                                        <img
+                                          src={invoiceLogoPreview}
+                                          alt="Company logo"
+                                          className="h-full w-full rounded-md object-cover"
+                                        />
+                                      ) : (
+                                        <span className="text-[11px] font-medium text-slate-400">Logo</span>
+                                      )}
+                                    </button>
+                                    <input
+                                      ref={invoiceLogoInputRef}
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        const reader = new FileReader();
+                                        reader.onload = () => {
+                                          setInvoiceLogoPreview(
+                                            typeof reader.result === "string" ? reader.result : null
+                                          );
+                                        };
+                                        reader.readAsDataURL(file);
+                                        e.currentTarget.value = "";
+                                      }}
+                                    />
+                                    {invoiceLogoPreview && (
+                                      <div className="mt-1 flex flex-col items-center justify-center gap-1">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => invoiceLogoInputRef.current?.click()}
+                                          className="h-6 rounded-md px-2 text-[11px] w-full"
+                                        >
+                                          Change
+                                        </Button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setInvoiceLogoPreview(null)}
+                                          className="rounded px-1.5 py-0.5 text-[11px] font-medium text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/30 dark:hover:text-rose-300"
+                                        >
+                                          Remove
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 space-y-2">
+                                    <div className="text-xs font-medium">From</div>
+                                    <Input placeholder="Company name" value={invoiceForm.from.name} onChange={(e) => setInvoiceForm((p) => ({ ...p, from: { ...p.from, name: e.target.value } }))} />
+                                    <Input placeholder="Address" value={invoiceForm.from.address1} onChange={(e) => setInvoiceForm((p) => ({ ...p, from: { ...p.from, address1: e.target.value } }))} />
+                                    <div className="grid grid-cols-3 gap-2">
+                                      <Input placeholder="City" value={invoiceForm.from.city} onChange={(e) => setInvoiceForm((p) => ({ ...p, from: { ...p.from, city: e.target.value } }))} />
+                                      <Input placeholder="State" value={invoiceForm.from.state} onChange={(e) => setInvoiceForm((p) => ({ ...p, from: { ...p.from, state: e.target.value } }))} />
+                                      <Input placeholder="Zip" value={invoiceForm.from.zip} onChange={(e) => setInvoiceForm((p) => ({ ...p, from: { ...p.from, zip: e.target.value } }))} />
+                                    </div>
+                                    <Input placeholder="Phone" value={invoiceForm.from.phone} onChange={(e) => setInvoiceForm((p) => ({ ...p, from: { ...p.from, phone: e.target.value } }))} />
+                                    <Input placeholder="Email" value={invoiceForm.from.email} onChange={(e) => setInvoiceForm((p) => ({ ...p, from: { ...p.from, email: e.target.value } }))} />
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                <div className="text-xs font-medium">To</div>
+                                <Input placeholder="Customer name" value={invoiceForm.to.name} onChange={(e) => setInvoiceForm((p) => ({ ...p, to: { ...p.to, name: e.target.value } }))} />
+                                <Input placeholder="Address" value={invoiceForm.to.address1} onChange={(e) => setInvoiceForm((p) => ({ ...p, to: { ...p.to, address1: e.target.value } }))} />
+                                <div className="grid grid-cols-3 gap-2">
+                                  <Input placeholder="City" value={invoiceForm.to.city} onChange={(e) => setInvoiceForm((p) => ({ ...p, to: { ...p.to, city: e.target.value } }))} />
+                                  <Input placeholder="State" value={invoiceForm.to.state} onChange={(e) => setInvoiceForm((p) => ({ ...p, to: { ...p.to, state: e.target.value } }))} />
+                                  <Input placeholder="Zip" value={invoiceForm.to.zip} onChange={(e) => setInvoiceForm((p) => ({ ...p, to: { ...p.to, zip: e.target.value } }))} />
+                                </div>
+                                <Input placeholder="Phone" value={invoiceForm.to.phone} onChange={(e) => setInvoiceForm((p) => ({ ...p, to: { ...p.to, phone: e.target.value } }))} />
+                                <Input placeholder="Email" value={invoiceForm.to.email} onChange={(e) => setInvoiceForm((p) => ({ ...p, to: { ...p.to, email: e.target.value } }))} />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-4 gap-2">
+                              <div>
+                                <Label className="text-xs">Invoice Number</Label>
+                                <Input className="mt-1" value={invoiceForm.invoiceNumber} onChange={(e) => setInvoiceForm((p) => ({ ...p, invoiceNumber: e.target.value }))} />
+                              </div>
+                              <div>
+                                <Label className="text-xs">Date</Label>
+                                <div className="mt-1">
+                                  <InputDatepicker
+                                    range={false}
+                                    value={{ startDate: fromYmdToDate(invoiceForm.date), endDate: fromYmdToDate(invoiceForm.date) }}
+                                    onChange={(value: DateValueType) => {
+                                      const selectedDate = value?.startDate ?? value?.endDate ?? null;
+                                      setInvoiceForm((p) => ({ ...p, date: toLocalYmd(selectedDate as string | Date | null) }));
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <Label className="text-xs">Due Date</Label>
+                                <div className="mt-1">
+                                  <InputDatepicker
+                                    range={false}
+                                    value={{ startDate: fromYmdToDate(invoiceForm.dueDate), endDate: fromYmdToDate(invoiceForm.dueDate) }}
+                                    onChange={(value: DateValueType) => {
+                                      const selectedDate = value?.startDate ?? value?.endDate ?? null;
+                                      setInvoiceForm((p) => ({ ...p, dueDate: toLocalYmd(selectedDate as string | Date | null) }));
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <Label className="text-xs">Payment Terms</Label>
+                                <div className="mt-1">
+                                  <SelectInput
+                                    options={["Due on receipt", "Net 7", "Net 15", "Net 30", "Net 45", "Net 60"].map((term) => ({
+                                      label: term,
+                                      value: term,
+                                    }))}
+                                    placeholder="Terms"
+                                    value={invoiceForm.paymentTerms}
+                                    onSearch={() => {}}
+                                    onSelect={(val) =>
+                                      setInvoiceForm((p) => ({
+                                        ...p,
+                                        paymentTerms: Array.isArray(val) ? (val[0] ?? "Net 30") : val,
+                                      }))
+                                    }
+                                    className="mt-0"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="text-xs font-medium">Line Items</div>
+                              {invoiceForm.items.map((it, idx) => (
+                                <div key={`inv-item-${idx}`} className="grid grid-cols-6 gap-2 items-center">
+                                  <Input className="col-span-3" placeholder="Description" value={it.description} onChange={(e) => setInvoiceForm((p) => { const arr = [...p.items]; arr[idx] = { ...arr[idx], description: e.target.value }; return { ...p, items: arr }; })} />
+                                  <Input className="col-span-1" type="number" placeholder="Qty" value={it.qty} onChange={(e) => setInvoiceForm((p) => { const arr = [...p.items]; arr[idx] = { ...arr[idx], qty: Number(e.target.value) || 0 }; return { ...p, items: arr }; })} />
+                                  <Input className="col-span-1" type="number" placeholder="Rate" value={it.rate} onChange={(e) => setInvoiceForm((p) => { const arr = [...p.items]; arr[idx] = { ...arr[idx], rate: Number(e.target.value) || 0 }; return { ...p, items: arr }; })} />
+                                  <div className="col-span-1 text-right text-sm">{formatCurrency(Number(it.qty || 0) * Number(it.rate || 0))}</div>
+                                </div>
+                              ))}
+                              <div>
+                                <Button size="sm" variant="outline" onClick={() => setInvoiceForm((p) => ({ ...p, items: [...p.items, { description: "", qty: 1, rate: 0 }] }))}>
+                                  Add item
+                                </Button>
+                                <Button size="sm" className="ml-2">Add from Catalog</Button>
+                                {(() => {
+                                  const price = invoiceForm.items.reduce((sum, it) => sum + Number(it.qty || 0) * Number(it.rate || 0), 0);
+                                  const cost = 0;
+                                  const margin = price > 0 ? ((price - cost) / price) * 100 : 0;
+                                  return (
+                                    <div className="inline-block ml-3 text-xs text-slate-600 align-middle">
+                                      Cost: {formatCurrency(cost)} • Price: {formatCurrency(price)} • Margin: {margin.toFixed(1)}%
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="rounded-md border p-3 space-y-2">
+                                <div className="text-sm font-medium">Payment Options</div>
+                                {([
+                                  ["creditCard", "Credit Card"],
+                                  ["debitCard", "Debit Card"],
+                                  ["check", "Check"],
+                                  ["cash", "Cash"],
+                                  ["bankTransfer", "Bank Transfer"],
+                                  ["paypal", "PayPal"],
+                                ] as const).map(([key, label]) => (
+                                  <div key={key} className="flex items-center justify-between text-sm">
+                                    <span>{label}</span>
+                                    <Switch
+                                      checked={invoiceForm.paymentMethods[key]}
+                                      onCheckedChange={(checked) =>
+                                        setInvoiceForm((p) => ({ ...p, paymentMethods: { ...p.paymentMethods, [key]: Boolean(checked) } }))
+                                      }
+                                    />
+                                  </div>
+                                ))}
+                                <div>
+                                  <Label className="text-xs">Deposit Amount</Label>
+                                  <Input
+                                    className="mt-1"
+                                    type="number"
+                                    value={invoiceForm.depositAmount}
+                                    onChange={(e) => setInvoiceForm((p) => ({ ...p, depositAmount: Number(e.target.value) || 0 }))}
+                                  />
+                                </div>
+                              </div>
+                              <div className="rounded-md border p-3 space-y-2 flex flex-col">
+                                <div className="text-sm font-medium">Financial Summary</div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span>Discount</span>
+                                  <Input className="h-8 w-20 text-right" type="number" value={invoiceForm.discountPct} onChange={(e) => setInvoiceForm((p) => ({ ...p, discountPct: Number(e.target.value) || 0 }))} />
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span>Tax</span>
+                                  <Input className="h-8 w-20 text-right" type="number" value={invoiceForm.taxPct} onChange={(e) => setInvoiceForm((p) => ({ ...p, taxPct: Number(e.target.value) || 0 }))} />
+                                </div>
+                                {(() => {
+                                  const t = calcTotal(invoiceForm.items, invoiceForm.discountPct, invoiceForm.taxPct);
+                                  return (
+                                    <div className="flex flex-col flex-1 justify-between">
+                                      <div>
+                                        <div className="flex items-center justify-between text-sm"><span>Subtotal</span><span>{formatCurrency(t.subtotal)}</span></div>
+                                        <div className="flex items-center justify-between text-sm"><span>Total</span><span className="font-medium">{formatCurrency(t.total)}</span></div>
+                                      </div>
+                                      <Button
+                                        className="w-full mt-2"
+                                        variant="outline"
+                                        onClick={() => {
+                                          const amount = Number(invoiceForm.depositAmount) > 0 ? Number(invoiceForm.depositAmount) : Number((t.total || 0) * 0.5);
+                                          if (!amount || amount <= 0) {
+                                            toast.error("Enter a valid deposit amount");
+                                            return;
+                                          }
+                                          toast.success(`Collected deposit ${formatCurrency(amount)} (demo)`);
+                                        }}
+                                      >
+                                        $ Collect Deposit (50%)
+                                      </Button>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                            <div className="rounded-md border p-3">
+                              <div className="mb-2 flex items-center justify-between">
+                                <div className="text-sm font-medium">Attachments</div>
+                                <Button type="button" variant="outline" size="sm" onClick={() => invoiceAttachmentInputRef.current?.click()}>
+                                  <Plus className="h-4 w-4 mr-1" />
+                                  Add More
+                                </Button>
+                              </div>
+                              <input
+                                ref={invoiceAttachmentInputRef}
+                                type="file"
+                                multiple
+                                className="hidden"
+                                onChange={handleInvoiceAttachmentInputChange}
+                              />
+                              {invoiceAttachments.length === 0 ? (
+                                <div
+                                  onDragOver={(event) => {
+                                    event.preventDefault();
+                                    setIsInvoiceAttachmentDragOver(true);
+                                  }}
+                                  onDragLeave={() => setIsInvoiceAttachmentDragOver(false)}
+                                  onDrop={handleInvoiceAttachmentDrop}
+                                  className={cn(
+                                    "rounded-lg border-2 border-dashed p-6 text-center transition-colors",
+                                    isInvoiceAttachmentDragOver ? "border-blue-500 bg-blue-50" : "border-slate-300 bg-slate-50"
+                                  )}
+                                >
+                                  <Upload className="w-6 h-6 mx-auto mb-2 text-slate-500" />
+                                  <p className="text-sm font-medium text-slate-700">Drag and drop files here</p>
+                                  <p className="text-xs text-slate-500 my-2">or</p>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => invoiceAttachmentInputRef.current?.click()}
+                                  >
+                                    Upload Files
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="min-w-0">
+                                  <div className="relative flex-1 min-w-0 overflow-hidden">
+                                    {invoiceAttachmentScrollState.canScrollLeft && (
+                                      <button
+                                        type="button"
+                                        className="absolute left-0 top-[3.5rem] -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                                        onClick={() => scrollInvoiceAttachmentList("left")}
+                                        disabled={!invoiceAttachmentScrollState.canScrollLeft}
+                                      >
+                                        <ChevronLeft className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                    <div
+                                      ref={invoiceAttachmentListRef}
+                                      className={`w-full overflow-x-auto pb-1 cursor-grab active:cursor-grabbing select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${invoiceAttachmentScrollState.canScrollLeft ? "pl-8" : "pl-0"} ${invoiceAttachmentScrollState.canScrollRight ? "pr-8" : "pr-0"}`}
+                                      onMouseDown={startInvoiceAttachmentListDrag}
+                                      onMouseMove={handleInvoiceAttachmentListDrag}
+                                      onMouseUp={endInvoiceAttachmentListDrag}
+                                      onMouseLeave={endInvoiceAttachmentListDrag}
+                                      onDragStart={(event) => event.preventDefault()}
+                                    >
+                                      <div className="flex min-w-max gap-3">
+                                        {invoiceAttachments.map((file) => {
+                                          const attachmentKey = getAttachmentKey(file);
+                                          return (
+                                            <div key={attachmentKey} className="w-28 shrink-0">
+                                              <div className="relative w-28 h-28 rounded-md border bg-slate-50 overflow-hidden flex items-center justify-center">
+                                                <button
+                                                  type="button"
+                                                  className="absolute right-1 top-1 z-10 h-5 w-5 rounded-full bg-white/95 border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-white"
+                                                  onMouseDown={(event) => event.stopPropagation()}
+                                                  onClick={(event) => {
+                                                    event.preventDefault();
+                                                    event.stopPropagation();
+                                                    removeInvoiceAttachmentByKey(attachmentKey);
+                                                  }}
+                                                  aria-label={`Remove ${file.name}`}
+                                                >
+                                                  <X className="h-3 w-3" />
+                                                </button>
+                                                {file.type.startsWith("image/") && invoiceAttachmentPreviewUrls[attachmentKey] ? (
+                                                  <img
+                                                    src={invoiceAttachmentPreviewUrls[attachmentKey]}
+                                                    alt={file.name}
+                                                    className="h-full w-full object-cover"
+                                                    draggable={false}
+                                                  />
+                                                ) : (
+                                                  <div className="flex flex-col items-center gap-1 text-slate-600">
+                                                    {getAttachmentIcon(file)}
+                                                    <span className="text-[10px] uppercase font-medium">{file.name.split(".").pop() ?? "file"}</span>
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <p className="mt-1 text-xs truncate">{file.name}</p>
+                                              <p className="text-[11px] text-slate-500">{formatAttachmentSize(file.size)}</p>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                    {invoiceAttachmentScrollState.canScrollRight && (
+                                      <button
+                                        type="button"
+                                        className="absolute right-0 top-[3.5rem] -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                                        onClick={() => scrollInvoiceAttachmentList("right")}
+                                        disabled={!invoiceAttachmentScrollState.canScrollRight}
+                                      >
+                                        <ChevronRight className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                              <div className="text-xs text-slate-500 mt-1">
+                                {invoiceAttachments.length
+                                  ? `${invoiceAttachments.length} file(s) selected`
+                                  : "Images, PDFs, Word docs (max 10MB each)"}
+                              </div>
+                            </div>
+                            <div className="rounded-md space-y-2">
+                              <Label className="text-xs">Notes</Label>
+                              <Textarea rows={3} value={invoiceForm.notes} onChange={(e) => setInvoiceForm((p) => ({ ...p, notes: e.target.value }))} />
+                              <Label className="text-xs">Terms & Conditions</Label>
+                              <Textarea rows={3} value={invoiceForm.terms} onChange={(e) => setInvoiceForm((p) => ({ ...p, terms: e.target.value }))} />
+                            </div>
+                            <div className="rounded-md border p-3 bg-slate-50">
+                              <div className="text-sm font-medium mb-2">Preview</div>
+                              <div className="text-xs space-y-1">
+                                <div className="font-semibold">INVOICE {invoiceForm.invoiceNumber}</div>
+                                <div>Date: {invoiceForm.date} • Due: {invoiceForm.dueDate}</div>
+                                <div>Bill To: {invoiceForm.to.name || "—"}</div>
+                                <div>{[invoiceForm.to.address1, invoiceForm.to.city, invoiceForm.to.state, invoiceForm.to.zip].filter(Boolean).join(", ") || "—"}</div>
+                                {(() => {
+                                  const t = calcTotal(invoiceForm.items, invoiceForm.discountPct, invoiceForm.taxPct);
+                                  return <div className="font-medium">Total: {formatCurrency(t.total)}</div>;
+                                })()}
+                              </div>
+                            </div>
+                            <div className="rounded-md border p-3">
+                              <div className="text-sm font-medium mb-2">Send Invoice</div>
+                              <div className="flex flex-row gap-2">
+                                <div className="grid grid-cols-2 gap-2 flex flex-1">
+                                  <div>
+                                    <Label className="text-xs">Email</Label>
+                                    <Input
+                                      className="mt-1"
+                                      value={invoiceForm.to.email}
+                                      onChange={(e) => setInvoiceForm((p) => ({ ...p, to: { ...p.to, email: e.target.value } }))}
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs">Phone (SMS)</Label>
+                                    <Input
+                                      className="mt-1"
+                                      value={invoiceForm.to.phone}
+                                      onChange={(e) => setInvoiceForm((p) => ({ ...p, to: { ...p.to, phone: e.target.value } }))}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-end gap-2 mt-7">
+                                  <Button variant="outline" onClick={() => toast.success("Invoice sent via SMS (demo)")}>Send SMS</Button>
+                                  <Button onClick={() => toast.success("Invoice sent via Email (demo)")}>Send Email</Button>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <div className="fixed bottom-0 left-0 right-0 bg-white">
+                          <div className="flex items-center justify-end gap-2 py-3 px-6 border-t">
+                            <Button
+                              variant="outline"
+                              onClick={() =>
+                                setInvoiceForm((p) => ({
+                                  ...p,
+                                  invoiceNumber: `INV-${Date.now()}`,
+                                  date: todayStr,
+                                  dueDate: plus30Str,
+                                  paymentTerms: "Net 30",
+                                  items: [{ description: "", qty: 1, rate: 0 }],
+                                  discountPct: 0,
+                                  taxPct: 8.25,
+                                  depositAmount: 0,
+                                  paymentMethods: { creditCard: true, debitCard: true, check: true, cash: true, bankTransfer: true, paypal: true },
+                                  notes: "",
+                                  terms: "Payment is due within 30 days of invoice date.",
+                                }))
+                              }
+                            >
+                              Reset
+                            </Button>
+                            <Button onClick={() => toast.success("Invoice form saved (demo)")}>Save & Request Signature</Button>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Tax:</span>
-                            <span className="text-sm font-medium">$0.00</span>
-                          </div>
-                          <div className="flex justify-between border-t pt-2">
-                            <span className="font-medium">Total:</span>
-                            <span className="font-bold">${selectedJob.revenue}</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2">
-                            <CreditCard className="w-5 h-5" />
-                            Payment History
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-sm text-gray-500">No payments recorded yet.</div>
-                        </CardContent>
-                      </Card>
-                    </div>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="estimates" className="mt-4 space-y-4">
+                        <Card>
+                          <CardHeader className="py-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <CardTitle className="text-base">Estimates</CardTitle>
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  className="w-44"
+                                  placeholder="Search by ID"
+                                  value={financeEstimateSearch}
+                                  onChange={(e) => setFinanceEstimateSearch(e.target.value)}
+                                />
+                                <div className="w-36">
+                                  <SelectInput
+                                    options={["all", "Draft", "Sent", "Approved", "Declined"].map((status) => ({
+                                      label: status,
+                                      value: status,
+                                    }))}
+                                    placeholder="Status"
+                                    value={financeEstimateStatus}
+                                    onSearch={() => {}}
+                                    onSelect={(val) =>
+                                      setFinanceEstimateStatus(Array.isArray(val) ? (val[0] ?? "all") : val)
+                                    }
+                                    className="mt-0"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-sm">
+                              <div className="grid grid-cols-6 px-2 py-2 text-xs text-slate-500">
+                                <div>ID</div><div>Status</div><div>Date</div><div>Valid Until</div><div>Amount</div><div className="text-right">Actions</div>
+                              </div>
+                              {ESTIMATE_DUMMY_DATA.filter((est) => {
+                                const matchesSearch = !financeEstimateSearch.trim() || est.id.toLowerCase().includes(financeEstimateSearch.toLowerCase());
+                                const matchesStatus = financeEstimateStatus === "all" || est.status === financeEstimateStatus;
+                                return matchesSearch && matchesStatus;
+                              }).map((est) => (
+                                <div key={`finance-est-${est.id}`} className="grid grid-cols-6 items-center px-2 py-2 border-b last:border-b-0">
+                                  <div className="font-medium">{est.id}</div>
+                                  <div><Badge variant="secondary">{est.status}</Badge></div>
+                                  <div>{est.dated}</div>
+                                  <div>{est.validUntil}</div>
+                                  <div className="text-slate-700">{est.amount}</div>
+                                  <div className="text-right space-x-2">
+                                    <Button size="sm" variant="outline">View</Button>
+                                    <Button size="sm">Convert</Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardHeader className="py-3">
+                            <CardTitle className="text-base">Create Estimate</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="grid grid-cols-4 gap-2">
+                              <div>
+                                <Label className="text-xs">Estimate Number</Label>
+                                <Input className="mt-1" value={estimateForm.estimateNumber} onChange={(e) => setEstimateForm((p) => ({ ...p, estimateNumber: e.target.value }))} />
+                              </div>
+                              <div>
+                                <Label className="text-xs">Date</Label>
+                                <div className="mt-1">
+                                  <InputDatepicker
+                                    range={false}
+                                    value={{ startDate: fromYmdToDate(estimateForm.date), endDate: fromYmdToDate(estimateForm.date) }}
+                                    onChange={(value: DateValueType) => {
+                                      const selectedDate = value?.startDate ?? value?.endDate ?? null;
+                                      setEstimateForm((p) => ({ ...p, date: toLocalYmd(selectedDate as string | Date | null) }));
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <Label className="text-xs">Valid Until</Label>
+                                <div className="mt-1">
+                                  <InputDatepicker
+                                    range={false}
+                                    value={{ startDate: fromYmdToDate(estimateForm.validUntil), endDate: fromYmdToDate(estimateForm.validUntil) }}
+                                    onChange={(value: DateValueType) => {
+                                      const selectedDate = value?.startDate ?? value?.endDate ?? null;
+                                      setEstimateForm((p) => ({ ...p, validUntil: toLocalYmd(selectedDate as string | Date | null) }));
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <Label className="text-xs">Payment Terms</Label>
+                                <div className="mt-1">
+                                  <SelectInput
+                                    options={["Due on receipt", "Net 7", "Net 15", "Net 30", "Net 45", "Net 60"].map((term) => ({
+                                      label: term,
+                                      value: term,
+                                    }))}
+                                    placeholder="Terms"
+                                    value={estimateForm.paymentTerms}
+                                    onSearch={() => {}}
+                                    onSelect={(val) =>
+                                      setEstimateForm((p) => ({
+                                        ...p,
+                                        paymentTerms: Array.isArray(val) ? (val[0] ?? "Net 30") : val,
+                                      }))
+                                    }
+                                    className="mt-0"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="text-xs font-medium">Line Items</div>
+                              {estimateForm.items.map((it, idx) => (
+                                <div key={`est-item-${idx}`} className="grid grid-cols-6 gap-2 items-center">
+                                  <Input className="col-span-3" placeholder="Description" value={it.description} onChange={(e) => setEstimateForm((p) => { const arr = [...p.items]; arr[idx] = { ...arr[idx], description: e.target.value }; return { ...p, items: arr }; })} />
+                                  <Input className="col-span-1" type="number" placeholder="Qty" value={it.qty} onChange={(e) => setEstimateForm((p) => { const arr = [...p.items]; arr[idx] = { ...arr[idx], qty: Number(e.target.value) || 0 }; return { ...p, items: arr }; })} />
+                                  <Input className="col-span-1" type="number" placeholder="Rate" value={it.rate} onChange={(e) => setEstimateForm((p) => { const arr = [...p.items]; arr[idx] = { ...arr[idx], rate: Number(e.target.value) || 0 }; return { ...p, items: arr }; })} />
+                                  <div className="col-span-1 text-right text-sm">{formatCurrency(Number(it.qty || 0) * Number(it.rate || 0))}</div>
+                                </div>
+                              ))}
+                              <div>
+                                <Button size="sm" variant="outline" onClick={() => setEstimateForm((p) => ({ ...p, items: [...p.items, { description: "", qty: 1, rate: 0 }] }))}>
+                                  Add item
+                                </Button>
+                                <Button size="sm" className="ml-2">Add from Catalog</Button>
+                                {(() => {
+                                  const price = estimateForm.items.reduce((sum, it) => sum + Number(it.qty || 0) * Number(it.rate || 0), 0);
+                                  const cost = 0;
+                                  const margin = price > 0 ? ((price - cost) / price) * 100 : 0;
+                                  return (
+                                    <div className="inline-block ml-3 text-xs text-slate-600 align-middle">
+                                      Cost: {formatCurrency(cost)} • Price: {formatCurrency(price)} • Margin: {margin.toFixed(1)}%
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="rounded-md border p-3 space-y-2">
+                                <div className="text-sm font-medium">Options</div>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                  {([
+                                    ["creditCard", "Credit Card"],
+                                    ["debitCard", "Debit Card"],
+                                    ["check", "Check"],
+                                    ["cash", "Cash"],
+                                    ["bankTransfer", "Bank Transfer"],
+                                    ["paypal", "PayPal"],
+                                  ] as const).map(([key, label]) => (
+                                    <label key={key} className="flex items-center gap-2">
+                                      <input
+                                        type="checkbox"
+                                        checked={estimateForm.paymentMethods[key]}
+                                        onChange={(e) =>
+                                          setEstimateForm((p) => ({
+                                            ...p,
+                                            paymentMethods: { ...p.paymentMethods, [key]: e.target.checked },
+                                          }))
+                                        }
+                                      />
+                                      {label}
+                                    </label>
+                                  ))}
+                                </div>
+                                <label className="flex items-center gap-2 mt-2 text-sm">
+                                  <input
+                                    type="checkbox"
+                                    checked={estimateForm.requireSignature}
+                                    onChange={(e) => setEstimateForm((p) => ({ ...p, requireSignature: e.target.checked }))}
+                                  />
+                                  Require Signature
+                                </label>
+                              </div>
+                              <div className="rounded-md border p-3 space-y-2">
+                                <div className="text-sm font-medium">Financial Summary</div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span>Discount</span>
+                                  <Input className="h-8 w-20 text-right" type="number" value={estimateForm.discountPct} onChange={(e) => setEstimateForm((p) => ({ ...p, discountPct: Number(e.target.value) || 0 }))} />
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span>Tax</span>
+                                  <Input className="h-8 w-20 text-right" type="number" value={estimateForm.taxPct} onChange={(e) => setEstimateForm((p) => ({ ...p, taxPct: Number(e.target.value) || 0 }))} />
+                                </div>
+                                {(() => {
+                                  const t = calcTotal(estimateForm.items, estimateForm.discountPct, estimateForm.taxPct);
+                                  return (
+                                    <>
+                                      <div className="flex items-center justify-between text-sm"><span>Subtotal</span><span>{formatCurrency(t.subtotal)}</span></div>
+                                      <div className="flex items-center justify-between text-sm"><span>Total</span><span className="font-medium">{formatCurrency(t.total)}</span></div>
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                            <div>
+                              <Label className="text-xs">Notes</Label>
+                              <Textarea rows={4} value={estimateForm.notes} onChange={(e) => setEstimateForm((p) => ({ ...p, notes: e.target.value }))} />
+                            </div>
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                onClick={() =>
+                                  setEstimateForm((p) => ({
+                                    ...p,
+                                    estimateNumber: `EST-${Date.now()}`,
+                                    date: todayStr,
+                                    validUntil: plus30Str,
+                                    paymentTerms: "Net 30",
+                                    items: [{ description: "", qty: 1, rate: 0 }],
+                                    discountPct: 0,
+                                    taxPct: 8.25,
+                                    paymentMethods: { creditCard: true, debitCard: true, check: true, cash: true, bankTransfer: true, paypal: true },
+                                    requireSignature: true,
+                                    notes: "",
+                                  }))
+                                }
+                              >
+                                Reset
+                              </Button>
+                              <Button onClick={() => toast.success("Estimate form saved (demo)")}>Save & Request Signature</Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+                    </Tabs>
                   </TabsContent>
 
                   <TabsContent value="nearest-jobs" className="flex-1 min-h-0 overflow-hidden flex flex-col p-4 data-[state=inactive]:hidden data-[state=active]:flex">
-                    <div className="flex-1 min-h-0 flex flex-col">
-                      <div className="relative mb-3">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input
-                          placeholder="Search jobs, clients, phone, email..."
-                          value={nearestJobsSearchQuery}
-                          onChange={(e) => {
-                            setNearestJobsSearchQuery(e.target.value);
-                            setNearestJobsPage(1);
-                          }}
-                          className="pl-9 w-full max-w-xs"
-                        />
-                      </div>
-                      <Table
-                        key="nearest-jobs"
-                        rows={nearestPaged}
-                        mobileRows={nearestJobsFiltered.slice(0, nearestJobsPage * nearestJobsEntriesPerPage)}
-                        columns={nearestJobsColumns}
-                        pageSize={nearestJobsEntriesPerPage}
-                        currentPage={nearestJobsPage}
-                        totalPages={nearestTotalPages}
-                        totalCount={nearestJobsFiltered.length}
-                        onPageSizeChange={(v) => {
-                          setNearestJobsEntriesPerPage(Number(v));
-                          setNearestJobsPage(1);
-                        }}
-                        onPageChange={setNearestJobsPage}
-                        maxHeightClassName="max-h-[calc(100vh-320px)]"
-                        className="flex-1 flex flex-col"
-                        tableClassName="flex-1"
-                        lockedColumns={0}
-                      />
-                    </div>
+                    <div className="text-sm text-slate-500">Nearest Jobs moved to Details below Assignment.</div>
                   </TabsContent>
                 </Tabs>
               </div>
@@ -1783,7 +3031,16 @@ export function JobForm(props: JobFormProps) {
               <div className="space-y-3">
                 <div>
                   <Label>Date</Label>
-                  <Input type="date" value={addPaymentForm.date} onChange={(e) => setAddPaymentForm((prev) => ({ ...prev, date: e.target.value }))} className="mt-1" />
+                  <div className="mt-1">
+                    <InputDatepicker
+                      range={false}
+                      value={{ startDate: fromYmdToDate(addPaymentForm.date), endDate: fromYmdToDate(addPaymentForm.date) }}
+                      onChange={(value: DateValueType) => {
+                        const selectedDate = value?.startDate ?? value?.endDate ?? null;
+                        setAddPaymentForm((prev) => ({ ...prev, date: toLocalYmd(selectedDate as string | Date | null) }));
+                      }}
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label>Status</Label>

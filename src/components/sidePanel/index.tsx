@@ -9,6 +9,7 @@ import React, {
   useState,
 } from 'react'
 import { X } from 'lucide-react'
+import { useRouter } from 'next/router'
 
 type WidthPreset = 'sm' | 'md' | 'lg' | 'xl'
 
@@ -84,6 +85,7 @@ export function SidePanelProvider({
   children,
   className,
 }: SidePanelProviderProps) {
+  const router = useRouter()
   const [state, setState] = useState<SidePanelState>({
     isOpen: false,
     options: defaultOptions,
@@ -115,6 +117,10 @@ export function SidePanelProvider({
       bridge.close = warnNotReady
     }
   }, [open, close])
+
+  useEffect(() => {
+    close()
+  }, [router.asPath, close])
 
   return (
     <SidePanelContext.Provider value={{ state, open, close }}>
