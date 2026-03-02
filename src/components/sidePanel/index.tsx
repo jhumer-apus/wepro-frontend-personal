@@ -9,11 +9,13 @@ import React, {
   useState,
 } from 'react'
 import { X } from 'lucide-react'
+import { useRouter } from 'next/router'
 
 type WidthPreset = 'sm' | 'md' | 'lg' | 'xl'
 
 type SidePanelOptions = {
   title?: React.ReactNode
+  headerButton?: React.ReactNode | (() => React.ReactNode)
   content?: React.ReactNode | (() => React.ReactNode)
   footer?: React.ReactNode | (() => React.ReactNode)
   width?: WidthPreset | string | number
@@ -23,6 +25,7 @@ type SidePanelState = {
   isOpen: boolean
   options: {
     title?: React.ReactNode
+    headerButton?: React.ReactNode | (() => React.ReactNode)
     content?: React.ReactNode | (() => React.ReactNode)
     footer?: React.ReactNode | (() => React.ReactNode)
     width: WidthPreset | string | number
@@ -44,6 +47,7 @@ const WIDTH_MAP: Record<WidthPreset, string> = {
 
 const defaultOptions: SidePanelState['options'] = {
   title: undefined,
+  headerButton: null,
   content: null,
   footer: null,
   width: 'md',
@@ -81,6 +85,7 @@ export function SidePanelProvider({
   children,
   className,
 }: SidePanelProviderProps) {
+  const router = useRouter()
   const [state, setState] = useState<SidePanelState>({
     isOpen: false,
     options: defaultOptions,
@@ -113,6 +118,10 @@ export function SidePanelProvider({
     }
   }, [open, close])
 
+  useEffect(() => {
+    close()
+  }, [router.asPath, close])
+
   return (
     <SidePanelContext.Provider value={{ state, open, close }}>
       <div className={className}>{children}</div>
@@ -138,6 +147,7 @@ export function SidePanelViewport({
   )
   const panelContent = renderContent(state.options.content)
   const panelFooter = renderContent(state.options.footer)
+  const panelHeaderButton = renderContent(state.options.headerButton)
 
   const gridStyle: React.CSSProperties = useMemo(
     () => ({
@@ -173,14 +183,17 @@ export function SidePanelViewport({
             <div className="text-base font-semibold text-neutral-900 dark:text-neutral-50">
               {state.options.title}
             </div>
-            <button
-              type="button"
-              onClick={close}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 text-neutral-700 transition hover:bg-neutral-200 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
-              aria-label="Close side panel"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              {panelHeaderButton}
+              <button
+                type="button"
+                onClick={close}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 text-neutral-700 transition hover:bg-neutral-200 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+                aria-label="Close side panel"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
           <div className="flex-1 overflow-auto overflow-x-visible px-4 py-4 text-neutral-900 dark:text-neutral-100">
             {panelContent}

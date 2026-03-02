@@ -10,7 +10,9 @@ import {
   ChevronRight,
   DollarSign,
   Eye,
+  Maximize2,
   MapPin,
+  Minimize2,
   MousePointer2,
   Plus,
   Route,
@@ -18,9 +20,11 @@ import {
   Search,
   Sparkles,
   Star,
+  X,
 } from 'lucide-react'
 import { Input } from '@/src/components/ui/input'
 import { Button } from '@/src/components/ui/button'
+import { Dialog, DialogContent } from '@/src/components/ui/dialog'
 import InputDatepicker from '@/src/components/input/datepicker'
 import SelectInput from '@/src/components/input/select'
 import SidePanel from '@/src/components/sidePanel'
@@ -332,6 +336,11 @@ const mapMarkers = [
   })),
 ]
 
+type MapInstance = {
+  getCenter: () => { lat: () => number; lng: () => number } | null | undefined
+  setCenter: (position: { lat: number; lng: number }) => void
+}
+
 export default function LiveMapIndex(): React.JSX.Element {
   const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -383,10 +392,9 @@ export default function LiveMapIndex(): React.JSX.Element {
   const jobTypePillsRef = useRef<HTMLDivElement | null>(null)
   const hoveredJobHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hoveredTechHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const mapRef = useRef<{
-    getCenter: () => { lat: () => number; lng: () => number } | null | undefined
-    setCenter: (position: { lat: number; lng: number }) => void
-  } | null>(null)
+  const inlineMapRef = useRef<MapInstance | null>(null)
+  const modalMapRef = useRef<MapInstance | null>(null)
+  const [showMapModal, setShowMapModal] = useState(false)
   const [isDraggingStatusPills, setIsDraggingStatusPills] = useState(false)
   const [isDraggingJobTypePills, setIsDraggingJobTypePills] = useState(false)
   const statusDragStartX = useRef(0)
@@ -421,10 +429,14 @@ export default function LiveMapIndex(): React.JSX.Element {
   )
 
   const animateMapPan = (target: { lat: number; lng: number }) => {
-    if (!mapRef.current) return
-    const currentCenter = mapRef.current.getCenter()
+    const activeMap = showMapModal
+      ? (modalMapRef.current ?? inlineMapRef.current)
+      : (inlineMapRef.current ?? modalMapRef.current)
+    if (!activeMap) return
+
+    const currentCenter = activeMap.getCenter()
     if (!currentCenter) {
-      mapRef.current.setCenter(target)
+      activeMap.setCenter(target)
       return
     }
 
@@ -434,10 +446,9 @@ export default function LiveMapIndex(): React.JSX.Element {
     const startTime = performance.now()
 
     const step = (now: number) => {
-      if (!mapRef.current) return
       const progress = Math.min((now - startTime) / durationMs, 1)
       const eased = 1 - (1 - progress) ** 3
-      mapRef.current.setCenter({
+      activeMap.setCenter({
         lat: startLat + (target.lat - startLat) * eased,
         lng: startLng + (target.lng - startLng) * eased,
       })
@@ -685,7 +696,7 @@ export default function LiveMapIndex(): React.JSX.Element {
   }, [showFilters])
 
   useEffect(() => {
-    if (!selectedQueueJobData || !mapRef.current) return
+    if (!selectedQueueJobData) return
     animateMapPan({
       lat: selectedQueueJobData.lat,
       lng: selectedQueueJobData.lng,
@@ -693,7 +704,7 @@ export default function LiveMapIndex(): React.JSX.Element {
   }, [selectedQueueJobData])
 
   useEffect(() => {
-    if (!selectedTechnicianData || !mapRef.current) return
+    if (!selectedTechnicianData) return
     animateMapPan({
       lat: selectedTechnicianData.lat,
       lng: selectedTechnicianData.lng,
@@ -711,6 +722,272 @@ export default function LiveMapIndex(): React.JSX.Element {
     setDateRangeValue(value)
   }
 
+  const renderMapCanvas = (isModalView: boolean) => (
+    <div
+      className={`relative flex-1 overflow-hidden ${
+        isModalView
+          ? 'h-full border-0 rounded-none'
+          : 'rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
+      }`}
+    >
+      <div className="absolute top-4 left-1/2 z-20 -translate-x-1/2">
+        <Button
+          type="button"
+          variant="outline"
+          className="h-8 rounded-full border-slate-300 bg-white/95 px-4 text-xs font-semibold shadow-sm backdrop-blur dark:border-slate-600 dark:bg-slate-900/90"
+          onClick={() => {
+            if (isModalView) {
+              setShowMapModal(false)
+              return
+            }
+            setShowMapModal(true)
+          }}
+        >
+          {isModalView ? (
+            <Minimize2 className="mr-1.5 h-3.5 w-3.5" />
+          ) : (
+            <Maximize2 className="mr-1.5 h-3.5 w-3.5" />
+          )}
+          {isModalView ? 'Exit Full Screen' : 'Full Screen'}
+        </Button>
+      </div>
+      <GoogleMap
+        mapContainerStyle={liveMapContainerStyle}
+        center={liveMapCenter}
+        zoom={12}
+        onLoad={map => {
+          if (isModalView) {
+            modalMapRef.current = map
+            return
+          }
+          inlineMapRef.current = map
+        }}
+        onUnmount={() => {
+          if (isModalView) {
+            modalMapRef.current = null
+            return
+          }
+          inlineMapRef.current = null
+        }}
+        options={{
+          mapTypeId: 'roadmap',
+          disableDefaultUI: false,
+          zoomControl: true,
+          streetViewControl: false,
+          fullscreenControl: false,
+          mapTypeControl: false,
+          styles: mounted && resolvedTheme === 'dark' ? darkMapStyles : [],
+        }}
+      >
+        {mapMarkers.map(marker => (
+          marker.kind === 'job' ? (
+            <Marker
+              key={marker.id}
+              position={{ lat: marker.lat, lng: marker.lng }}
+              onMouseOver={() => {
+                cancelHoveredJobHide()
+                const hoveredJob = JOB_QUEUE_ITEMS.find(job => job.jobId === marker.id)
+                if (hoveredJob) setHoveredQueueJob(hoveredJob.title)
+              }}
+              onMouseOut={scheduleHoveredJobHide}
+            />
+          ) : (
+            <OverlayView
+              key={marker.id}
+              position={{ lat: marker.lat, lng: marker.lng }}
+              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            >
+              <div
+                className="-translate-x-1/2 -translate-y-1/2"
+                onMouseEnter={() => {
+                  cancelHoveredTechHide()
+                  const hoveredTech = TECHNICIAN_ITEMS.find(
+                    tech => `tech-${tech.initials}` === marker.id
+                  )
+                  if (hoveredTech) {
+                    setHoveredQueueJob(null)
+                    setHoveredTechnician(hoveredTech.name)
+                  }
+                }}
+                onMouseLeave={scheduleHoveredTechHide}
+              >
+                <div className="flex h-8 w-12 items-center justify-center rounded-full bg-white  shadow-md ring-2 ring-brandGreen-900 dark:ring-slate-900/90">
+                  <Car className="h-8 w-8 text-brandGreen-900" />
+                </div>
+              </div>
+            </OverlayView>
+          )
+        ))}
+        {hoveredQueueJobData && (
+          <OverlayView
+            position={{ lat: hoveredQueueJobData.lat, lng: hoveredQueueJobData.lng }}
+            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+          >
+            <div
+              className="-translate-x-1/2 -translate-y-[calc(100%+20px)]"
+              onMouseEnter={cancelHoveredJobHide}
+              onMouseLeave={scheduleHoveredJobHide}
+            >
+              <div className="w-[330px] rounded-xl border border-slate-200 bg-white p-4 text-slate-700 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <p className="text-sm font-semibold leading-5 text-slate-900 dark:text-slate-100">
+                    {hoveredQueueJobData.title}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setHoveredQueueJob(null)}
+                    className="text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200"
+                    aria-label="Close tooltip"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="space-y-1.5 text-xs">
+                  <p><span className="font-semibold">Job ID:</span> {hoveredQueueJobData.jobId}</p>
+                  <p><span className="font-semibold">Status:</span> {hoveredQueueJobData.statusBadge?.label ?? 'Scheduled'}</p>
+                  <p><span className="font-semibold">Client:</span> {hoveredQueueJobData.customer}</p>
+                  <p><span className="font-semibold">Company:</span> {hoveredQueueJobData.company}</p>
+                  <p><span className="font-semibold">Address:</span> {hoveredQueueJobData.address}</p>
+                </div>
+
+                <div className="mt-4 flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-8 flex-1 rounded-sm border-brandGreen-500 text-xs text-brandGreen-900 hover:bg-brandGreen-50 dark:border-brandGreen-700 dark:text-brandGreen-300"
+                    onClick={() =>
+                      openJobQuickView({
+                        jobId: hoveredQueueJobData.jobId,
+                        title: hoveredQueueJobData.title,
+                        customer: hoveredQueueJobData.customer,
+                        company: hoveredQueueJobData.company,
+                        address: hoveredQueueJobData.address,
+                        time: hoveredQueueJobData.time,
+                        value: hoveredQueueJobData.value,
+                        type: hoveredQueueJobData.type,
+                        status: hoveredQueueJobData.statusBadge?.label,
+                        assignedTo: hoveredQueueJobData.assignedTo,
+                        lat: hoveredQueueJobData.lat,
+                        lng: hoveredQueueJobData.lng,
+                      })
+                    }
+                  >
+                    Quick View
+                  </Button>
+                  <Button
+                    type="button"
+                    className="h-8 flex-1 rounded-sm bg-brandGreen-900 text-xs text-white hover:bg-brandGreen-800"
+                    onClick={() => openGoogleMapsLocation(hoveredQueueJobData.lat, hoveredQueueJobData.lng)}
+                  >
+                    View Location
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </OverlayView>
+        )}
+        {hoveredTechnicianData && (
+          <OverlayView
+            position={{ lat: hoveredTechnicianData.lat, lng: hoveredTechnicianData.lng }}
+            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+          >
+            <div
+              className="-translate-x-1/2 -translate-y-[calc(100%+20px)]"
+              onMouseEnter={cancelHoveredTechHide}
+              onMouseLeave={scheduleHoveredTechHide}
+            >
+              <div className="w-[330px] rounded-xl border border-slate-200 bg-white p-4 text-slate-700 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <p className="text-sm font-semibold leading-5 text-slate-900 dark:text-slate-100">
+                    {hoveredTechnicianData.jobs.length} Jobs
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setHoveredTechnician(null)}
+                    className="text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200"
+                    aria-label="Close tooltip"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="space-y-1.5 text-xs">
+                  <p><span className="font-semibold">Job ID:</span> {hoveredTechnicianData.jobId}</p>
+                  <p><span className="font-semibold">Technician:</span> {hoveredTechnicianData.name} jobs</p>
+                  <p><span className="font-semibold">Status:</span> {hoveredTechnicianData.status}</p>
+                  <p><span className="font-semibold">Client:</span> {hoveredTechnicianData.client}</p>
+                  <p><span className="font-semibold">Company:</span> {hoveredTechnicianData.company}</p>
+                  <p><span className="font-semibold">Address:</span> {hoveredTechnicianData.address}</p>
+                </div>
+
+                <div className="mt-4 flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-8 flex-1 rounded-sm border-brandGreen-500 text-xs text-brandGreen-900 hover:bg-brandGreen-50 dark:border-brandGreen-700 dark:text-brandGreen-300"
+                    onClick={() => openTechnicianQuickView(hoveredTechnicianData)}
+                  >
+                    Quick View
+                  </Button>
+                  <Button
+                    type="button"
+                    className="h-8 flex-1 rounded-sm bg-brandGreen-900 text-xs text-white hover:bg-brandGreen-800"
+                    onClick={() => openGoogleMapsLocation(hoveredTechnicianData.lat, hoveredTechnicianData.lng)}
+                  >
+                    View Location
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </OverlayView>
+        )}
+      </GoogleMap>
+      {isJobsQueueCollapsed && (
+        <div className="absolute top-4 left-4">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 rounded-full border-slate-300 dark:border-slate-600 w-[140px]"
+            aria-label="Expand jobs queue"
+            onClick={() => setIsJobsQueueCollapsed(false)}
+          >
+            <p className="font-semibold">Jobs</p>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+      {isTechniciansCollapsed && (
+        <div className="absolute top-4 right-4">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 rounded-full border-slate-300 dark:border-slate-600 w-[140px]"
+            aria-label="Expand technicians panel"
+            onClick={() => setIsTechniciansCollapsed(false)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <p className="font-semibold">Technicians</p>
+          </Button>
+        </div>
+      )}
+      <div className="absolute bottom-4 left-4">
+        <div className="max-w-xs rounded-xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/90">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+            <MousePointer2 className="h-4 w-4" />
+            Interactive Route Map
+          </div>
+          <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
+            <li>- Click technicians to view/hide routes</li>
+            <li>- Hover jobs for quick assign/reassign</li>
+            <li>- Colored lines show route connections</li>
+            <li>- Numbers show route sequence</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <div className="md:h-[calc(100vh-110px)] flex flex-col">
       <section className="mb-6 relative rounded-lg p-4 md:p-5 pb-5 md:pb-6 border border-slate-200/60 dark:border-slate-700/60 shadow-none md:shadow-xl bg-white dark:bg-slate-900 md:bg-gradient-to-br md:from-slate-50 md:via-blue-50 md:to-indigo-50 md:dark:from-slate-900 md:dark:via-blue-950/20 md:dark:to-indigo-950/20">
@@ -720,28 +997,6 @@ export default function LiveMapIndex(): React.JSX.Element {
               <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-slate-900 to-blue-900 dark:from-slate-100 dark:to-blue-100 bg-clip-text text-transparent">
               Live Map
               </h2>
-            </div>
-            <div className="md:flex items-start gap-2 hidden">
-              <div className="flex items-center gap-1 rounded-full bg-slate-50 border border-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
-                {([
-                  { key: 'all', label: 'All' },
-                  { key: 'job', label: 'Jobs' },
-                  { key: 'technician', label: 'Technicians' },
-                ] as const).map(item => (
-                  <Button
-                    key={item.key}
-                    variant="ghost"
-                    className={`h-8 rounded-full px-4 text-xs ${
-                      liveMapEntityFilter === item.key
-                        ? 'bg-brandGreen-900 text-white hover:bg-brandGreen-600'
-                        : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700'
-                    }`}
-                    onClick={() => setLiveMapEntityFilter(item.key)}
-                  >
-                    {item.label}
-                  </Button>
-                ))}
-              </div>
             </div>
           </div>
         </div>
@@ -1026,16 +1281,25 @@ export default function LiveMapIndex(): React.JSX.Element {
                 className="mt-0"
               />
             </div>
-            <div className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-              <span className="font-medium">Max Jobs:</span>
-              <input
-                type="number"
-                min={1}
-                max={99}
-                value={maxJobs}
-                onChange={e => setMaxJobs(e.target.value)}
-                className="h-10 w-16 rounded-xl border border-slate-200 bg-white px-2 text-center text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brandGreen-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-              />
+            <div className="flex items-center gap-1 rounded-full bg-slate-50 border border-slate-100 dark:bg-slate-800 px-1 py-1 h-10">
+              {([
+                { key: 'all', label: 'All' },
+                { key: 'job', label: 'Jobs' },
+                { key: 'technician', label: 'Technicians' },
+              ] as const).map(item => (
+                <Button
+                  key={item.key}
+                  variant="ghost"
+                  className={`h-8 rounded-full px-4 text-xs ${
+                    liveMapEntityFilter === item.key
+                      ? 'bg-brandGreen-900 text-white hover:bg-brandGreen-600'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-700'
+                  }`}
+                  onClick={() => setLiveMapEntityFilter(item.key)}
+                >
+                  {item.label}
+                </Button>
+              ))}
             </div>
           </div>
         </div>
@@ -1053,7 +1317,7 @@ export default function LiveMapIndex(): React.JSX.Element {
           <div className="flex-row justify-between flex pr-2">
             <div className="mb-4">
               <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                Jobs Queue
+                Jobs
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400">6 jobs</p>
             </div>
@@ -1084,10 +1348,13 @@ export default function LiveMapIndex(): React.JSX.Element {
                     onClick={() => {
                       if (selectedQueueJob === job.title) {
                         setSelectedQueueJob(null)
+                        setHoveredQueueJob(null)
                         return
                       }
                       setSelectedTechnician(null)
+                      setHoveredTechnician(null)
                       setSelectedQueueJob(job.title)
+                      setHoveredQueueJob(job.title)
                     }}
                     className="w-full text-left cursor-pointer"
                     aria-label={`Open ${job.title}`}
@@ -1179,234 +1446,7 @@ export default function LiveMapIndex(): React.JSX.Element {
         </div>
 
         <div className="rounded-2xl flex-1 flex border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 lg:col-span-6">
-          <div className="relative flex-1 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
-            <GoogleMap
-              mapContainerStyle={liveMapContainerStyle}
-              center={liveMapCenter}
-              zoom={12}
-              onLoad={map => {
-                mapRef.current = map
-              }}
-              onUnmount={() => {
-                mapRef.current = null
-              }}
-              options={{
-                mapTypeId: 'roadmap',
-                disableDefaultUI: false,
-                zoomControl: true,
-                streetViewControl: false,
-                fullscreenControl: false,
-                mapTypeControl: false,
-                styles: mounted && resolvedTheme === 'dark' ? darkMapStyles : [],
-              }}
-            >
-              {mapMarkers.map(marker => (
-                marker.kind === 'job' ? (
-                  <Marker
-                    key={marker.id}
-                    position={{ lat: marker.lat, lng: marker.lng }}
-                    onMouseOver={() => {
-                      cancelHoveredJobHide()
-                      const hoveredJob = JOB_QUEUE_ITEMS.find(job => job.jobId === marker.id)
-                      if (hoveredJob) setHoveredQueueJob(hoveredJob.title)
-                    }}
-                    onMouseOut={scheduleHoveredJobHide}
-                  />
-                ) : (
-                  <OverlayView
-                    key={marker.id}
-                    position={{ lat: marker.lat, lng: marker.lng }}
-                    mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-                  >
-                    <div
-                      className="-translate-x-1/2 -translate-y-1/2"
-                      onMouseEnter={() => {
-                        cancelHoveredTechHide()
-                        const hoveredTech = TECHNICIAN_ITEMS.find(
-                          tech => `tech-${tech.initials}` === marker.id
-                        )
-                        if (hoveredTech) {
-                          setHoveredQueueJob(null)
-                          setHoveredTechnician(hoveredTech.name)
-                        }
-                      }}
-                      onMouseLeave={scheduleHoveredTechHide}
-                    >
-                      <div className="flex h-8 w-12 items-center justify-center rounded-full bg-white  shadow-md ring-2 ring-brandGreen-900 dark:ring-slate-900/90">
-                        <Car className="h-8 w-8 text-brandGreen-900" />
-                      </div>
-                    </div>
-                  </OverlayView>
-                )
-              ))}
-              {hoveredQueueJobData && (
-                <OverlayView
-                  position={{ lat: hoveredQueueJobData.lat, lng: hoveredQueueJobData.lng }}
-                  mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-                >
-                  <div
-                    className="-translate-x-1/2 -translate-y-[calc(100%+20px)]"
-                    onMouseEnter={cancelHoveredJobHide}
-                    onMouseLeave={scheduleHoveredJobHide}
-                  >
-                    <div className="w-[330px] rounded-xl border border-slate-200 bg-white p-4 text-slate-700 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                      <div className="mb-3 flex items-start justify-between gap-3">
-                        <p className="text-sm font-semibold leading-5 text-slate-900 dark:text-slate-100">
-                          {hoveredQueueJobData.title}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setHoveredQueueJob(null)}
-                          className="text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200"
-                          aria-label="Close tooltip"
-                        >
-                          ×
-                        </button>
-                      </div>
-
-                      <div className="space-y-1.5 text-xs">
-                        <p><span className="font-semibold">Job ID:</span> {hoveredQueueJobData.jobId}</p>
-                        <p><span className="font-semibold">Status:</span> {hoveredQueueJobData.statusBadge?.label ?? 'Scheduled'}</p>
-                        <p><span className="font-semibold">Client:</span> {hoveredQueueJobData.customer}</p>
-                        <p><span className="font-semibold">Company:</span> {hoveredQueueJobData.company}</p>
-                        <p><span className="font-semibold">Address:</span> {hoveredQueueJobData.address}</p>
-                      </div>
-
-                      <div className="mt-4 flex items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-8 flex-1 rounded-sm border-brandGreen-500 text-xs text-brandGreen-900 hover:bg-brandGreen-50 dark:border-brandGreen-700 dark:text-brandGreen-300"
-                          onClick={() =>
-                            openJobQuickView({
-                              jobId: hoveredQueueJobData.jobId,
-                              title: hoveredQueueJobData.title,
-                              customer: hoveredQueueJobData.customer,
-                              company: hoveredQueueJobData.company,
-                              address: hoveredQueueJobData.address,
-                              time: hoveredQueueJobData.time,
-                              value: hoveredQueueJobData.value,
-                              type: hoveredQueueJobData.type,
-                              status: hoveredQueueJobData.statusBadge?.label,
-                              assignedTo: hoveredQueueJobData.assignedTo,
-                              lat: hoveredQueueJobData.lat,
-                              lng: hoveredQueueJobData.lng,
-                            })
-                          }
-                        >
-                          Quick View
-                        </Button>
-                        <Button
-                          type="button"
-                          className="h-8 flex-1 rounded-sm bg-brandGreen-900 text-xs text-white hover:bg-brandGreen-800"
-                          onClick={() => openGoogleMapsLocation(hoveredQueueJobData.lat, hoveredQueueJobData.lng)}
-                        >
-                          View Location
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </OverlayView>
-              )}
-              {hoveredTechnicianData && (
-                <OverlayView
-                  position={{ lat: hoveredTechnicianData.lat, lng: hoveredTechnicianData.lng }}
-                  mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-                >
-                  <div
-                    className="-translate-x-1/2 -translate-y-[calc(100%+20px)]"
-                    onMouseEnter={cancelHoveredTechHide}
-                    onMouseLeave={scheduleHoveredTechHide}
-                  >
-                    <div className="w-[330px] rounded-xl border border-slate-200 bg-white p-4 text-slate-700 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                      <div className="mb-3 flex items-start justify-between gap-3">
-                        <p className="text-sm font-semibold leading-5 text-slate-900 dark:text-slate-100">
-                          {hoveredTechnicianData.jobs.length} Jobs
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setHoveredTechnician(null)}
-                          className="text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200"
-                          aria-label="Close tooltip"
-                        >
-                          ×
-                        </button>
-                      </div>
-
-                      <div className="space-y-1.5 text-xs">
-                        <p><span className="font-semibold">Job ID:</span> {hoveredTechnicianData.jobId}</p>
-                        <p><span className="font-semibold">Technician:</span> {hoveredTechnicianData.name} jobs</p>
-                        <p><span className="font-semibold">Status:</span> {hoveredTechnicianData.status}</p>
-                        <p><span className="font-semibold">Client:</span> {hoveredTechnicianData.client}</p>
-                        <p><span className="font-semibold">Company:</span> {hoveredTechnicianData.company}</p>
-                        <p><span className="font-semibold">Address:</span> {hoveredTechnicianData.address}</p>
-                      </div>
-
-                      <div className="mt-4 flex items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-8 flex-1 rounded-sm border-brandGreen-500 text-xs text-brandGreen-900 hover:bg-brandGreen-50 dark:border-brandGreen-700 dark:text-brandGreen-300"
-                          onClick={() => openTechnicianQuickView(hoveredTechnicianData)}
-                        >
-                          Quick View
-                        </Button>
-                        <Button
-                          type="button"
-                          className="h-8 flex-1 rounded-sm bg-brandGreen-900 text-xs text-white hover:bg-brandGreen-800"
-                          onClick={() => openGoogleMapsLocation(hoveredTechnicianData.lat, hoveredTechnicianData.lng)}
-                        >
-                          View Location
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </OverlayView>
-              )}
-            </GoogleMap>
-            {isJobsQueueCollapsed && (
-              <div className="absolute top-4 left-4">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 rounded-full border-slate-300 dark:border-slate-600 w-[140px]"
-                  aria-label="Expand jobs queue"
-                  onClick={() => setIsJobsQueueCollapsed(false)}
-                >
-                  <p className="font-semibold">Jobs Queue</p>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-            {isTechniciansCollapsed && (
-              <div className="absolute top-4 right-4">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 rounded-full border-slate-300 dark:border-slate-600 w-[140px]"
-                  aria-label="Expand technicians panel"
-                  onClick={() => setIsTechniciansCollapsed(false)}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  <p className="font-semibold">Technicians</p>
-                </Button>
-              </div>
-            )}
-            <div className="absolute bottom-4 left-4">
-              <div className="max-w-xs rounded-xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/90">
-                <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
-                  <MousePointer2 className="h-4 w-4" />
-                  Interactive Route Map
-                </div>
-                <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                  <li>- Click technicians to view/hide routes</li>
-                  <li>- Hover jobs for quick assign/reassign</li>
-                  <li>- Colored lines show route connections</li>
-                  <li>- Numbers show route sequence</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          {renderMapCanvas(false)}
         </div>
 
         <div
@@ -1444,7 +1484,15 @@ export default function LiveMapIndex(): React.JSX.Element {
                   }`}
                   onClick={() => {
                     setSelectedQueueJob(null)
-                    setSelectedTechnician(prev => (prev === tech.name ? null : tech.name))
+                    setHoveredQueueJob(null)
+                    setSelectedTechnician(prev => {
+                      if (prev === tech.name) {
+                        setHoveredTechnician(null)
+                        return null
+                      }
+                      setHoveredTechnician(tech.name)
+                      return tech.name
+                    })
                   }}
                 >
                 <div className="flex items-start justify-between">
@@ -1543,6 +1591,26 @@ export default function LiveMapIndex(): React.JSX.Element {
         </div>
         </div>
       </div>
+      <Dialog open={showMapModal} onOpenChange={setShowMapModal} modal>
+        <DialogContent className="max-w-[100vw] w-[100vw] h-[100vh] p-0 [&>button]:hidden rounded-none border-0">
+          <div className="h-full w-full flex flex-col bg-white dark:bg-slate-900">
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Live Map - Full Screen</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shadow-sm hover:shadow-md rounded-full transition-all duration-200 text-xs h-9 w-9"
+                onClick={() => setShowMapModal(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="flex-1 min-h-0">
+              {renderMapCanvas(true)}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
