@@ -89,7 +89,9 @@ export function Header({ onMenuClick, onCreateJobClick }: HeaderProps): React.JS
   const canClockOut = checkPermission('MOD009', 'clock_out')
   const showClockButton = canClockIn || canClockOut
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const { clearServerSession } = await import('@/src/services/api')
+    await clearServerSession()
     dispatch(logoutAction())
     dispatch(clearUserData())
     router.push('/login')
