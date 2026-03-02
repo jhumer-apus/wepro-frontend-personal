@@ -216,8 +216,8 @@ export default function JobCustomFieldsPage() {
 
       const apiEndpoint =
         isP1User || hasP1Permission
-          ? `/v1/custom-job-fields/p1?${queryParams.toString()}`
-          : `/v1/custom-job-fields?${queryParams.toString()}`
+          ? `/v3/custom-job-fields/p1?${queryParams.toString()}`
+          : `/v3/custom-job-fields?${queryParams.toString()}`
 
       const response = await apiService.get(apiEndpoint)
 
@@ -346,7 +346,7 @@ export default function JobCustomFieldsPage() {
     try {
       setDeleting(true)
       await apiService.delete(
-        `/v1/custom-job-fields/${customFieldToDelete._id}`
+        `/v3/custom-job-fields/${customFieldToDelete._id}`
       )
 
       // Refresh the list

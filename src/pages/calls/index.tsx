@@ -1079,7 +1079,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
       params.append('sort', '-createdAt')
 
       const response = await apiService.get(
-        `/v1/wepro-phone/call-blocking?${params.toString()}`
+        `/v3/wepro-phone/call-blocking?${params.toString()}`
       )
 
       setCallBlockingData(response.data.data)
@@ -1130,7 +1130,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
         params.append('groupBy', blockingGroupBy)
 
       const queryString = params.toString()
-      const url = `/v1/wepro-phone/call-blocking/statistics${queryString ? `?${queryString}` : ''}`
+      const url = `/v3/wepro-phone/call-blocking/statistics${queryString ? `?${queryString}` : ''}`
 
       const response = await apiService.get(url)
       setStatistics(response.data)
@@ -1173,7 +1173,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
         ? `&search=${encodeURIComponent(searchQuery)}`
         : ''
       const response = await apiService.get(
-        `/v1/sources?page=1&limit=50&sort=-createdAt${searchParam}`
+        `/v3/sources?page=1&limit=50&sort=-createdAt${searchParam}`
       )
       const sourcesData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -1200,7 +1200,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
       params.append('sortBy', '-createdAt')
 
       const response = await apiService.get(
-        `/v1/wepro-phone/spam-protection?${params.toString()}`
+        `/v3/wepro-phone/spam-protection?${params.toString()}`
       )
 
       if (response.data.success) {
@@ -1236,7 +1236,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
       if (spamProtectionEndDate) params.append('endDate', spamProtectionEndDate)
 
       const response = await apiService.get(
-        `/v1/wepro-phone/spam-protection/statistics?${params.toString()}`
+        `/v3/wepro-phone/spam-protection/statistics?${params.toString()}`
       )
 
       if (response.data.success) {
@@ -1356,7 +1356,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
     try {
       const response = await apiService.get(
-        `/v1/wepro-phone/spam-protection/${rule._id}`
+        `/v3/wepro-phone/spam-protection/${rule._id}`
       )
       if (response.data.success) {
         setDetailedSpamProtectionRule(response.data.data)
@@ -1383,7 +1383,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
     setSpamProtectionDeleting(true)
     try {
       await apiService.delete(
-        `/v1/wepro-phone/spam-protection/${spamProtectionToDelete._id}`
+        `/v3/wepro-phone/spam-protection/${spamProtectionToDelete._id}`
       )
       toast.success('Spam protection rule deleted successfully')
 
@@ -1415,7 +1415,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
       params.append('sortBy', '-createdAt')
 
       const response = await apiService.get(
-        `/v1/wepro-phone/spam-protection?${params.toString()}`
+        `/v3/wepro-phone/spam-protection?${params.toString()}`
       )
 
       if (response.data.success) {
@@ -1498,14 +1498,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
     setSpamProtectionRegenerating(true)
     try {
       await apiService.post(
-        `/v1/wepro-phone/spam-protection/${ruleId}/regenerate-audio`
+        `/v3/wepro-phone/spam-protection/${ruleId}/regenerate-audio`
       )
       toast.success('Audio regeneration started successfully')
 
       // Refresh the detailed data to get updated status
       if (detailedSpamProtectionRule) {
         const response = await apiService.get(
-          `/v1/wepro-phone/spam-protection/${ruleId}`
+          `/v3/wepro-phone/spam-protection/${ruleId}`
         )
         if (response.data.success) {
           setDetailedSpamProtectionRule(response.data.data)
@@ -1585,14 +1585,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
       if (spamProtectionToEdit) {
         // Update existing rule
         await apiService.put(
-          `/v1/wepro-phone/spam-protection/${spamProtectionToEdit._id}`,
+          `/v3/wepro-phone/spam-protection/${spamProtectionToEdit._id}`,
           spamProtectionCreateForm
         )
         toast.success('Spam protection rule updated successfully')
       } else {
         // Create new rule
         await apiService.post(
-          '/v1/wepro-phone/spam-protection',
+          '/v3/wepro-phone/spam-protection',
           spamProtectionCreateForm
         )
         toast.success('Spam protection rule created successfully')
@@ -1687,7 +1687,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
         params.append('search', searchTerm.trim())
       }
 
-      const response = await apiService.get(`/v1/users/tenants/all?${params}`)
+      const response = await apiService.get(`/v3/users/tenants/all?${params}`)
       if (response.data.success && response.data.data) {
         setTenants(response.data.data)
       }
@@ -1712,7 +1712,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
         params.append('search', searchTerm.trim())
       }
 
-      const response = await apiService.get(`/v1/users/tenant?${params}`)
+      const response = await apiService.get(`/v3/users/tenant?${params}`)
       if (response.data.success && response.data.data) {
         setByTenants(response.data.data)
       }
@@ -1774,11 +1774,11 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
       if (checkPermission('MOD042', 'view')) {
         // Use admin API for MOD042 permission
-        const url = `/v1/admin/phone-numbers${queryString ? `?${queryString}` : ''}`
+        const url = `/v3/admin/phone-numbers${queryString ? `?${queryString}` : ''}`
         response = await apiService.get(url)
       } else {
         // Use regular API for MOD041 permission
-        const url = `/v1/wepro-phone/phone-numbers${queryString ? `?${queryString}` : ''}`
+        const url = `/v3/wepro-phone/phone-numbers${queryString ? `?${queryString}` : ''}`
         response = await apiService.get(url)
       }
 
@@ -1877,7 +1877,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
           params.append('byTenantId', phoneNumberByTenantId.trim())
 
         const queryString = params.toString()
-        const url = `/v1/admin/phone-numbers/statistics${queryString ? `?${queryString}` : ''}`
+        const url = `/v3/admin/phone-numbers/statistics${queryString ? `?${queryString}` : ''}`
         response = await apiService.get(url)
       } else {
         // Use regular statistics API for MOD041 permission
@@ -2034,7 +2034,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
     try {
       const response = await apiService.put(
-        `/v1/wepro-phone/phone-numbers/${selectedPhoneNumberForEdit._id}`,
+        `/v3/wepro-phone/phone-numbers/${selectedPhoneNumberForEdit._id}`,
         {
           friendlyName: phoneNumberEditFormData.friendlyName,
         }
@@ -2074,7 +2074,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
         params.append('search', searchQuery.trim())
       }
 
-      const response = await apiService.get(`/v1/sources?${params.toString()}`)
+      const response = await apiService.get(`/v3/sources?${params.toString()}`)
       const sourcesData =
         response.data.success !== undefined ? response.data.data : response.data
       setAssignmentSources(sourcesData || [])
@@ -2117,7 +2117,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
     try {
       const response = await apiService.put(
-        `/v1/wepro-phone/phone-numbers/${selectedPhoneNumberForAssignment._id}/assign`,
+        `/v3/wepro-phone/phone-numbers/${selectedPhoneNumberForAssignment._id}/assign`,
         {
           sourceCode: selectedAssignmentSource.code,
         }
@@ -2171,7 +2171,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
     try {
       const response = await apiService.put(
-        `/v1/wepro-phone/phone-numbers/${selectedPhoneNumberForRelease._id}/release`,
+        `/v3/wepro-phone/phone-numbers/${selectedPhoneNumberForRelease._id}/release`,
         {}
       )
 
@@ -2217,12 +2217,12 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
       if (checkPermission('MOD042', 'delete')) {
         // Use admin API for MOD042 permission
         response = await apiService.delete(
-          `/v1/admin/phone-numbers/${phoneNumberToDelete._id}`
+          `/v3/admin/phone-numbers/${phoneNumberToDelete._id}`
         )
       } else {
         // Use regular API for other permissions
         response = await apiService.delete(
-          `/v1/wepro-phone/phone-numbers/${phoneNumberToDelete._id}`
+          `/v3/wepro-phone/phone-numbers/${phoneNumberToDelete._id}`
         )
       }
 
@@ -2461,7 +2461,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
             : undefined,
       }
 
-      await apiService.post('/v1/wepro-phone/call-blocking', payload)
+      await apiService.post('/v3/wepro-phone/call-blocking', payload)
 
       // Show success toast
       const displayName =
@@ -2488,7 +2488,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
       // Refresh call blocking data
       const response = await apiService.get(
-        `/v1/wepro-phone/call-blocking?page=1&limit=10&sort=-createdAt`
+        `/v3/wepro-phone/call-blocking?page=1&limit=10&sort=-createdAt`
       )
 
       setCallBlockingData(response.data.data)
@@ -2548,7 +2548,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
     setDeleting(true)
     try {
       await apiService.delete(
-        `/v1/wepro-phone/call-blocking/${ruleToDelete._id}`
+        `/v3/wepro-phone/call-blocking/${ruleToDelete._id}`
       )
 
       // Remove the deleted rule from the local state
@@ -2745,7 +2745,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
       }
 
       await apiService.put(
-        `/v1/wepro-phone/call-blocking/${editingRule._id}`,
+        `/v3/wepro-phone/call-blocking/${editingRule._id}`,
         payload
       )
 
@@ -2764,7 +2764,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
       // Refresh call blocking data
       const response = await apiService.get(
-        `/v1/wepro-phone/call-blocking?page=1&limit=10&sort=-createdAt`
+        `/v3/wepro-phone/call-blocking?page=1&limit=10&sort=-createdAt`
       )
 
       setCallBlockingData(response.data.data)
@@ -2841,7 +2841,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
       params.append('sort', '-createdAt')
 
       const response = await apiService.get(
-        `/v1/wepro-phone/call-blocking?${params.toString()}`
+        `/v3/wepro-phone/call-blocking?${params.toString()}`
       )
 
       // Append new data to existing data
@@ -2873,7 +2873,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
     setExportFormatDialogOpen(false)
     try {
       const response = await apiService.get(
-        `/v1/wepro-phone/call-blocking/export?format=${selectedExportFormat}`,
+        `/v3/wepro-phone/call-blocking/export?format=${selectedExportFormat}`,
         {
           responseType: selectedExportFormat === 'csv' ? 'blob' : 'json',
         }
@@ -3110,7 +3110,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
       }
 
       const response = await apiService.post(
-        '/v1/wepro-phone/call-blocking/import',
+        '/v3/wepro-phone/call-blocking/import',
         payload
       )
 
@@ -3134,14 +3134,14 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
       // Refresh call blocking data
       const callBlockingResponse = await apiService.get(
-        `/v1/wepro-phone/call-blocking?page=1&limit=10&sort=-createdAt`
+        `/v3/wepro-phone/call-blocking?page=1&limit=10&sort=-createdAt`
       )
 
       setCallBlockingData(callBlockingResponse.data.data)
 
       // Update statistics
       const statsResponse = await apiService.get(
-        '/v1/wepro-phone/call-blocking/statistics'
+        '/v3/wepro-phone/call-blocking/statistics'
       )
       setStatistics(statsResponse.data)
 

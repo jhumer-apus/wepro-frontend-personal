@@ -153,7 +153,7 @@ export default function PackagePage(): React.JSX.Element {
         setLoading(true)
       }
       try {
-        let url = `/v1/packages?page=${currentPage}&limit=${entriesPerPage}&tenantId=${tenantId}`
+        let url = `/v3/packages?page=${currentPage}&limit=${entriesPerPage}&tenantId=${tenantId}`
         if (debouncedSearchTerm) {
           url += `&search=${encodeURIComponent(debouncedSearchTerm)}`
         }
@@ -186,11 +186,11 @@ export default function PackagePage(): React.JSX.Element {
     try {
       setDeleting(true)
       await apiService.delete(
-        `/v1/packages/with-modules/${packageToDelete._id}`
+        `/v3/packages/with-modules/${packageToDelete._id}`
       )
 
       // Refresh the current page data
-      let url = `/v1/packages?page=${currentPage}&limit=${entriesPerPage}&tenantId=${tenantId}`
+      let url = `/v3/packages?page=${currentPage}&limit=${entriesPerPage}&tenantId=${tenantId}`
       if (debouncedSearchTerm) {
         url += `&search=${encodeURIComponent(debouncedSearchTerm)}`
       }

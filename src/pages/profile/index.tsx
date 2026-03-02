@@ -15,16 +15,25 @@ import { Button } from '../../components/ui/button'
 import {
   ArrowLeft,
   User,
-  Shield,
   Key,
   Edit,
   X,
   ChevronsUpDown,
   Check,
   Clock,
+  Mail,
+  Phone,
+  MapPin,
 } from 'lucide-react'
 import { profileService } from '../../services/profileService'
-import { Profile } from '../../constants/interface/profile'
+import {
+  type TechnicianProfileApiResponse,
+  mapTechnicianProfileToUserData,
+} from '../../constants/interface/profile'
+import { useAppSelector, useAppDispatch } from '../../store/hooks'
+import { setUserData } from '../../store/slices/userSlice'
+import type { UserData } from '../../store/slices/userSlice'
+import { RootState } from '../../store'
 import { toast } from 'sonner'
 import { apiService } from '../../services/api'
 import { Input } from '../../components/ui/input'
@@ -67,7 +76,8 @@ interface WorkingHour {
 }
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const dispatch = useAppDispatch()
+  const userData = useAppSelector((state: RootState) => state.user.data)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -93,7 +103,15 @@ export default function ProfilePage() {
   const router = useRouter()
 
   useEffect(() => {
-    fetchProfile()
+    if (userData) {
+      setLoading(false)
+      setError(null)
+    } else {
+      fetchProfile()
+    }
+  }, [userData])
+
+  useEffect(() => {
     fetchTimezones()
     fetchWorkingHours()
   }, [])
@@ -101,7 +119,7 @@ export default function ProfilePage() {
   const fetchTimezones = async () => {
     try {
       setTimezonesLoading(true)
-      const response = await apiService.get('/v1/timezones?page=1&limit=20')
+      const response = await apiService.get('/v3/timezones?page=1&limit=20')
       setAvailableTimezones(response.data.data)
     } catch (error) {
       console.error('Error fetching timezones:', error)
@@ -113,7 +131,7 @@ export default function ProfilePage() {
   const fetchWorkingHours = async () => {
     try {
       setWorkingHoursLoading(true)
-      const response = await apiService.get('/v1/profile/working-hours')
+      const response = await apiService.get('/v3/profile/working-hours')
       setWorkingHours(response.data.data)
     } catch (error) {
       console.error('Error fetching working hours:', error)
@@ -155,8 +173,14 @@ export default function ProfilePage() {
   const fetchProfile = async () => {
     try {
       setLoading(true)
-      const response = await profileService.getProfile()
-      setProfile(response.data)
+      setError(null)
+      const res = await apiService.get<TechnicianProfileApiResponse>(
+        '/v3/technicians/users/profile'
+      )
+      const payload = res.data
+      if (payload?.status === 'success' && payload?.profile) {
+        dispatch(setUserData(mapTechnicianProfileToUserData(payload)))
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to fetch profile')
       toast.error('Failed to load profile information')
@@ -176,11 +200,14 @@ export default function ProfilePage() {
   }
 
   const openEditModal = () => {
-    if (profile) {
+    if (userData) {
+      const displayName =
+        [userData.firstname, userData.lastname].filter(Boolean).join(' ') ||
+        userData.name
       setEditForm({
-        name: profile.name,
-        username: profile.username,
-        timezoneId: profile.timezoneId._id,
+        name: displayName,
+        username: userData.username,
+        timezoneId: userData.timezoneId?._id ?? '',
       })
       setShowEditModal(true)
     }
@@ -200,11 +227,8 @@ export default function ProfilePage() {
     setEditLoading(true)
 
     try {
-      const response = await profileService.updateProfile(editForm)
-
+      await profileService.updateProfile(editForm)
       toast.success('Profile updated successfully')
-
-      // Refresh profile data
       await fetchProfile()
       closeEditModal()
     } catch (err: any) {
@@ -261,7 +285,7 @@ export default function ProfilePage() {
       }
 
       // Always use POST for both creating and updating
-      await apiService.post('/v1/profile/working-hours', payload)
+      await apiService.post('/v3/profile/working-hours', payload)
       toast.success(
         existingHour
           ? 'Working hours updated successfully'
@@ -320,7 +344,7 @@ export default function ProfilePage() {
     )
   }
 
-  if (!profile) {
+  if (!userData) {
     return (
       <div className="p-6">
         <div className="text-center">
@@ -390,40 +414,126 @@ export default function ProfilePage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                    Full Name
-                  </label>
-                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {profile.name}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                    Username
-                  </label>
-                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {profile.username}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                    Account Type
-                  </label>
-                  <Badge variant="secondary" className="text-sm">
-                    {profile.type}
-                  </Badge>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                    Timezone
-                  </label>
-                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {profile.timezoneId.name}
-                  </p>
+              <div className="flex flex-col sm:flex-row gap-6">
+                {userData.picture && (
+                  <div className="shrink-0">
+                    <img
+                      src={userData.picture}
+                      alt="Profile"
+                      className="w-24 h-24 rounded-full object-cover border-2 border-neutral-200 dark:border-neutral-700"
+                    />
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                  <div>
+                    <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                      Full Name
+                    </label>
+                    <p className="text-neutral-900 dark:text-neutral-100 font-medium">
+                      {[userData.firstname, userData.lastname]
+                        .filter(Boolean)
+                        .join(' ') || userData.name}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                      Username
+                    </label>
+                    <p className="text-neutral-900 dark:text-neutral-100 font-medium">
+                      {userData.username}
+                    </p>
+                  </div>
+                  {userData.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-neutral-500" />
+                      <div>
+                        <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                          Email
+                        </label>
+                        <p className="text-neutral-900 dark:text-neutral-100 font-medium">
+                          {userData.email}
+                        </p>
+                        {userData.emailCheck && (
+                          <Badge variant="outline" className="text-xs mt-1">
+                            {userData.emailCheck}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {userData.phone_number && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-neutral-500" />
+                      <div>
+                        <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                          Phone
+                        </label>
+                        <p className="text-neutral-900 dark:text-neutral-100 font-medium">
+                          {userData.phone_number}
+                        </p>
+                        {userData.phoneNo && (
+                          <Badge variant="outline" className="text-xs mt-1">
+                            {userData.phoneNo}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {(userData.type ?? userData.status) && (
+                    <div>
+                      <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                        {userData.type ? 'Account Type' : 'Status'}
+                      </label>
+                      <Badge variant="secondary" className="text-sm">
+                        {userData.type ?? userData.status}
+                      </Badge>
+                    </div>
+                  )}
+                  {userData.profile_status && (
+                    <div>
+                      <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                        Profile Status
+                      </label>
+                      <Badge variant="outline" className="text-sm">
+                        {userData.profile_status}
+                      </Badge>
+                    </div>
+                  )}
+                  {userData.timezoneId && (
+                    <div>
+                      <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                        Timezone
+                      </label>
+                      <p className="text-neutral-900 dark:text-neutral-100 font-medium">
+                        {userData.timezoneId.name}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
+              {(userData.formatted_address ||
+                userData.address ||
+                userData.location) && (
+                <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                  <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400 flex items-center gap-1">
+                    <MapPin className="w-4 h-4" />
+                    Address
+                  </label>
+                  <p className="text-neutral-900 dark:text-neutral-100 font-medium mt-1">
+                    {userData.formatted_address ||
+                      userData.address ||
+                      userData.location}
+                  </p>
+                  {(userData.city || userData.state || userData.zip) && (
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-0.5">
+                      {[userData.city, userData.state, userData.zip]
+                        .filter(Boolean)
+                        .join(', ')}
+                      {userData.country && `, ${userData.country}`}
+                    </p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -445,25 +555,33 @@ export default function ProfilePage() {
                     Account Created
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {formatDate(profile.createdAt)}
+                    {userData.created_date
+                      ? userData.created_date
+                      : userData.createdAt
+                        ? formatDate(userData.createdAt)
+                        : '—'}
                   </p>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                    Last Updated
-                  </label>
-                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {formatDate(profile.updatedAt)}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                    Tenant ID
-                  </label>
-                  <p className="text-sm font-mono text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">
-                    {profile.tenantId}
-                  </p>
-                </div>
+                {userData.updatedAt && (
+                  <div>
+                    <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                      Last Updated
+                    </label>
+                    <p className="text-neutral-900 dark:text-neutral-100 font-medium">
+                      {formatDate(userData.updatedAt)}
+                    </p>
+                  </div>
+                )}
+                {userData.tenantId && (
+                  <div>
+                    <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                      Tenant ID
+                    </label>
+                    <p className="text-sm font-mono text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded">
+                      {userData.tenantId}
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

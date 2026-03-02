@@ -109,7 +109,7 @@ export default function FranchiseViewPage() {
   const fetchFranchise = async () => {
     try {
       setLoading(true)
-      const response = await apiService.get(`/v1/franchises/${id}`)
+      const response = await apiService.get(`/v3/franchises/${id}`)
 
       if (response.data.success) {
         setFranchise(response.data.data)

@@ -96,7 +96,7 @@ export default function CreateServicePackagePage(): React.JSX.Element {
         setIsLoading(true)
         try {
           const response = await apiService.get(
-            `/v1/answering-services/packages/${id}`
+            `/v3/answering-services/packages/${id}`
           )
           if (response.data.success && response.data.message?.package) {
             const packageData: ServicePackage = response.data.message.package

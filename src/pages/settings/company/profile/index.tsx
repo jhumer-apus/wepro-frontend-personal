@@ -101,7 +101,7 @@ export default function CompanyProfilePage() {
         success: boolean
         message: string
         data: CompanyProfile
-      }>('/v1/company-profile')
+      }>('/v3/company-profile')
       const result = response.data
 
       if (result.success) {

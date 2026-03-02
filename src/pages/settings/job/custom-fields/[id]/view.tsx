@@ -117,7 +117,7 @@ export default function CustomJobFieldViewPage(): React.JSX.Element {
         setError(null)
         try {
           const response = await apiService.get<CustomJobFieldResponse>(
-            `/v1/custom-job-fields/${id}`
+            `/v3/custom-job-fields/${id}`
           )
 
           if (response.data.success) {
@@ -157,15 +157,15 @@ export default function CustomJobFieldViewPage(): React.JSX.Element {
     setSwitchLoading(true)
     try {
       if (checked) {
-        // Activate: DELETE /v1/custom-job-fields/[code]/inactivate
+        // Activate: DELETE /v3/custom-job-fields/[code]/inactivate
         await apiService.delete(
-          `/v1/custom-job-fields/${fieldData.code}/inactivate`
+          `/v3/custom-job-fields/${fieldData.code}/inactivate`
         )
         toast.success('Custom field activated successfully')
       } else {
-        // Deactivate: POST /v1/custom-job-fields/[code]/inactivate
+        // Deactivate: POST /v3/custom-job-fields/[code]/inactivate
         await apiService.post(
-          `/v1/custom-job-fields/${fieldData.code}/inactivate`
+          `/v3/custom-job-fields/${fieldData.code}/inactivate`
         )
         toast.success('Custom field deactivated successfully')
       }

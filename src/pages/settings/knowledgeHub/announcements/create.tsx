@@ -213,7 +213,7 @@ export default function CreateAnnouncementPage(): React.JSX.Element {
     setSourcesLoading(true)
     try {
       const response = await apiService.get(
-        '/v1/sources?page=1&limit=50&sort=-createdAt'
+        '/v3/sources?page=1&limit=50&sort=-createdAt'
       )
       const sourcesData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -240,7 +240,7 @@ export default function CreateAnnouncementPage(): React.JSX.Element {
         setIsLoading(true)
         try {
           const response = await apiService.get(
-            `/v1/knowledge-hub/announcements/${id}`
+            `/v3/knowledge-hub/announcements/${id}`
           )
 
           let announcementData
@@ -348,13 +348,13 @@ export default function CreateAnnouncementPage(): React.JSX.Element {
 
       if (isEditing && id) {
         // Update existing announcement
-        await apiService.put(`/v1/knowledge-hub/announcements/${id}`, payload)
+        await apiService.put(`/v3/knowledge-hub/announcements/${id}`, payload)
         toast.success('Announcement updated successfully!', {
           description: 'The announcement has been updated in the system.',
         })
       } else {
         // Create new announcement
-        await apiService.post('/v1/knowledge-hub/announcements', payload)
+        await apiService.post('/v3/knowledge-hub/announcements', payload)
         toast.success('Announcement created successfully!', {
           description: 'The new announcement has been added to the system.',
         })

@@ -66,7 +66,7 @@ export default function MetroAreaViewPage() {
       if (id && typeof id === 'string') {
         setIsLoading(true)
         try {
-          const response = await apiService.get(`/v1/metro-areas/${id}`)
+          const response = await apiService.get(`/v3/metro-areas/${id}`)
           const metroAreaData = response.data.data
           setMetroArea(metroAreaData)
           setTimeout(() => {

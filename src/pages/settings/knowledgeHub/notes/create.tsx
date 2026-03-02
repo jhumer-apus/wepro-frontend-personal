@@ -229,7 +229,7 @@ export default function CreateNotePage() {
       }
 
       const response = await apiService.get(
-        `/v1/sources?${queryParams.toString()}`
+        `/v3/sources?${queryParams.toString()}`
       )
       const sourcesData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -260,7 +260,7 @@ export default function CreateNotePage() {
       }
 
       const response = await apiService.get(
-        `/v1/custom-job-fields?${queryParams.toString()}`
+        `/v3/custom-job-fields?${queryParams.toString()}`
       )
       const customJobFieldsData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -287,7 +287,7 @@ export default function CreateNotePage() {
       if (isEditing && id && typeof id === 'string') {
         setIsLoading(true)
         try {
-          const response = await apiService.get(`/v1/knowledge-hub/notes/${id}`)
+          const response = await apiService.get(`/v3/knowledge-hub/notes/${id}`)
 
           let noteData
           if (response.data.success !== undefined) {
@@ -430,13 +430,13 @@ export default function CreateNotePage() {
 
       if (isEditing && id) {
         // Update existing note
-        await apiService.put(`/v1/knowledge-hub/notes/${id}`, payload)
+        await apiService.put(`/v3/knowledge-hub/notes/${id}`, payload)
         toast.success('Note updated successfully!', {
           description: 'The note has been updated in the system.',
         })
       } else {
         // Create new note
-        await apiService.post('/v1/knowledge-hub/notes', payload)
+        await apiService.post('/v3/knowledge-hub/notes', payload)
         toast.success('Note created successfully!', {
           description: 'The note has been added to the system.',
         })

@@ -406,7 +406,7 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
     setSourcesLoading(true)
     try {
       const response = await apiService.get(
-        '/v1/sources?page=1&limit=50&sort=-createdAt'
+        '/v3/sources?page=1&limit=50&sort=-createdAt'
       )
       const sourcesData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -429,7 +429,7 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
     setIsLoading(true)
     try {
       const response = await apiService.get(
-        `/v1/templates/invoices/${templateId}`
+        `/v3/templates/invoices/${templateId}`
       )
       const templateData = response.data.data
 
@@ -533,13 +533,13 @@ export default function CreateInvoiceTemplatePage(): React.JSX.Element {
 
       if (isEditMode) {
         // Update existing template
-        await apiService.put(`/v1/templates/invoices/${templateId}`, payload)
+        await apiService.put(`/v3/templates/invoices/${templateId}`, payload)
         toast.success('Invoice template updated successfully!', {
           description: 'The template has been updated in the system.',
         })
       } else {
         // Create new template
-        await apiService.post('/v1/templates/invoices', payload)
+        await apiService.post('/v3/templates/invoices', payload)
         toast.success('Invoice template created successfully!', {
           description: 'The new template has been added to the system.',
         })

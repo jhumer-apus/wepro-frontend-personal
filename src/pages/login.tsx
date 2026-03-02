@@ -6,16 +6,19 @@ import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
 import { Label } from '@/src/components/ui/label'
 import { Card, CardContent } from '@/src/components/ui/card'
-import { Eye, EyeOff, User, Lock, Building2 } from 'lucide-react'
+import { Eye, EyeOff, User, Lock } from 'lucide-react'
 import { useAppDispatch, useAppSelector } from '@/src/store/hooks'
 import { login } from '@/src/store/slices/authSlice'
 import { setUserData } from '@/src/store/slices/userSlice'
 import { RootState } from '@/src/store'
-import { apiService } from '@/src/services/api'
-import { useConfig } from '@/src/hooks/useConfig'
+import axios from 'axios'
 import { useTheme } from 'next-themes'
 import logo from '../../public/logo.png'
 import logoAlt from '../../public/logo-alt.png'
+import {
+  type TechnicianProfileApiResponse,
+  mapTechnicianProfileToUserData,
+} from '@/src/constants/interface/profile'
 
 export default function Login(): React.JSX.Element {
   const router = useRouter()
@@ -24,7 +27,6 @@ export default function Login(): React.JSX.Element {
     (state: RootState) => state.auth
   )
   const userData = useAppSelector((state: RootState) => state.user)
-  const config = useConfig()
   const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [formData, setFormData] = useState({
@@ -41,13 +43,13 @@ export default function Login(): React.JSX.Element {
     setMounted(true)
   }, [])
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (profile loaded: has _id or username)
   useEffect(() => {
     if (
       isAuthenticated &&
       !loading &&
       !userData.loading &&
-      userData?.data?._id
+      (userData?.data?._id ?? userData?.data?.username)
     ) {
       router.push('/dashboard')
     }
@@ -69,40 +71,61 @@ export default function Login(): React.JSX.Element {
         throw new Error('Please fill in all fields')
       }
 
-      // Example API call using the configured service
-      // In a real implementation, you would call your authentication endpoint
       try {
-        const response = await apiService.post('/v1/auth/login', {
+        // Light server login: credentials sent to server only; tokens stored in httpOnly cookies
+        const loginRes = await axios.post('/api/auth/login', {
           username: formData.username,
           password: formData.password,
+          deviceToken: 'sdsd',
         })
-
-        // Update Redux state with the full user data from API response
-        dispatch(
-          login({
-            accessToken: response.data.accessToken,
-            expiresIn: response.data.expiresIn,
-            refreshExpiresIn: response.data.refreshExpiresIn,
-            refreshToken: response.data.refreshToken,
-          })
-        )
-
-        // Fetch and save user profile data
-        const profile = await apiService.get('/v1/profile')
-        console.log(profile, 'profile')
-        // Save user profile data to Redux store
-        if (profile.data.success && profile.data.data) {
-          dispatch(setUserData(profile.data.data))
+        const loginData = loginRes.data as {
+          success?: boolean
+          profile?: TechnicianProfileApiResponse['profile']
+          status?: string
         }
-      } catch (apiError: any) {
-        // Handle API errors
-        if (apiError.response?.status === 401) {
-          throw new Error('Wrong password or username')
-        } else if (apiError.response?.data?.message) {
-          throw new Error(apiError.response.data.message)
+
+        if (loginRes.status !== 200 || !loginData?.success) {
+          if (loginRes.status === 401) {
+            throw new Error('Wrong password or username')
+          }
+          const msg = (loginRes.data as { msg?: string })?.msg
+          throw new Error(msg ?? 'Login failed')
+        }
+
+        dispatch(login()) // No tokens in frontend; session is in httpOnly cookie
+
+        if (loginData.profile) {
+          const payload: TechnicianProfileApiResponse = {
+            status: loginData.status ?? 'success',
+            profile: loginData.profile,
+            companies: { total_records: 0, companies: [] },
+          }
+          dispatch(setUserData(mapTechnicianProfileToUserData(payload)))
         } else {
-          throw new Error('Login failed. Please try again.')
+          // Fallback: fetch profile via proxy (cookie sent automatically)
+          const profileRes = await axios.post('/api/proxy', {
+            method: 'GET',
+            target_url: '/v3/technicians/users/profile',
+          })
+          const payload = profileRes.data as TechnicianProfileApiResponse
+          if (payload?.status === 'success' && payload?.profile) {
+            dispatch(setUserData(mapTechnicianProfileToUserData(payload)))
+          }
         }
+      } catch (apiError: unknown) {
+        if (axios.isAxiosError(apiError) && apiError.response) {
+          const { status, data } = apiError.response
+          if (status === 401) {
+            throw new Error('Wrong password or username')
+          }
+          if (data?.msg) {
+            throw new Error(data.msg)
+          }
+        }
+        if (apiError instanceof Error) {
+          throw apiError
+        }
+        throw new Error('Login failed. Please try again.')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')

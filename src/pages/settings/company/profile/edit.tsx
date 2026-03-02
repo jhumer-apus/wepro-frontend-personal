@@ -150,7 +150,7 @@ export default function EditCompanyProfilePage() {
     setIsFetching(true)
     try {
       const response = await apiService.get<CompanyProfileResponse>(
-        '/v1/company-profile'
+        '/v3/company-profile'
       )
 
       if (response.data.success) {
@@ -417,7 +417,7 @@ export default function EditCompanyProfilePage() {
       }
 
       // Make the actual API call
-      const response = await apiService.put('/v1/company-profile', payload)
+      const response = await apiService.put('/v3/company-profile', payload)
 
       if (response.data.success) {
         toast({

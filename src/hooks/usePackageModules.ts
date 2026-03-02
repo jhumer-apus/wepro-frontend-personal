@@ -45,7 +45,7 @@ export const usePackageModules = () => {
       setError(null)
 
       const response = await apiService.get<PackageModulesResponse>(
-        `/v1/package-modules/tenant-modules?page=1&limit=50`
+        `/v3/package-modules/tenant-modules?page=1&limit=50`
       )
 
       if (response.data.success) {

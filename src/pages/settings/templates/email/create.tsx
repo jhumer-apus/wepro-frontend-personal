@@ -158,7 +158,7 @@ export default function CreateEmailTemplatePage(): React.JSX.Element {
       if (isEditing && id && typeof id === 'string') {
         setIsLoading(true)
         try {
-          const response = await apiService.get(`/v1/templates/email/${id}`)
+          const response = await apiService.get(`/v3/templates/email/${id}`)
 
           let templateData
           if (response.data.success !== undefined) {
@@ -233,13 +233,13 @@ export default function CreateEmailTemplatePage(): React.JSX.Element {
 
       if (isEditing && id) {
         // Update existing template
-        await apiService.put(`/v1/templates/email/${id}`, payload)
+        await apiService.put(`/v3/templates/email/${id}`, payload)
         toast.success('Email template updated successfully!', {
           description: 'The template has been updated in the system.',
         })
       } else {
         // Create new template
-        await apiService.post('/v1/templates/email', payload)
+        await apiService.post('/v3/templates/email', payload)
         toast.success('Email template created successfully!', {
           description: 'The new template has been added to the system.',
         })

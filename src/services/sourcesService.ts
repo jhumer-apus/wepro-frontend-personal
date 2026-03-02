@@ -20,7 +20,7 @@ export const sourcesService = {
     if (params.sort) queryParams.append('sort', params.sort)
     if (params.search) queryParams.append('search', params.search)
 
-    const url = `/v1/sources${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+    const url = `/v3/sources${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
     const response = await apiService.get<SourcesResponse>(url)
     return response.data
   },
@@ -28,7 +28,7 @@ export const sourcesService = {
   // Get a single source by ID
   getSourceById: async (id: string): Promise<Source> => {
     const response = await apiService.get<{ success: boolean; data: Source }>(
-      `/v1/sources/${id}`
+      `/v3/sources/${id}`
     )
     return response.data.data
   },
@@ -36,7 +36,7 @@ export const sourcesService = {
   // Create a new source
   createSource: async (sourceData: Partial<Source>): Promise<Source> => {
     const response = await apiService.post<{ success: boolean; data: Source }>(
-      '/v1/sources',
+      '/v3/sources',
       sourceData
     )
     return response.data.data
@@ -48,7 +48,7 @@ export const sourcesService = {
     sourceData: Partial<Source>
   ): Promise<Source> => {
     const response = await apiService.put<{ success: boolean; data: Source }>(
-      `/v1/sources/${id}`,
+      `/v3/sources/${id}`,
       sourceData
     )
     return response.data.data
@@ -56,6 +56,6 @@ export const sourcesService = {
 
   // Delete a source
   deleteSource: async (id: string): Promise<void> => {
-    await apiService.delete(`/v1/sources/${id}`)
+    await apiService.delete(`/v3/sources/${id}`)
   },
 }

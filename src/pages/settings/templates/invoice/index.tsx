@@ -253,7 +253,7 @@ export default function InvoiceTemplatesPage() {
     setSourcesLoading(true)
     try {
       const response = await apiService.get(
-        '/v1/sources?page=1&limit=50&sort=-createdAt'
+        '/v3/sources?page=1&limit=50&sort=-createdAt'
       )
       const sourcesData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -310,7 +310,7 @@ export default function InvoiceTemplatesPage() {
       }
 
       const response = await apiService.get(
-        `/v1/templates/invoices?${queryParams.toString()}`
+        `/v3/templates/invoices?${queryParams.toString()}`
       )
       const responseData: InvoiceTemplatesResponse = response.data
 
@@ -448,7 +448,7 @@ export default function InvoiceTemplatesPage() {
 
     try {
       setDeleting(true)
-      await apiService.delete(`/v1/templates/invoices/${templateToDelete._id}`)
+      await apiService.delete(`/v3/templates/invoices/${templateToDelete._id}`)
 
       // Refresh the list
       await fetchTemplates()

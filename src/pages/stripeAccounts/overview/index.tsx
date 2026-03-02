@@ -315,7 +315,7 @@ export default function StripeAccountsOverview() {
       setLoadingAccounts(true)
       setAccountsError(null)
       
-      const response = await apiService.get('/v1/stripe-accounts?page=1&limit=100')
+      const response = await apiService.get('/v3/stripe-accounts?page=1&limit=100')
       
       if (response.data.success) {
         const accountsData = response.data.data.data
@@ -381,7 +381,7 @@ export default function StripeAccountsOverview() {
         setLoadingStripeAccounts(true)
         setError(null)
 
-        let url = `/v1/stripe-accounts?page=${currentPage}&limit=${entriesPerPage}`
+        let url = `/v3/stripe-accounts?page=${currentPage}&limit=${entriesPerPage}`
         if (debouncedSearchTerm) {
           url += `&search=${encodeURIComponent(debouncedSearchTerm)}`
         }
@@ -434,7 +434,7 @@ export default function StripeAccountsOverview() {
       try {
         setLoadingStripeAccounts(true)
         const response =
-          await apiService.get<AccountsResponse>('/v1/franchises')
+          await apiService.get<AccountsResponse>('/v3/franchises')
 
         if (response.data.success) {
           // Filter out accounts that already have stripe accounts (assuming we can determine this)
@@ -533,7 +533,7 @@ export default function StripeAccountsOverview() {
     try {
       setSaving(true)
       // Here you would make an API call to update the account
-      // await apiService.put(`/v1/stripe-accounts/${editingAccount._id}`, editFormData)
+      // await apiService.put(`/v3/stripe-accounts/${editingAccount._id}`, editFormData)
 
       // For now, we'll just update the local state
       setStripeAccounts(prev =>
@@ -576,7 +576,7 @@ export default function StripeAccountsOverview() {
 
     try {
       setSaving(true)
-      await apiService.delete(`/v1/stripe-accounts/${deletingAccount._id}`)
+      await apiService.delete(`/v3/stripe-accounts/${deletingAccount._id}`)
       
       toast.success('Account deleted successfully!')
       setShowDeleteDialog(false)
@@ -613,7 +613,7 @@ export default function StripeAccountsOverview() {
       const currentUrl = process.env.NEXT_PUBLIC_FRONTEND_URL
       const returnUrl = `${currentUrl}/stripeAccounts/overview`
       
-      const response = await apiService.post(`/v1/stripe-accounts/${account._id}/onboarding-link`, {
+      const response = await apiService.post(`/v3/stripe-accounts/${account._id}/onboarding-link`, {
         returnUrl: returnUrl
       })
       
@@ -651,7 +651,7 @@ export default function StripeAccountsOverview() {
     try {
       setSaving(true)
       
-      const response = await apiService.post(`/v1/stripe-accounts/${accountId}/onboarding-complete`)
+      const response = await apiService.post(`/v3/stripe-accounts/${accountId}/onboarding-complete`)
       
       if (response.data.success && response.data.message?.account) {
         const account = response.data.message.account
@@ -674,7 +674,7 @@ export default function StripeAccountsOverview() {
             setLoadingStripeAccounts(true)
             setError(null)
 
-            let url = `/v1/stripe-accounts?page=${currentPage}&limit=${entriesPerPage}`
+            let url = `/v3/stripe-accounts?page=${currentPage}&limit=${entriesPerPage}`
             if (debouncedSearchTerm) {
               url += `&search=${encodeURIComponent(debouncedSearchTerm)}`
             }
@@ -730,7 +730,7 @@ export default function StripeAccountsOverview() {
     try {
       setSaving(true)
       
-      const response = await apiService.post(`/v1/stripe-accounts/${account._id}/dashboard-link`)
+      const response = await apiService.post(`/v3/stripe-accounts/${account._id}/dashboard-link`)
       
       if (response.data.success && response.data.message?.dashboardLink?.url) {
         // Open the dashboard URL in a new tab
@@ -756,7 +756,7 @@ export default function StripeAccountsOverview() {
     try {
       setLoadingOnboardingStatus(true)
       
-      const response = await apiService.get(`/v1/stripe-accounts/${account._id}/onboarding-status`)
+      const response = await apiService.get(`/v3/stripe-accounts/${account._id}/onboarding-status`)
       
       if (response.data.success && response.data.message) {
         setOnboardingStatusData(response.data.message)
@@ -782,7 +782,7 @@ export default function StripeAccountsOverview() {
     try {
       setSaving(true)
       const response = await apiService.put(
-        `/v1/stripe-accounts/${currentAccount._id}`,
+        `/v3/stripe-accounts/${currentAccount._id}`,
         {
           creditCardProcessingFees: { paidBy },
         }
@@ -918,7 +918,7 @@ export default function StripeAccountsOverview() {
         accountNickname: step2FormData.accountNickname || selectedAccountForSetup.ownerName,
       }
 
-      const createResponse = await apiService.post('/v1/stripe-accounts', createPayload)
+      const createResponse = await apiService.post('/v3/stripe-accounts', createPayload)
       
       if (createResponse.data.success) {
         const accountId = createResponse.data.message.account._id
@@ -945,7 +945,7 @@ export default function StripeAccountsOverview() {
           },
         }
 
-        await apiService.put(`/v1/stripe-accounts/${accountId}`, updatePayload)
+        await apiService.put(`/v3/stripe-accounts/${accountId}`, updatePayload)
         
         // Success!
         toast.success('Stripe account created successfully!', {
@@ -966,7 +966,7 @@ export default function StripeAccountsOverview() {
             setLoadingStripeAccounts(true)
             setError(null)
 
-            let url = `/v1/stripe-accounts?page=${currentPage}&limit=${entriesPerPage}`
+            let url = `/v3/stripe-accounts?page=${currentPage}&limit=${entriesPerPage}`
             if (debouncedSearchTerm) {
               url += `&search=${encodeURIComponent(debouncedSearchTerm)}`
             }
@@ -1190,7 +1190,7 @@ export default function StripeAccountsOverview() {
         formData.append('logo', selectedLogoFile)
         
         const logoResponse = await apiService.post(
-          `/v1/stripe-accounts/${currentAccount._id}/logo`,
+          `/v3/stripe-accounts/${currentAccount._id}/logo`,
           formData,
           {
             headers: {
@@ -1222,7 +1222,7 @@ export default function StripeAccountsOverview() {
       }
 
       const response = await apiService.put(
-        `/v1/stripe-accounts/${currentAccount._id}`,
+        `/v3/stripe-accounts/${currentAccount._id}`,
         {
           weproInvoice: {
             ...weproInvoiceUpdate,
@@ -1304,7 +1304,7 @@ export default function StripeAccountsOverview() {
         return
       }
       
-      const response = await apiService.patch(`/v1/stripe-accounts/${accountToUpdate._id}/set-default`)
+      const response = await apiService.patch(`/v3/stripe-accounts/${accountToUpdate._id}/set-default`)
 
       if (response.data.success) {
         toast.success('Account set as default successfully!', {

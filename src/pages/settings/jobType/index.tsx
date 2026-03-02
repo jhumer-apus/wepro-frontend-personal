@@ -172,7 +172,7 @@ export default function JobTypePage() {
 
     try {
       const userType = getUserType()
-      let url = `/v1/job-types`
+      let url = `/v3/job-types`
 
       // If user type is P1, append it to the URL
       if (
@@ -242,7 +242,7 @@ export default function JobTypePage() {
       setDeleting(true)
       // Use the correct endpoint format for job types based on user type
       const userType = getUserType()
-      let deleteUrl = `/v1/job-types`
+      let deleteUrl = `/v3/job-types`
 
       deleteUrl += `/${jobTypeToDelete._id}`
       await apiService.delete(deleteUrl)

@@ -34,7 +34,7 @@ export default function ForgotPassword(): React.JSX.Element {
         throw new Error('Please enter your email address')
       }
 
-      await apiService.post('/v1/auth/forgot-password', {
+      await apiService.post('/v3/auth/forgot-password', {
         email,
       })
 

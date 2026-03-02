@@ -232,7 +232,7 @@ export default function CreateStripeAccountPage(): React.JSX.Element {
         setIsLoading(true)
         try {
           const response = await apiService.get<StripeAccountResponse>(
-            `/v1/stripe-accounts/${id}`
+            `/v3/stripe-accounts/${id}`
           )
           if (response.data.success && response.data.data) {
             const accountData = response.data.data
@@ -503,7 +503,7 @@ export default function CreateStripeAccountPage(): React.JSX.Element {
       if (isEditing && id) {
         console.log('Updating Stripe account:', { id, payload })
         const response = await apiService.put(
-          `/v1/stripe-accounts/${id}`,
+          `/v3/stripe-accounts/${id}`,
           payload
         )
         console.log('Stripe account updated successfully:', response.data)
@@ -514,7 +514,7 @@ export default function CreateStripeAccountPage(): React.JSX.Element {
         })
       } else {
         console.log('Creating Stripe account:', payload)
-        const response = await apiService.post('/v1/stripe-accounts', payload)
+        const response = await apiService.post('/v3/stripe-accounts', payload)
         console.log('Stripe account created successfully:', response.data)
 
         // Show success toast for creation

@@ -44,13 +44,16 @@ export const useAuth = () => {
     }
   }, [])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const { clearServerSession } = await import('../services/api')
+    await clearServerSession()
     dispatch(logout())
     router.push('/login')
   }
 
-  // Check if user has valid tokens
-  const hasValidTokens = tokens && tokens.accessToken && tokens.refreshToken
+  // Valid session: either stored tokens (legacy) or isAuthenticated (light server uses httpOnly cookies)
+  const hasValidTokens =
+    (tokens && tokens.accessToken && tokens.refreshToken) || isAuthenticated
 
   // Only show loading if we're still rehydrating OR if the auth slice is explicitly loading
   const isLoading = !isRehydrated || loading

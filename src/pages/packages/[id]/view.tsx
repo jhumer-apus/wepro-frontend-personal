@@ -69,7 +69,7 @@ export default function PackageViewPage(): React.JSX.Element {
         setLoading(true)
         setError(null)
         try {
-          const response = await apiService.get(`/v1/packages/${id}/modules`)
+          const response = await apiService.get(`/v3/packages/${id}/modules`)
           if (response.data.success && response.data.data) {
             setPackageData(response.data.data)
           } else {

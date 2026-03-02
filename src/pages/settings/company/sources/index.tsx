@@ -109,7 +109,7 @@ export default function CompanySourcesPage() {
       queryParams.append('sort', '-createdAt')
       if (debouncedSearchTerm) queryParams.append('search', debouncedSearchTerm)
 
-      const url = `/v1/sources?${queryParams.toString()}`
+      const url = `/v3/sources?${queryParams.toString()}`
       const response = await apiService.get(url)
 
       setSources(response.data.data)

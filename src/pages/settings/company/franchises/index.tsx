@@ -152,7 +152,7 @@ export default function CompanyFranchisesPage() {
     setLoading(true)
 
     try {
-      let url = `/v1/franchises?page=${currentPage}&limit=${entriesPerPage}&sort=-createdAt`
+      let url = `/v3/franchises?page=${currentPage}&limit=${entriesPerPage}&sort=-createdAt`
       if (debouncedSearchTerm) {
         url += `&search=${encodeURIComponent(debouncedSearchTerm)}`
       }
@@ -238,7 +238,7 @@ export default function CompanyFranchisesPage() {
 
     try {
       setDeleting(true)
-      await apiService.delete(`/v1/franchises/${franchiseToDelete._id}`)
+      await apiService.delete(`/v3/franchises/${franchiseToDelete._id}`)
 
       // Refresh the list
       await fetchFranchises()

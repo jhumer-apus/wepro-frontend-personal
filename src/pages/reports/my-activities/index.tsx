@@ -190,7 +190,7 @@ export default function MyActivitiesPage() {
       }
 
       const response = await apiService.get<ActivityLogsResponse>(
-        '/v1/activity-logs/my',
+        '/v3/activity-logs/my',
         {
           params,
         }

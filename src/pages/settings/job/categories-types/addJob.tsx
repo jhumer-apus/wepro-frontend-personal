@@ -74,7 +74,7 @@ export default function AddJobTypePage() {
       try {
         setIndustriesLoading(true)
         const userType = getUserType()
-        let url = '/v1/industries'
+        let url = '/v3/industries'
 
         if (userType === 'P1') {
           url += '/P1'
@@ -148,7 +148,7 @@ export default function AddJobTypePage() {
     try {
       setSubmitting(true)
       const userType = getUserType()
-      let url = '/v1/job-types'
+      let url = '/v3/job-types'
 
       // Prepare payload according to API specification
       const payload: any = {
