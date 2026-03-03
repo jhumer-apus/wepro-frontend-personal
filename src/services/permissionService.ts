@@ -91,8 +91,9 @@ export const hasAllPermissions = (
     return false
   }
 
+  const permissions = userData.permissions
   return keys.every(key =>
-    userData.permissions.some(
+    permissions.some(
       permission =>
         permission.moduleCode === moduleCode && permission.key === key
     )
