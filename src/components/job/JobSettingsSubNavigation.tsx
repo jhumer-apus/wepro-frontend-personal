@@ -16,6 +16,7 @@ interface SubNavigationItem {
   path: string
   label: string
   icon: React.ComponentType<{ className?: string }>
+  moduleCodes?: string[]
   requiresPermission?: boolean
   permissionCheck?: () => boolean
 }

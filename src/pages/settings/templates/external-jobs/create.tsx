@@ -204,8 +204,8 @@ export default function CreateExternalJobTemplatePage(): React.JSX.Element {
       setSourcesLoading(true)
       try {
         const response = await sourcesService.getSources({ limit: 1000 })
-        setSources(response.data || [])
-      } catch (error) {
+        setSources((response.data || []) as Source[])
+      } catch (error: any) {
         console.error('Error fetching sources:', error)
         toast.error('Failed to load sources')
       } finally {

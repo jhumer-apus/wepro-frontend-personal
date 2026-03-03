@@ -366,8 +366,8 @@ export default function JobTagNotesPage() {
     setEditingJobTagNote(jobTagNote)
     setFormData({
       title: jobTagNote.title,
-      job_tag_code: jobTagNote.job_tag_code,
-      display_order: jobTagNote.display_order,
+      job_tag_code: jobTagNote.job_tag_code ?? '',
+      display_order: jobTagNote.display_order ?? 1,
       content: jobTagNote.content,
     })
     setJobTagNoteSubmitted(false)
@@ -1187,7 +1187,7 @@ export default function JobTagNotesPage() {
                             <CommandItem
                               key={tag._id}
                               onSelect={() => {
-                                handleFormChange('job_tag_code', tag.code)
+                                handleFormChange('job_tag_code', tag.code ?? '')
                                 setJobTagDropdownOpen(false)
                               }}
                             >

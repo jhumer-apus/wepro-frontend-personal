@@ -185,6 +185,16 @@ export default function AnsweringServiceViewPage(): React.JSX.Element {
     )
   }
 
+  // Short helpers for packageId/timezoneId (string | object)
+  const pkg = answeringServiceData?.packageId
+  const tz = answeringServiceData?.timezoneId
+  const pkgName = (pkg && typeof pkg === 'object' ? pkg.name : pkg) ?? '-'
+  const pkgType = (pkg && typeof pkg === 'object' ? pkg.type : null) ?? '-'
+  const pkgPrice = (pkg && typeof pkg === 'object' ? pkg.price : null) ?? '-'
+  const pkgPublic = pkg && typeof pkg === 'object' && 'isPublic' in pkg ? (pkg.isPublic ? 'Yes' : 'No') : '-'
+  const tzName = (tz && typeof tz === 'object' ? tz.name : tz) ?? '-'
+  const tzValue = (tz && typeof tz === 'object' ? tz.value : null) ?? '-'
+
   return (
     <>
       <Head>
@@ -285,33 +295,25 @@ export default function AnsweringServiceViewPage(): React.JSX.Element {
                   <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                     Package Name
                   </label>
-                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {answeringServiceData.packageId.name}
-                  </p>
+                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">{pkgName}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                     Package Type
                   </label>
-                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {answeringServiceData.packageId.type}
-                  </p>
+                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">{pkgType}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                     Price
                   </label>
-                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    ${answeringServiceData.packageId.price}
-                  </p>
+                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">{pkgPrice !== '-' ? `$${pkgPrice}` : '-'}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                     Public Package
                   </label>
-                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {answeringServiceData.packageId.isPublic ? 'Yes' : 'No'}
-                  </p>
+                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">{pkgPublic}</p>
                 </div>
               </div>
             </CardContent>
@@ -331,17 +333,13 @@ export default function AnsweringServiceViewPage(): React.JSX.Element {
                   <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                     Timezone
                   </label>
-                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {answeringServiceData.timezoneId.name}
-                  </p>
+                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">{tzName}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                     Timezone Value
                   </label>
-                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {answeringServiceData.timezoneId.value}
-                  </p>
+                  <p className="text-neutral-900 dark:text-neutral-100 font-medium">{tzValue}</p>
                 </div>
               </div>
             </CardContent>

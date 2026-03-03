@@ -25,7 +25,7 @@ import {
 import { apiService } from '@/src/services/api'
 import { toast } from 'sonner'
 import { Loading } from '@/src/components/ui/loading'
-import { Module } from '@/src/constants/interface/module'
+import { PackageModule } from '@/src/constants/interface/module'
 import { Package as PackageInterface } from '@/src/constants/interface/package'
 import { usePermissions } from '@/src/hooks/usePermissions'
 
@@ -455,7 +455,7 @@ export default function PackageViewPage(): React.JSX.Element {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {packageData.modules.map((moduleItem: Module) => (
+                  {packageData.modules.map((moduleItem: PackageModule) => (
                     <div
                       key={moduleItem._id}
                       className="flex items-center gap-3 p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg"
@@ -463,10 +463,10 @@ export default function PackageViewPage(): React.JSX.Element {
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                       <div>
                         <p className="font-medium text-neutral-900 dark:text-neutral-100">
-                          {moduleItem.module.name}
+                          {moduleItem.module?.name ?? moduleItem.moduleCode}
                         </p>
                         <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                          {moduleItem.module.code}
+                          {moduleItem.module?.code ?? moduleItem.moduleCode}
                         </p>
                       </div>
                     </div>
@@ -492,10 +492,14 @@ export default function PackageViewPage(): React.JSX.Element {
                     Created By
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100">
-                    {packageData.createdBy.name}
+                    {typeof packageData.createdBy === 'object' && packageData.createdBy !== null
+                      ? packageData.createdBy.name
+                      : packageData.createdBy ?? '-'}
                   </p>
                   <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    @{packageData.createdBy.username}
+                    {typeof packageData.createdBy === 'object' && packageData.createdBy !== null
+                      ? `@${packageData.createdBy.username}`
+                      : '-'}
                   </p>
                 </div>
                 <div>
@@ -511,7 +515,7 @@ export default function PackageViewPage(): React.JSX.Element {
                     Last Updated
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100">
-                    {formatDate(packageData.updatedAt)}
+                    {formatDate(packageData.updatedAt ?? '')}
                   </p>
                 </div>
               </CardContent>

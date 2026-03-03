@@ -309,17 +309,17 @@ export default function CreateStripeAccountPage(): React.JSX.Element {
     setFormData(prev => ({
       ...prev,
       [parentField]: {
-        ...prev[parentField],
+        ...(prev[parentField] as any),
         [childField]: value,
       },
     }))
 
     // Clear validation error when user starts typing
-    if (validationErrors[parentField]?.[childField as keyof any]) {
+    if ((validationErrors as any)[parentField]?.[childField]) {
       setValidationErrors(prev => ({
         ...prev,
         [parentField]: {
-          ...prev[parentField],
+          ...((prev as any)[parentField] ?? {}),
           [childField]: undefined,
         },
       }))

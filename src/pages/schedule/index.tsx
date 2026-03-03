@@ -530,11 +530,6 @@ export default function ScheduleIndex() {
           <CreateJobForm 
             showNewJobDialog={showNewJobDialog}
             setShowNewJobDialog={setShowNewJobDialog}
-            newJobData={newJobData}
-            setNewJobData={setNewJobData}
-            calculateEndTime={calculateEndTime}
-            technicians={technicians}
-            metroAreas={metroAreas}
             handleCreateJob={handleCreateJob}
           />
           {/* <NewJobScheduleDialog
@@ -542,7 +537,7 @@ export default function ScheduleIndex() {
             setShowNewJobDialog={setShowNewJobDialog}
             newJobData={newJobData}
             setNewJobData={setNewJobData}
-            calculateEndTime={calculateEndTime}
+            calculateEndTime={calculateEndTime}x`
             technicians={technicians}
             metroAreas={metroAreas}
             handleCreateJob={handleCreateJob}

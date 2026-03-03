@@ -5,7 +5,7 @@ import {
   setLoading,
   setModules,
   setError,
-  forceRefresh,
+  forceRefresh as forceRefreshModulesAction,
 } from '@/src/store/slices/modulesSlice'
 import { apiService } from '@/src/services/api'
 
@@ -89,7 +89,7 @@ export const useModules = (tenantId?: string | null) => {
   }
 
   const forceRefresh = () => {
-    dispatch(forceRefresh()) // Clear cache timestamp
+    dispatch(forceRefreshModulesAction()) // Clear cache timestamp
   }
 
   useEffect(() => {

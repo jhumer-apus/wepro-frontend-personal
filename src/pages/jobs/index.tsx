@@ -401,7 +401,7 @@ export default function Jobs() {
 
   // Advanced filter toggle state
   // Helper: get status object by name with safety checks
-  const getStatusObj = (name) => {
+  const getStatusObj = (name: string) => {
     if (!jobStatuses || !Array.isArray(jobStatuses)) {
       return { name: name || 'Pending', color: '#888', showDispatch: true };
     }
@@ -409,7 +409,7 @@ export default function Jobs() {
   };
 
   // Assign a status to each job for demo (in real app, jobs would have a status property)
-  const getJobStatus = (job) => {
+  const getJobStatus = (job: { id: string }) => {
     // For demo, assign by job id
     const statusList = jobStatuses.map(s => s.name);
     const idx = parseInt(job.id.replace(/\D/g, '')) % statusList.length;
@@ -2428,8 +2428,8 @@ export default function Jobs() {
     setJobs(
       [...jobsSeed].filter(job => {
         if (selectedTags.length === 0) return true;
-        const jobTags = (job.jobTags || []).map(t => t.toLowerCase());
-        return jobTags.some(tag => selectedTags.includes(tag));
+        const jobTags = (job.jobTags || []).map((t: string) => t.toLowerCase());
+        return jobTags.some((tag: string) => selectedTags.includes(tag));
       })
     );
   }, [quickTags, jobsSeed]);
@@ -2440,8 +2440,8 @@ export default function Jobs() {
     setJobs(
       [...jobsSeed].filter(job => {
         if (selectedNotes.length === 0) return true;
-        const jobNotes = (job.noteTags || []).map(t => t.toLowerCase());
-        return jobNotes.some(tag => selectedNotes.includes(tag));
+        const jobNotes = (job.noteTags || []).map((t: string) => t.toLowerCase());
+        return jobNotes.some((tag: string) => selectedNotes.includes(tag));
       })
     );
   }, [quickTagNotes, jobsSeed]);
@@ -3863,7 +3863,7 @@ export default function Jobs() {
     });
     
     // Group jobs by status for better organization
-    const groupedJobs = jobStatuses.reduce((acc, status) => {
+    const groupedJobs = jobStatuses.reduce<Record<string, typeof jobs>>((acc, status) => {
       const statusJobs = jobs.filter(job => getJobStatus(job) === status.name);
       if (statusJobs.length > 0) {
         acc[status.name] = statusJobs;
@@ -3906,9 +3906,9 @@ export default function Jobs() {
       actions: true,
     };
 
-    const mobileCard = (row) => {
+    const mobileCard = (row: Job) => {
       const status = getStatusObj(getJobStatus(row));
-      const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
+      const timeAgo = getTimeAgo(row.lastUpdated || row.startDate || '');
       const scheduledTime = new Date(`${row.startDate} ${row.startTime}`);
       const timeUntilScheduled = getTimeUntil(scheduledTime);
       return (
@@ -4003,7 +4003,7 @@ export default function Jobs() {
             <div className="flex flex-wrap items-center gap-2 text-slate-600 dark:text-slate-300">
               <Calendar className="w-4 h-4" />
               <span>
-                {new Date(row.startDate).toLocaleDateString("en-US", {
+                {new Date(row.startDate || '').toLocaleDateString("en-US", {
                   weekday: "short",
                   month: "short",
                   day: "2-digit",
@@ -4368,7 +4368,7 @@ export default function Jobs() {
                                 : [...prev, s.name]
                             );
                           }}
-                          style={{color: sel ? 'white' : null, backgroundColor: sel ? s.color : null}}
+                          style={{ color: sel ? 'white' : undefined, backgroundColor: sel ? s.color : undefined }}
                         className={`flex items-center gap-1.5 rounded-full h-7 px-2 text-xs whitespace-nowrap px-3 ${sel? `bg-slate-900` :'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}>
                         <span className="inline-block h-2 w-2 rounded-full" style={{backgroundColor: sel ? 'white' : s.color}}></span>
                         {s.name}
@@ -4592,7 +4592,7 @@ export default function Jobs() {
     });
   };
 
-  const onChangeStatus: ((rowId: string, statusName: string) => void) | undefined = undefined;
+  const onChangeStatus: ((rowId: string, statusName: string) => void) | undefined = undefined as ((rowId: string, statusName: string) => void) | undefined;
 
   const tableColumns = useMemo(() => {
     const d = jobsDensityRef;
@@ -4603,7 +4603,7 @@ export default function Jobs() {
       {
         columnName: "",
         sortKey: "",
-        cell: (row) => (
+        cell: (row: Job) => (
           <div className="flex items-center">
             <div className={`${d === 'ultra' ? 'h-7' : d === 'compact' ? 'h-8' : 'h-7'} flex items-center justify-center`}>
               <Checkbox
@@ -4619,8 +4619,8 @@ export default function Jobs() {
         isFixed: true,
         columnName: "Job Details",
         sortKey: "jobType",
-        cell: (row) => {
-          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
+        cell: (row: Job) => {
+          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate || '');
           return (
             <div className={`max-w-[200px] ${d === 'ultra' ? 'space-y-0.5' : d === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
               <div className="flex flex-col space-y-2">
@@ -4683,7 +4683,7 @@ export default function Jobs() {
       {
         columnName: "Client Info",
         sortKey: "clientName",
-        cell: (row) => (
+        cell: (row: Job) => (
           <div className={`${d === 'ultra' ? 'space-y-0.5' : d === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
             {visibleClientFields.clientName && (
               <div className="min-w-0 flex flex-row gap-2 items-center">
@@ -4718,10 +4718,10 @@ export default function Jobs() {
       {
         columnName: "Schedule",
         sortKey: "startDate",
-        cell: (row) => {
+        cell: (row: Job) => {
           const scheduledTime = new Date(`${row.startDate} ${row.startTime}`);
           const timeUntilScheduled = getTimeUntil(scheduledTime);
-          const startDate = new Date(row.startDate);
+          const startDate = new Date(row.startDate || '');
           const hasEnd = !!(row as { estimatedEndTime?: string }).estimatedEndTime || (row as { endDate?: string }).endDate;
           const fromLabel = `${startDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}  ${row.startTime}`;
           return (
@@ -4738,7 +4738,7 @@ export default function Jobs() {
                   );
                 }
                 const endTime = (row as { estimatedEndTime?: string }).estimatedEndTime ?? row.startTime;
-                let endDate = new Date((row as { endDate?: string }).endDate ?? row.startDate);
+                let endDate = new Date((row as { endDate?: string }).endDate ?? row.startDate ?? '');
                 if (endDate.getTime() <= startDate.getTime()) {
                   endDate = new Date(startDate);
                   endDate.setDate(endDate.getDate() + 1);
@@ -4779,7 +4779,7 @@ export default function Jobs() {
       {
         columnName: "Location",
         sortKey: "location",
-        cell: (row) => (
+        cell: (row: Job) => (
           <div className={`${d === 'ultra' ? 'space-y-0.5' : 'space-y-1.5'}`}>
             <p className={`text-xs text-slate-700 dark:text-slate-300 truncate`}>{row.location}</p>
             <p className={`text-xs text-slate-600 dark:text-slate-400 truncate`}>
@@ -4791,7 +4791,7 @@ export default function Jobs() {
       {
         columnName: "Source",
         sortKey: "source",
-        cell: (row) => (
+        cell: (row: Job) => (
           <div className={`space-y-0.5`}>
             <div className="flex items-center space-x-2">
               <Globe className="w-3.5 h-3.5 text-slate-500" />
@@ -4820,14 +4820,14 @@ export default function Jobs() {
       {
         columnName: "Created",
         sortKey: "createdAt",
-        cell: (row) => {
-          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
+        cell: (row: Job) => {
+          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate || '');
           return (
             <div className={`space-y-0.5`}>
               <div className="flex items-center space-x-2">
                 <Calendar className="w-3.5 h-3.5 text-slate-500" />
                 <span className={`text-xs font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap`}>
-                  {new Date(row.createdAt || row.lastUpdated).toLocaleDateString('en-US', {
+                  {new Date(row.createdAt || row.lastUpdated || '').toLocaleDateString('en-US', {
                     month: 'short',
                     day: '2-digit',
                     year: '2-digit',
@@ -4844,7 +4844,7 @@ export default function Jobs() {
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {new Date(row.createdAt || row.lastUpdated).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}
+                      {new Date(row.createdAt || row.lastUpdated || '').toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -4856,7 +4856,7 @@ export default function Jobs() {
       {
         columnName: "Technician",
         sortKey: "assignedTechnician",
-        cell: (row) => (
+        cell: (row: Job) => (
           <div className={`${d === 'ultra' ? 'space-y-0.5' : d === 'compact' ? 'space-y-1' : 'space-y-2'}`}>
             <button
               type="button"
@@ -4877,9 +4877,9 @@ export default function Jobs() {
       {
         columnName: "Status",
         sortKey: "status",
-        cell: (row) => {
+        cell: (row: Job) => {
           const status = getStatusObj(getJobStatus(row));
-          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate);
+          const timeAgo = getTimeAgo(row.lastUpdated || row.startDate || '');
           return (
             <div className={`space-y-0.5`}>
               <div className="flex flex-row gap-2">
@@ -4971,7 +4971,7 @@ export default function Jobs() {
     setShowAssignTech(false);
     setSelectedTech('');
   };
-  const handleReplyNote = (i) => {
+  const handleReplyNote = (_i: number) => {
     if (!replyNote.trim()) return;
     // Add reply to note logic here
     setReplyNote('');
@@ -4979,23 +4979,23 @@ export default function Jobs() {
   };
 
   // Calculate invoice totals
-  const calculateInvoiceTotals = (form) => {
-    const subtotal = form.lineItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+  const calculateInvoiceTotals = (form: { lineItems: Array<{ quantity: number; rate: number }>; taxRate: number; discount: number }) => {
+    const subtotal = form.lineItems.reduce((sum: number, item: { quantity: number; rate: number }) => sum + (item.quantity * item.rate), 0);
     const taxAmount = (subtotal * form.taxRate) / 100;
     const total = subtotal + taxAmount - form.discount;
     return { subtotal, taxAmount, total };
   };
 
   // Calculate estimate totals
-  const calculateEstimateTotals = (form) => {
-    const subtotal = form.lineItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+  const calculateEstimateTotals = (form: { lineItems: Array<{ quantity: number; rate: number }>; taxRate: number; discount: number }) => {
+    const subtotal = form.lineItems.reduce((sum: number, item: { quantity: number; rate: number }) => sum + (item.quantity * item.rate), 0);
     const taxAmount = (subtotal * form.taxRate) / 100;
     const total = subtotal + taxAmount - form.discount;
     return { subtotal, taxAmount, total };
   };
 
   // Handle invoice line item changes
-  const handleInvoiceLineItemChange = (index, field, value) => {
+  const handleInvoiceLineItemChange = (index: number, field: string, value: unknown) => {
     const newLineItems = [...invoiceForm.lineItems];
     newLineItems[index] = { ...newLineItems[index], [field]: value };
     
@@ -5014,7 +5014,7 @@ export default function Jobs() {
   };
 
   // Handle estimate line item changes
-  const handleEstimateLineItemChange = (index, field, value) => {
+  const handleEstimateLineItemChange = (index: number, field: string, value: unknown) => {
     const newLineItems = [...estimateForm.lineItems];
     newLineItems[index] = { ...newLineItems[index], [field]: value };
     
@@ -5049,7 +5049,7 @@ export default function Jobs() {
   };
 
   // Remove line item from invoice
-  const removeInvoiceLineItem = (index) => {
+  const removeInvoiceLineItem = (index: number) => {
     const newLineItems = invoiceForm.lineItems.filter((_, i) => i !== index);
     const newForm = { ...invoiceForm, lineItems: newLineItems };
     const totals = calculateInvoiceTotals(newForm);
@@ -5061,7 +5061,7 @@ export default function Jobs() {
   };
 
   // Remove line item from estimate
-  const removeEstimateLineItem = (index) => {
+  const removeEstimateLineItem = (index: number) => {
     const newLineItems = estimateForm.lineItems.filter((_, i) => i !== index);
     const newForm = { ...estimateForm, lineItems: newLineItems };
     const totals = calculateEstimateTotals(newForm);
@@ -5193,12 +5193,12 @@ export default function Jobs() {
   };
 
   // Generate paid invoice from recorded payment
-  const generateInvoiceFromPayment = (payment) => {
+  const generateInvoiceFromPayment = (payment: Record<string, unknown> & { date?: string; amount?: number; paymentType?: string; id?: string; depositForJob?: string }) => {
     const newInvoice = {
       id: `INV-${Date.now()}`,
-      date: payment.date,
-      due: payment.date,
-      amount: payment.amount,
+      date: payment.date ?? '',
+      due: payment.date ?? '',
+      amount: payment.amount ?? 0,
       status: 'Paid',
       type: payment.paymentType === 'Deposit' ? 'Deposit' : 'Service',
       paymentId: payment.id,
@@ -5207,15 +5207,15 @@ export default function Jobs() {
           ? `Deposit for Job ${payment.depositForJob || 'Unknown'}` 
           : 'Service Payment', 
         quantity: 1, 
-        rate: payment.amount, 
-        amount: payment.amount 
+        rate: payment.amount ?? 0, 
+        amount: payment.amount ?? 0 
       }],
-      subtotal: payment.amount,
+      subtotal: payment.amount ?? 0,
       taxRate: 0,
       taxAmount: 0,
       discount: 0,
-      total: payment.amount,
-      notes: `Generated from payment: ${payment.notes}`
+      total: payment.amount ?? 0,
+      notes: `Generated from payment: ${(payment as { notes?: string }).notes ?? ''}`
     };
     
     setInvoices([...invoices, newInvoice]);

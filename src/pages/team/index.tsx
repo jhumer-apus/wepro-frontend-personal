@@ -78,8 +78,9 @@ export default function AdminTeamLayout() {
   useEffect(() => {
     if (userData?.permissions) {
       try {
-        // Parse the permissions string from user data
-        const parsedPermissions = JSON.parse(userData.permissions)
+        // Parse the permissions (may be string or already an array)
+        const raw = userData.permissions as any
+        const parsedPermissions = typeof raw === 'string' ? JSON.parse(raw) : raw
         // Filter out permissions where moduleCode isn't MOD002 or MOD003
         const filteredPermissions = parsedPermissions.filter(
           (permission: any) => {
@@ -91,7 +92,7 @@ export default function AdminTeamLayout() {
         )
 
         setPermissions(filteredPermissions)
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error parsing permissions:', error)
         setPermissions([])
       }

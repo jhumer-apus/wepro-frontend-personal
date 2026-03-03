@@ -269,7 +269,9 @@ export default function CompanyViewPage(): React.JSX.Element {
                     Package Name
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {companyData.packageId.name}
+                    {typeof companyData.packageId === 'object' && companyData.packageId !== null
+                      ? companyData.packageId.name
+                      : companyData.packageId ?? '-'}
                   </p>
                 </div>
                 <div>
@@ -277,7 +279,9 @@ export default function CompanyViewPage(): React.JSX.Element {
                     Package Type
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {companyData.packageId.type}
+                    {typeof companyData.packageId === 'object' && companyData.packageId !== null
+                      ? companyData.packageId.type
+                      : '-'}
                   </p>
                 </div>
                 <div>
@@ -285,7 +289,9 @@ export default function CompanyViewPage(): React.JSX.Element {
                     Price
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    ${companyData.packageId.price}
+                    {typeof companyData.packageId === 'object' && companyData.packageId !== null
+                      ? `$${companyData.packageId.price}`
+                      : '-'}
                   </p>
                 </div>
                 <div>
@@ -293,7 +299,9 @@ export default function CompanyViewPage(): React.JSX.Element {
                     Public Package
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {companyData.packageId.isPublic ? 'Yes' : 'No'}
+                    {typeof companyData.packageId === 'object' && companyData.packageId !== null && 'isPublic' in companyData.packageId
+                      ? companyData.packageId.isPublic ? 'Yes' : 'No'
+                      : '-'}
                   </p>
                 </div>
               </div>
@@ -315,7 +323,9 @@ export default function CompanyViewPage(): React.JSX.Element {
                     Timezone
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {companyData.timezoneId.name}
+                    {typeof companyData.timezoneId === 'object' && companyData.timezoneId !== null
+                      ? companyData.timezoneId.name
+                      : companyData.timezoneId ?? '-'}
                   </p>
                 </div>
                 <div>
@@ -323,7 +333,9 @@ export default function CompanyViewPage(): React.JSX.Element {
                     Timezone Value
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {companyData.timezoneId.value}
+                    {typeof companyData.timezoneId === 'object' && companyData.timezoneId !== null
+                      ? companyData.timezoneId.value
+                      : '-'}
                   </p>
                 </div>
               </div>

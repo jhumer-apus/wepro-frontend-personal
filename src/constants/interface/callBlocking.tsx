@@ -266,14 +266,16 @@ export interface PhoneNumberStatistics {
     activeNumbers: number
     totalCalls: number
     totalSms: number
+    totalMonthlyCharges?: number
   }
   byCountry: {
     [key: string]: number
   }
   byNumberType: {
-    local: number
-    'toll-free': number
-    mobile: number
+    local?: number
+    'toll-free'?: number
+    mobile?: number
+    [key: string]: number | undefined
   }
   mostUsedNumbers: Array<{
     id: string

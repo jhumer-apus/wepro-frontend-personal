@@ -99,7 +99,9 @@ export const hasAllPermissions = (
   )
 }
 
-export const getAllModules = (userData: UserData | null): string[] => {
+export const getAllModules = (
+  userData: UserData | null
+): Array<{ code: string }> => {
   if (!userData || !userData.modules || !Array.isArray(userData.modules)) {
     return []
   }

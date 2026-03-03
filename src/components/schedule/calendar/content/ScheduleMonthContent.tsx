@@ -1,4 +1,4 @@
-import { Fragment, use } from "react";
+import React, { Fragment, use } from "react";
 import DroppableArea from "./DroppableArea";
 import { Badge } from "@/src/components/ui/badge";
 import DraggableJob from "./DraggableJob";
@@ -48,9 +48,10 @@ export default function ScheduleMonthContent(props: Props) {
                             ? 'bg-blue-100 dark:bg-blue-900 ring-2 ring-blue-500 ring-inset' 
                             : 'bg-white dark:bg-neutral-950'
                         }`}
-                        onClick={(e: any) => {
+                        onClick={(e: React.MouseEvent) => {
                             // Only trigger if clicking on empty space (not on a job)
-                            if (e.target === e.currentTarget || e.target.closest('.day-header')) {
+                            const target = e.target as HTMLElement
+                            if (e.target === e.currentTarget || target.closest('.day-header')) {
                                 handleShowMoreJobs(day.dateStr);
                             }
                         }}

@@ -1989,7 +1989,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
       const response = await apiService.purchasePhoneNumber({
         phoneNumber: selectedNumberForPurchaseSection.phoneNumber,
         numberType: selectedNumberForPurchaseSection.numberType,
-        friendlyName: purchaseSectionFriendlyName || undefined,
+        friendlyName: purchaseSectionFriendlyName || '',
       })
 
       if (response.data.success) {
@@ -3059,7 +3059,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
         if (manualInputMode && manualRulesContent.trim()) {
           // Use manual input content - validate JSON first
           try {
-            payload.rules = JSON.parse(manualRulesContent).map(val => {
+            payload.rules = JSON.parse(manualRulesContent).map((val: Record<string, unknown>) => {
               return {
                 ...val,
                 sourceSelectionType: payload.sourceSelectionType,
@@ -3147,12 +3147,12 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
 
       // Update call blocking stats
       const totalBlocked = callBlockingResponse.data.data.reduce(
-        (sum, rule) => sum + rule.blockedCount,
+        (sum: number, rule: { blockedCount: number }) => sum + rule.blockedCount,
         0
       )
       const today = new Date().toISOString().split('T')[0]
-      const blockedToday = callBlockingResponse.data.data.filter(rule =>
-        rule.createdAt.startsWith(today)
+      const blockedToday = callBlockingResponse.data.data.filter(
+        (rule: { createdAt: string }) => rule.createdAt.startsWith(today)
       ).length
 
       setCallBlockingStats({
@@ -6082,7 +6082,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                             {phoneNumberError}
                           </p>
                           <Button
-                            onClick={fetchPhoneNumberData}
+                            onClick={() => fetchPhoneNumberData()}
                             variant="outline"
                             className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
                           >
@@ -8163,13 +8163,7 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                         </div>
                       </div>
 
-                      {(
-                        detailedSpamProtectionRule || selectedSpamProtectionRule
-                      )?.sourceCodes &&
-                        (
-                          detailedSpamProtectionRule ||
-                          selectedSpamProtectionRule
-                        )?.sourceCodes.length > 0 && (
+                      {((detailedSpamProtectionRule || selectedSpamProtectionRule)?.sourceCodes?.length ?? 0) > 0 && (
                           <div>
                             <Label className="text-sm font-medium text-slate-700 mb-2 block">
                               Source Codes (
@@ -8356,14 +8350,10 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                           Tenant:
                         </span>
                         <span className="ml-2 text-slate-900">
-                          {(
-                            detailedSpamProtectionRule ||
-                            selectedSpamProtectionRule
-                          )?.tenantId?.name ||
-                            (
-                              detailedSpamProtectionRule ||
-                              selectedSpamProtectionRule
-                            )?.tenantId}
+                          {(() => {
+                            const t = (detailedSpamProtectionRule || selectedSpamProtectionRule)?.tenantId
+                            return typeof t === 'object' && t !== null ? t.name : (t ?? 'N/A')
+                          })()}
                         </span>
                       </div>
                       <div>
@@ -8384,14 +8374,10 @@ const CallsIndex: React.FC = (): React.JSX.Element => {
                           By Tenant:
                         </span>
                         <span className="ml-2 text-slate-900">
-                          {(
-                            detailedSpamProtectionRule ||
-                            selectedSpamProtectionRule
-                          )?.byTenantId?.name ||
-                            (
-                              detailedSpamProtectionRule ||
-                              selectedSpamProtectionRule
-                            )?.byTenantId}
+                          {(() => {
+                            const t = (detailedSpamProtectionRule || selectedSpamProtectionRule)?.byTenantId
+                            return typeof t === 'object' && t !== null ? t.name : (t ?? 'N/A')
+                          })()}
                         </span>
                       </div>
                     </div>

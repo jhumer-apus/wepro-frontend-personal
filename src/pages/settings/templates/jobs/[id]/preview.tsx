@@ -38,6 +38,7 @@ import {
   AlertCircle,
   Settings,
   Play,
+  Shield,
 } from 'lucide-react'
 import { usePermissions } from '@/src/hooks/usePermissions'
 import { toast } from 'sonner'

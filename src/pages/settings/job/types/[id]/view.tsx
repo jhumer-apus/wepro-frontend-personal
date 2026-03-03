@@ -120,11 +120,16 @@ export default function JobTypeViewPage(): React.JSX.Element {
           if (response.data.success) {
             setJobTypeData(response.data.message)
           } else {
-            setError(response.data.message || 'Failed to load job type data')
+            setError(
+              typeof response.data.message === 'string'
+                ? response.data.message
+                : 'Failed to load job type data'
+            )
             toast.error('Failed to load job type data', {
               description:
-                response.data.message ||
-                'The job type information could not be retrieved.',
+                typeof response.data.message === 'string'
+                  ? response.data.message
+                  : 'The job type information could not be retrieved.',
             })
           }
         } catch (error: any) {

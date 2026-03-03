@@ -80,9 +80,7 @@ export const usePermissions = () => {
         return true
       }
       if (userData?.type === 'P5') {
-        return getAllModules(userData).find(val => val.code === moduleCode)
-          ? true
-          : false
+        return getAllModules(userData).some(m => m.code === moduleCode)
       }
 
       return false

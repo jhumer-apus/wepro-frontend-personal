@@ -8,6 +8,7 @@ interface KnowledgeHubSubNavigationItem {
   path: string
   label: string
   icon: React.ComponentType<{ className?: string }>
+  moduleCodes?: string[]
 }
 
 const knowledgeHubSubNavigationItems: KnowledgeHubSubNavigationItem[] = [

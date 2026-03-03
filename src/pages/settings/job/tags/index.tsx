@@ -283,8 +283,8 @@ export default function JobTagsPage() {
     setFormData({
       name: jobTag.name,
       description: jobTag.description || '',
-      background_color: jobTag.background_color,
-      text_color: jobTag.text_color,
+      background_color: jobTag.background_color ?? jobTag.color ?? '',
+      text_color: jobTag.text_color ?? '',
     })
     setJobTagSubmitted(false)
     setJobTagModalOpen(true)

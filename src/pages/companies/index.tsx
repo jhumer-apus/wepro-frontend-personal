@@ -557,21 +557,32 @@ export default function CompaniesPage(): React.JSX.Element {
                             <TableCell>
                               <div className="space-y-1">
                                 <div className="font-medium">
-                                  {company.packageId?.name || 'N/A'}
+                                  {company.packageId
+                                    ? typeof company.packageId === 'object'
+                                      ? company.packageId.name
+                                      : company.packageId
+                                    : 'N/A'}
                                 </div>
                                 <div className="text-xs text-neutral-500">
-                                  {company.packageId?.type} - $
-                                  {company.packageId?.price}
+                                  {typeof company.packageId === 'object' && company.packageId
+                                    ? `${company.packageId.type} - $${company.packageId.price}`
+                                    : '-'}
                                 </div>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="space-y-1">
                                 <div className="font-medium">
-                                  {company.timezoneId?.name || 'N/A'}
+                                  {company.timezoneId
+                                    ? typeof company.timezoneId === 'object'
+                                      ? company.timezoneId.name
+                                      : company.timezoneId
+                                    : 'N/A'}
                                 </div>
                                 <div className="text-xs text-neutral-500">
-                                  {company.timezoneId?.value}
+                                  {typeof company.timezoneId === 'object' && company.timezoneId
+                                    ? company.timezoneId.value
+                                    : '-'}
                                 </div>
                               </div>
                             </TableCell>
@@ -788,10 +799,16 @@ export default function CompaniesPage(): React.JSX.Element {
                             </div>
                             <div>
                               <div className="font-medium text-neutral-900 dark:text-neutral-100">
-                                {company.packageId?.name || 'N/A'}
+                                {company.packageId
+                                  ? typeof company.packageId === 'object'
+                                    ? company.packageId.name
+                                    : company.packageId
+                                  : 'N/A'}
                               </div>
                               <div className="text-xs text-neutral-500">
-                                {company.packageId?.type} - ${company.packageId?.price}
+                                {typeof company.packageId === 'object' && company.packageId
+                                  ? `${company.packageId.type} - $${company.packageId.price}`
+                                  : '-'}
                               </div>
                             </div>
                           </div>
@@ -803,10 +820,16 @@ export default function CompaniesPage(): React.JSX.Element {
                             </div>
                             <div>
                               <div className="font-medium text-neutral-900 dark:text-neutral-100">
-                                {company.timezoneId?.name || 'N/A'}
+                                {company.timezoneId
+                                  ? typeof company.timezoneId === 'object'
+                                    ? company.timezoneId.name
+                                    : company.timezoneId
+                                  : 'N/A'}
                               </div>
                               <div className="text-xs text-neutral-500">
-                                {company.timezoneId?.value}
+                                {typeof company.timezoneId === 'object' && company.timezoneId
+                                  ? company.timezoneId.value
+                                  : '-'}
                               </div>
                             </div>
                           </div>

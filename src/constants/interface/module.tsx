@@ -28,9 +28,9 @@ export interface PackageModule {
   _id: string
   packageId: string
   moduleCode: string
-  createdAt: string
-  updatedAt: string
-  module: {
+  createdAt?: string
+  updatedAt?: string
+  module?: {
     _id: string
     name: string
     isP1Module: boolean
@@ -39,14 +39,14 @@ export interface PackageModule {
   }
 }
 
-// Module interface used in package view
+// Module interface used in package view (full shape when populated)
 export interface Module {
   _id: string
   packageId: string
   moduleCode: string
-  createdAt: string
-  updatedAt: string
-  module: {
+  createdAt?: string
+  updatedAt?: string
+  module?: {
     _id: string
     name: string
     isP1Module: boolean

@@ -15,6 +15,7 @@ interface TemplateSubNavigationItem {
   path: string
   label: string
   icon: React.ComponentType<{ className?: string }>
+  moduleCodes?: string[]
 }
 
 const templateSubNavigationItems: TemplateSubNavigationItem[] = [

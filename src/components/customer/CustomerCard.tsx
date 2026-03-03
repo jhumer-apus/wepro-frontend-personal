@@ -99,16 +99,22 @@ export const CustomerCard = ({
                 </p>
               )}
 
-              {(customer.addressUnit || customer.location) && (
-                <p className="flex items-center space-x-2">
-                  <MapPin className="w-3 h-3" />
-                  <span className="truncate">
-                    {[customer.addressUnit, customer.location]
-                      .filter(Boolean)
-                      .join(", ")}
-                  </span>
-                </p>
-              )}
+              {(() => {
+                const addressParts = [
+                  customer.apartmentUnit,
+                  customer.city,
+                  customer.state,
+                  customer.country,
+                  customer.zipCode,
+                ].filter(Boolean)
+                const address = addressParts.join(", ")
+                return address ? (
+                  <p className="flex items-center space-x-2">
+                    <MapPin className="w-3 h-3" />
+                    <span className="truncate">{address}</span>
+                  </p>
+                ) : null
+              })()}
             </div>
 
             {/* Source */}

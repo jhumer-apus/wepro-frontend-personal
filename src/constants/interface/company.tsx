@@ -3,20 +3,26 @@ export interface Company {
   name: string
   type: 'Tenant' | 'Customer' | 'Partner'
   username: string
-  passwordHash: string
-  packageId: {
-    _id: string
-    name: string
-    type: string
-    price: number
-    tenantId: string
-    isPublic: boolean
-  }
-  timezoneId: {
-    _id: string
-    value: string
-    name: string
-  }
+  passwordHash?: string
+  /** Plain password for mock/dummy data only */
+  password?: string
+  packageId:
+    | string
+    | {
+        _id: string
+        name: string
+        type: string
+        price: number
+        tenantId: string
+        isPublic: boolean
+      }
+  timezoneId:
+    | string
+    | {
+        _id: string
+        value: string
+        name: string
+      }
   createdAt: string
   updatedAt: string
   phone?: string

@@ -27,6 +27,7 @@ import {
   Settings,
   Play,
   FileText,
+  Shield,
 } from 'lucide-react'
 import { usePermissions } from '@/src/hooks/usePermissions'
 import { toast } from 'sonner'

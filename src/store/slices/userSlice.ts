@@ -26,7 +26,7 @@ interface Module {
   permissions: Permission[]
 }
 
-interface UserData {
+export interface UserData {
   _id: string
   name: string
   type: string

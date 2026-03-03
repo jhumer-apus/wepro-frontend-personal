@@ -577,11 +577,7 @@ export default function CreateSourcePage() {
           }
         )
       }
-    } catch (error) {
-      console.error(
-        `Error ${isEditing ? 'updating' : 'creating'} source:`,
-        error
-      )
+    } catch (error:any) {
       toast.error(
         isEditing ? 'Failed to update source' : 'Failed to create source',
         {

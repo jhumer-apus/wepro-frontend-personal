@@ -34,12 +34,12 @@ export interface Package {
     perWhatsappSms: number
     perEmail: number
   }
-  createdBy: CreatedBy
-  tenantId: TenantId
-  isPublic: boolean
+  createdBy: CreatedBy | string
+  tenantId?: TenantId | string
+  isPublic?: boolean
   createdAt: string
-  updatedAt: string
-  modules: import('./module').Module[]
+  updatedAt?: string
+  modules: import('./module').PackageModule[]
 }
 
 // Package interface for creation/editing (used in create.tsx)

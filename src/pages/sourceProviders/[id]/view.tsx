@@ -278,7 +278,9 @@ export default function SourceProviderViewPage(): React.JSX.Element {
                     Package Name
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {sourceProviderData.packageId.name}
+                    {typeof sourceProviderData.packageId === 'object' && sourceProviderData.packageId !== null
+                      ? sourceProviderData.packageId.name
+                      : sourceProviderData.packageId ?? '-'}
                   </p>
                 </div>
                 <div>
@@ -286,7 +288,9 @@ export default function SourceProviderViewPage(): React.JSX.Element {
                     Package Type
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {sourceProviderData.packageId.type}
+                    {typeof sourceProviderData.packageId === 'object' && sourceProviderData.packageId !== null
+                      ? sourceProviderData.packageId.type
+                      : '-'}
                   </p>
                 </div>
                 <div>
@@ -294,7 +298,9 @@ export default function SourceProviderViewPage(): React.JSX.Element {
                     Price
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    ${sourceProviderData.packageId.price}
+                    {typeof sourceProviderData.packageId === 'object' && sourceProviderData.packageId !== null
+                      ? `$${sourceProviderData.packageId.price}`
+                      : '-'}
                   </p>
                 </div>
                 <div>
@@ -302,7 +308,9 @@ export default function SourceProviderViewPage(): React.JSX.Element {
                     Public Package
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {sourceProviderData.packageId.isPublic ? 'Yes' : 'No'}
+                    {typeof sourceProviderData.packageId === 'object' && sourceProviderData.packageId !== null && 'isPublic' in sourceProviderData.packageId
+                      ? sourceProviderData.packageId.isPublic ? 'Yes' : 'No'
+                      : '-'}
                   </p>
                 </div>
               </div>
@@ -324,7 +332,9 @@ export default function SourceProviderViewPage(): React.JSX.Element {
                     Timezone
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {sourceProviderData.timezoneId.name}
+                    {typeof sourceProviderData.timezoneId === 'object' && sourceProviderData.timezoneId !== null
+                      ? sourceProviderData.timezoneId.name
+                      : sourceProviderData.timezoneId ?? '-'}
                   </p>
                 </div>
                 <div>
@@ -332,7 +342,9 @@ export default function SourceProviderViewPage(): React.JSX.Element {
                     Timezone Value
                   </label>
                   <p className="text-neutral-900 dark:text-neutral-100 font-medium">
-                    {sourceProviderData.timezoneId.value}
+                    {typeof sourceProviderData.timezoneId === 'object' && sourceProviderData.timezoneId !== null
+                      ? sourceProviderData.timezoneId.value
+                      : '-'}
                   </p>
                 </div>
               </div>

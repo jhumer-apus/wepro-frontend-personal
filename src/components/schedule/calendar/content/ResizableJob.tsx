@@ -87,14 +87,15 @@ export default function ResizableJob(props: PropsWithChildren<Props>) {
             {...attributes}
             onPointerDown={(e) => {
                 // Check if clicking on resize handle - if so, don't start drag
-                if (e.target.closest('.resize-handle')) {
+                const target = e.target as HTMLElement
+                if (target.closest('.resize-handle')) {
                     console.log('🚫 Clicked resize handle - not starting drag');
                     return;
                 }
                 
                 // Start drag for job area clicks
                 console.log('✅ Clicked job area - starting drag');
-                if (listeners.onPointerDown) {
+                if (listeners?.onPointerDown) {
                     listeners.onPointerDown(e);
                 }
             }}

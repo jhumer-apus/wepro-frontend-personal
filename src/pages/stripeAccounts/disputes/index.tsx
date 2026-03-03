@@ -48,6 +48,7 @@ interface LocalAccount {
   id: string
   name: string
   isActive: boolean
+  isDefault: boolean
   balanceData: {
     currentBalance: number
     instantAvailable: number
@@ -76,6 +77,7 @@ export default function StripeAccountsDisputes() {
       id: 'all',
       name: 'All Locations',
       isActive: true,
+      isDefault: false,
       balanceData: {
         currentBalance: 10697.18,
         instantAvailable: 10697.18,
@@ -89,6 +91,7 @@ export default function StripeAccountsDisputes() {
       phone: '(555) 123-4567',
       manager: 'John Smith',
       isActive: true,
+      isDefault: true,
       balanceData: {
         currentBalance: 6420.5,
         instantAvailable: 6420.5,
@@ -102,6 +105,7 @@ export default function StripeAccountsDisputes() {
       phone: '(555) 987-6543',
       manager: 'Sarah Johnson',
       isActive: true,
+      isDefault: false,
       balanceData: {
         currentBalance: 4276.68,
         instantAvailable: 4276.68,

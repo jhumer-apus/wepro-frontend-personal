@@ -560,21 +560,28 @@ export default function SourceProvidersPage(): React.JSX.Element {
                             <TableCell>
                               <div className="space-y-1">
                                 <div className="font-medium">
-                                  {sourceProvider.packageId?.name || 'N/A'}
+                                  {typeof sourceProvider.packageId === 'object' && sourceProvider.packageId
+                                    ? sourceProvider.packageId.name
+                                    : 'N/A'}
                                 </div>
                                 <div className="text-xs text-neutral-500">
-                                  {sourceProvider.packageId?.type} - $
-                                  {sourceProvider.packageId?.price}
+                                  {typeof sourceProvider.packageId === 'object' && sourceProvider.packageId
+                                    ? `${sourceProvider.packageId.type} - $${sourceProvider.packageId.price}`
+                                    : 'N/A'}
                                 </div>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="space-y-1">
                                 <div className="font-medium">
-                                  {sourceProvider.timezoneId?.name || 'N/A'}
+                                  {typeof sourceProvider.timezoneId === 'object' && sourceProvider.timezoneId
+                                    ? sourceProvider.timezoneId.name
+                                    : 'N/A'}
                                 </div>
                                 <div className="text-xs text-neutral-500">
-                                  {sourceProvider.timezoneId?.value}
+                                  {typeof sourceProvider.timezoneId === 'object' && sourceProvider.timezoneId
+                                    ? sourceProvider.timezoneId.value
+                                    : 'N/A'}
                                 </div>
                               </div>
                             </TableCell>
@@ -793,10 +800,14 @@ export default function SourceProvidersPage(): React.JSX.Element {
                             </div>
                             <div>
                               <div className="font-medium text-neutral-900 dark:text-neutral-100">
-                                {sourceProvider.packageId?.name || 'N/A'}
+                                {typeof sourceProvider.packageId === 'object' && sourceProvider.packageId
+                                  ? sourceProvider.packageId.name
+                                  : 'N/A'}
                               </div>
                               <div className="text-xs text-neutral-500">
-                                {sourceProvider.packageId?.type} - ${sourceProvider.packageId?.price}
+                                {typeof sourceProvider.packageId === 'object' && sourceProvider.packageId
+                                  ? `${sourceProvider.packageId.type} - $${sourceProvider.packageId.price}`
+                                  : 'N/A'}
                               </div>
                             </div>
                           </div>
@@ -808,10 +819,14 @@ export default function SourceProvidersPage(): React.JSX.Element {
                             </div>
                             <div>
                               <div className="font-medium text-neutral-900 dark:text-neutral-100">
-                                {sourceProvider.timezoneId?.name || 'N/A'}
+                                {typeof sourceProvider.timezoneId === 'object' && sourceProvider.timezoneId
+                                  ? sourceProvider.timezoneId.name
+                                  : 'N/A'}
                               </div>
                               <div className="text-xs text-neutral-500">
-                                {sourceProvider.timezoneId?.value}
+                                {typeof sourceProvider.timezoneId === 'object' && sourceProvider.timezoneId
+                                  ? sourceProvider.timezoneId.value
+                                  : 'N/A'}
                               </div>
                             </div>
                           </div>

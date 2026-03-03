@@ -19,6 +19,7 @@ import { toast } from '@/src/components/ui/use-toast'
 import { GoogleMap, Marker, StandaloneSearchBox } from '@react-google-maps/api'
 import { apiService } from '@/src/services/api'
 import { usePermissions } from '@/src/hooks/usePermissions'
+import { AxiosError } from 'axios'
 interface FranchiseFormData {
   name: string
   ownerName: string
@@ -448,7 +449,7 @@ export default function CreateFranchisePage() {
 
       // Redirect to franchises list
       router.push('/settings/company/franchises')
-    } catch (error) {
+    } catch (error:any) {
       console.error(
         `Error ${isEditMode ? 'updating' : 'creating'} franchise:`,
         error

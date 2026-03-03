@@ -1,42 +1,55 @@
 export interface Source {
   _id: string
   name: string
-  status: string
-  weproUsername: string
-  email: string
-  phoneNumber: string
-  address: string
+  description?: string
+  type?: string
+  url?: string
+  isActive?: boolean
+  priority?: number
+  color?: string
+  icon?: string
+  metadata?: Record<string, unknown>
+  status?: string
+  weproUsername?: string
+  email?: string
+  phoneNumber?: string
+  address?: string
   addressLine2?: string
-  city: string
-  state: string
-  zipCode: string
-  country: string
-  addressId: string
-  lat: number
-  lng: number
-  franchiseCode: string
-  industryId: string
-  transactionPayFee: string
-  phoneMasking: string
-  callRouting: string
-  tenantId: {
+  city?: string
+  state?: string
+  zipCode?: string
+  country?: string
+  addressId?: string
+  lat?: number
+  lng?: number
+  franchiseCode?: string
+  industryId?: string
+  transactionPayFee?: string
+  phoneMasking?: string
+  callRouting?: string
+  tenantId?: {
     _id: string
     name: string
     username: string
   }
-  byTenantId: {
+  tenant_id?: {
     _id: string
     name: string
     username: string
   }
-  createdBy: {
+  byTenantId?: {
+    _id: string
+    name: string
+    username: string
+  }
+  createdBy?: {
     _id: string
     name: string
     username: string
   }
   createdAt: string
   updatedAt: string
-  code: string
+  code?: string
 }
 
 export interface SourcesResponse {

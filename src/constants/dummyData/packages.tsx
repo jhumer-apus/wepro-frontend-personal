@@ -5,7 +5,7 @@ export const dummyPackages: Package[] = [
     _id: '1',
     name: 'Starter Package',
     type: 'P2',
-    interval: 'monthly',
+    interval: 'Monthly',
     price: 29.99,
     limits: {
       users: 5,
@@ -35,7 +35,7 @@ export const dummyPackages: Package[] = [
     _id: '2',
     name: 'Professional Package',
     type: 'P3',
-    interval: 'monthly',
+    interval: 'Monthly',
     price: 79.99,
     limits: {
       users: 15,
@@ -164,7 +164,7 @@ export const dummyPackages: Package[] = [
     _id: '6',
     name: 'Basic Starter',
     type: 'P2',
-    interval: 'monthly',
+    interval: 'Monthly',
     price: 19.99,
     limits: {
       users: 3,
