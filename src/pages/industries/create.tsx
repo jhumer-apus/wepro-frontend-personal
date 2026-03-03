@@ -63,7 +63,7 @@ export default function CreateIndustryPage(): React.JSX.Element {
       if (isEditing && id && typeof id === 'string' && tenantId) {
         setIsLoading(true)
         try {
-          const response = await apiService.get(`/v1/industries/${id}`)
+          const response = await apiService.get(`/v3/industries/${id}`)
           if (response.data.success) {
             const industryData = response.data.data
             setFormData({
@@ -151,13 +151,13 @@ export default function CreateIndustryPage(): React.JSX.Element {
 
       if (isEditing && id) {
         // Update existing industry
-        await apiService.put(`/v1/industries/${id}`, payload)
+        await apiService.put(`/v3/industries/${id}`, payload)
         toast.success('Industry updated successfully!', {
           description: 'The industry has been updated in the system.',
         })
       } else {
         // Create new industry
-        await apiService.post('/v1/industries', payload)
+        await apiService.post('/v3/industries', payload)
         toast.success('Industry created successfully!', {
           description: 'The new industry has been added to the system.',
         })

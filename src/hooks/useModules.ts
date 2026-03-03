@@ -58,7 +58,7 @@ export const useModules = (tenantId?: string | null) => {
     try {
       dispatch(setLoading(true))
       const response = await apiService.get(
-        `/v1/modules/${tenantId}/permissions`
+        `/v3/modules/${tenantId}/permissions`
       )
       // Handle different possible response structures
       let modulesData: Module[] = []

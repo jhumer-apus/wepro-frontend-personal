@@ -1,140 +1,88 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import config from '@/src/config'
 import { store } from '@/src/store'
-import { logout, refreshTokens } from '@/src/store/slices/authSlice'
+import { logout } from '@/src/store/slices/authSlice'
 
-// Create axios instance with default config
+/**
+ * API client: all requests go to the light server (proxy).
+ * Auth is handled server-side via httpOnly cookies; no tokens on frontend.
+ * Every request is transformed into POST /api/proxy with { method, target_url, data }.
+ */
 const apiClient: AxiosInstance = axios.create({
-  baseURL: config.api.baseUrl,
+  baseURL: '/api/proxy',
   timeout: config.api.timeout,
-  headers: {
-    'Content-Type': 'application/json',
-    // 'ngrok-skip-browser-warning': 'true',
-  },
+  withCredentials: true, // send cookies (session) with every request
 })
 
-// Request interceptor
+// Transform any request into the proxy envelope: POST /api/proxy with { method, target_url, data }
 apiClient.interceptors.request.use(
-  config => {
-    // Add auth token from Redux store if available
-    const state = store.getState()
-    const accessToken = state.auth.tokens?.accessToken
+  reqConfig => {
+    const method = (reqConfig.method ?? 'get').toUpperCase()
+    const targetUrl = reqConfig.url ?? ''
 
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`
+    // ============ method, target, data should exist in the request body ============
+    const isProxyEnvelope =
+      typeof reqConfig.data === 'object' &&
+      reqConfig.data !== null &&
+      'method' in reqConfig.data &&
+      'target_url' in reqConfig.data
+    if (isProxyEnvelope) {
+      // Already in envelope form (e.g. manual proxy call)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('API Request (proxy):', reqConfig.data?.method, reqConfig.data?.target_url)
+      }
+      return reqConfig
     }
-
-    // Log request in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('API Request:', {
-        method: config.method?.toUpperCase(),
-        url: config.url,
-        data: config.data,
-      })
+    const envelope = {
+      method,
+      target_url: targetUrl.startsWith('/') ? targetUrl : `/${targetUrl}`,
+      ...(reqConfig.data !== undefined && method !== 'GET' && { data: reqConfig.data }),
     }
-
-    return config
+    return {
+      ...reqConfig,
+      method: 'POST',
+      url: '',
+      data: envelope,
+    }
   },
-  error => {
-    return Promise.reject(error)
-  }
+  error => Promise.reject(error)
 )
 
-// Response interceptor
+// Response interceptor: log and redirect to login on 401 (session invalid after proxy refresh attempt)
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Log response in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('API Response:', {
-        status: response.status,
-        url: response.config.url,
-        data: response.data,
-      })
+      console.log('API Response:', { status: response.status, url: response.config.url })
     }
-
     return response
   },
-  async error => {
-    const originalRequest = error.config
-
-    // Handle common errors
+  error => {
     if (error.response) {
       const { status, data } = error.response
       console.log({ status, data }, 'error')
-
-      // Handle 401 Unauthorized
-      if (status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true
-
-        try {
-          // Get refresh token from Redux store
-          const state = store.getState()
-          const refreshToken = state.auth.tokens?.refreshToken
-
-          if (refreshToken) {
-            // Attempt to refresh the token
-            const refreshResponse = await axios.post(
-              `${config.api.baseUrl}/v1/auth/refresh-token`,
-              {
-                refreshToken: refreshToken,
-              }
-            )
-
-            if (refreshResponse.data.success) {
-              const {
-                accessToken,
-                expiresIn,
-                refreshExpiresIn,
-                refreshToken: newRefreshToken,
-              } = refreshResponse.data
-
-              // Update tokens in Redux store
-              store.dispatch(
-                refreshTokens({
-                  accessToken,
-                  expiresIn,
-                  refreshExpiresIn,
-                  refreshToken: newRefreshToken,
-                })
-              )
-
-              // Update the original request with new token
-              originalRequest.headers.Authorization = `Bearer ${accessToken}`
-
-              // Retry the original request
-              return apiClient(originalRequest)
-            }
-          }
-        } catch (refreshError) {
-          console.error('Token refresh failed:', refreshError)
-          // If refresh fails, logout the user and redirect to login
-          if (typeof window !== 'undefined') {
-            store.dispatch(logout())
-            window.location.href = '/login'
-          }
-        }
+      if (status === 401 && typeof window !== 'undefined') {
+        store.dispatch(logout())
+        window.location.href = '/login'
       }
-
-      // Handle 403 Forbidden
-      if (status === 403) {
-        console.error('Access forbidden:', data)
-      }
-
-      // Handle 500 Server Error
-      if (status >= 500) {
-        console.error('Server error:', data)
-      }
+      if (status === 403) console.error('Access forbidden:', data)
+      if (status >= 500) console.error('Server error:', data)
     } else if (error.request) {
-      // Network error
       console.error('Network error:', error.request)
     } else {
-      // Other error
       console.error('API error:', error.message)
     }
-
     return Promise.reject(error)
   }
 )
+
+/** Call light server to clear httpOnly auth cookies. Use before dispatching logout(). */
+export async function clearServerSession(): Promise<void> {
+  try {
+    await axios.post('/api/auth/logout', {}, { withCredentials: true })
+  } catch {
+    // Best effort; clear client state anyway
+  }
+}
 
 // API service methods
 export const apiService = {
@@ -193,17 +141,17 @@ export const apiService = {
     if (filters?.sortBy) params.append('sortBy', filters.sortBy)
 
     const queryString = params.toString()
-    const url = `/v1/wepro-phone/spam-protection${queryString ? `?${queryString}` : ''}`
+    const url = `/v3/wepro-phone/spam-protection${queryString ? `?${queryString}` : ''}`
 
     return apiClient.get(url)
   },
 
   getSpamProtectionById: (id: string) => {
-    return apiClient.get(`/v1/wepro-phone/spam-protection/${id}`)
+    return apiClient.get(`/v3/wepro-phone/spam-protection/${id}`)
   },
 
   deleteSpamProtection: (id: string) => {
-    return apiClient.delete(`/v1/wepro-phone/spam-protection/${id}`)
+    return apiClient.delete(`/v3/wepro-phone/spam-protection/${id}`)
   },
 
   createSpamProtection: (data: {
@@ -220,12 +168,12 @@ export const apiService = {
       use_speaker_boost: boolean
     }
   }) => {
-    return apiClient.post('/v1/wepro-phone/spam-protection', data)
+    return apiClient.post('/v3/wepro-phone/spam-protection', data)
   },
 
   regenerateSpamProtectionAudio: (id: string) => {
     return apiClient.post(
-      `/v1/wepro-phone/spam-protection/${id}/regenerate-audio`
+      `/v3/wepro-phone/spam-protection/${id}/regenerate-audio`
     )
   },
 
@@ -246,7 +194,7 @@ export const apiService = {
       }
     }
   ) => {
-    return apiClient.put(`/v1/wepro-phone/spam-protection/${id}`, data)
+    return apiClient.put(`/v3/wepro-phone/spam-protection/${id}`, data)
   },
 
   getSpamProtectionStatistics: (filters?: {
@@ -258,13 +206,13 @@ export const apiService = {
     if (filters?.endDate) params.append('endDate', filters.endDate)
 
     const queryString = params.toString()
-    const url = `/v1/wepro-phone/spam-protection/statistics${queryString ? `?${queryString}` : ''}`
+    const url = `/v3/wepro-phone/spam-protection/statistics${queryString ? `?${queryString}` : ''}`
 
     return apiClient.get(url)
   },
 
   getPhoneNumberById: (id: string) => {
-    return apiClient.get(`/v1/wepro-phone/phone-numbers/${id}`)
+    return apiClient.get(`/v3/wepro-phone/phone-numbers/${id}`)
   },
 
   getPhoneNumberStatistics: (filters?: {
@@ -276,7 +224,7 @@ export const apiService = {
     if (filters?.endDate) params.append('endDate', filters.endDate)
 
     const queryString = params.toString()
-    const url = `/v1/wepro-phone/phone-numbers/statistics${queryString ? `?${queryString}` : ''}`
+    const url = `/v3/wepro-phone/phone-numbers/statistics${queryString ? `?${queryString}` : ''}`
 
     return apiClient.get(url)
   },
@@ -314,7 +262,7 @@ export const apiService = {
       params.append('limit', filters.limit.toString())
 
     const queryString = params.toString()
-    const url = `/v1/wepro-phone/phone-numbers/available${queryString ? `?${queryString}` : ''}`
+    const url = `/v3/wepro-phone/phone-numbers/available${queryString ? `?${queryString}` : ''}`
 
     return apiClient.get(url)
   },
@@ -324,7 +272,7 @@ export const apiService = {
     numberType: string
     friendlyName: string
   }) => {
-    return apiClient.post('/v1/wepro-phone/phone-numbers/purchase', data)
+    return apiClient.post('/v3/wepro-phone/phone-numbers/purchase', data)
   },
 
   // Service Packages methods
@@ -341,13 +289,13 @@ export const apiService = {
     if (filters?.tenantId) params.append('tenantId', filters.tenantId)
 
     const queryString = params.toString()
-    const url = `/v1/answering-services/packages${queryString ? `?${queryString}` : ''}`
+    const url = `/v3/answering-services/packages${queryString ? `?${queryString}` : ''}`
 
     return apiClient.get(url)
   },
 
   getServicePackageById: (id: string) => {
-    return apiClient.get(`/v1/answering-services/packages/${id}`)
+    return apiClient.get(`/v3/answering-services/packages/${id}`)
   },
 
   createServicePackage: (data: {
@@ -361,7 +309,7 @@ export const apiService = {
     isActive: boolean
     isPublic: boolean
   }) => {
-    return apiClient.post('/v1/answering-services/packages', data)
+    return apiClient.post('/v3/answering-services/packages', data)
   },
 
   updateServicePackage: (
@@ -378,11 +326,11 @@ export const apiService = {
       isPublic: boolean
     }
   ) => {
-    return apiClient.put(`/v1/answering-services/packages/${id}`, data)
+    return apiClient.put(`/v3/answering-services/packages/${id}`, data)
   },
 
   deleteServicePackage: (id: string) => {
-    return apiClient.delete(`/v1/answering-services/packages/${id}`)
+    return apiClient.delete(`/v3/answering-services/packages/${id}`)
   },
 
   // Stripe Accounts methods
@@ -395,7 +343,7 @@ export const apiService = {
     if (filters?.limit) params.append('limit', filters.limit.toString())
 
     const queryString = params.toString()
-    const url = `/v1/stripe-accounts${queryString ? `?${queryString}` : ''}`
+    const url = `/v3/stripe-accounts${queryString ? `?${queryString}` : ''}`
 
     return apiClient.get(url)
   },

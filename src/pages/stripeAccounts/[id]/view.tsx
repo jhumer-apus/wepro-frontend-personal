@@ -136,7 +136,7 @@ export default function StripeAccountViewPage(): React.JSX.Element {
         setLoading(true)
         setError(null)
         const response = await apiService.get<StripeAccountResponse>(
-          `/v1/stripe-accounts/${id}`
+          `/v3/stripe-accounts/${id}`
         )
 
         if (response.data.success) {

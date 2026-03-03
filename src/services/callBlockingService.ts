@@ -29,7 +29,7 @@ export const callBlockingService = {
     }
 
     const response = await apiService.get<CallBlockingResponse>(
-      `/v1/wepro-phone/call-blocking?${params.toString()}`
+      `/v3/wepro-phone/call-blocking?${params.toString()}`
     )
 
     return response.data
@@ -47,7 +47,7 @@ export const callBlockingService = {
     tags?: string[]
   }) => {
     const response = await apiService.post(
-      '/v1/wepro-phone/call-blocking',
+      '/v3/wepro-phone/call-blocking',
       data
     )
     return response.data
@@ -69,7 +69,7 @@ export const callBlockingService = {
     }>
   ) => {
     const response = await apiService.put(
-      `/v1/wepro-phone/call-blocking/${id}`,
+      `/v3/wepro-phone/call-blocking/${id}`,
       data
     )
     return response.data
@@ -78,7 +78,7 @@ export const callBlockingService = {
   // Delete a call blocking rule
   deleteCallBlockingRule: async (id: string) => {
     const response = await apiService.delete(
-      `/v1/wepro-phone/call-blocking/${id}`
+      `/v3/wepro-phone/call-blocking/${id}`
     )
     return response.data
   },
@@ -86,7 +86,7 @@ export const callBlockingService = {
   // Toggle rule status (activate/deactivate)
   toggleRuleStatus: async (id: string, status: 'active' | 'inactive') => {
     const response = await apiService.patch(
-      `/v1/wepro-phone/call-blocking/${id}/status`,
+      `/v3/wepro-phone/call-blocking/${id}/status`,
       { status }
     )
     return response.data
@@ -96,7 +96,7 @@ export const callBlockingService = {
   getCallBlockingStatistics:
     async (): Promise<CallBlockingStatisticsResponse> => {
       const response = await apiService.get<CallBlockingStatisticsResponse>(
-        '/v1/wepro-phone/call-blocking/statistics'
+        '/v3/wepro-phone/call-blocking/statistics'
       )
       return response.data
     },

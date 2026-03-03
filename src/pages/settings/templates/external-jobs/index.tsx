@@ -193,7 +193,7 @@ export default function ExternalJobTemplatesPage() {
     setSourcesLoading(true)
     try {
       const response = await apiService.get(
-        '/v1/sources?page=1&limit=50&sort=-createdAt'
+        '/v3/sources?page=1&limit=50&sort=-createdAt'
       )
       const sourcesData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -239,7 +239,7 @@ export default function ExternalJobTemplatesPage() {
       }
 
       const response = await apiService.get(
-        `/v1/templates/external-jobs?${queryParams.toString()}`
+        `/v3/templates/external-jobs?${queryParams.toString()}`
       )
       const responseData: ExternalJobTemplatesResponse = response.data
 
@@ -355,7 +355,7 @@ export default function ExternalJobTemplatesPage() {
     try {
       setDeleting(true)
       await apiService.delete(
-        `/v1/templates/external-jobs/${templateToDelete._id}`
+        `/v3/templates/external-jobs/${templateToDelete._id}`
       )
 
       // Refresh the list

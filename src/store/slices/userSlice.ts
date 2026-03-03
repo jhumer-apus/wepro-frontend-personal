@@ -1,12 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-interface TimezoneId {
+export interface TimezoneId {
   _id: string
   value: string
   name: string
 }
 
-interface Permission {
+export interface Permission {
   _id: string
   moduleCode: string
   key: string
@@ -15,7 +15,7 @@ interface Permission {
   updatedAt: string
 }
 
-interface Module {
+export interface Module {
   _id: string
   name: string
   isP1Module: boolean
@@ -26,18 +26,50 @@ interface Module {
   permissions: Permission[]
 }
 
+export interface PhoneNumberFormat {
+  country_code: string
+  number: string
+}
+
+/** User data in Redux — can be from full user payload or technician profile on login */
 export interface UserData {
-  _id: string
+  _id?: string
   name: string
-  type: string
+  type?: string
   username: string
-  passwordHash: string
-  timezoneId: TimezoneId
+  passwordHash?: string
+  timezoneId?: TimezoneId
   tenantId?: string | null
-  createdAt: string
-  updatedAt: string
-  permissions: Permission[]
-  modules: Module[]
+  createdAt?: string
+  updatedAt?: string
+  permissions?: Permission[]
+  modules?: Module[]
+  // Profile fields (from /v3/technicians/users/profile)
+  firstname?: string
+  lastname?: string
+  email?: string
+  picture?: string | null
+  phone_number?: string | null
+  phone_numberFormat?: PhoneNumberFormat | null
+  address?: string | null
+  location?: string | null
+  city?: string | null
+  zip?: string | null
+  state?: string | null
+  country?: string | null
+  lat?: string | null
+  lng?: string | null
+  formatted_address?: string | null
+  place_id?: string | null
+  profile_status?: string
+  status?: string
+  phoneNo?: string
+  emailCheck?: string
+  is_clock_in?: string
+  user_status?: string
+  userAvail?: string
+  availability_hours?: boolean
+  created_date?: string
 }
 
 interface UserState {

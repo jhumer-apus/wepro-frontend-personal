@@ -30,9 +30,9 @@ const authSlice = createSlice({
       state.loading = action.payload
     },
 
-    // Login user
-    login: (state, action: PayloadAction<Tokens>) => {
-      state.tokens = action.payload
+    // Login user. Pass tokens to store them (legacy), or no payload when using light server (session in httpOnly cookie).
+    login: (state, action: PayloadAction<Tokens | undefined>) => {
+      if (action.payload) state.tokens = action.payload
       state.isAuthenticated = true
       state.error = null
       state.loading = false

@@ -320,7 +320,7 @@ export default function KnowledgeHubAnnouncementsPage() {
     setSourcesLoading(true)
     try {
       const response = await apiService.get(
-        '/v1/sources?page=1&limit=50&sort=-createdAt'
+        '/v3/sources?page=1&limit=50&sort=-createdAt'
       )
       const sourcesData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -395,7 +395,7 @@ export default function KnowledgeHubAnnouncementsPage() {
       }
 
       const response = await apiService.get(
-        `/v1/knowledge-hub/announcements?${queryParams.toString()}`
+        `/v3/knowledge-hub/announcements?${queryParams.toString()}`
       )
       const responseData: AnnouncementsResponse = response.data
 
@@ -524,7 +524,7 @@ export default function KnowledgeHubAnnouncementsPage() {
     try {
       setDeleting(true)
       await apiService.delete(
-        `/v1/knowledge-hub/announcements/${announcementToDelete._id}`
+        `/v3/knowledge-hub/announcements/${announcementToDelete._id}`
       )
 
       // Refresh the list

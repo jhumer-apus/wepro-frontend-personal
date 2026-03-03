@@ -11,7 +11,7 @@ export const userService = {
   getUsers: async (params: GetUsersParams = {}): Promise<UsersApiResponse> => {
     const { page = 1, limit = 10, search } = params
 
-    let url = `/v1/users?page=${page}&limit=${limit}`
+    let url = `/v3/users?page=${page}&limit=${limit}`
 
     if (search) {
       url += `&search=${encodeURIComponent(search)}`
@@ -22,6 +22,6 @@ export const userService = {
   },
 
   deleteUser: async (userId: string): Promise<void> => {
-    await apiService.delete(`/v1/users/${userId}`)
+    await apiService.delete(`/v3/users/${userId}`)
   },
 }

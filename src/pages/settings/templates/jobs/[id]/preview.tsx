@@ -175,7 +175,7 @@ export default function JobTemplatePreviewPage(): React.JSX.Element {
         setLoading(true)
         setError(null)
 
-        const response = await apiService.get(`/v1/templates/jobs/${id}`)
+        const response = await apiService.get(`/v3/templates/jobs/${id}`)
 
         let templateData
         if (response.data.success !== undefined) {
@@ -350,7 +350,7 @@ export default function JobTemplatePreviewPage(): React.JSX.Element {
       setError(null)
 
       const response = await apiService.post(
-        `/v1/templates/jobs/${id}/preview`,
+        `/v3/templates/jobs/${id}/preview`,
         {
           channel: activeChannel,
           sampleData: variableValues,

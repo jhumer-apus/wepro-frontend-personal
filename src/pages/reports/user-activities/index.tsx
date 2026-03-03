@@ -203,7 +203,7 @@ export default function UserActivitiesPage() {
         params.append('search', searchTerm.trim())
       }
 
-      const response = await api.get(`/v1/users?${params}`)
+      const response = await api.get(`/v3/users?${params}`)
       if (response.data.success) {
         setUsers(response.data.data)
       }
@@ -219,7 +219,7 @@ export default function UserActivitiesPage() {
     try {
       setLoadingModules(true)
       const response = await api.get(
-        '/v1/package-modules/tenant-modules?page=1&limit=50'
+        '/v3/package-modules/tenant-modules?page=1&limit=50'
       )
       if (response.data.success) {
         setModules(response.data.data)
@@ -245,7 +245,7 @@ export default function UserActivitiesPage() {
       }
 
       // Fetch from all three package types
-      const response = await api.get(`/v1/users/tenants/all?${params}`)
+      const response = await api.get(`/v3/users/tenants/all?${params}`)
 
       // Combine results from all three APIs
       const allTenants = []
@@ -347,8 +347,8 @@ export default function UserActivitiesPage() {
       }
 
       const apiEndpoint = checkPermission('MOD017', 'view_all_logs')
-        ? `/v1/admin/activity-logs?${params}`
-        : `/v1/activity-logs?${params}`
+        ? `/v3/admin/activity-logs?${params}`
+        : `/v3/activity-logs?${params}`
 
       const response = await api.get<ActivityLogsResponse>(apiEndpoint)
 

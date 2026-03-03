@@ -212,7 +212,7 @@ export default function KnowledgeHubNotesScriptsPage() {
     setSourcesLoading(true)
     try {
       const response = await apiService.get(
-        '/v1/sources?page=1&limit=50&sort=-createdAt'
+        '/v3/sources?page=1&limit=50&sort=-createdAt'
       )
       const sourcesData =
         response.data.success !== undefined ? response.data.data : response.data
@@ -263,7 +263,7 @@ export default function KnowledgeHubNotesScriptsPage() {
       }
 
       const response = await apiService.get(
-        `/v1/knowledge-hub/scripts?${queryParams.toString()}`
+        `/v3/knowledge-hub/scripts?${queryParams.toString()}`
       )
       const responseData: ScriptsResponse = response.data
 
@@ -382,7 +382,7 @@ export default function KnowledgeHubNotesScriptsPage() {
 
     try {
       setDeleting(true)
-      await apiService.delete(`/v1/knowledge-hub/scripts/${scriptToDelete._id}`)
+      await apiService.delete(`/v3/knowledge-hub/scripts/${scriptToDelete._id}`)
 
       // Refresh the list
       await fetchScripts()

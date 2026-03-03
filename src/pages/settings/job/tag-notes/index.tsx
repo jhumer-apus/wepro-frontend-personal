@@ -203,8 +203,8 @@ export default function JobTagNotesPage() {
       const hasP1Permission = checkPermissionRef.current('MOD023', 'view')
       const endpoint =
         isP1User || hasP1Permission
-          ? `/v1/job-tag-notes/p1?${params}`
-          : `/v1/job-tag-notes?${params}`
+          ? `/v3/job-tag-notes/p1?${params}`
+          : `/v3/job-tag-notes?${params}`
 
       const response = await apiService.get<JobTagNotesResponse>(endpoint)
 
@@ -263,8 +263,8 @@ export default function JobTagNotesPage() {
       const hasP1Permission = checkPermissionRef.current('MOD021', 'view')
       const endpoint =
         isP1User || hasP1Permission
-          ? `/v1/job-tags/p1?page=1&limit=100&tenantId=${tenantId}`
-          : `/v1/job-tags?page=1&limit=100&tenantId=${tenantId}`
+          ? `/v3/job-tags/p1?page=1&limit=100&tenantId=${tenantId}`
+          : `/v3/job-tags?page=1&limit=100&tenantId=${tenantId}`
 
       const response = await apiService.get(endpoint)
 
@@ -304,8 +304,8 @@ export default function JobTagNotesPage() {
       const hasP1Permission = checkPermission('MOD023', 'delete')
       const endpoint =
         isP1User || hasP1Permission
-          ? `/v1/job-tag-notes/p1/${jobTagNoteToDelete._id}`
-          : `/v1/job-tag-notes/${jobTagNoteToDelete._id}`
+          ? `/v3/job-tag-notes/p1/${jobTagNoteToDelete._id}`
+          : `/v3/job-tag-notes/${jobTagNoteToDelete._id}`
 
       const response = await apiService.delete(endpoint)
       if (!response.data.success) {
@@ -401,8 +401,8 @@ export default function JobTagNotesPage() {
         const hasP1Permission = checkPermission('MOD023', 'update')
         const endpoint =
           isP1User || hasP1Permission
-            ? `/v1/job-tag-notes/p1/${editingJobTagNote._id}`
-            : `/v1/job-tag-notes/${editingJobTagNote._id}`
+            ? `/v3/job-tag-notes/p1/${editingJobTagNote._id}`
+            : `/v3/job-tag-notes/${editingJobTagNote._id}`
 
         const response = await apiService.put(endpoint, formData)
         if (!response.data.success) {
@@ -416,8 +416,8 @@ export default function JobTagNotesPage() {
         const hasP1Permission = checkPermission('MOD023', 'create')
         const endpoint =
           isP1User || hasP1Permission
-            ? '/v1/job-tag-notes/p1'
-            : '/v1/job-tag-notes'
+            ? '/v3/job-tag-notes/p1'
+            : '/v3/job-tag-notes'
 
         const response = await apiService.post(endpoint, formData)
         if (!response.data.success) {

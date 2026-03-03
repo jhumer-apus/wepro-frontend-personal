@@ -111,7 +111,7 @@ export default function IndustryViewPage(): React.JSX.Element {
       setLoading(true)
       setError(null)
       try {
-        const url = `/v1/industries/${id}`
+        const url = `/v3/industries/${id}`
 
         const response = await apiService.get<IndustryResponse>(url)
 
@@ -147,7 +147,7 @@ export default function IndustryViewPage(): React.JSX.Element {
       setJobTypeTreeLoading(true)
       setJobTypeTreeError(null)
       try {
-        const url = `/v1/job-types/tree/${id}?active=true`
+        const url = `/v3/job-types/tree/${id}?active=true`
         const response = await apiService.get<JobTypeTreeResponse>(url)
 
         if (response.data.success) {

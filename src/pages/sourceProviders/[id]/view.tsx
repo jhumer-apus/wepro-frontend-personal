@@ -46,7 +46,7 @@ export default function SourceProviderViewPage(): React.JSX.Element {
         try {
           // Call the actual API endpoint
           const response = await apiService.get<TenantUserResponse>(
-            `/v1/users/tenant/${id}`
+            `/v3/users/tenant/${id}`
           )
 
           if (response.data.success) {

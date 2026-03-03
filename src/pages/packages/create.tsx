@@ -160,7 +160,7 @@ export default function CreatePackagePage(): React.JSX.Element {
       if (isEditing && id && typeof id === 'string') {
         setIsLoading(true)
         try {
-          const response = await apiService.get(`/v1/packages/${id}/modules`)
+          const response = await apiService.get(`/v3/packages/${id}/modules`)
           if (response.data.success && response.data.data) {
             const packageData = response.data.data
             setFormData({
@@ -508,7 +508,7 @@ export default function CreatePackagePage(): React.JSX.Element {
       if (isEditing && id) {
         console.log('Updating package:', { id, payload })
         const response = await apiService.put(
-          `/v1/packages/with-modules/${id}`,
+          `/v3/packages/with-modules/${id}`,
           payload
         )
         console.log('Package updated successfully:', response.data)
@@ -520,7 +520,7 @@ export default function CreatePackagePage(): React.JSX.Element {
       } else {
         console.log('Creating package:', payload)
         const response = await apiService.post(
-          '/v1/packages/with-modules',
+          '/v3/packages/with-modules',
           payload
         )
         console.log('Package created successfully:', response.data)

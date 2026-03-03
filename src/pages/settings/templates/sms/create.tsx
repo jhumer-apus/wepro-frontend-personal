@@ -125,7 +125,7 @@ export default function CreateSMSTemplatePage(): React.JSX.Element {
       if (isEditing && id && typeof id === 'string') {
         setIsLoading(true)
         try {
-          const response = await apiService.get(`/v1/templates/sms/${id}`)
+          const response = await apiService.get(`/v3/templates/sms/${id}`)
 
           let templateData
           if (response.data.success !== undefined) {
@@ -212,13 +212,13 @@ export default function CreateSMSTemplatePage(): React.JSX.Element {
 
       if (isEditing && id) {
         // Update existing template
-        await apiService.put(`/v1/templates/sms/${id}`, payload)
+        await apiService.put(`/v3/templates/sms/${id}`, payload)
         toast.success('SMS template updated successfully!', {
           description: 'The template has been updated in the system.',
         })
       } else {
         // Create new template
-        await apiService.post('/v1/templates/sms', payload)
+        await apiService.post('/v3/templates/sms', payload)
         toast.success('SMS template created successfully!', {
           description: 'The new template has been added to the system.',
         })

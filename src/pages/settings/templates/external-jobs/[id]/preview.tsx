@@ -123,7 +123,7 @@ export default function ExternalJobTemplatePreviewPage(): React.JSX.Element {
         setError(null)
 
         const response = await apiService.get(
-          `/v1/templates/external-jobs/${id}`
+          `/v3/templates/external-jobs/${id}`
         )
 
         let templateData
@@ -203,7 +203,7 @@ export default function ExternalJobTemplatePreviewPage(): React.JSX.Element {
       setError(null)
 
       const response = await apiService.post(
-        `/v1/templates/external-jobs/${id}/preview`,
+        `/v3/templates/external-jobs/${id}/preview`,
         {
           sampleData: variableValues,
         }

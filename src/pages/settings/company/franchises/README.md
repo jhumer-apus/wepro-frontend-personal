@@ -16,7 +16,7 @@ This page provides a comprehensive form for creating new company franchises with
 ### Endpoint
 
 ```
-POST: /v1/franchises
+POST: /v3/franchises
 ```
 
 ### Payload Structure

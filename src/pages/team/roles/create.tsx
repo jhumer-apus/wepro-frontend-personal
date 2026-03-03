@@ -55,7 +55,7 @@ export default function CreateRole() {
   const fetchModules = async (tenantId: string) => {
     setModulesLoading(true)
     try {
-      const response = await apiService.get(`/v1/modules/permissions`)
+      const response = await apiService.get(`/v3/modules/permissions`)
       setAvailableModules(response.data.data || [])
     } catch (error) {
       console.error('Error fetching modules:', error)
@@ -87,7 +87,7 @@ export default function CreateRole() {
           // Load role data for editing
           setIsLoading(true)
           try {
-            const response = await apiService.get(`/v1/role-management/${id}`)
+            const response = await apiService.get(`/v3/role-management/${id}`)
             const roleData = response.data.data // The actual role data is nested under response.data.data
 
             // Transform the API response to match our form structure
@@ -203,7 +203,7 @@ export default function CreateRole() {
       // Make API call to create or update the role
       if (isEditing) {
         console.log('Updating role:', { id, roleData })
-        const response = await apiService.put(`/v1/role-management/${id}`, {
+        const response = await apiService.put(`/v3/role-management/${id}`, {
           name: roleData.name,
           isFeatured: roleData.isFeatured,
           permissions: roleData.permissions,
@@ -217,7 +217,7 @@ export default function CreateRole() {
         })
       } else {
         console.log('Creating role:', roleData)
-        const response = await apiService.post('/v1/role-management', roleData)
+        const response = await apiService.post('/v3/role-management', roleData)
         console.log('Role created successfully:', response.data)
 
         // Show success toast for creation

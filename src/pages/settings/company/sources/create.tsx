@@ -178,7 +178,7 @@ export default function CreateSourcePage() {
       try {
         setFranchisesLoading(true)
         const response = await apiService.get(
-          '/v1/franchises?page=1&limit=50&sort=-createdAt'
+          '/v3/franchises?page=1&limit=50&sort=-createdAt'
         )
         setAvailableFranchises(response.data.data)
       } catch (error) {
@@ -201,7 +201,7 @@ export default function CreateSourcePage() {
       try {
         setIndustriesLoading(true)
         const response = await apiService.get(
-          '/v1/industries?sort=-createdAt&page=1&limit=50'
+          '/v3/industries?sort=-createdAt&page=1&limit=50'
         )
         setAvailableIndustries(response.data.data)
       } catch (error) {
@@ -225,7 +225,7 @@ export default function CreateSourcePage() {
         try {
           setTenantsLoading(true)
           const response = await apiService.get(
-            '/v1/users/tenant?page=1&limit=100&packageType=P3'
+            '/v3/users/tenant?page=1&limit=100&packageType=P3'
           )
           setAvailableTenants(
             response.data.data.map((tenant: any) => ({
@@ -266,7 +266,7 @@ export default function CreateSourcePage() {
         setLoading(true)
         try {
           // Fetch source data from API
-          const response = await apiService.get(`/v1/sources/${id}`)
+          const response = await apiService.get(`/v3/sources/${id}`)
           const sourceData = response.data.data
           setTimeout(() => {
             setMarkerBuffer(true)
@@ -547,9 +547,9 @@ export default function CreateSourcePage() {
       // Make the actual API call
       let response
       if (isEditing && id) {
-        response = await apiService.put(`/v1/sources/${id}`, payload)
+        response = await apiService.put(`/v3/sources/${id}`, payload)
       } else {
-        response = await apiService.post('/v1/sources', payload)
+        response = await apiService.post('/v3/sources', payload)
       }
 
       if (response.data.success) {

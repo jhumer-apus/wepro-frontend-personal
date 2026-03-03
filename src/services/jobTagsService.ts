@@ -25,7 +25,7 @@ export const jobTagsService = {
     const { page = 1, limit = 10, tenantId, search, isP1 } = params
 
     // Use P1 endpoint if user has P1 permissions
-    const baseUrl = isP1 ? '/v1/job-tags/p1' : '/v1/job-tags'
+    const baseUrl = isP1 ? '/v3/job-tags/p1' : '/v3/job-tags'
     let url = `${baseUrl}?page=${page}&limit=${limit}&tenantId=${tenantId}`
 
     if (search) {
@@ -51,11 +51,11 @@ export const jobTagsService = {
       success: boolean
       data: JobTag
       message: string
-    }>(`/v1/job-tags/${id}`, updateData)
+    }>(`/v3/job-tags/${id}`, updateData)
     return response.data.data
   },
 
   deleteJobTag: async (id: string): Promise<void> => {
-    await apiService.delete(`/v1/job-tags/${id}`)
+    await apiService.delete(`/v3/job-tags/${id}`)
   },
 }

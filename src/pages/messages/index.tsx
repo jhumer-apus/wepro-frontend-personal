@@ -4,7 +4,10 @@ import { useState, useRef, useEffect } from 'react'
 import { Card, CardContent } from '@/src/components/ui/card'
 import { Button } from '@/src/components/ui/button'
 import { Badge } from '@/src/components/ui/badge'
+import { JobForm } from '@/src/components/job'
+import NewJobScheduleDialog from '@/src/components/schedule/NewJobScheduleDialog'
 import { Input } from '@/src/components/ui/input'
+import SelectInput from '@/src/components/input/select'
 import { Textarea } from '@/src/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar'
 import {
@@ -27,6 +30,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/src/components/ui/dropdown-menu'
+import { calculateEndTime } from '@/src/lib/calculate'
 import {
   MessageSquare,
   Search,
@@ -77,7 +81,31 @@ const MessagesIndex: React.FC = (): React.JSX.Element => {
   const [selectedClient, setSelectedClient] = useState(null)
   const [showQuickReplies, setShowQuickReplies] = useState(false)
   const [showEditJobDialog, setShowEditJobDialog] = useState(false)
-  const [selectedJobId, setSelectedJobId] = useState(null)
+  const [selectedJob, setSelectedJob] = useState<any>(null)
+  const [newJobData, setNewJobData] = useState({
+    title: '',
+    client: '',
+    clientPhone: '',
+    address: '',
+    description: '',
+    jobType: 'HVAC',
+    estimatedDuration: 120,
+    scheduledDate: '',
+    scheduledTime: '09:00',
+    endTime: '11:00',
+    value: 0,
+    technicianId: 'unassigned',
+    metroArea: 'Houston Metro',
+    tags: [],
+    notes: '',
+  })
+
+  const technicians = [
+    { id: 'tech-1', name: 'Mike Rodriguez' },
+    { id: 'tech-2', name: 'Jennifer Lee' },
+    { id: 'tech-3', name: 'David Smith' },
+  ]
+  const metroAreas = ['Houston Metro', 'Dallas Metro', 'Austin Metro']
 
   // Sample conversations data
   const [conversationsList] = useState([
@@ -142,6 +170,95 @@ const MessagesIndex: React.FC = (): React.JSX.Element => {
         service: 'HVAC',
         location: 'Austin, TX',
       },
+    },
+    {
+      id: 5,
+      name: 'Daniel Morris',
+      type: 'client',
+      avatar: 'DM',
+      lastMessage: 'Can we move my appointment to tomorrow morning?',
+      timestamp: '2 hours ago',
+      unread: 0,
+      online: false,
+      phone: '+1 (555) 654-1142',
+      address: '112 Cedar Ln, Austin, TX',
+      jobHistory: 3,
+      source: 'google-ads',
+      franchise: 'Houston Central',
+    },
+    {
+      id: 6,
+      name: 'Olivia Carter',
+      type: 'client',
+      avatar: 'OC',
+      lastMessage: 'The upstairs vent is still making noise.',
+      timestamp: '3 hours ago',
+      unread: 1,
+      online: true,
+      phone: '+1 (555) 207-8841',
+      address: '78 Lakeview Dr, Houston, TX',
+      jobHistory: 4,
+      source: 'referral',
+      franchise: 'Houston Central',
+    },
+    {
+      id: 7,
+      name: 'Ethan Walker',
+      type: 'client',
+      avatar: 'EW',
+      lastMessage: 'Thanks, the issue is resolved now.',
+      timestamp: '5 hours ago',
+      unread: 0,
+      online: false,
+      phone: '+1 (555) 990-3310',
+      address: '503 Maple Ave, Dallas, TX',
+      jobHistory: 2,
+      source: 'website',
+      franchise: 'Dallas North',
+    },
+    {
+      id: 8,
+      name: 'Sophia Reed',
+      type: 'client',
+      avatar: 'SR',
+      lastMessage: 'Please share the invoice once done.',
+      timestamp: 'Yesterday',
+      unread: 0,
+      online: false,
+      phone: '+1 (555) 812-4439',
+      address: '17 Hillcrest Rd, Sugar Land, TX',
+      jobHistory: 6,
+      source: 'google-ads',
+      franchise: 'Houston Central',
+    },
+    {
+      id: 9,
+      name: 'Noah Bennett',
+      type: 'tech',
+      avatar: 'NB',
+      lastMessage: 'I am at the customer location for Job #J702.',
+      timestamp: 'Yesterday',
+      unread: 0,
+      online: true,
+      phone: '+1 (555) 731-2294',
+      specialties: ['Electrical', 'Plumbing'],
+      completedJobs: 412,
+      rating: 4.7,
+    },
+    {
+      id: 10,
+      name: 'Ava Brooks',
+      type: 'client',
+      avatar: 'AB',
+      lastMessage: 'Can someone check the AC before the weekend?',
+      timestamp: '2 days ago',
+      unread: 2,
+      online: false,
+      phone: '+1 (555) 118-7726',
+      address: '65 Westpark Ct, Katy, TX',
+      jobHistory: 1,
+      source: 'facebook',
+      franchise: 'Dallas North',
     },
   ])
 
@@ -235,42 +352,47 @@ const MessagesIndex: React.FC = (): React.JSX.Element => {
     "What's the best time for our tech to arrive?",
     "We'll call you when we're 15 minutes away",
   ]
+  const franchiseOptions = [
+    { label: 'All Franchises', value: 'all' },
+    { label: 'Houston Central', value: 'Houston Central' },
+    { label: 'Dallas North', value: 'Dallas North' },
+  ]
 
   // Client log data
   const clientLogData = {
     1: {
       personalInfo: {
-        name: 'Sarah Johnson',
-        phone: '+1 (555) 123-4567',
-        email: 'sarah.johnson@email.com',
-        address: '123 Main St, Houston, TX 77001',
+        name: "Sarah Johnson",
+        phone: "+1 (555) 123-4567",
+        email: "sarah.johnson@email.com",
+        address: "123 Main St, Houston, TX 77001",
       },
       jobHistory: [
         {
-          id: 'J001',
-          date: '2024-01-15',
-          service: 'Plumbing',
-          issue: 'Kitchen sink repair',
-          technician: 'Mike Rodriguez',
-          status: 'Completed',
-          cost: '$185',
+          id: "J001",
+          date: "2024-01-15",
+          service: "Plumbing",
+          issue: "Kitchen sink repair",
+          technician: "Mike Rodriguez",
+          status: "Completed",
+          cost: "$185",
         },
         {
-          id: 'J002',
-          date: '2024-02-20',
-          service: 'HVAC',
-          issue: 'AC maintenance',
-          technician: 'Jennifer Lee',
-          status: 'Completed',
-          cost: '$125',
+          id: "J002",
+          date: "2024-02-20",
+          service: "HVAC",
+          issue: "AC maintenance",
+          technician: "Jennifer Lee",
+          status: "Completed",
+          cost: "$125",
         },
       ],
       preferences: {
-        preferredTime: 'Morning (8-12 PM)',
-        notes: 'Has a dog - please call before entering yard',
+        preferredTime: "Morning (8-12 PM)",
+        notes: "Has a dog - please call before entering yard",
       },
     },
-  }
+  };
 
   const filteredConversations = conversationsList.filter(conv => {
     const matchesSearch = conv.name
@@ -294,7 +416,35 @@ const MessagesIndex: React.FC = (): React.JSX.Element => {
 
   const createJobFromMessage = (message: any) => {
     setSelectedMessageForJob(message)
+    const now = new Date()
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}-${String(now.getDate()).padStart(2, '0')}`
+    const startTime = '09:00'
+    setNewJobData({
+      title: `${selectedConversation?.name || message?.sender || 'Client'} Service Request`,
+      client: selectedConversation?.name || message?.sender || '',
+      clientPhone: selectedConversation?.phone || '',
+      address: selectedConversation?.address || '',
+      description: message?.content || '',
+      jobType: 'HVAC',
+      estimatedDuration: 120,
+      scheduledDate: today,
+      scheduledTime: startTime,
+      endTime: calculateEndTime(startTime, 120),
+      value: 0,
+      technicianId: 'unassigned',
+      metroArea: 'Houston Metro',
+      tags: [],
+      notes: 'Created from Messages page',
+    })
     setShowAddJobDialog(true)
+  }
+
+  const handleCreateJob = () => {
+    console.log('Creating scheduled job:', newJobData)
+    setShowAddJobDialog(false)
   }
 
   const viewClientLog = (client: any) => {
@@ -313,7 +463,42 @@ const MessagesIndex: React.FC = (): React.JSX.Element => {
   }
 
   const editJob = (jobId: any) => {
-    setSelectedJobId(jobId)
+    const selectedJobData = jobData[jobId] ?? {
+      id: jobId,
+      service: 'General Service',
+      issue: 'Dummy issue description from messages',
+      priority: 'Medium',
+      status: 'Pending',
+      technician: 'Tech One',
+      scheduledDate: '2024-03-20',
+      scheduledTime: '09:00',
+      estimatedCost: '$150',
+      notes: 'Created from message conversation',
+    }
+
+    // Provide a richer payload so JobForm opens with sensible values.
+    setSelectedJob({
+      id: selectedJobData.id,
+      clientName: selectedConversation?.name || 'Sample Customer',
+      companyName: 'WePro Demo Company',
+      email: 'demo.customer@email.com',
+      phoneNumber: selectedConversation?.phone || '+1 (555) 000-0000',
+      location: selectedConversation?.address || '123 Demo St',
+      city: 'Houston',
+      state: 'TX',
+      zipCode: '77001',
+      country: 'USA',
+      jobCategory: selectedJobData.service,
+      jobType: selectedJobData.service,
+      source: 'Messages',
+      status: selectedJobData.status,
+      startDate: selectedJobData.scheduledDate,
+      startTime: selectedJobData.scheduledTime,
+      assignedTechnician: selectedJobData.technician,
+      jobDescription: selectedJobData.issue,
+      revenue: Number(String(selectedJobData.estimatedCost).replace(/[^0-9.]/g, '')) || 0,
+      notes: selectedJobData.notes,
+    })
     setShowEditJobDialog(true)
   }
 
@@ -356,7 +541,7 @@ const MessagesIndex: React.FC = (): React.JSX.Element => {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
+    <div className="h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col border md:h-[calc(100vh-112px)] rounded-lg overflow-hidden">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -366,19 +551,21 @@ const MessagesIndex: React.FC = (): React.JSX.Element => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-900">Messages</h1>
-              <p className="text-sm text-slate-600">
-                Team & Client Communication
-              </p>
+              <div className="flex flex-row items-center space-x-2">
+                <p className="text-sm text-slate-600">
+                  Team & Client Communication
+                </p>
+                <Badge className="bg-[#53a533]/10 text-[#2f5f1f] border-[#53a533]/20">
+                  {filteredConversations.reduce(
+                    (acc, conv) => acc + conv.unread,
+                    0
+                  )}{' '}
+                  Unread
+                </Badge>
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <Badge className="bg-[#53a533]/10 text-[#2f5f1f] border-[#53a533]/20">
-              {filteredConversations.reduce(
-                (acc, conv) => acc + conv.unread,
-                0
-              )}{' '}
-              Unread
-            </Badge>
             <Dialog>
               <DialogTrigger asChild>
                 <Button className="wepro-button-gradient text-white shadow-lg hover:shadow-xl transition-all duration-200">
@@ -406,21 +593,15 @@ const MessagesIndex: React.FC = (): React.JSX.Element => {
             </div>
 
             <div className="mb-3">
-              <Select
+              <SelectInput
+                options={franchiseOptions}
+                placeholder="All Franchises"
                 value={franchiseFilter}
-                onValueChange={setFranchiseFilter}
-              >
-                <SelectTrigger className="w-full h-8 text-xs bg-slate-50 border-slate-200">
-                  <SelectValue placeholder="All Franchises" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Franchises</SelectItem>
-                  <SelectItem value="Houston Central">
-                    Houston Central
-                  </SelectItem>
-                  <SelectItem value="Dallas North">Dallas North</SelectItem>
-                </SelectContent>
-              </Select>
+                onSearch={() => {}}
+                onSelect={val =>
+                  setFranchiseFilter(Array.isArray(val) ? 'all' : val || 'all')
+                }
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-1">
@@ -488,7 +669,7 @@ const MessagesIndex: React.FC = (): React.JSX.Element => {
                   key={conv.id}
                   className={`p-4 border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors ${
                     selectedConversation?.id === conv.id
-                      ? 'bg-[#53a533]/5 border-l-4 border-l-blue-500'
+                      ? 'bg-[#53a533]/5 border-l-4 border-l-brandGreen-600'
                       : ''
                   }`}
                   onClick={() => setSelectedConversation(conv)}
@@ -1101,220 +1282,31 @@ const MessagesIndex: React.FC = (): React.JSX.Element => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Job Dialog */}
-      <Dialog open={showAddJobDialog} onOpenChange={setShowAddJobDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create Job from Message</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Client</label>
-              <Input value={selectedConversation?.name || ''} disabled />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Issue Description</label>
-              <Textarea value={selectedMessageForJob?.content || ''} rows={3} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Service Type</label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select service" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="plumbing">Plumbing</SelectItem>
-                    <SelectItem value="hvac">HVAC</SelectItem>
-                    <SelectItem value="electrical">Electrical</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Priority</label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowAddJobDialog(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={() => setShowAddJobDialog(false)}>
-                Create Job
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <NewJobScheduleDialog
+        showNewJobDialog={showAddJobDialog}
+        setShowNewJobDialog={setShowAddJobDialog}
+        newJobData={newJobData}
+        setNewJobData={setNewJobData}
+        calculateEndTime={calculateEndTime}
+        technicians={technicians}
+        metroAreas={metroAreas}
+        handleCreateJob={handleCreateJob}
+      />
 
-      {/* Edit Job Dialog */}
-      <Dialog open={showEditJobDialog} onOpenChange={setShowEditJobDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Job #{selectedJobId}</DialogTitle>
-          </DialogHeader>
-          {selectedJobId && jobData[selectedJobId] && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Job ID</label>
-                  <Input value={jobData[selectedJobId].id} disabled />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Status</label>
-                  <Select
-                    defaultValue={jobData[selectedJobId].status
-                      .toLowerCase()
-                      .replace(' ', '-')}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Service Type</label>
-                  <Select
-                    defaultValue={jobData[selectedJobId].service.toLowerCase()}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="plumbing">Plumbing</SelectItem>
-                      <SelectItem value="hvac">HVAC</SelectItem>
-                      <SelectItem value="electrical">Electrical</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Priority</label>
-                  <Select
-                    defaultValue={jobData[selectedJobId].priority.toLowerCase()}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Issue Description</label>
-                <Textarea
-                  defaultValue={jobData[selectedJobId].issue}
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Scheduled Date</label>
-                  <Input
-                    type="date"
-                    defaultValue={jobData[selectedJobId].scheduledDate}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Scheduled Time</label>
-                  <Input type="time" defaultValue="10:00" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">
-                    Assigned Technician
-                  </label>
-                  <Select
-                    defaultValue={jobData[selectedJobId].technician
-                      .toLowerCase()
-                      .replace(' ', '-')}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mike-rodriguez">
-                        Mike Rodriguez
-                      </SelectItem>
-                      <SelectItem value="jennifer-lee">Jennifer Lee</SelectItem>
-                      <SelectItem value="david-smith">David Smith</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Estimated Cost</label>
-                  <Input defaultValue={jobData[selectedJobId].estimatedCost} />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Job Notes</label>
-                <Textarea
-                  defaultValue={jobData[selectedJobId].notes}
-                  rows={2}
-                />
-              </div>
-
-              <div className="flex justify-between">
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    className="text-red-600 border-red-200"
-                  >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Cancel Job
-                  </Button>
-                  <Button variant="outline">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Reschedule
-                  </Button>
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowEditJobDialog(false)}
-                  >
-                    Close
-                  </Button>
-                  <Button onClick={() => setShowEditJobDialog(false)}>
-                    Save Changes
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <JobForm
+        open={showEditJobDialog}
+        onOpenChange={open => {
+          setShowEditJobDialog(open)
+          if (!open) {
+            setSelectedJob(null)
+          }
+        }}
+        jobId={selectedJob?.id ?? null}
+        formData={selectedJob ?? undefined}
+        onJobUpdated={() => {
+          // Optional: refresh data after save.
+        }}
+      />
     </div>
   )
 }

@@ -3,6 +3,7 @@ export interface Config {
     baseUrl: string
     rootUrl?: string
     timeout: number
+    apiKey?: string
   }
   app: {
     name: string
@@ -29,6 +30,7 @@ const configs: Record<string, Config> = {
     api: {
       baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
       rootUrl: process.env.NEXT_PUBLIC_URL,
+      apiKey: process.env.NEXT_PUBLIC_API_KEY,
       timeout: 10000,
     },
     app: {
@@ -44,8 +46,9 @@ const configs: Record<string, Config> = {
   staging: {
     api: {
       baseUrl:
-        process.env.NEXT_PUBLIC_API_URL || 'https://staging-api.wepro.ai/api',
+      process.env.NEXT_PUBLIC_API_URL || 'https://staging-api.wepro.ai/api',
       rootUrl: process.env.NEXT_PUBLIC_URL,
+      apiKey: process.env.NEXT_PUBLIC_API_KEY,
       timeout: 15000,
     },
     app: {
@@ -61,6 +64,7 @@ const configs: Record<string, Config> = {
   production: {
     api: {
       baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.wepro.ai/api',
+      apiKey: process.env.NEXT_PUBLIC_API_KEY,
       rootUrl: process.env.NEXT_PUBLIC_URL,
       timeout: 20000,
     },

@@ -114,7 +114,7 @@ export default function JobTypeViewPage(): React.JSX.Element {
         setError(null)
         try {
           const response = await apiService.get<JobTypeResponse>(
-            `/v1/job-types/${id}`
+            `/v3/job-types/${id}`
           )
 
           if (response.data.success) {

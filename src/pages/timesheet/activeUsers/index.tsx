@@ -58,9 +58,9 @@ export default function ActiveUsersPage() {
         return
       }
 
-      let url = `/v1/timesheets/active`
+      let url = `/v3/timesheets/active`
       if (checkPermission('MOD016', 'view_all_timesheets')) {
-        url = `/v1/admin/timesheets/active`
+        url = `/v3/admin/timesheets/active`
       }
 
       // Add search parameter if provided

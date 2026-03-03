@@ -162,7 +162,7 @@ const { modules, refetch } = useModules(tenantId)
 const handleSubmit = async (e: React.FormEvent) => {
   try {
     // Create or update role
-    await apiService.post('/v1/role-management', roleData)
+    await apiService.post('/v3/role-management', roleData)
 
     // Refresh modules data to get latest permissions
     await refetch()
@@ -197,13 +197,13 @@ const handleSubmit = async (e: React.FormEvent) => {
 ```typescript
 // ✅ Good: Refresh after role creation
 const handleCreateRole = async () => {
-  await apiService.post('/v1/role-management', roleData)
+  await apiService.post('/v3/role-management', roleData)
   await refetch() // Refresh to get latest module data
 }
 
 // ✅ Good: Refresh after permission update
 const handleUpdatePermissions = async () => {
-  await apiService.put('/v1/permissions', permissionData)
+  await apiService.put('/v3/permissions', permissionData)
   await refetch() // Refresh to get updated permissions
 }
 
@@ -215,7 +215,7 @@ const handleViewModules = () => {
 
 // ✅ Good: Conditional refresh
 const handleDataOperation = async () => {
-  const result = await apiService.post('/v1/some-endpoint', data)
+  const result = await apiService.post('/v3/some-endpoint', data)
 
   // Only refresh if the operation affects modules
   if (result.data.affectsModules) {

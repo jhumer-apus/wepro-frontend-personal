@@ -123,10 +123,10 @@ export default function JobMetroAreaPage() {
     setLoading(true)
 
     try {
-      let url = `/v1/metro-areas?page=${currentPage}&limit=${entriesPerPage}&sortBy=createdAt&sortOrder=desc`
+      let url = `/v3/metro-areas?page=${currentPage}&limit=${entriesPerPage}&sortBy=createdAt&sortOrder=desc`
 
       if (debouncedLatitudeFilter && debouncedLongitudeFilter) {
-        url = `/v1/metro-areas/search?lat=${encodeURIComponent(debouncedLatitudeFilter)}&lng=${encodeURIComponent(debouncedLongitudeFilter)}`
+        url = `/v3/metro-areas/search?lat=${encodeURIComponent(debouncedLatitudeFilter)}&lng=${encodeURIComponent(debouncedLongitudeFilter)}`
         if (debouncedSearchTerm) {
           url += `&search=${encodeURIComponent(debouncedSearchTerm)}`
         }
@@ -243,7 +243,7 @@ export default function JobMetroAreaPage() {
 
     setDeleting(true)
     try {
-      await apiService.delete(`/v1/metro-areas/${metroAreaToDelete._id}`)
+      await apiService.delete(`/v3/metro-areas/${metroAreaToDelete._id}`)
       toast.success('Metro area deleted successfully')
       setDeleteDialogOpen(false)
       setMetroAreaToDelete(null)

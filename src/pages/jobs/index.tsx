@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/components/ui/select";
+import { Switch } from "@/src/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -80,6 +81,8 @@ import {
   FileSpreadsheet,
   FileText,
   FileVideo,
+  Maximize2,
+  Send,
 } from "lucide-react";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
@@ -2375,7 +2378,43 @@ export default function Jobs() {
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [showJobDetails, setShowJobDetails] = useState(false);
   const [isEditing, setIsEditing] = useState(true);
+  const [isAdvanceAssign, setIsAdvanceAssign] = useState(false);
+  const isAdvanceAssignRef = useRef(false);
+  const [isCustomTechPayEnabled, setIsCustomTechPayEnabled] = useState(false);
+  const isCustomTechPayEnabledRef = useRef(false);
+  const [showAddPaymentForm, setShowAddPaymentForm] = useState(false);
+  const [paymentFormResetKey, setPaymentFormResetKey] = useState(0);
+  const [paymentValidationError, setPaymentValidationError] = useState("");
+  const [partFormResetKey, setPartFormResetKey] = useState(0);
+  const showAddPaymentFormRef = useRef(false);
+  const paymentValidationErrorRef = useRef("");
+  const paymentDraftRef = useRef<{ paymentType: string; paymentAmount: string }>({
+    paymentType: "",
+    paymentAmount: "",
+  });
+  const partDraftRef = useRef<{ partCost: string; partType: string }>({
+    partCost: "",
+    partType: "tech",
+  });
+  const customTechPayDraftRef = useRef<{ mode: string; amount: string }>({
+    mode: "amount",
+    amount: "0",
+  });
+  const noteDraftRef = useRef("");
+  const activityTypeFilterRef = useRef("all");
+  const activityLogsRef = useRef<
+    Array<{ id: string; color: string; title: string; time: string }>
+  >([
+    { id: "log-note-1", color: "bg-slate-400", title: "Note: THIS IS A TEST_NOTE", time: "2/27/2026, 12:08:04 AM" },
+    { id: "log-note-2", color: "bg-slate-400", title: "Note: dsa", time: "2/27/2026, 12:07:55 AM" },
+    { id: "log-part-1", color: "bg-amber-500", title: "Part added: $3.00 (tech)", time: "2/26/2026, 11:53:32 PM" },
+    { id: "log-payment-1", color: "bg-emerald-500", title: "Payment $1.00 (Check)", time: "2/26/2026, 11:43:27 PM" },
+    { id: "log-payment-2", color: "bg-emerald-500", title: "Payment $1.00 (Cash)", time: "2/26/2026, 11:43:17 PM" },
+    { id: "log-payment-3", color: "bg-emerald-500", title: "Payment $2.00 (Cash)", time: "2/26/2026, 11:43:15 PM" },
+  ]);
   const [editFormData, setEditFormData] = useState({});
+  const selectedJobRef = useRef<any>(null);
+  const editFormDataRef = useRef<Record<string, any>>({});
   const [showSecondPhone, setShowSecondPhone] = useState(false);
   const [panelAttachments, setPanelAttachments] = useState<JobAttachment[]>([]);
   const [activeTab, setActiveTab] = useState('details');
@@ -3291,15 +3330,563 @@ export default function Jobs() {
   useEffect(() => {
     if (selectedJob) {
       setEditFormData(selectedJob);
+      selectedJobRef.current = selectedJob;
+      editFormDataRef.current = selectedJob as Record<string, any>;
       setShowSecondPhone(!!(selectedJob as { phoneNumber2?: string }).phoneNumber2);
     }
   }, [selectedJob]);
 
   const handleEditChange = (field: string, value: string | string[]) => {
-    setEditFormData(prev => ({ ...prev, [field]: value }));
+    setEditFormData(prev => {
+      const next = { ...(prev as Record<string, any>), [field]: value };
+      editFormDataRef.current = next;
+      return next;
+    });
   };
 
-  const handleSave = () => {
+  const parseLocalDateTime = (dateStr?: string, timeStr?: string) => {
+    if (!dateStr || !timeStr) return null;
+    const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+    if (!dateMatch) return null;
+    const [, y, m, d] = dateMatch;
+
+    const rawTime = String(timeStr).trim();
+    const amPmMatch = /^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i.exec(rawTime);
+    const twentyFourMatch = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(rawTime);
+
+    let hours: number;
+    let minutes: number;
+    let seconds = 0;
+
+    if (amPmMatch) {
+      const period = amPmMatch[3].toUpperCase();
+      const baseHour = Number(amPmMatch[1]) % 12;
+      hours = period === "PM" ? baseHour + 12 : baseHour;
+      minutes = Number(amPmMatch[2]);
+    } else if (twentyFourMatch) {
+      hours = Number(twentyFourMatch[1]);
+      minutes = Number(twentyFourMatch[2]);
+      seconds = twentyFourMatch[3] ? Number(twentyFourMatch[3]) : 0;
+    } else {
+      return null;
+    }
+
+    if (hours > 23 || minutes > 59 || seconds > 59) return null;
+    const parsed = new Date(Number(y), Number(m) - 1, Number(d), hours, minutes, seconds, 0);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const calculateDurationLabel = () => {
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const startDate = currentEdit.startDate ?? currentJob.startDate;
+    const startTime = currentEdit.startTime ?? currentJob.startTime;
+    const endDate = currentEdit.endDate ?? currentJob.endDate;
+    const endTime = currentEdit.estimatedEndTime ?? currentJob.estimatedEndTime;
+    if (!startDate || !startTime || !endDate || !endTime) return "—";
+
+    const start = parseLocalDateTime(startDate, String(startTime));
+    const end = parseLocalDateTime(endDate, String(endTime));
+    if (!start || !end || end <= start) return "—";
+
+    const totalMinutes = Math.floor((end.getTime() - start.getTime()) / 60000);
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+    const minutes = totalMinutes % 60;
+    const parts = [
+      days ? `${days}d` : "",
+      hours ? `${hours}h` : "",
+      minutes ? `${minutes}m` : "",
+    ].filter(Boolean);
+    return parts.join(" ") || "0m";
+  };
+
+  const getCurrentDurationMinutes = () => {
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const startDate = currentEdit.startDate ?? currentJob.startDate;
+    const startTime = currentEdit.startTime ?? currentJob.startTime;
+    const endDate = currentEdit.endDate ?? currentJob.endDate;
+    const endTime = currentEdit.estimatedEndTime ?? currentJob.estimatedEndTime;
+    if (!startDate || !startTime || !endDate || !endTime) return null;
+
+    const start = parseLocalDateTime(startDate, String(startTime));
+    const end = parseLocalDateTime(endDate, String(endTime));
+    if (!start || !end || end <= start) return null;
+    return Math.floor((end.getTime() - start.getTime()) / 60000);
+  };
+
+  const isDurationPillActive = (durationMinutes: number) =>
+    getCurrentDurationMinutes() === durationMinutes;
+
+  const isAllDayPillActive = () => {
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const startDate = currentEdit.startDate ?? currentJob.startDate;
+    const startTime = String(currentEdit.startTime ?? currentJob.startTime ?? "");
+    const endDate = currentEdit.endDate ?? currentJob.endDate;
+    const endTime = String(currentEdit.estimatedEndTime ?? currentJob.estimatedEndTime ?? "");
+    return !!startDate && startDate === endDate && startTime === "00:00" && endTime === "23:59";
+  };
+
+  const isStartNowPillActive = () => {
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const startDate = currentEdit.startDate ?? currentJob.startDate;
+    const startTime = String(currentEdit.startTime ?? currentJob.startTime ?? "");
+    const endDate = String(currentEdit.endDate ?? currentJob.endDate ?? "");
+    const endTime = String(currentEdit.estimatedEndTime ?? currentJob.estimatedEndTime ?? "");
+    if (!startDate || !startTime || !!endDate || !!endTime) return false;
+
+    const now = new Date();
+    const nowDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const nowTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    return startDate === nowDate && startTime === nowTime;
+  };
+
+  const applyDurationToEndDateTime = (durationMinutes: number) => {
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const startDate = currentEdit.startDate ?? currentJob.startDate;
+    const startTime = currentEdit.startTime ?? currentJob.startTime;
+    if (!startDate || !startTime) return;
+
+    const start = parseLocalDateTime(startDate, String(startTime));
+    if (!start) return;
+
+    const end = new Date(start.getTime() + durationMinutes * 60_000);
+    const yyyy = end.getFullYear();
+    const mm = String(end.getMonth() + 1).padStart(2, "0");
+    const dd = String(end.getDate()).padStart(2, "0");
+    const hh = String(end.getHours()).padStart(2, "0");
+    const min = String(end.getMinutes()).padStart(2, "0");
+    const nextEndDate = `${yyyy}-${mm}-${dd}`;
+    const nextEndTime = `${hh}:${min}`;
+
+    const nextJob = {
+      ...currentJob,
+      ...currentEdit,
+      startDate,
+      startTime,
+      endDate: nextEndDate,
+      estimatedEndTime: nextEndTime,
+    };
+
+    setSelectedJob(nextJob);
+    selectedJobRef.current = nextJob;
+    setEditFormData((prev) => ({
+      ...(prev as Record<string, any>),
+      startDate,
+      startTime,
+      endDate: nextEndDate,
+      estimatedEndTime: nextEndTime,
+    }));
+    editFormDataRef.current = {
+      ...currentEdit,
+      startDate,
+      startTime,
+      endDate: nextEndDate,
+      estimatedEndTime: nextEndTime,
+    };
+
+    // Refresh side panel content so datetime inputs reflect updated values immediately.
+    setTimeout(() => {
+      openJobPanel(nextJob, true);
+    }, 0);
+  };
+
+  const handleDurationPillPress = (event: any, durationMinutes: number) => {
+    event.preventDefault();
+    event.stopPropagation();
+    applyDurationToEndDateTime(durationMinutes);
+  };
+
+  const handleAllDayPillPress = (event: any) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const startDate = currentEdit.startDate ?? currentJob.startDate;
+    if (!startDate) return;
+
+    updatePanelDateTimeFields({
+      startDate,
+      startTime: "00:00",
+      endDate: startDate,
+      estimatedEndTime: "23:59",
+    });
+  };
+
+  const handleStartNowPillPress = (event: any) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const hh = String(now.getHours()).padStart(2, "0");
+    const min = String(now.getMinutes()).padStart(2, "0");
+
+    updatePanelDateTimeFields({
+      startDate: `${yyyy}-${mm}-${dd}`,
+      startTime: `${hh}:${min}`,
+      endDate: "",
+      estimatedEndTime: "",
+    });
+  };
+
+  const updatePanelDateTimeFields = (updates: {
+    startDate?: string;
+    startTime?: string;
+    endDate?: string;
+    estimatedEndTime?: string;
+  }) => {
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const nextJob = {
+      ...currentJob,
+      ...currentEdit,
+      ...updates,
+    };
+
+    setSelectedJob(nextJob);
+    selectedJobRef.current = nextJob;
+    setEditFormData((prev) => {
+      const next = {
+        ...(prev as Record<string, any>),
+        ...updates,
+      };
+      editFormDataRef.current = next;
+      return next;
+    });
+
+    setTimeout(() => {
+      openJobPanel(nextJob, true);
+    }, 0);
+  };
+
+  const handleAdvanceAssignToggle = (checked: boolean) => {
+    setIsAdvanceAssign(checked);
+    isAdvanceAssignRef.current = checked;
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const nextJob = {
+      ...currentJob,
+      ...currentEdit,
+    };
+    setTimeout(() => {
+      openJobPanel(nextJob, true);
+    }, 0);
+  };
+
+  const handleCustomTechPayToggle = (checked: boolean) => {
+    setIsCustomTechPayEnabled(checked);
+    isCustomTechPayEnabledRef.current = checked;
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const nextJob = {
+      ...currentJob,
+      ...currentEdit,
+      customTechPayEnabled: checked,
+    };
+    setSelectedJob(nextJob);
+    selectedJobRef.current = nextJob;
+    setEditFormData((prev) => {
+      const next = {
+        ...(prev as Record<string, any>),
+        customTechPayEnabled: checked,
+      };
+      editFormDataRef.current = next;
+      return next;
+    });
+    setTimeout(() => {
+      openJobPanel(nextJob, true);
+    }, 0);
+  };
+
+  const handleCustomTechPayModeChange = (val: string | string[]) => {
+    customTechPayDraftRef.current = {
+      ...customTechPayDraftRef.current,
+      mode: Array.isArray(val) ? (val[0] ?? "amount") : val || "amount",
+    };
+    refreshJobPanel();
+  };
+
+  const refreshJobPanel = () => {
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const nextJob = {
+      ...currentJob,
+      ...currentEdit,
+    };
+    setTimeout(() => {
+      openJobPanel(nextJob, true);
+    }, 0);
+  };
+
+  const handleShowAddPaymentForm = () => {
+    setShowAddPaymentForm(true);
+    showAddPaymentFormRef.current = true;
+    setPaymentValidationError("");
+    paymentValidationErrorRef.current = "";
+    refreshJobPanel();
+  };
+
+  const handlePaymentTypeChange = (val: string | string[]) => {
+    paymentDraftRef.current = {
+      ...paymentDraftRef.current,
+      paymentType: Array.isArray(val) ? (val[0] ?? "") : val,
+    };
+    refreshJobPanel();
+  };
+
+  const formatPaymentTypeLabel = (rawType?: string) => {
+    if (!rawType) return "Payment";
+    return rawType
+      .split("-")
+      .map((part) => (part ? `${part[0].toUpperCase()}${part.slice(1)}` : part))
+      .join(" ");
+  };
+
+  const formatPaymentTimestamp = (timestamp?: string) => {
+    if (!timestamp) return "—";
+    const parsed = new Date(timestamp);
+    if (Number.isNaN(parsed.getTime())) return "—";
+    return parsed.toLocaleString("en-US");
+  };
+
+  const handleAddPaymentItem = () => {
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const paymentType = String(paymentDraftRef.current.paymentType ?? "").trim();
+    const paymentAmountNumber = Number.parseFloat(String(paymentDraftRef.current.paymentAmount ?? ""));
+    if (!paymentType || !Number.isFinite(paymentAmountNumber) || paymentAmountNumber <= 0) return;
+
+    const currentPayments = Array.isArray(currentEdit.payments)
+      ? currentEdit.payments
+      : Array.isArray(currentJob.payments)
+      ? currentJob.payments
+      : [];
+    const currentPaidTotal = currentPayments.reduce((sum: number, payment: any) => {
+      const amount = Number.parseFloat(String(payment?.amount ?? 0));
+      return sum + (Number.isFinite(amount) ? amount : 0);
+    }, 0);
+    const dueAmountRaw = currentEdit.dueAmount ?? currentJob.dueAmount;
+    const dueAmountNumber = Number.parseFloat(String(dueAmountRaw ?? ""));
+    const remainingDue =
+      Number.isFinite(dueAmountNumber) && dueAmountNumber >= 0 ? Math.max(0, dueAmountNumber - currentPaidTotal) : null;
+    if (remainingDue !== null && paymentAmountNumber > remainingDue) {
+      const errorMessage = `Amount exceeds remaining due ($${remainingDue.toFixed(2)}).`;
+      setPaymentValidationError(errorMessage);
+      paymentValidationErrorRef.current = errorMessage;
+      refreshJobPanel();
+      return;
+    }
+
+    const nextPayment = {
+      id: `payment-${Date.now()}`,
+      paymentType,
+      amount: Number(paymentAmountNumber.toFixed(2)),
+      createdAt: new Date().toISOString(),
+    };
+    const nextPayments = [nextPayment, ...currentPayments];
+    const nextJob = {
+      ...currentJob,
+      ...currentEdit,
+      payments: nextPayments,
+    };
+
+    setSelectedJob(nextJob);
+    selectedJobRef.current = nextJob;
+    setEditFormData((prev) => {
+      const next = {
+        ...(prev as Record<string, any>),
+        payments: nextPayments,
+      };
+      editFormDataRef.current = next;
+      return next;
+    });
+
+    setShowAddPaymentForm(true);
+    showAddPaymentFormRef.current = true;
+    paymentDraftRef.current = { paymentType: "", paymentAmount: "" };
+    setPaymentValidationError("");
+    paymentValidationErrorRef.current = "";
+    setPaymentFormResetKey((prev) => prev + 1);
+
+    setTimeout(() => {
+      openJobPanel(nextJob, true);
+    }, 0);
+  };
+
+  const handleRemovePaymentItem = (paymentId: string) => {
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const currentPayments = Array.isArray(currentEdit.payments)
+      ? currentEdit.payments
+      : Array.isArray(currentJob.payments)
+      ? currentJob.payments
+      : [];
+    const nextPayments = currentPayments.filter((payment: any) => String(payment?.id) !== paymentId);
+    const nextJob = {
+      ...currentJob,
+      ...currentEdit,
+      payments: nextPayments,
+    };
+
+    setSelectedJob(nextJob);
+    selectedJobRef.current = nextJob;
+    setEditFormData((prev) => {
+      const next = {
+        ...(prev as Record<string, any>),
+        payments: nextPayments,
+      };
+      editFormDataRef.current = next;
+      return next;
+    });
+
+    setTimeout(() => {
+      openJobPanel(nextJob, true);
+    }, 0);
+  };
+
+  const formatPartTypeLabel = (rawType?: string) => {
+    if (!rawType) return "Tech";
+    return rawType
+      .split("-")
+      .map((part) => (part ? `${part[0].toUpperCase()}${part.slice(1)}` : part))
+      .join(" ");
+  };
+
+  const handlePartTypeChange = (val: string | string[]) => {
+    partDraftRef.current = {
+      ...partDraftRef.current,
+      partType: Array.isArray(val) ? (val[0] ?? "") : val,
+    };
+    refreshJobPanel();
+  };
+
+  const handleAddNoteEntry = () => {
+    const note = noteDraftRef.current.trim();
+    if (!note) return;
+    const now = new Date();
+    const nextEntry = {
+      id: `log-note-${Date.now()}`,
+      color: "bg-slate-400",
+      title: `Note: ${note}`,
+      time: now.toLocaleString("en-US"),
+    };
+    activityLogsRef.current = [nextEntry, ...activityLogsRef.current];
+    noteDraftRef.current = "";
+    refreshJobPanel();
+  };
+
+  const handleActivityTypeFilterChange = (val: string | string[]) => {
+    activityTypeFilterRef.current = Array.isArray(val) ? (val[0] ?? "all") : (val || "all");
+    refreshJobPanel();
+  };
+
+  const handleAddPartItem = () => {
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const partType = String(partDraftRef.current.partType ?? "").trim() || "tech";
+    const partCostNumber = Number.parseFloat(String(partDraftRef.current.partCost ?? ""));
+    if (!Number.isFinite(partCostNumber) || partCostNumber < 0) return;
+
+    const currentParts = Array.isArray(currentEdit.parts)
+      ? currentEdit.parts
+      : Array.isArray(currentJob.parts)
+      ? currentJob.parts
+      : [];
+
+    const nextPart = {
+      id: `part-${Date.now()}`,
+      partType,
+      cost: Number(partCostNumber.toFixed(2)),
+      createdAt: new Date().toISOString(),
+    };
+    const nextParts = [nextPart, ...currentParts];
+    const nextJob = {
+      ...currentJob,
+      ...currentEdit,
+      parts: nextParts,
+    };
+
+    setSelectedJob(nextJob);
+    selectedJobRef.current = nextJob;
+    setEditFormData((prev) => {
+      const next = {
+        ...(prev as Record<string, any>),
+        parts: nextParts,
+      };
+      editFormDataRef.current = next;
+      return next;
+    });
+
+    partDraftRef.current = { partCost: "", partType: "tech" };
+    setPartFormResetKey((prev) => prev + 1);
+
+    setTimeout(() => {
+      openJobPanel(nextJob, true);
+    }, 0);
+  };
+
+  const handleRemovePartItem = (partId: string) => {
+    const currentEdit = editFormDataRef.current ?? {};
+    const currentJob = selectedJobRef.current ?? {};
+    const currentParts = Array.isArray(currentEdit.parts)
+      ? currentEdit.parts
+      : Array.isArray(currentJob.parts)
+      ? currentJob.parts
+      : [];
+    const nextParts = currentParts.filter((part: any) => String(part?.id) !== partId);
+    const nextJob = {
+      ...currentJob,
+      ...currentEdit,
+      parts: nextParts,
+    };
+
+    setSelectedJob(nextJob);
+    selectedJobRef.current = nextJob;
+    setEditFormData((prev) => {
+      const next = {
+        ...(prev as Record<string, any>),
+        parts: nextParts,
+      };
+      editFormDataRef.current = next;
+      return next;
+    });
+
+    setTimeout(() => {
+      openJobPanel(nextJob, true);
+    }, 0);
+  };
+
+  const getDistanceNumber = (distance: unknown) => {
+    const parsed = typeof distance === "number" ? distance : Number.parseFloat(String(distance ?? ""));
+    return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
+  };
+
+  const getAdvanceAssignNearbyJobs = (currentJob: any, assignedTech?: string) => {
+    const tech = String(assignedTech ?? "").trim();
+    return jobs
+      .filter((item) => {
+        if (!item || item.id === currentJob?.id) return false;
+        if (!tech) return true;
+        return String(item.assignedTechnician ?? "").trim() === tech;
+      })
+      .sort((a, b) => {
+        const distanceDelta = getDistanceNumber(a.distance) - getDistanceNumber(b.distance);
+        if (distanceDelta !== 0) return distanceDelta;
+        const aDateTime = new Date(`${a.startDate ?? ""}T${String(a.startTime ?? "")}`).getTime();
+        const bDateTime = new Date(`${b.startDate ?? ""}T${String(b.startTime ?? "")}`).getTime();
+        if (Number.isNaN(aDateTime) || Number.isNaN(bDateTime)) return 0;
+        return aDateTime - bDateTime;
+      })
+      .slice(0, 8);
+  };
+
+  const saveJobFromPanel = () => {
     const nextJob = {
       ...(selectedJob ?? {}),
       ...(editFormData as Record<string, unknown>),
@@ -3307,374 +3894,312 @@ export default function Jobs() {
     };
     setSelectedJob(nextJob);
     setJobs(prev => prev.map(j => (j.id === nextJob.id ? { ...j, ...nextJob } : j)));
-    openJobPanel(nextJob, false);
+    return nextJob;
+  };
+
+  const handleSave = () => {
+    const nextJob = saveJobFromPanel();
+    openJobPanel(nextJob, true);
+  };
+
+  const handleSaveAndClose = () => {
+    saveJobFromPanel();
+    SidePanel.close();
   };
 
   const openJobPanel = (job: any, isEditMode = false) => {
+    isEditMode = true;
     setSelectedJob(job);
+    selectedJobRef.current = job;
     setEditFormData(job);
+    editFormDataRef.current = job as Record<string, any>;
+    const customPayEnabled = Boolean((job as { customTechPayEnabled?: boolean }).customTechPayEnabled);
+    const customPayMode = String((job as { customTechPayMode?: string }).customTechPayMode ?? "amount");
+    const customPayAmount = String((job as { customTechPayAmount?: string | number }).customTechPayAmount ?? "0");
+    setIsCustomTechPayEnabled(customPayEnabled);
+    isCustomTechPayEnabledRef.current = customPayEnabled;
+    customTechPayDraftRef.current = {
+      mode: customPayMode || "amount",
+      amount: customPayAmount,
+    };
     setPanelAttachments(Array.isArray((job as { attachments?: JobAttachment[] }).attachments) ? (job as { attachments?: JobAttachment[] }).attachments! : []);
     SidePanel.open({
-      title: job?.jobType || `Job #${job?.id}`,
+      title: `Job #${job?.id}`,
+      headerButton: () => (
+        <button
+          type="button"
+          onClick={() => setShowJobDetails(true)}
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-neutral-100 text-neutral-700 transition hover:bg-neutral-200 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+          aria-label="Expand job panel"
+          title="Expand"
+        >
+          <Maximize2 className="h-4 w-4" />
+        </button>
+      ),
       content: () => (
         <div className="space-y-5">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
-              <p className="text-xs uppercase text-slate-500">Job ID</p>
-              <p className="text-xl font-semibold text-slate-900">#{job?.id}</p>
+              <p className="text-xl font-semibold text-slate-900">{job?.jobType || `Job #${job?.id}`}</p>
+              <p className="text-sm font-medium text-slate-800">{job?.clientName || "—"}</p>
               <p className="text-sm text-slate-600">{job?.jobDescription || 'No description'}</p>
             </div>
             <div className="flex flex-col items-end gap-2">
               <div className="flex flex-wrap gap-2">
                 <Badge variant="outline">{job?.status || 'Pending'}</Badge>
-                {job?.priority && <Badge variant="secondary">{job.priority}</Badge>}
-                <Badge>${job?.revenue ?? '—'}</Badge>
+                <Badge variant="secondary">{job?.jobCategory || "—"}</Badge>
               </div>
-              {job?.distance && (
-                <p className="text-xs text-slate-500">~{job.distance} mi away</p>
-              )}
+              <p className="text-xs text-slate-500">
+                {[
+                  job?.location,
+                  (job as { apartmentNumber?: string }).apartmentNumber,
+                  job?.city,
+                  job?.state,
+                  job?.zipCode,
+                ]
+                  .filter(Boolean)
+                  .join(", ") || "—"}
+              </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4 flex flex-col">
-              <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-1">
-                <p className="text-xs uppercase text-slate-500 mb-1">Client Information</p>
-                {isEditMode ? (
-                  <div className="space-y-2">
-                    <Input defaultValue={job?.clientName || ""} placeholder="Client Name" onChange={(e) => handleEditChange("clientName", e.target.value)} />
-                    <Input defaultValue={job?.companyName || ""} placeholder="Company" onChange={(e) => handleEditChange("companyName", e.target.value)} />
-                    <Input defaultValue={job?.email || ""} placeholder="Email" onChange={(e) => handleEditChange("email", e.target.value)} />
-                    <Input defaultValue={job?.phoneNumber || ""} placeholder="Phone" onChange={(e) => handleEditChange("phoneNumber", e.target.value)} />
-                    <Input
-                      defaultValue={(job as { phoneNumber2?: string }).phoneNumber2 || ""}
-                      placeholder="Phone 2"
-                      onChange={(e) => handleEditChange("phoneNumber2", e.target.value)}
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-sm font-medium text-slate-900">{job?.clientName || "—"}</p>
-                    {job?.companyName && <p className="text-sm text-slate-700">{job.companyName}</p>}
-                    <p className="text-sm text-slate-700">{job?.email || "—"}</p>
-                    <p className="text-sm text-slate-700">{job?.phoneNumber || "—"}</p>
-                    {(job as { phoneNumber2?: string }).phoneNumber2 && (
-                      <p className="text-sm text-slate-700">{(job as { phoneNumber2?: string }).phoneNumber2}</p>
-                    )}
-                  </>
-                )}
-              </div>
-
-              <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-1 grow">
-                <p className="text-xs uppercase text-slate-500 mb-1">Service Location</p>
-                {isEditMode ? (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="col-span-2">
-                        <AddressInput
-                          isEditing={true}
-                          value={(editFormData as { location?: string }).location ?? job?.location ?? ""}
-                          displayValue={job?.location}
-                          onChange={(value) => handleEditChange("location", value ?? "")}
-                          onAddressChange={({ address, address2, city, zip, state, country }) => {
-                            handleEditChange("location", address ?? "");
-                            handleEditChange("apartmentNumber", address2 ?? "");
-                            handleEditChange("city", city ?? "");
-                            handleEditChange("zipCode", zip ?? "");
-                            handleEditChange("state", state ?? "");
-                            handleEditChange("country", country ?? "");
-                          }}
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <Label className="text-sm font-medium">Apartment #</Label>
-                        <Input
-                          value={(editFormData as { apartmentNumber?: string }).apartmentNumber ?? (job as { apartmentNumber?: string }).apartmentNumber ?? ""}
-                          placeholder="Apartment #"
-                          onChange={(e) => handleEditChange("apartmentNumber", e.target.value)}
-                          className="mt-1"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label className="text-sm font-medium">City</Label>
-                        <Input
-                          value={(editFormData as { city?: string }).city ?? job?.city ?? ""}
-                          placeholder="City"
-                          onChange={(e) => handleEditChange("city", e.target.value)}
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium">Zip</Label>
-                        <Input
-                          value={(editFormData as { zipCode?: string }).zipCode ?? job?.zipCode ?? ""}
-                          placeholder="Zip"
-                          onChange={(e) => handleEditChange("zipCode", e.target.value)}
-                          className="mt-1"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label className="text-sm font-medium">State</Label>
-                        <Input
-                          value={(editFormData as { state?: string }).state ?? job?.state ?? ""}
-                          placeholder="State"
-                          onChange={(e) => handleEditChange("state", e.target.value)}
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium">Country</Label>
-                        <Input
-                          value={(editFormData as { country?: string }).country ?? (job as { country?: string }).country ?? ""}
-                          placeholder="Country"
-                          onChange={(e) => handleEditChange("country", e.target.value)}
-                          className="mt-1"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-700">
-                    {[
-                      job?.location,
-                      (job as { apartmentNumber?: string }).apartmentNumber,
-                      job?.city,
-                      job?.state,
-                      job?.zipCode,
-                      (job as { country?: string }).country,
-                    ]
-                      .filter(Boolean)
-                      .join(", ") || "—"}
-                  </p>
-                )}
+            <div className="space-y-2 md:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <SelectInput
+                  label="Job Status"
+                  options={jobStatuses.map((s) => ({ label: s.name, value: s.name }))}
+                  placeholder="Select status"
+                  value={(editFormData as { status?: string }).status ?? job?.status ?? ""}
+                  onSearch={() => {}}
+                  onSelect={(val) => handleEditChange("status", Array.isArray(val) ? (val[0] ?? "") : val)}
+                />
+                <SelectInput
+                  label="Job Tag Note"
+                  options={quickTagNoteOptions.map((t) => ({ label: t.replace(/-/g, " "), value: t }))}
+                  placeholder="Select Tag Note"
+                  multiselect
+                  value={
+                    Array.isArray((editFormData as { noteTags?: string[] }).noteTags)
+                      ? (editFormData as { noteTags?: string[] }).noteTags!
+                      : Array.isArray(job?.noteTags)
+                      ? job.noteTags
+                      : []
+                  }
+                  onSearch={() => {}}
+                  onSelect={(val) => handleEditChange("noteTags", Array.isArray(val) ? val : [])}
+                />
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-2">
-              <p className="text-xs uppercase text-slate-500 mb-1">Job Details</p>
-              {isEditMode ? (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-1 gap-2">
-                    <SelectInput
-                      label="Job Category"
-                      options={[
-                        { label: "Plumbing", value: "Plumbing" },
-                        { label: "Electrical", value: "Electrical" },
-                        { label: "HVAC", value: "HVAC" },
-                        { label: "General", value: "General" },
-                      ]}
-                      placeholder="Select category"
-                      value={(editFormData as { jobCategory?: string }).jobCategory ?? job?.jobCategory ?? ""}
-                      onSelect={(val) => handleEditChange("jobCategory", Array.isArray(val) ? (val[0] ?? "") : val)}
-                    />
-                    <SelectInput
-                      label="Job Type"
-                      options={[
-                        { label: "Repair", value: "Repair" },
-                        { label: "Installation", value: "Installation" },
-                        { label: "Maintenance", value: "Maintenance" },
-                        { label: "Emergency", value: "Emergency" },
-                      ]}
-                      placeholder="Select type"
-                      value={(editFormData as { jobType?: string }).jobType ?? job?.jobType ?? ""}
-                      onSelect={(val) => handleEditChange("jobType", Array.isArray(val) ? (val[0] ?? "") : val)}
-                    />
-                  </div>
-                  <SelectInput
-                    label="Source"
-                    options={[
-                      { label: "Yelp", value: "yelp" },
-                      { label: "Google Ads", value: "google-ads" },
-                      { label: "Facebook", value: "facebook" },
-                      { label: "Referral", value: "referral" },
-                      { label: "Website", value: "website" },
-                      { label: "Direct Call", value: "phone" },
-                    ]}
-                    placeholder="Select source"
-                    value={(editFormData as { source?: string }).source ?? job?.source ?? ""}
-                    onSelect={(val) => handleEditChange("source", Array.isArray(val) ? (val[0] ?? "") : val)}
-                  />
-                  <div className="grid grid-cols-1 gap-2">
-                    <SelectInput
-                      label="Job Status"
-                      options={jobStatuses.map((s) => ({ label: s.name, value: s.name }))}
-                      placeholder="Select status"
-                      value={(editFormData as { status?: string }).status ?? job?.status ?? ""}
-                      onSelect={(val) => handleEditChange("status", Array.isArray(val) ? (val[0] ?? "") : val)}
-                    />
-                    <SelectInput
-                      label="Sub Status"
-                      options={[
-                        { label: "Nothing selected", value: "" },
-                        { label: "Follow up", value: "follow-up" },
-                        { label: "Rescheduled", value: "rescheduled" },
-                        { label: "No answer", value: "no-answer" },
-                        { label: "Customer cancelled", value: "customer-cancelled" },
-                        { label: "Pending confirmation", value: "pending-confirmation" },
-                      ]}
-                      placeholder="Nothing selected"
-                      value={(editFormData as { subStatus?: string }).subStatus ?? (job as { subStatus?: string }).subStatus ?? ""}
-                      onSelect={(val) => handleEditChange("subStatus", Array.isArray(val) ? (val[0] ?? "") : val)}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 gap-2">
-                    <SelectInput
-                      label="Jobs Tag"
-                      options={[
-                        { label: "Urgent", value: "urgent" },
-                        { label: "Warranty", value: "warranty" },
-                        { label: "Follow-up", value: "follow-up" },
-                        { label: "Commercial", value: "commercial" },
-                        { label: "Test1", value: "test1" },
-                        { label: "Job", value: "job" },
-                      ]}
-                      placeholder="Select tags"
-                      multiselect
-                      value={
-                        Array.isArray((editFormData as { jobTags?: string[] }).jobTags)
-                          ? (editFormData as { jobTags?: string[] }).jobTags!
-                          : Array.isArray(job?.jobTags)
-                          ? job.jobTags
-                          : []
-                      }
-                      onSelect={(val) => handleEditChange("jobTags", Array.isArray(val) ? val : [])}
-                    />
-                    <SelectInput
-                      label="Jobs Tag Note"
-                      options={quickTagNoteOptions.map((t) => ({ label: t.replace(/-/g, " "), value: t }))}
-                      placeholder="Select Tag Note"
-                      multiselect
-                      value={
-                        Array.isArray((editFormData as { noteTags?: string[] }).noteTags)
-                          ? (editFormData as { noteTags?: string[] }).noteTags!
-                          : Array.isArray(job?.noteTags)
-                          ? job.noteTags
-                          : []
-                      }
-                      onSelect={(val) => handleEditChange("noteTags", Array.isArray(val) ? val : [])}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-sm"><span className="font-medium text-slate-900">Job Category:</span> <span className="text-slate-700">{job?.jobCategory || "—"}</span></p>
-                  <p className="text-sm"><span className="font-medium text-slate-900">Job Type:</span> <span className="text-slate-700">{job?.jobType || "—"}</span></p>
-                  <p className="text-sm"><span className="font-medium text-slate-900">Source:</span> <span className="text-slate-700">{job?.source || "—"}</span></p>
-                  <p className="text-sm"><span className="font-medium text-slate-900">Job Status:</span> <span className="text-slate-700">{job?.status || "—"}</span></p>
-                  <p className="text-sm"><span className="font-medium text-slate-900">Sub Status:</span> <span className="text-slate-700">{(job as { subStatus?: string }).subStatus || "—"}</span></p>
-                </>
-              )}
-              {!isEditMode &&
-                <div>
-                  <p className="text-xs uppercase text-slate-500 mb-1">Tags</p>
-                  <div className="flex flex-wrap gap-2 text-xs">
-                    {(job?.jobTags || []).map((tag: string) => (
-                      <Badge key={tag} variant="outline">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {(job?.noteTags || []).map((tag: string) => (
-                      <Badge key={tag} variant="secondary">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {!job?.jobTags?.length && !job?.noteTags?.length && (
-                      <span className="text-slate-500 text-sm">No tags</span>
-                    )}
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-1">
-              <p className="text-xs uppercase text-slate-500 mb-1">Scheduled</p>
-              {isEditMode ? (
-                <div className="space-y-2">
-                  <InputDatepicker
-                    label="Start DateTime"
-                    range={false}
-                    withTime={true}
-                    datetimeValue={
-                      (editFormData as { startDate?: string; startTime?: string }).startDate &&
-                      (editFormData as { startDate?: string; startTime?: string }).startTime
-                        ? `${(editFormData as { startDate?: string; startTime?: string }).startDate}T${String((editFormData as { startDate?: string; startTime?: string }).startTime)}`
-                        : job?.startDate && job?.startTime
-                        ? `${job.startDate}T${String(job.startTime)}`
-                        : ""
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-2 md:col-span-2">
+              <p className="text-xs uppercase text-slate-500">Scheduled</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <InputDatepicker
+                  label="Start"
+                  range={false}
+                  withTime={true}
+                  datetimeValue={
+                    (editFormData as { startDate?: string; startTime?: string }).startDate &&
+                    (editFormData as { startDate?: string; startTime?: string }).startTime
+                      ? `${(editFormData as { startDate?: string; startTime?: string }).startDate}T${String((editFormData as { startDate?: string; startTime?: string }).startTime)}`
+                      : job?.startDate && job?.startTime
+                      ? `${job.startDate}T${String(job.startTime)}`
+                      : ""
+                  }
+                  onDateTimeChange={(v) => {
+                    if (v) {
+                      const [d, t] = v.split("T");
+                      updatePanelDateTimeFields({
+                        startDate: d || "",
+                        startTime: t || "",
+                      });
+                    } else {
+                      updatePanelDateTimeFields({
+                        startDate: "",
+                        startTime: "",
+                      });
                     }
-                    onDateTimeChange={(v) => {
-                      if (v) {
-                        const [d, t] = v.split("T");
-                        handleEditChange("startDate", d || "");
-                        handleEditChange("startTime", t || "");
-                      } else {
-                        handleEditChange("startDate", "");
-                        handleEditChange("startTime", "");
-                      }
-                    }}
-                  />
-                  <InputDatepicker
-                    label="End DateTime"
-                    range={false}
-                    withTime={true}
-                    datetimeValue={(() => {
-                      const endD =
-                        (editFormData as { endDate?: string }).endDate ??
-                        (job as { endDate?: string }).endDate;
-                      const endT =
-                        (editFormData as { estimatedEndTime?: string }).estimatedEndTime ??
-                        (job as { estimatedEndTime?: string }).estimatedEndTime;
-                      return endD && endT ? `${endD}T${String(endT)}` : "";
-                    })()}
-                    onDateTimeChange={(v) => {
-                      if (v) {
-                        const [d, t] = v.split("T");
-                        handleEditChange("endDate", d || "");
-                        handleEditChange("estimatedEndTime", t || "");
-                      } else {
-                        handleEditChange("endDate", "");
-                        handleEditChange("estimatedEndTime", "");
-                      }
-                    }}
-                  />
+                  }}
+                />
+                <InputDatepicker
+                  label="End"
+                  range={false}
+                  withTime={true}
+                  datetimeValue={(() => {
+                    const endD =
+                      (editFormData as { endDate?: string }).endDate ??
+                      (job as { endDate?: string }).endDate;
+                    const endT =
+                      (editFormData as { estimatedEndTime?: string }).estimatedEndTime ??
+                      (job as { estimatedEndTime?: string }).estimatedEndTime;
+                    return endD && endT ? `${endD}T${String(endT)}` : "";
+                  })()}
+                  onDateTimeChange={(v) => {
+                    if (v) {
+                      const [d, t] = v.split("T");
+                      updatePanelDateTimeFields({
+                        endDate: d || "",
+                        estimatedEndTime: t || "",
+                      });
+                    } else {
+                      updatePanelDateTimeFields({
+                        endDate: "",
+                        estimatedEndTime: "",
+                      });
+                    }
+                  }}
+                />
+              </div>
+              <div className="relative z-[120] flex items-center gap-2 flex-wrap pointer-events-auto justify-between">
+                <span className="text-xs text-slate-500">Duration: {calculateDurationLabel()}</span>
+                <div className="flex flex-row space-x-2">
+                  <button
+                    type="button"
+                    className={`h-6 rounded-full border px-3 text-xs font-medium ${
+                      isDurationPillActive(30)
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
+                    onMouseDown={(e) => handleDurationPillPress(e, 30)}
+                    onPointerDown={(e) => handleDurationPillPress(e, 30)}
+                  >
+                    +30m
+                  </button>
+                  <button
+                    type="button"
+                    className={`h-6 rounded-full border px-3 text-xs font-medium ${
+                      isDurationPillActive(60)
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
+                    onMouseDown={(e) => handleDurationPillPress(e, 60)}
+                    onPointerDown={(e) => handleDurationPillPress(e, 60)}
+                  >
+                    +1h
+                  </button>
+                  <button
+                    type="button"
+                    className={`h-6 rounded-full border px-3 text-xs font-medium ${
+                      isDurationPillActive(120)
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
+                    onMouseDown={(e) => handleDurationPillPress(e, 120)}
+                    onPointerDown={(e) => handleDurationPillPress(e, 120)}
+                  >
+                    +2h
+                  </button>
+                  <button
+                    type="button"
+                    className={`h-6 rounded-full border px-3 text-xs font-medium ${
+                      isDurationPillActive(24 * 60)
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
+                    onMouseDown={(e) => handleDurationPillPress(e, 24 * 60)}
+                    onPointerDown={(e) => handleDurationPillPress(e, 24 * 60)}
+                  >
+                    +1d
+                  </button>
+                  <button
+                    type="button"
+                    className={`h-6 rounded-full border px-3 text-xs font-medium ${
+                      isAllDayPillActive()
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
+                    onMouseDown={(e) => handleAllDayPillPress(e)}
+                    onPointerDown={(e) => handleAllDayPillPress(e)}
+                  >
+                    All Day
+                  </button>
+                  <button
+                    type="button"
+                    className={`h-6 rounded-full border px-3 text-xs font-medium ${
+                      isStartNowPillActive()
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
+                    onMouseDown={(e) => handleStartNowPillPress(e)}
+                    onPointerDown={(e) => handleStartNowPillPress(e)}
+                  >
+                    Start Now
+                  </button>
                 </div>
-              ) : (
-                <>
-                  <p className="text-sm"><span className="font-medium text-slate-900">Start DateTime:</span> <span className="text-slate-700">{job?.startDate || "—"} {job?.startTime || ""}</span></p>
-                  <p className="text-sm"><span className="font-medium text-slate-900">End DateTime:</span> <span className="text-slate-700">{(job as { endDate?: string }).endDate || job?.startDate || "—"} {(job as { estimatedEndTime?: string }).estimatedEndTime || job?.startTime || ""}</span></p>
-                </>
-              )}
+              </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-1">
-              <p className="text-xs uppercase text-slate-500 mb-1">Assignment</p>
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-2 md:col-span-2">
+              <div className="mb-1 flex items-center justify-between">
+                <p className="text-xs uppercase text-slate-500">Technician</p>
+                <div className="flex items-center gap-2">
+                  <Switch checked={isAdvanceAssignRef.current} onCheckedChange={handleAdvanceAssignToggle} />
+                  <span className="text-xs text-slate-600">Advance Assign</span>
+                </div>
+              </div>
               {isEditMode ? (
                 <div className="space-y-2">
-                  <SelectInput
-                    options={[
-                      { label: "All", value: "all" },
-                      { label: "Closest Distance", value: "closest-distance" },
-                      { label: "Matching Skills", value: "matching-skills" },
-                      { label: "Matching Metro", value: "matching-metro" },
-                      { label: "Closest Distance + Matching Skill + Matching Metro", value: "closest-distance-matching-skill-matching-metro" },
-                    ]}
-                    placeholder="Closest Distance"
-                    value={(editFormData as { closestDistance?: string }).closestDistance ?? (job as { closestDistance?: string }).closestDistance ?? ""}
-                    onSelect={(val) => handleEditChange("closestDistance", Array.isArray(val) ? (val[0] ?? "") : val)}
-                  />
-                  <SelectInput
-                    label="Assign Technician"
-                    options={technicianOptions.map((name) => ({ label: name, value: name }))}
-                    placeholder="Select Technician"
-                    value={(editFormData as { assignedTechnician?: string }).assignedTechnician ?? job?.assignedTechnician ?? ""}
-                    onSelect={(val) => handleEditChange("assignedTechnician", Array.isArray(val) ? (val[0] ?? "") : val)}
-                  />
+                  <div className="flex items-end gap-2">
+                    <div className="flex-1">
+                      <SelectInput
+                        options={technicianOptions.map((name) => ({ label: name, value: name }))}
+                        placeholder="Select Technician"
+                        value={(editFormData as { assignedTechnician?: string }).assignedTechnician ?? job?.assignedTechnician ?? ""}
+                        onSearch={() => {}}
+                        onSelect={(val) => handleEditChange("assignedTechnician", Array.isArray(val) ? (val[0] ?? "") : val)}
+                      />
+                    </div>
+                    <Button type="button" className="h-10 shrink-0">
+                      <Send className="mr-1 h-4 w-4" />
+                      Send
+                    </Button>
+                  </div>
+                  {isAdvanceAssignRef.current &&
+                    (() => {
+                      const assignedTech =
+                        (editFormData as { assignedTechnician?: string }).assignedTechnician ??
+                        job?.assignedTechnician ??
+                        "";
+                      const nearbyJobs = getAdvanceAssignNearbyJobs(job, assignedTech);
+                      return (
+                        <div className="pt-1">
+                          <p className="text-sm font-medium text-slate-700 mb-2">Nearby jobs</p>
+                          <div className="max-h-44 overflow-y-auto space-y-2 pr-1">
+                            {nearbyJobs.length ? (
+                              nearbyJobs.map((item) => {
+                                const scheduleDate = String(item.startDate ?? "—");
+                                const scheduleTimeRaw = String(item.startTime ?? "");
+                                const scheduleTime = scheduleTimeRaw ? scheduleTimeRaw.slice(0, 5) : "";
+                                const distanceValue = getDistanceNumber(item.distance);
+                                const distanceLabel = Number.isFinite(distanceValue) ? `${distanceValue.toFixed(1)} mi` : "—";
+                                return (
+                                  <div key={item.id} className="flex items-start justify-between gap-3 rounded-md border border-slate-200 bg-white p-2">
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-semibold text-slate-900 truncate">
+                                        {item.id} • {item.jobType || "Job"}
+                                      </p>
+                                      <p className="text-sm text-slate-600 truncate">{item.location || "—"}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <p className="text-sm text-slate-400">
+                                        {scheduleDate}
+                                        {scheduleTime ? ` ${scheduleTime}` : ""}
+                                      </p>
+                                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                                        {distanceLabel}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <p className="text-sm text-slate-500">No nearby jobs found.</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
                 </div>
               ) : (
                 <>
@@ -3683,47 +4208,329 @@ export default function Jobs() {
                 </>
               )}
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:col-span-2">
-              <p className="text-xs uppercase text-slate-500 mb-1">Description & Notes</p>
+            <div className="order-1 rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-2 md:col-span-2">
+              <p className="text-xs uppercase text-slate-500 mb-1">Finance</p>
               {isEditMode ? (
-                <div className="space-y-2">
-                  <div>
-                    <Label className="text-sm font-medium">Description</Label>
-                    <Textarea
-                      defaultValue={job?.jobDescription || ""}
-                      rows={4}
-                      className="mt-1"
-                      onChange={(e) => handleEditChange("jobDescription", e.target.value)}
-                    />
+                <div>
+                  <Label className="text-sm font-medium">Due Amount</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    defaultValue={(editFormData as { dueAmount?: string | number }).dueAmount ?? (job as { dueAmount?: string | number }).dueAmount ?? ""}
+                    placeholder="0.00"
+                    onChange={(e) => handleEditChange("dueAmount", e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              ) : (
+                <p className="text-sm">
+                  <span className="font-medium text-slate-900">Due Amount:</span>{" "}
+                  <span className="text-slate-700">
+                    {(job as { dueAmount?: string | number }).dueAmount !== undefined &&
+                    (job as { dueAmount?: string | number }).dueAmount !== null &&
+                    String((job as { dueAmount?: string | number }).dueAmount) !== ""
+                      ? `$${(job as { dueAmount?: string | number }).dueAmount}`
+                      : "—"}
+                  </span>
+                </p>
+              )}
+              {(() => {
+                const payments = Array.isArray((editFormData as { payments?: any[] }).payments)
+                  ? (editFormData as { payments?: any[] }).payments!
+                  : Array.isArray((job as { payments?: any[] }).payments)
+                  ? (job as { payments?: any[] }).payments!
+                  : [];
+
+                return (
+                  <div className="rounded-lg border border-slate-200 bg-white p-3">
+                    <p className="text-sm font-medium text-slate-700">Payments</p>
+                    {payments.length ? (
+                      <div className="mt-2 space-y-2">
+                        {payments.map((payment, idx) => (
+                          <div key={`${idx}-${payment?.id ?? "payment"}`} className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-2 py-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                                {formatPaymentTypeLabel(String(payment?.paymentType ?? ""))}
+                              </span>
+                              <span className="text-sm font-medium text-slate-700">
+                                ${Number.parseFloat(String(payment?.amount ?? 0)).toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-sm text-slate-400">{formatPaymentTimestamp(String(payment?.createdAt ?? ""))}</span>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-slate-500 hover:text-red-600"
+                                onClick={() => handleRemovePaymentItem(String(payment?.id ?? ""))}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    {showAddPaymentForm || showAddPaymentFormRef.current ? (
+                      <div className="flex flex-row space-x-2">
+                        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2 flex-1">
+                          <SelectInput
+                            key={`payment-type-${paymentFormResetKey}`}
+                            label="Payment Type"
+                            options={[
+                              { label: "Cash", value: "cash" },
+                              { label: "Card", value: "card" },
+                              { label: "Check", value: "check" },
+                              { label: "Bank Transfer", value: "bank-transfer" },
+                            ]}
+                            placeholder="Select payment type"
+                            value={paymentDraftRef.current.paymentType}
+                            onSearch={() => {}}
+                            onSelect={handlePaymentTypeChange}
+                          />
+                          <div>
+                            <Label className="text-sm font-medium">Payment Amount</Label>
+                            <Input
+                              key={`payment-amount-${paymentFormResetKey}`}
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              defaultValue={paymentDraftRef.current.paymentAmount}
+                              placeholder="0.00"
+                              className="mt-1"
+                              onChange={(e) => {
+                                paymentDraftRef.current = {
+                                  ...paymentDraftRef.current,
+                                  paymentAmount: e.target.value,
+                                };
+                              }}
+                            />
+                            {(paymentValidationError || paymentValidationErrorRef.current) && (
+                              <p className="mt-1 text-sm text-red-500">
+                                {paymentValidationError || paymentValidationErrorRef.current}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex md:justify-end pt-10">
+                          <Button type="button" size="sm" className="h-10" onClick={handleAddPaymentItem}>
+                            <Plus className="mr-1 h-4 w-4" />
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-2 flex flex-col items-center justify-center gap-2 text-center">
+                        <p className="text-sm text-slate-500">No payments yet.</p>
+                        <Button type="button" size="sm" variant="outline" onClick={handleShowAddPaymentForm}>
+                          Add Payment
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <Label className="text-sm font-medium">Notes</Label>
-                    <Textarea
-                      defaultValue={job?.notes || ""}
-                      rows={3}
-                      className="mt-1"
-                      onChange={(e) => handleEditChange("notes", e.target.value)}
+                );
+              })()}
+            </div>
+
+            <div className="order-4 md:col-span-2 space-y-3 border-t border-slate-200 pt-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-slate-800">Add Note</p>
+                <Button type="button" size="sm" variant="secondary" onClick={handleAddNoteEntry}>
+                  Add Note
+                </Button>
+              </div>
+              <Textarea
+                placeholder="Type a note..."
+                rows={3}
+                defaultValue={noteDraftRef.current}
+                onChange={(e) => {
+                  noteDraftRef.current = e.target.value;
+                }}
+              />
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-medium text-slate-800">Activity Log</p>
+                <div className="flex items-center gap-2">
+                  <Input placeholder="Search" className="mt-1 w-[180px]" />
+                  <div className="w-[140px]">
+                    <SelectInput
+                      options={[
+                        { label: "Status", value: "status" },
+                        { label: "Assign", value: "assign" },
+                        { label: "Payment", value: "payment" },
+                        { label: "Part", value: "part" },
+                        { label: "Note", value: "note" },
+                        { label: "Call", value: "call" },
+                      ]}
+                      placeholder="Types"
+                      value={activityTypeFilterRef.current}
+                      onSearch={() => {}}
+                      onSelect={handleActivityTypeFilterChange}
                     />
                   </div>
                 </div>
-              ) : (
+              </div>
+              <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                {activityLogsRef.current.map((log) => (
+                  <div key={log.id} className="flex items-start gap-2">
+                    <span className={`mt-1.5 h-2 w-2 rounded-full ${log.color}`} />
+                    <div>
+                      <p className="text-sm text-slate-700">{log.title}</p>
+                      <p className="text-sm text-slate-400">{log.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="order-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-2 md:col-span-2">
+              {(() => {
+                const parts = Array.isArray((editFormData as { parts?: any[] }).parts)
+                  ? (editFormData as { parts?: any[] }).parts!
+                  : Array.isArray((job as { parts?: any[] }).parts)
+                  ? (job as { parts?: any[] }).parts!
+                  : [];
+                const techTotal = parts.reduce((sum: number, part: any) => {
+                  if (String(part?.partType ?? "").toLowerCase() !== "tech") return sum;
+                  const cost = Number.parseFloat(String(part?.cost ?? 0));
+                  return sum + (Number.isFinite(cost) ? cost : 0);
+                }, 0);
+                const companyTotal = parts.reduce((sum: number, part: any) => {
+                  if (String(part?.partType ?? "").toLowerCase() !== "company") return sum;
+                  const cost = Number.parseFloat(String(part?.cost ?? 0));
+                  return sum + (Number.isFinite(cost) ? cost : 0);
+                }, 0);
+
+                return (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-slate-700 flex items-center gap-1">
+                        <Wrench className="h-4 w-4 text-slate-500" />
+                        Parts
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        Tech: ${techTotal.toFixed(2)} <span className="mx-1">•</span> Company: ${companyTotal.toFixed(2)}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-row space-x-2 items-end">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1">
+                        <div>
+                          <Label className="text-sm font-medium">Cost</Label>
+                          <Input
+                            key={`part-cost-${partFormResetKey}`}
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            defaultValue={partDraftRef.current.partCost}
+                            placeholder="0"
+                            className="mt-1"
+                            onChange={(e) => {
+                              partDraftRef.current = {
+                                ...partDraftRef.current,
+                                partCost: e.target.value,
+                              };
+                            }}
+                          />
+                        </div>
+                        <SelectInput
+                          key={`part-type-${partFormResetKey}`}
+                          label="Type"
+                          options={[
+                            { label: "Tech", value: "tech" },
+                            { label: "Company", value: "company" },
+                          ]}
+                          placeholder="Select type"
+                          value={partDraftRef.current.partType}
+                          onSearch={() => {}}
+                          onSelect={handlePartTypeChange}
+                        />
+                      </div>
+                      <div className="flex md:justify-end pt-8">
+                        <Button type="button" size="sm" className="h-10" onClick={handleAddPartItem}>
+                          Add Part
+                        </Button>
+                      </div>
+                    </div>
+
+                    {parts.length ? (
+                      <div className="mt-1 space-y-2">
+                        {parts.map((part: any, idx: number) => (
+                          <div key={`${idx}-${part?.id ?? "part"}`} className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-2 py-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                                {formatPartTypeLabel(String(part?.partType ?? ""))}
+                              </span>
+                              <span className="text-sm font-medium text-slate-700">
+                                ${Number.parseFloat(String(part?.cost ?? 0)).toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-sm text-slate-400">{formatPaymentTimestamp(String(part?.createdAt ?? ""))}</span>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-slate-500 hover:text-red-600"
+                                onClick={() => handleRemovePartItem(String(part?.id ?? ""))}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-500">No parts yet.</p>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+
+            <div className="order-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm space-y-2 md:col-span-2">
+              <p className="text-sm font-medium text-slate-800">Custom Technician Pay (optional)</p>
+              <div className="flex items-center gap-2">
+                <Switch checked={isCustomTechPayEnabledRef.current} onCheckedChange={handleCustomTechPayToggle} />
+                <p className="text-sm text-slate-700">Use a custom rate for this job (overrides tech default)</p>
+              </div>
+              {isCustomTechPayEnabledRef.current && (
                 <>
-                  <p className="text-sm text-slate-700 whitespace-pre-wrap">{job?.jobDescription || "No description"}</p>
-                  {job?.notes && <p className="text-sm text-slate-600 mt-2">{job.notes}</p>}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <SelectInput
+                      label="Mode"
+                      options={[
+                        { label: "Amount", value: "amount" },
+                        { label: "Percentage", value: "percentage" },
+                      ]}
+                      placeholder="Select mode"
+                      value={customTechPayDraftRef.current.mode}
+                      onSearch={() => {}}
+                      onSelect={handleCustomTechPayModeChange}
+                    />
+                    <div>
+                      <Label className="text-sm font-medium">Amount</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        defaultValue={customTechPayDraftRef.current.amount}
+                        placeholder="0"
+                        className="mt-1"
+                        onChange={(e) => {
+                          customTechPayDraftRef.current = {
+                            ...customTechPayDraftRef.current,
+                            amount: e.target.value,
+                          };
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-sm text-slate-500">Only used when enabled; otherwise the tech&apos;s default pay applies.</p>
                 </>
               )}
-
-              <PanelAttachmentSection
-                isEditMode={isEditMode}
-                attachments={Array.isArray((job as { attachments?: JobAttachment[] }).attachments) ? (job as { attachments?: JobAttachment[] }).attachments! : []}
-                onAddFiles={addPanelAttachmentFiles}
-                onRemoveAttachment={removePanelAttachment}
-                getAttachmentIcon={getAttachmentIcon}
-                formatAttachmentSize={formatAttachmentSize}
-              />
             </div>
           </div>
 
@@ -3731,30 +4538,12 @@ export default function Jobs() {
       ),
       footer: () => (
         <div className="flex flex-wrap gap-2">
-          {isEditMode ? (
-            <>
-              <Button size="sm" onClick={() => handleSave()}>
-                Save
-              </Button>
-              <Button size="sm" variant="secondary" onClick={() => openJobPanel(job, false)}>
-                Cancel
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setShowJobDetails(true);
-                }}
-              >
-                Open full view
-              </Button>
-              <Button size="sm" variant="secondary" onClick={() => openJobPanel(job, true)}>
-                Edit
-              </Button>
-            </>
-          )}
+          <Button size="sm" onClick={() => handleSave()}>
+            Save
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => handleSaveAndClose()}>
+            Save and Close
+          </Button>
         </div>
       ),
     });
@@ -4213,6 +5002,7 @@ export default function Jobs() {
                 placeholder="All job types"
                 value={quickJobTypes}
                 multiselect
+                onSearch={() => {}}
                 onSelect={val => setQuickJobTypes(Array.isArray(val) ? val : [])}
               />
               <SelectInput
@@ -4224,6 +5014,7 @@ export default function Jobs() {
                 placeholder="All agents"
                 value={quickAgents}
                 multiselect
+                onSearch={() => {}}
                 onSelect={val => setQuickAgents(Array.isArray(val) ? val : [])}
               />
               <InputDatepicker
@@ -4240,6 +5031,7 @@ export default function Jobs() {
                 placeholder="All dispatches"
                 value={quickDispatches}
                 multiselect
+                onSearch={() => {}}
                 onSelect={val => setQuickDispatches(Array.isArray(val) ? val : [])}
               />
             </div>
@@ -4255,6 +5047,7 @@ export default function Jobs() {
                 placeholder="All Tag Notes"
                 value={quickTagNotes}
                 multiselect
+                onSearch={() => {}}
                 onSelect={val => setQuickTagNotes(Array.isArray(val) ? val : [])}
                 actionLabel="Add Tag Notes"
                 onAction={() => setShowAddTagNoteModal(true)}
@@ -4268,6 +5061,7 @@ export default function Jobs() {
                 placeholder="All Tags"
                 value={quickTags}
                 multiselect
+                onSearch={() => {}}
                 onSelect={val => setQuickTags(Array.isArray(val) ? val : [])}
                 actionLabel="Add Tag"
                 onAction={() => setShowAddTagModal(true)}
@@ -4277,6 +5071,7 @@ export default function Jobs() {
                 options={quickSingleOptions}
                 placeholder="All Sources"
                 value={quickSingleChoice}
+                onSearch={() => {}}
                 onSelect={val => setQuickSingleChoice(Array.isArray(val) ? (val[0] ?? '') : val)}
               />
               <SelectInput
@@ -4289,6 +5084,7 @@ export default function Jobs() {
                 ]}
                 placeholder="All technicians"
                 value={assignedTechFilter}
+                onSearch={() => {}}
                 onSelect={val => setAssignedTechFilter(Array.isArray(val) ? (val[0] ?? "all") : val)}
               />
             </div>
